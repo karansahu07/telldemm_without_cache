@@ -701,17 +701,17 @@ export class AppComponent implements OnInit {
     this.themeSvc.apply();
 
     // ✅ 1. Wait for CacheService + FirebaseChatService initialization first
-    try {
-      console.log("🔄 Initializing cache and Firebase chat service...");
-      await this.cacheService.ready;
-      console.log("✅ Ionic storage is ready");
+    // try {
+    //   console.log("🔄 Initializing cache and Firebase chat service...");
+    //   await this.cacheService.ready;
+    //   console.log("✅ Ionic storage is ready");
       
-      await this.firebaseChatService.init();
-      await this.firebaseChatService.logCacheContents();
-      console.log('✅ [AppComponent] CacheService and FirebaseChatService initialized');
-    } catch (e) {
-      console.warn('❌ [AppComponent] Cache init failed', e);
-    }
+    //   await this.firebaseChatService.init();
+    //   await this.firebaseChatService.logCacheContents();
+    //   console.log('✅ [AppComponent] CacheService and FirebaseChatService initialized');
+    // } catch (e) {
+    //   console.warn('❌ [AppComponent] Cache init failed', e);
+    // }
 
     // ✅ 2. Proceed with your existing boot logic
     await this.fcmService.initializePushNotifications();
