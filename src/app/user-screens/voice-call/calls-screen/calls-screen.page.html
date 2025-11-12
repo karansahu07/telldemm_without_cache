@@ -1,21 +1,34 @@
 <ion-header [translucent]="true">
-  <ion-toolbar style="display: flex; padding-top:30px; flex-direction: column; --background: white;">
+   <ion-toolbar
+    style="
+      display: flex;
+      padding-top: 20px;
+      flex-direction: column;
+      --background: white;
+    "
+  >
 
     <!-- Top Row: Logo and Icons -->
-    <div style="display: flex;">
+    <div style="display: flex">
       <ion-title>
-        <h2 style="font-family: Montserrat-bold;font-size:20px">Calls</h2>
+        <h2
+          style="font-family: Montserrat-bold; font-size: 20px"
+          class="heading"
+        >
+          Calls
+        </h2>
       </ion-title>
 
-      <ion-buttons slot="end" style="display: flex;margin-right: 10px;">
+       <ion-buttons slot="end" style="display: flex; margin-right: 10px">
         <ion-button fill="clear">
-          <img src="assets/images/qr-code.svg" style="width: 24px; height: 24px;" />
+          <i class="fa-solid fa-qrcode homemainicons"></i>
         </ion-button>
         <!-- <ion-button fill="clear">
           <img src="assets/images/camera.svg" style="width: 24px; height: 24px;" />
         </ion-button> -->
         <ion-button fill="clear" (click)="presentPopover($event)">
-          <img src="assets/images/dots (1).svg" style="width: 24px; height: 24px;" />
+          <!-- <img src="assets/images/dots (1).svg" style="width: 24px; height: 24px;" /> -->
+           <i class="fa-solid fa-camera homemainicons"></i>
         </ion-button>
       </ion-buttons>
     </div>
@@ -45,25 +58,34 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <!-- <ion-list>
+  <ion-list>
     <ion-item *ngFor="let chat of chatList">
       <ion-avatar slot="start">
         <img src="assets/images/user.jfif" />
       </ion-avatar>
       <ion-label>
         <h2 class="chat-message">{{ chat.name }}</h2>
-        <p [innerHTML]="chat.message" style="color: #444343;font-family: Montserrat-Medium;font-size: 14px;"></p>
+        <p
+          [innerHTML]="chat.message"
+          style="
+            color: #444343;
+            font-family: Montserrat-Medium;
+            font-size: 14px;
+          "
+        ></p>
       </ion-label>
       <div slot="end" class="chat-meta">
-        <ion-icon name="videocam-outline" style="width: 27px;height: 27px;"></ion-icon>
+        <ion-icon
+          name="videocam-outline"
+          style="width: 27px; height: 27px"
+          class="call_icon"
+        ></ion-icon>
       </div>
     </ion-item>
-  </ion-list> -->
-  <div class="work-img">
+  </ion-list>
+  <!-- <div class="work-img">
   <img src="assets/images/workinprogress.jpg" alt="">
-</div>
+</div> -->
 </ion-content>
 
 <app-footer-tabs></app-footer-tabs>
-
- 

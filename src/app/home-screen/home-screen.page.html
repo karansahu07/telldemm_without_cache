@@ -98,7 +98,7 @@
   <ng-template #normalHomeHeader>
     <ion-toolbar class="telldemm">
       <ion-title>
-        <img src="assets/images/TELLDEMM.svg" alt="Logo" />
+        <img src="assets/images/NEW_TELLDEMM.svg" alt="Logo" />
       </ion-title>
 
       <ion-buttons slot="end">
@@ -106,21 +106,24 @@
           (click)="scanBarcode()"
           [attr.aria-label]="'home.actions.scan' | translate"
         >
-          <img src="assets/images/qr-code.svg" alt="" />
+          <!-- <img src="assets/images/qr-code.svg" alt="" /> -->
+           <i class="fa-solid fa-qrcode homemainicons"></i>
         </ion-button>
 
         <ion-button
           (click)="openCamera()"
           [attr.aria-label]="'home.actions.camera' | translate"
         >
-          <img src="assets/images/camera.svg" alt="" />
+          <!-- <img src="assets/images/camera.svg" alt="" /> -->
+            <i class="fa-solid fa-camera homemainicons"></i>
         </ion-button>
 
         <ion-button
           (click)="presentPopover($event)"
           [attr.aria-label]="'home.actions.menu' | translate"
         >
-          <img src="assets/images/dots (1).svg" alt="" />
+          <!-- <img src="assets/images/dots (1).svg" alt="" /> -->
+           <i class="fa-solid fa-ellipsis-vertical homemainicons"></i>
         </ion-button>
       </ion-buttons>
     </ion-toolbar>
@@ -215,7 +218,7 @@
 <ion-content [fullscreen]="true">
   <!-- Loader skeleton -->
   <ion-list *ngIf="isLoading" aria-busy="true" aria-live="polite">
-    <ion-item *ngFor="let i of [1,2,3,4,5,6,7,8,9]">
+     <ion-item *ngFor="let i of [1,2,3,4,5,6,7,8,9]" class="for_top">
       <ion-avatar slot="start">
         <ion-skeleton-text
           animated
@@ -232,30 +235,6 @@
       </ion-label>
     </ion-item>
   </ion-list>
-
-  <div *ngIf="showNewChatPrompt" class="no-chats-container">
-  <ion-icon name="chatbubbles-outline"></ion-icon>
-  <h2>No chats Yet</h2>
-  <p>start new chat click on start button</p>
-  <!-- <h2>{{ 'home.noChats.title' | translate }}</h2>
-  <p>{{ 'home.noChats.subtitle' | translate }}</p> -->
-  <ion-button (click)="goToContact()" expand="block">
-    <ion-icon slot="start" name="person-add-outline"></ion-icon>
-    Start Button
-  </ion-button>
-    <!-- <ion-icon slot="start" name="person-add-outline"></ion-icon>
-    {{ 'home.noChats.startButton' | translate }}
-  </ion-button> -->
-</div>
-
-<!-- for translation
- "home": {
-  "noChats": {
-    "title": "No Conversations Yet",
-    "subtitle": "Start chatting with your contacts",
-    "startButton": "Start New Chat"
-  }
-} -->
 
   <!-- Meta rows: Locked & Archived -->
   <ion-list

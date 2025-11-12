@@ -10,7 +10,8 @@ ion-content {
 .background {
   --background: var(--ion-card-background);
   --background-color: var(--ion-card-background);
-  box-shadow: 0 0 8px 8px color-mix(in srgb, var(--ion-text-color) 6%, transparent);
+  box-shadow: 0 0 8px 8px
+    color-mix(in srgb, var(--ion-text-color) 6%, transparent);
 }
 
 /* Toolbar / titles */
@@ -28,19 +29,28 @@ ion-content {
 }
 
 /* Page layout */
-.Lorem-main { display: flex; flex-direction: column; height: 100%; }
-.Lorem { width: 100%; display: flex; justify-content: center; }
+// .Lorem-main { display: flex; flex-direction: column; height: 100%; }
+.Lorem {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
 
 .Lorem p {
   text-align: center;
   color: var(--ion-text-color);
   font-size: 18px;
   width: 94%;
-  font-family: 'Montserrat-Medium';
+  font-family: "Montserrat-Medium";
 }
 
 /* Country select */
-.main-dropdown { text-align: center; display: flex; flex-direction: column; align-items: center; }
+.main-dropdown {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
 .drop-down {
   color: var(--ion-text-color);
@@ -55,15 +65,24 @@ ion-content {
 /* underline (was translucent red) -> tinted primary */
 .underline-text {
   display: inline-block;
-  border-bottom: 2px solid color-mix(in srgb, var(--ion-color-primary) 27%, transparent);
+  border-bottom: 2px solid
+    color-mix(in srgb, var(--ion-color-primary) 27%, transparent);
   padding-bottom: 0;
   width: 63%;
 }
 
 /* Country + phone input row */
-.main-country { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
+.main-country {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+}
 
-.country-code { width: 11%; margin-top: 2px; }
+.country-code {
+  width: 11%;
+  margin-top: 2px;
+}
 
 .count-code {
   color: var(--ion-text-color);
@@ -76,7 +95,8 @@ ion-content {
 
 /* underlines for inputs */
 .underline-country {
-  border-bottom: 2px solid color-mix(in srgb, var(--ion-color-primary) 27%, transparent);
+  border-bottom: 2px solid
+    color-mix(in srgb, var(--ion-color-primary) 27%, transparent);
   margin: 0;
 }
 
@@ -98,13 +118,14 @@ ion-content {
   width: 100%;
 }
 .phone-wrapper .underline-country {
-  border-bottom: 2px solid color-mix(in srgb, var(--ion-color-primary) 27%, transparent);
+  border-bottom: 2px solid
+    color-mix(in srgb, var(--ion-color-primary) 27%, transparent);
   width: 100%;
 }
 
 /* remove spin buttons once */
-input[type=number]::-webkit-inner-spin-button,
-input[type=number]::-webkit-outer-spin-button {
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
@@ -112,10 +133,11 @@ input[type=number]::-webkit-outer-spin-button {
 /* Validation text (was red) -> use danger token */
 .required-line {
   color: var(--ion-color-danger);
-  margin-top: 5px;
+  margin-top: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 0px;
 }
 
 /* Agree & Continue button area */
@@ -143,11 +165,16 @@ input[type=number]::-webkit-outer-spin-button {
   background: linear-gradient(
     175deg,
     var(--ion-color-primary) 0%,
-    color-mix(in srgb, var(--ion-color-primary) 60%, var(--ion-color-dark) 40%) 50%
+    color-mix(in srgb, var(--ion-color-primary) 60%, var(--ion-color-dark) 40%)
+      50%
   );
 }
 .agree-div button:disabled {
-  background-color: color-mix(in srgb, var(--ion-color-medium) 25%, transparent);
+  background-color: color-mix(
+    in srgb,
+    var(--ion-color-medium) 25%,
+    transparent
+  );
   opacity: 0.6;
   cursor: not-allowed;
 }
@@ -157,7 +184,8 @@ input[type=number]::-webkit-outer-spin-button {
   background: var(--ion-card-background);
   width: 90%;
   border-radius: 10px;
-  box-shadow: 4px 4px 10px color-mix(in srgb, var(--ion-text-color) 20%, transparent);
+  box-shadow: 4px 4px 10px
+    color-mix(in srgb, var(--ion-text-color) 20%, transparent);
   padding: 14px;
 }
 
@@ -176,17 +204,22 @@ input[type=number]::-webkit-outer-spin-button {
   font-size: 18px;
   font-family: Montserrat-bold;
   font-weight: bold;
-  color: var(--ion-text-color);
+  color: var(--ion-color-primary);
 }
 
 /* subtle divider (was light bluish) -> use primary tint */
 .border-line {
-  border: 1px solid color-mix(in srgb, var(--ion-color-primary) 18%, var(--ion-border-color));
+  border: 1px solid
+    color-mix(in srgb, var(--ion-color-primary) 18%, var(--ion-border-color));
   margin: 8px 0;
 }
 
 /* OTP input wrapper */
-.otp-input-wrapper { display: flex; justify-content: center; margin-top: 8px; }
+.otp-input-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
 
 // /* OTP inputs — tokenized borders/text */
 // .custom-otp-input input,
@@ -249,7 +282,8 @@ ion-input-otp input,
   -webkit-text-fill-color: var(--ion-text-color) !important;
   caret-color: var(--ion-color-primary);
   box-sizing: border-box;
-  transition: border-color 160ms ease, box-shadow 160ms ease, transform 120ms ease;
+  transition: border-color 160ms ease, box-shadow 160ms ease,
+    transform 120ms ease;
   -moz-appearance: textfield;
   appearance: textfield;
   outline: none;
@@ -268,7 +302,8 @@ ion-input-otp input,
 .custom-otp-input input:focus,
 .custom-otp-input ::ng-deep input:focus {
   border-color: color-mix(in srgb, var(--ion-color-primary) 65%, transparent);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--ion-color-primary) 12%, transparent);
+  box-shadow: 0 4px 12px
+    color-mix(in srgb, var(--ion-color-primary) 12%, transparent);
   transform: translateY(-1px);
 }
 
@@ -283,7 +318,8 @@ ion-input-otp input,
 .custom-otp-input input.invalid,
 .custom-otp-input ::ng-deep input.invalid {
   border-color: var(--ion-color-danger);
-  box-shadow: 0 3px 10px color-mix(in srgb, var(--ion-color-danger) 12%, transparent);
+  box-shadow: 0 3px 10px
+    color-mix(in srgb, var(--ion-color-danger) 12%, transparent);
   animation: wobble 220ms ease;
 }
 
@@ -329,8 +365,14 @@ ion-input-otp input,
 
 /* subtle entrance animation for OTP modal inputs */
 @keyframes otpAppear {
-  from { opacity: 0; transform: translateY(6px) scale(.98); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 .custom-otp-input input {
   animation: otpAppear 220ms ease both;
@@ -338,20 +380,35 @@ ion-input-otp input,
 
 /* small wobble for invalid feedback */
 @keyframes wobble {
-  0% { transform: translateX(0); }
-  25% { transform: translateX(-4px); }
-  50% { transform: translateX(3px); }
-  75% { transform: translateX(-2px); }
-  100% { transform: translateX(0); }
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+  75% {
+    transform: translateX(-2px);
+  }
+  100% {
+    transform: translateX(0);
+  }
 }
 
 /* Accessibility notes (visual only) */
 /* - Ensure each <input> has aria-label or aria-labelledby and inputmode="numeric" on template side */
 /* - Use JS to toggle 'filled' class when a cell has a digit, and toggle 'invalid' on verification failure */
 
-
 /* Submit button inside OTP popup */
-.submit { width: 100%; display: flex; justify-content: center; margin-top: 5%; margin-bottom: 5%; }
+.submit {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 5%;
+  margin-bottom: 5%;
+}
 
 .submit button {
   height: 45px;
@@ -366,23 +423,30 @@ ion-input-otp input,
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s, opacity 0.3s;
-  background: linear-gradient(
-    175deg,
-    var(--ion-color-primary) 0%,
-    color-mix(in srgb, var(--ion-color-primary) 60%, var(--ion-color-dark) 40%) 50%
-  );
+  background: var(--ion-color-primary);
 }
 .submit button:disabled {
-  background-color: color-mix(in srgb, var(--ion-color-medium) 25%, transparent);
-  opacity: 0.6;
+  // background-color: color-mix(
+  //   in srgb,
+  //   var(--ion-color-medium) 25%,
+  //   transparent
+  // );
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 /* Fullpage OTP overlay — tokenized backdrop */
 .otp-popup-wrapper {
-  position: fixed; top: 0; left: 0; z-index: 9999; width: 100%; height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  width: 100%;
+  height: 100%;
   background: color-mix(in srgb, var(--ion-text-color) 10%, transparent);
-  display: flex; justify-content: center; align-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* Blur class applied to background when OTP modal open */
@@ -390,7 +454,11 @@ ion-input-otp input,
   filter: blur(1px);
   pointer-events: none;
   user-select: none;
-  background-color: color-mix(in srgb, var(--ion-card-background) 30%, transparent);
+  background-color: color-mix(
+    in srgb,
+    var(--ion-card-background) 30%,
+    transparent
+  );
 }
 
 /* Resend section */
@@ -399,7 +467,11 @@ ion-input-otp input,
   color: var(--ion-color-medium);
   margin-top: 10px;
 }
-.resend-section span { cursor: pointer; font-weight: 500; color: var(--ion-color-primary); }
+.resend-section span {
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--ion-color-primary)!important;
+}
 
 /* Confirm popup (tokenized) */
 .confirm-popup::part(backdrop) {
@@ -416,21 +488,44 @@ ion-input-otp input,
 /* Popup container */
 .popup-container {
   position: absolute;
-  top: 50%; left: 50%;
+  top: 50%;
+  left: 50%;
   transform: translate(-50%, -50%);
   background: var(--ion-card-background);
   padding: 24px;
   border-radius: 16px;
-  width: 90%; max-width: 350px;
+  width: 90%;
+  max-width: 350px;
   text-align: center;
-  box-shadow: 0 10px 20px color-mix(in srgb, var(--ion-text-color) 18%, transparent);
+  box-shadow: 0 10px 20px
+    color-mix(in srgb, var(--ion-text-color) 18%, transparent);
   animation: fadeInScale 0.3s ease;
 }
-.popup-message { font-size: 16px; color: color-mix(in srgb, var(--ion-text-color) 70%, transparent); }
-.popup-number { font-size: 20px; margin: 12px 0; font-weight: 600; color: var(--ion-text-color); }
+.popup-message {
+  font-size: 16px;
+  color: color-mix(in srgb, var(--ion-text-color) 70%, transparent);
+}
+.popup-number {
+  font-size: 20px;
+  margin: 12px 0;
+  font-weight: 600;
+  color: var(--ion-text-color);
+}
 
-.popup-buttons { display:flex; justify-content:space-between; gap:12px; margin-top:20px; }
-.popup-btn { flex:1; padding:10px 0; font-size:16px; border-radius:8px; border:none; cursor:pointer; }
+.popup-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 20px;
+}
+.popup-btn {
+  flex: 1;
+  padding: 10px 0;
+  font-size: 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
 .popup-btn.edit {
   background: var(--chat-input-icon);
   color: var(--ion-text-color);
@@ -441,12 +536,24 @@ ion-input-otp input,
 }
 
 @keyframes fadeInScale {
-  from { opacity:0; transform: translate(-50%,-45%) scale(0.95); }
-  to   { opacity:1; transform: translate(-50%,-50%) scale(1); }
+  from {
+    opacity: 0;
+    transform: translate(-50%, -45%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
 /* email wrapper */
-.email-wrapper { display:flex; flex-direction:column; align-items:center; width:75%; margin:0 auto; }
+.email-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 75%;
+  margin: 0 auto;
+}
 .email-wrapper input {
   background: transparent;
   color: var(--ion-text-color);
@@ -455,18 +562,128 @@ ion-input-otp input,
   text-align: center;
   font-size: 16px;
   font-family: Montserrat-Medium;
-  width:100%;
+  width: 100%;
 }
 .email-wrapper .underline-country {
-  border-bottom: 2px solid color-mix(in srgb, var(--ion-color-primary) 27%, transparent);
+  border-bottom: 2px solid
+    color-mix(in srgb, var(--ion-color-primary) 27%, transparent);
   width: 100%;
 }
 
 /* Responsive tweaks */
 @media (max-width: 420px) {
-  .agree-div { margin-top: 40px; }
-  .count-code { font-size: 14px; }
-  .custom-otp-input input, .custom-otp-input .otp-input input { width: 38px; height: 38px; font-size: 24px; }
+  .agree-div {
+    margin-top: 20px;
+  }
+  .count-code {
+    font-size: 14px;
+  }
+  .custom-otp-input input,
+  .custom-otp-input .otp-input input {
+    width: 38px;
+    height: 38px;
+    font-size: 24px;
+  }
 }
 
+.forbg {
+  --background: url("/assets/images/ion-background.jpeg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
 
+// new
+
+.forbg {
+  --background: url(/assets/images/ion-background.jpeg);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+}
+.Lorem-main {
+  display: flex;
+  flex-direction: column;
+  // height: 54%;
+  background: white;
+  position: absolute;
+  bottom: 0px;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  z-index: 99999999 !important;
+  padding-bottom: 60px;
+}
+
+.Lorem {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}
+.Lorem h2 {
+  color: var(--ion-text-color-head);
+}
+.Lorem p {
+  text-align: center;
+  // color: #bc8c2c;
+  font-size: 18px;
+  width: 94%;
+  font-family: "Montserrat-Medium";
+}
+
+.agree-div button {
+  height: 55px;
+  width: 90%;
+  border-radius: 15px;
+  font-family: Montserrat-bold;
+  font-weight: bold;
+  color: var(--ion-color-primary-contrast);
+  padding: 10px 20px;
+  border: none;
+  border-radius: 30px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s, opacity 0.3s;
+  /* background: linear-gradient(175deg, var(--ion-color-primary) 0%,
+ color-mix(in srgb, var(--ion-color-primary) 60%, var(--ion-color-dark) 40%) 50%); */
+  background: #bc8c2c !important;
+}
+.phone-wrapper .underline-country {
+  border-bottom: 2px solid
+    color-mix(in srgb, var(--ion-color-primary) 27%, transparent);
+  width: 100%;
+  border-bottom: 2px solid #bc8c2c;
+}
+.underline-country {
+  border-bottom: 2px solid
+    color-mix(in srgb, var(--ion-color-primary) 27%, transparent);
+  margin: 0;
+  border-bottom: 2px solid #bc8c2c;
+}
+.underline-text {
+  display: inline-block;
+  border-bottom: 2px solid
+    color-mix(in srgb, var(--ion-color-primary) 27%, transparent);
+  padding-bottom: 0;
+  width: 63%;
+  border-bottom: 2px solid #bc8c2c;
+}
+.darkbg {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.63);
+  /* top: 0; */
+  /* left: 0px; */
+  width: 100%;
+  height: 100%;
+  z-index: 9;
+  /* margin: 0 auto; */
+  text-align: center;
+}
+.logoimg {
+  width: 80%;
+  /* position: absolute; */
+  top: 20px;
+  padding-top: 18px;
+}

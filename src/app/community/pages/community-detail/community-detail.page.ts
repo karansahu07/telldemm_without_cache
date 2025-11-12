@@ -574,12 +574,13 @@ export class CommunityDetailPage implements OnInit {
       //   );
 
       // Update announcement group
+      console.log("this.firebaseService.currentConversations",this.firebaseService.currentConversations)
       const announcementGroup = this.firebaseService.currentConversations.find(
         (c) =>
           c.title === 'Announcements' &&
           c.communityId === this.communityId
       );
-
+      // console.log({announcementGroup})
       if (announcementGroup) {
         this.announcementGroup = this.convertToConversation(
           announcementGroup,
@@ -592,6 +593,7 @@ export class CommunityDetailPage implements OnInit {
           c.title === 'General' &&
           c.communityId === this.communityId
       );
+      // console.log({generalGroup})
       // Update general group
       if (generalGroup) {
         this.generalGroup = this.convertToConversation(generalGroup, true);
@@ -601,6 +603,7 @@ export class CommunityDetailPage implements OnInit {
         (c) => c.type === 'group' && c.communityId === this.communityId
       );
       // Update member groups
+      // console.log({allGroups})
       this.groupsIn = allGroups
         .filter(
           (c) =>
@@ -609,7 +612,7 @@ export class CommunityDetailPage implements OnInit {
             c.title != 'General'
         )
         .map((g) => this.convertToConversation(g, true));
-
+        // console.log("this groupIn",this.groupsIn)
       // Update available groups
       this.groupsAvailable = allGroups
         .filter(
@@ -619,9 +622,10 @@ export class CommunityDetailPage implements OnInit {
             c.title != 'General'
         )
         .map((g) => this.convertToConversation(g, false));
-
+        // console.log("this.groupsAvailable",this.groupsAvailable)
       // Update group count
       this.groupCount = allGroups.length;
+      // console.log("this group count", this.groupCount)
       // if (this.announcementGroup) this.groupCount++;
       // if (this.generalGroup) this.groupCount++;
       //   console.log(this.firebaseService.currentConversations)

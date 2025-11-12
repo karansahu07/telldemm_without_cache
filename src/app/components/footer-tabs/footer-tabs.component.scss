@@ -167,6 +167,7 @@ ion-tab-bar {
   background: var(--ion-background-color);
   padding: 4px 0 env(safe-area-inset-bottom, 4px) 0;
   transition: padding-bottom 0.2s;
+  padding: 0px 10px 14px 10px !important;
 }
 
 p.tabtext {

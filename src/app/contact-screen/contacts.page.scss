@@ -43,7 +43,7 @@ ion-header {
 .all-icon-btn { color: var(--ion-text-color); }
 .call-dout-icon { font-size: 28px; }
 
-ion-icon { font-size: 26px; color: var(--ion-text-color); }
+ion-icon { font-size: 26px; color: white; }
 
 /* Names / labels */
 .user-real-name {
@@ -87,7 +87,7 @@ ion-label { color: var(--ion-text-color); }
 .list,
 .list2 {
   background: var(--ion-card-background);
-  border: 1px solid var(--ion-border-color);
+  // border: 1px solid var(--ion-border-color);
   border-radius: 12px;
   margin-top: 20px;
 }

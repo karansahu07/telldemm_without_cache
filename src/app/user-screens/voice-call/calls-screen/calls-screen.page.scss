@@ -105,3 +105,31 @@ ion-badge {
   height: auto;
   display: block;
 }
+
+
+
+.heading{
+  color: var(--ion-color-primary);
+}
+.call_icon{
+  width: 27px;
+    height: 27px;
+    border: 1px solid #bc8c2c;
+    border-radius: 50px;
+    text-align: center;
+    padding: 3px;
+    background: #bc8c2c;
+    color: white;
+}
+
+.homemainicons {
+  color: white;
+  background: #bc8c2c;
+  font-size: 18px;
+  border-radius: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 34px;
+  width: 34px;
+}

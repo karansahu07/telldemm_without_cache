@@ -31,7 +31,7 @@ ion-content {
 }
 
 .welcome h2 {
-  color: var(--ion-text-color);
+  color: var(--ion-text-color-head);
   font-size: 26px;
   font-weight: bold;
   font-family: Montserrat-bold;
@@ -55,9 +55,10 @@ ion-content {
   font-weight: 700;
   font-family: Montserrat-bold;
   color: var(--ion-color-primary-contrast);
-  background: linear-gradient(
-    175deg,
-    var(--ion-color-primary) 0%,
-    color-mix(in srgb, var(--ion-color-primary) 60%, var(--ion-color-dark) 40%) 50%
-  );
+  // background: linear-gradient(
+  //   175deg,
+  //   var(--ion-color-primary) 0%,
+  //   color-mix(in srgb, var(--ion-color-primary) 60%, var(--ion-color-dark) 40%) 50%
+  // );
+    background: var(--ion-color-primary);
 }

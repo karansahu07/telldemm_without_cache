@@ -1411,6 +1411,41 @@ export class HomeScreenPage implements OnInit, OnDestroy {
       return date.toLocaleDateString();
     }
   }
+  getTimeStamp(lastMessageAt: string | Date | undefined): string {
+    if (!lastMessageAt) return '';
+ 
+    const date = new Date(lastMessageAt);
+    const now = new Date();
+ 
+    // Check if the date is today
+    const isToday = date.toDateString() === now.toDateString();
+ 
+    // Check if the date is yesterday
+    const yesterday = new Date();
+    yesterday.setDate(now.getDate() - 1);
+    const isYesterday = date.toDateString() === yesterday.toDateString();
+ 
+    if (isToday) {
+      // Return only time (e.g., "02:00 PM")
+      return date.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      });
+    } else if (isYesterday) {
+      // Return 'Yesterday' or translated text
+      return this.translate.instant('home.time.yesterday');
+    } else if (date.getFullYear() === now.getFullYear()) {
+      // Same year: Return only date without year (e.g., "11 Nov")
+      return date.toLocaleDateString([], {
+        day: 'numeric', 
+        month: 'short' 
+      });
+    } else {
+      // Different year: Return full date (e.g., "11/11/2024")
+      return date.toLocaleDateString();
+    }
+}
 
   private async getPreviewFromMessages(
     messages: any[]
