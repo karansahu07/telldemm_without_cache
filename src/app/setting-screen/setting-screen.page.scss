@@ -1,0 +1,27 @@
+.logout_icon {
+  font-size: 24px;
+  color: #ffffff;
+  background: var(--ion-color-primary);
+  border-radius: 50px;
+  padding: 6px;
+}
+.logout_text {
+  color: var(--ion-color-primary) !important;
+}
+
+.setting_icons {
+  background: var(--ion-color-primary);
+  color: white;
+  padding: 4px;
+  border-radius: 50px;
+  font-size: 26px;
+  margin-right: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ion_title {
+  color: var(--ion-color-primary);
+  padding: 0px !important;
+}

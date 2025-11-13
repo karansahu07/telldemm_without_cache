@@ -1,9 +1,9 @@
 <ion-header>
-  <ion-toolbar>
+  <ion-toolbar class="ion_toolbar">
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/settings"></ion-back-button>
     </ion-buttons>
-    <ion-title>Chat Theme</ion-title>
+    <ion-title class="ion_title">Chat Theme</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="surpriseMe()">Surprise</ion-button>
       <ion-button (click)="saveTheme()">Save</ion-button>
@@ -51,10 +51,10 @@
       <div class="wall-thumb" *ngFor="let w of wallpapers" (click)="pickWallpaper(w.url)">
         <img [src]="w.url" loading="lazy" [attr.alt]="'Wallpaper ' + w.id" />
       </div>
-      <!-- <div class="wall-thumb upload">
+      <div class="wall-thumb upload">
         <input type="file" accept="image/*" (change)="onFilePicked($event)" />
         <div class="upload-label">Upload</div>
-      </div> -->
+      </div>
     </div>
   </ion-list>
 

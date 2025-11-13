@@ -1,12 +1,12 @@
 <ion-header>
-  <ion-toolbar style="--background: #ffffff; --color: #000000;">
+  <ion-toolbar  class="ion_toolbar">
     <ion-buttons slot="start">
       <ion-back-button
         defaultHref="/settings"
         [attr.aria-label]="'common.back' | translate">
       </ion-back-button>
     </ion-buttons>
-    <ion-title>{{ 'accountPage.title' | translate }}</ion-title>
+    <ion-title class="ion_title">{{ 'accountPage.title' | translate }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -15,49 +15,49 @@
 
     <ion-item button lines="full" (click)="navigateTo('security-notifications')"
               [attr.aria-label]="'accountPage.securityNotifications' | translate">
-      <ion-icon slot="start" name="shield-outline" aria-hidden="true"></ion-icon>
+      <ion-icon slot="start" name="shield-outline" aria-hidden="true" class="setting_icons"></ion-icon>
       <ion-label>{{ 'accountPage.securityNotifications' | translate }}</ion-label>
     </ion-item>
 
     <ion-item button lines="full" (click)="navigateTo('passkeys')"
               [attr.aria-label]="'accountPage.passkeys' | translate">
-      <ion-icon slot="start" name="key-outline" aria-hidden="true"></ion-icon>
+      <ion-icon slot="start" name="key-outline" aria-hidden="true" class="setting_icons"></ion-icon>
       <ion-label>{{ 'accountPage.passkeys' | translate }}</ion-label>
     </ion-item>
 
     <ion-item button lines="full" (click)="goToEditEmail()"
               [attr.aria-label]="'accountPage.emailAddress' | translate">
-      <ion-icon slot="start" name="mail-outline" aria-hidden="true"></ion-icon>
+      <ion-icon slot="start" name="mail-outline" aria-hidden="true" class="setting_icons"></ion-icon>
       <ion-label>{{ 'accountPage.emailAddress' | translate }}</ion-label>
     </ion-item>
 
     <ion-item button lines="full" (click)="navigateTo('two-step-verification')"
               [attr.aria-label]="'accountPage.twoStep' | translate">
-      <ion-icon slot="start" name="lock-closed-outline" aria-hidden="true"></ion-icon>
+      <ion-icon slot="start" name="lock-closed-outline" aria-hidden="true" class="setting_icons"></ion-icon>
       <ion-label>{{ 'accountPage.twoStep' | translate }}</ion-label>
     </ion-item>
 
     <ion-item button lines="full" (click)="navigateTo('change-number')"
               [attr.aria-label]="'accountPage.changeNumber' | translate">
-      <ion-icon slot="start" name="call-outline" aria-hidden="true"></ion-icon>
+      <ion-icon slot="start" name="call-outline" aria-hidden="true" class="setting_icons"></ion-icon>
       <ion-label>{{ 'accountPage.changeNumber' | translate }}</ion-label>
     </ion-item>
 
     <ion-item button lines="full" (click)="navigateTo('request-account-info')"
               [attr.aria-label]="'accountPage.requestInfo' | translate">
-      <ion-icon slot="start" name="document-outline" aria-hidden="true"></ion-icon>
+      <ion-icon slot="start" name="document-outline" aria-hidden="true" class="setting_icons"></ion-icon>
       <ion-label>{{ 'accountPage.requestInfo' | translate }}</ion-label>
     </ion-item>
 
     <ion-item button lines="full" (click)="navigateTo('add-account')"
               [attr.aria-label]="'accountPage.addAccount' | translate">
-      <ion-icon slot="start" name="person-add-outline" aria-hidden="true"></ion-icon>
+      <ion-icon slot="start" name="person-add-outline" aria-hidden="true" class="setting_icons"></ion-icon>
       <ion-label>{{ 'accountPage.addAccount' | translate }}</ion-label>
     </ion-item>
 
     <ion-item button lines="full" class="delete-account" (click)="openDeleteConfirmation()"
               [attr.aria-label]="'accountPage.deleteAccount' | translate">
-      <ion-icon slot="start" name="trash-outline" aria-hidden="true"></ion-icon>
+      <ion-icon slot="start" name="trash-outline" aria-hidden="true" class="setting_icons"></ion-icon>
       <ion-label>{{ 'accountPage.deleteAccount' | translate }}</ion-label>
     </ion-item>
 

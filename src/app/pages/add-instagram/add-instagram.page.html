@@ -35,12 +35,18 @@
   </div>
 
   <div class="save-bar">
-    <ion-button
+    <!-- <ion-button
       expand="block"
       shape="round"
       (click)="save()"
       [attr.aria-label]="'addInstagram.save' | translate">
       {{ 'addInstagram.save' | translate }}
-    </ion-button>
+    </ion-button> -->
+       <button
+      type="submit"
+       class="save_button" (click)="save()"
+      [attr.aria-label]="'addInstagram.save' | translate">
+      {{ 'addInstagram.save' | translate }}
+    </button>
   </div>
 </ion-content>

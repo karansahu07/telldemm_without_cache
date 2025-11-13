@@ -1,9 +1,10 @@
 /* Header */
 ion-toolbar {
-  --background: var(--ion-color-primary);
-  --color: var(--ion-color-primary-contrast);
-  border-bottom: 1px solid var(--ion-border-color);
-  box-shadow: none;
+  // --background: var(--ion-color-primary);
+  // --color: var(--ion-color-primary-contrast);
+  // border-bottom: 1px solid var(--ion-border-color);
+  // box-shadow: none;
+  padding-top: 28px !important;
 }
 
 /* Name input container */
@@ -51,4 +52,25 @@ ion-toolbar {
   font-size: 13px;
   margin: 12px 0 20px 4px;
   color: var(--ion-color-step-600);
+}
+
+button.save_button {
+  /* background: --background: var(--ion-color-primary); */
+
+  background: var(--ion-color-primary) !important;
+  width: 100%;
+  padding: 11px;
+  color: white;
+  font-weight: 700;
+  font-size: 18px;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+}
+
+
+.ion_title{
+    color: var(--ion-color-primary);
+    padding: 0px !important;
 }

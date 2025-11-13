@@ -1,12 +1,12 @@
 <ion-header>
-  <ion-toolbar style="--background: #ffffff; --color: #000000;">
+  <ion-toolbar style="--background: #ffffff; --color: #000000;" class="ion_toolbar">
     <ion-buttons slot="start">
       <ion-back-button
         defaultHref="/settings"
         [attr.aria-label]="'common.back' | translate">
       </ion-back-button>
     </ion-buttons>
-    <ion-title>{{ 'privacyPage.title' | translate }}</ion-title>
+    <ion-title class="ion_title">{{ 'privacyPage.title' | translate }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -19,7 +19,7 @@
 
     <!-- Last Seen -->
     <ion-item>
-      <ion-icon slot="start" name="time-outline" aria-hidden="true"></ion-icon>
+      <ion-icon slot="start" name="time-outline" aria-hidden="true" class="setting_icons"></ion-icon>
       <ion-label>
         <h2>{{ 'privacyPage.lastSeen.title' | translate }}</h2>
         <p>{{ 'privacyPage.lastSeen.desc' | translate }}</p>
@@ -37,7 +37,7 @@
 
     <!-- Profile Photo -->
     <ion-item>
-      <ion-icon slot="start" name="person-circle-outline" aria-hidden="true"></ion-icon>
+      <ion-icon slot="start" name="person-circle-outline" aria-hidden="true" class="setting_icons"></ion-icon>
       <ion-label>
         <h2>{{ 'privacyPage.profilePhoto.title' | translate }}</h2>
         <p>{{ 'privacyPage.profilePhoto.desc' | translate }}</p>
@@ -55,7 +55,7 @@
 
     <!-- About -->
     <ion-item>
-      <ion-icon slot="start" name="information-circle-outline" aria-hidden="true"></ion-icon>
+      <ion-icon slot="start" name="information-circle-outline" aria-hidden="true" class="setting_icons"></ion-icon>
       <ion-label>
         <h2>{{ 'privacyPage.about.title' | translate }}</h2>
         <p>{{ 'privacyPage.about.desc' | translate }}</p>
@@ -80,7 +80,7 @@
     <!-- Status -->
     <ion-item button detail (click)="goToStatusPrivacy()"
               [attr.aria-label]="'privacyPage.status.title' | translate">
-      <ion-icon slot="start" name="ellipse-outline" aria-hidden="true"></ion-icon>
+      <ion-icon slot="start" name="ellipse-outline" aria-hidden="true" class="setting_icons"></ion-icon>
       <ion-label>
         <h2>{{ 'privacyPage.status.title' | translate }}</h2>
         <p>{{ 'privacyPage.status.desc' | translate }}</p>
@@ -90,7 +90,7 @@
     <!-- Blocked Contacts -->
     <ion-item button detail (click)="goToBlockedContacts()"
               [attr.aria-label]="'privacyPage.blocked.title' | translate">
-      <ion-icon slot="start" name="ban-outline" aria-hidden="true"></ion-icon>
+      <ion-icon slot="start" name="ban-outline" aria-hidden="true" class="setting_icons"></ion-icon>
       <ion-label>
         <h2>{{ 'privacyPage.blocked.title' | translate }}</h2>
         <p>{{ 'privacyPage.blocked.desc' | translate }}</p>

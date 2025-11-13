@@ -5,17 +5,16 @@
 /* Optional theme hook for this page */
 .header-red {
   /* use page-scoped primary; falls back to global */
-  --page-primary: var(--ion-color-primary, #b71c1c);
+  --page-primary: var(--ion-color-primary, #bc8c2c);
   --page-primary-rgb: var(--ion-color-primary-rgb, 183, 28, 28);
   --page-contrast: var(--ion-color-primary-contrast, #fff);
 }
 
 /* Header */
 .header-red ion-toolbar {
-  --background: var(--page-primary);
-  --color: var(--page-contrast);
-  color: var(--color);
-  border-bottom: 1px solid color-mix(in srgb, var(--page-primary) 25%, transparent);
+  --background: var(--ion-background-color);
+  --color: var(--ion-color-primary);
+  padding-top: 28px;
 }
 
 /* Page content */
@@ -76,6 +75,7 @@ ion-input::part(native) {
   color: color-mix(in srgb, var(--ion-text-color) 65%, transparent);
   font-size: 14px;
   line-height: 1.45;
+  padding: 0px 20px 0px 20px;
 }
 .learn-more {
   color: var(--ion-color-primary, #0b6ef9);
@@ -124,4 +124,29 @@ ion-input::part(native) {
     background: rgba(var(--page-primary-rgb), .16);
     border-color: color-mix(in srgb, var(--page-primary) 38%, transparent);
   }
+}
+
+
+
+.form-row {
+    padding: 20px 20px 0px 20px;
+}
+
+
+.save_button {
+  background: var(--ion-color-primary) !important;
+  width: 100%;
+  padding: 11px;
+  color: white;
+  font-weight: 700;
+  font-size: 18px;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+}
+
+
+.ion-valid.sc-ion-input-md-h {
+    --highlight-color: var(--ion-color-primary) !important;
 }

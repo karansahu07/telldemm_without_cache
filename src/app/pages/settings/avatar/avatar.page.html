@@ -1,12 +1,12 @@
 <ion-header>
-  <ion-toolbar style="--background: #f0f0f0; --color: #000000;">
+  <ion-toolbar class="ion_toolbar">
     <ion-buttons slot="start">
       <ion-back-button
         defaultHref="/settings"
         [attr.aria-label]="'common.back' | translate">
       </ion-back-button>
     </ion-buttons>
-    <ion-title>{{ 'avatarPage.title' | translate }}</ion-title>
+    <ion-title class="ion_title">{{ 'avatarPage.title' | translate }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -168,14 +168,13 @@
   </ion-list>
 
   <!-- Action Buttons -->
-  <ion-card color="white" style="margin-top: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-    <ion-card-content style="padding: 20px;">
+  <ion-card color="white" style="margin: 6px 0px 60px 0px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <ion-card-content style="padding: 0px;">
       <ion-row>
         <ion-col size="6">
           <ion-button
             expand="block"
             fill="solid"
-            color="dark"
             (click)="downloadAvatar()"
             [disabled]="isDownloading"
             [attr.aria-label]="(isDownloading ? 'avatarPage.buttons.downloading' : 'avatarPage.buttons.download') | translate"
@@ -188,7 +187,6 @@
           <ion-button
             expand="block"
             fill="outline"
-            color="medium"
             (click)="saveOptions()"
             [attr.aria-label]="'avatarPage.buttons.save' | translate"
             style="--border-radius: 4px; text-transform: none; font-weight: 500;">

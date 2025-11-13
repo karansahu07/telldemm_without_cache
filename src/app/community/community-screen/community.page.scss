@@ -5,7 +5,7 @@
 
 /* Typography + smoothing (keeps your Montserrat but uses weight) */
 .tooler {
-  padding-top: 30px;
+  padding-top: 20px;
   font-family: "Montserrat", sans-serif !important;
   font-weight: 700; /* replaces Montserrat-bold */
   box-shadow: none;
@@ -57,13 +57,19 @@
 }
 
 /* ---------- Rows (new-community / card / view-all) ---------- */
-.new-community,
 .community-card,
 .view-all {
   --background: var(--ion-item-background);
   background: var(--background);
   padding: 8px 12px;
   border-bottom: 1px solid var(--ion-border-color);
+}
+.new-community{
+  --background: var(--ion-item-background);
+  background: var(--background);
+  padding: 0px 0px;
+  border-bottom: 1px solid var(--ion-border-color);
+  margin: 12px 0px 0px 0px !important;
 }
 
 .new-community h2,
@@ -204,10 +210,10 @@ ion-avatar {
 /* “add” icon on avatar; uses brand color and proper layering */
 .add-icon {
   position: absolute;
-  bottom: -2px;
-  right: -6px;
+  bottom: 14px;
+  right: 16px;
   color: var(--ion-color-primary);
-  font-size: 16px;
+  font-size: 20px;
   background: var(--ion-card-background);
   border-radius: 50%;
   padding: 2px;
@@ -276,4 +282,21 @@ ion-avatar {
   .info-banner {
     border-color: color-mix(in srgb, var(--ion-text-color) 25%, var(--ion-border-color));
   }
+}
+
+.heading{
+  color: var(--ion-color-primary);
+  font-family: Montserrat-bold;
+  font-size: 20px;
+}
+.homemainicons {
+  color: white;
+  background: #bc8c2c;
+  font-size: 18px;
+  border-radius: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 34px;
+  width: 34px;
 }

@@ -76,3 +76,22 @@
     }
   }
 }
+
+
+
+.ion_title{
+    color: var(--ion-color-primary);
+    padding: 0px !important;
+}
+
+.setting_icons {
+  background: var(--ion-color-primary);
+  color: white;
+  padding: 4px;
+  border-radius: 50px;
+  font-size: 26px;
+  margin-right: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

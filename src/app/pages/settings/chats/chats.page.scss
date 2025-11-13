@@ -69,3 +69,30 @@ ion-item {
   background: var(--ion-border-color);
   margin: 8px 12px;
 }
+
+
+
+
+.setting_icons{
+    background: var(--ion-color-primary);
+    color: white;
+    padding: 4px;
+    border-radius: 50px;
+    font-size: 26px;
+    margin-right: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+
+.ion_toolbar{
+    --background: #ffffff;
+    --color:  var(--ion-color-primary);
+    padding-top: 28px !important;
+}  
+.ion_title{
+    color: var(--ion-color-primary) !important;
+    padding: 0px;
+}

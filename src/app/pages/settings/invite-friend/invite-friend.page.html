@@ -1,10 +1,10 @@
 <ion-header>
-  <ion-toolbar style="--background: #f0f0f0; --color: #000000;">
+  <ion-toolbar class="ion_toolbar">
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/settings"></ion-back-button>
     </ion-buttons>
 
-    <ion-title>{{ 'invite.header' | translate }}</ion-title>
+    <ion-title class="ion_title">{{ 'invite.header' | translate }}</ion-title>
 
     <ion-buttons slot="end">
       <ion-button fill="clear" (click)="searchContacts()" [attr.aria-label]="'invite.actions.search' | translate">
@@ -18,7 +18,7 @@
   <!-- Quick Actions -->
   <ion-list lines="inset">
     <ion-item button detail (click)="shareLink()" [attr.aria-label]="'invite.actions.shareLink' | translate">
-      <ion-icon slot="start" name="share-social-outline" color="success"></ion-icon>
+      <ion-icon slot="start" name="share-social-outline" class="setting_icons"></ion-icon>
       <ion-label>
         <h2>{{ 'invite.share.title' | translate }}</h2>
         <p>{{ 'invite.share.subtitle' | translate }}</p>
@@ -26,7 +26,7 @@
     </ion-item>
 
     <ion-item button detail (click)="openContacts()" [attr.aria-label]="'invite.actions.fromContacts' | translate">
-      <ion-icon slot="start" name="people-outline" color="primary"></ion-icon>
+      <ion-icon slot="start" name="people-outline" class="setting_icons"></ion-icon>
       <ion-label>
         <h2>{{ 'invite.contacts.title' | translate }}</h2>
         <p>{{ 'invite.contacts.subtitle' | translate }}</p>

@@ -1678,7 +1678,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
 
   onForward() {
     console.log("this. selected message ", this.selectedMessages)
-    this.chatService.setForwardMessages(this.selectedMessages);
+    this.chatService.setForwardMessage(this.selectedMessages);
     this.selectedMessages = [];
     this.router.navigate(['/forwardmessage']);
   }

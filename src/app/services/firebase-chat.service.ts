@@ -143,413 +143,413 @@ export class FirebaseChatService {
     private authService: AuthService,
     private http: HttpClient
   ) {
-    this.init();
+    // this.init();
   }
 
   // 🔹 Lightweight deep equality check (replacement for lodash.isEqual)
-  private isEqual(a: any, b: any): boolean {
-    // Quick identical check
-    if (a === b) return true;
+  // private isEqual(a: any, b: any): boolean {
+  //   // Quick identical check
+  //   if (a === b) return true;
 
-    // Handle null / undefined
-    if (a == null || b == null) return false;
+  //   // Handle null / undefined
+  //   if (a == null || b == null) return false;
 
-    // Handle primitive types
-    if (typeof a !== 'object' || typeof b !== 'object') return false;
+  //   // Handle primitive types
+  //   if (typeof a !== 'object' || typeof b !== 'object') return false;
 
-    // Arrays
-    if (Array.isArray(a) && Array.isArray(b)) {
-      if (a.length !== b.length) return false;
-      for (let i = 0; i < a.length; i++) {
-        if (!this.isEqual(a[i], b[i])) return false;
-      }
-      return true;
-    }
+  //   // Arrays
+  //   if (Array.isArray(a) && Array.isArray(b)) {
+  //     if (a.length !== b.length) return false;
+  //     for (let i = 0; i < a.length; i++) {
+  //       if (!this.isEqual(a[i], b[i])) return false;
+  //     }
+  //     return true;
+  //   }
 
-    // Objects
-    const aKeys = Object.keys(a);
-    const bKeys = Object.keys(b);
-    if (aKeys.length !== bKeys.length) return false;
+  //   // Objects
+  //   const aKeys = Object.keys(a);
+  //   const bKeys = Object.keys(b);
+  //   if (aKeys.length !== bKeys.length) return false;
 
-    for (const key of aKeys) {
-      if (!b.hasOwnProperty(key)) return false;
-      if (!this.isEqual(a[key], b[key])) return false;
-    }
+  //   for (const key of aKeys) {
+  //     if (!b.hasOwnProperty(key)) return false;
+  //     if (!this.isEqual(a[key], b[key])) return false;
+  //   }
 
-    return true;
-  }
+  //   return true;
+  // }
 
-  /**
-   * Public init - await this in APP_INITIALIZER to ensure hydration completes before app bootstrap
-   */
-  public async init(): Promise<void> {
-    // wait for cache ready
-    await this.cache.ready;
-    await this.hydrateFromCache();
-    this.setupAutoPersist();
-  }
+  // /**
+  //  * Public init - await this in APP_INITIALIZER to ensure hydration completes before app bootstrap
+  //  */
+  // public async init(): Promise<void> {
+  //   // wait for cache ready
+  //   await this.cache.ready;
+  //   await this.hydrateFromCache();
+  //   this.setupAutoPersist();
+  // }
 
-  // ---------- Serialization helpers ----------
-  private mapToObject<T>(m: Map<string, T>): Record<string, T> {
-    const obj: Record<string, T> = {};
-    m.forEach((v, k) => (obj[k] = v));
-    return obj;
-  }
+  // // ---------- Serialization helpers ----------
+  // private mapToObject<T>(m: Map<string, T>): Record<string, T> {
+  //   const obj: Record<string, T> = {};
+  //   m.forEach((v, k) => (obj[k] = v));
+  //   return obj;
+  // }
 
-  private objectToMap<T>(obj: Record<string, T> | null): Map<string, T> {
-    const m = new Map<string, T>();
-    if (!obj) return m;
-    Object.keys(obj).forEach((k) => m.set(k, obj[k]));
-    return m;
-  }
+  // private objectToMap<T>(obj: Record<string, T> | null): Map<string, T> {
+  //   const m = new Map<string, T>();
+  //   if (!obj) return m;
+  //   Object.keys(obj).forEach((k) => m.set(k, obj[k]));
+  //   return m;
+  // }
 
-  // ---------- Hydration ----------
-  private async hydrateFromCache(): Promise<void> {
-    try {
-      // conversations
-      const convs = await this.cache.get<any[]>(K_CONVERSATIONS);
-      if (convs) {
-        this._conversations$.next(convs);
-        this.lastSavedSnapshots.conversations = convs;
-      }
+  // // ---------- Hydration ----------
+  // private async hydrateFromCache(): Promise<void> {
+  //   try {
+  //     // conversations
+  //     const convs = await this.cache.get<any[]>(K_CONVERSATIONS);
+  //     if (convs) {
+  //       this._conversations$.next(convs);
+  //       this.lastSavedSnapshots.conversations = convs;
+  //     }
 
-      // platform users
-      const pUsers = await this.cache.get<Partial<any>[]>(K_PLATFORM_USERS);
-      if (pUsers) {
-        this._platformUsers$.next(pUsers);
-        this.lastSavedSnapshots.platformUsers = pUsers;
-      }
+  //     // platform users
+  //     const pUsers = await this.cache.get<Partial<any>[]>(K_PLATFORM_USERS);
+  //     if (pUsers) {
+  //       this._platformUsers$.next(pUsers);
+  //       this.lastSavedSnapshots.platformUsers = pUsers;
+  //     }
 
-      // device contacts
-      const dContacts = await this.cache.get<
-        { username: string; phoneNumber: string }[]
-      >(K_DEVICE_CONTACTS);
-      if (dContacts) {
-        this._deviceContacts$.next(dContacts);
-        this.lastSavedSnapshots.deviceContacts = dContacts;
-      }
+  //     // device contacts
+  //     const dContacts = await this.cache.get<
+  //       { username: string; phoneNumber: string }[]
+  //     >(K_DEVICE_CONTACTS);
+  //     if (dContacts) {
+  //       this._deviceContacts$.next(dContacts);
+  //       this.lastSavedSnapshots.deviceContacts = dContacts;
+  //     }
 
-      // offsets (stored as plain object)
-      const offsetsObj = await this.cache.get<Record<string, number>>(
-        K_OFFSETS
-      );
-      if (offsetsObj) {
-        this._offsets$.next(this.objectToMap<number>(offsetsObj));
-        this.lastSavedSnapshots.offsets = offsetsObj;
-      }
+  //     // offsets (stored as plain object)
+  //     const offsetsObj = await this.cache.get<Record<string, number>>(
+  //       K_OFFSETS
+  //     );
+  //     if (offsetsObj) {
+  //       this._offsets$.next(this.objectToMap<number>(offsetsObj));
+  //       this.lastSavedSnapshots.offsets = offsetsObj;
+  //     }
 
-      // presence
-      const presenceObj = await this.cache.get<Record<string, any>>(K_PRESENCE);
-      if (presenceObj) {
-        this._presenceSubject$.next(this.objectToMap<any>(presenceObj));
-        this.lastSavedSnapshots.presence = presenceObj;
-      }
+  //     // presence
+  //     const presenceObj = await this.cache.get<Record<string, any>>(K_PRESENCE);
+  //     if (presenceObj) {
+  //       this._presenceSubject$.next(this.objectToMap<any>(presenceObj));
+  //       this.lastSavedSnapshots.presence = presenceObj;
+  //     }
 
-      // typing
-      const typingObj = await this.cache.get<Record<string, boolean>>(K_TYPING);
-      if (typingObj) {
-        this._typingStatus$.next(this.objectToMap<boolean>(typingObj));
-        this.lastSavedSnapshots.typing = typingObj;
-      }
+  //     // typing
+  //     const typingObj = await this.cache.get<Record<string, boolean>>(K_TYPING);
+  //     if (typingObj) {
+  //       this._typingStatus$.next(this.objectToMap<boolean>(typingObj));
+  //       this.lastSavedSnapshots.typing = typingObj;
+  //     }
 
-      // scalar values
-      const sender = await this.cache.get<string>(CACHE_PREFIX + 'senderId_v1');
-      if (sender) this.senderId = sender;
+  //     // scalar values
+  //     const sender = await this.cache.get<string>(CACHE_PREFIX + 'senderId_v1');
+  //     if (sender) this.senderId = sender;
 
-      const forwardMsgs = await this.cache.get<any[]>(
-        CACHE_PREFIX + 'forwardMsgs_v1'
-      );
-      if (forwardMsgs) this.forwardMessages = forwardMsgs;
+  //     const forwardMsgs = await this.cache.get<any[]>(
+  //       CACHE_PREFIX + 'forwardMsgs_v1'
+  //     );
+  //     if (forwardMsgs) this.forwardMessages = forwardMsgs;
 
-      const initialized = await this.cache.get<boolean>(
-        CACHE_PREFIX + 'isAppInitialized_v1'
-      );
-      if (typeof initialized === 'boolean') this.isAppInitialized = initialized;
+  //     const initialized = await this.cache.get<boolean>(
+  //       CACHE_PREFIX + 'isAppInitialized_v1'
+  //     );
+  //     if (typeof initialized === 'boolean') this.isAppInitialized = initialized;
 
-      // messages (per-room). load list of rooms and hydrate each room's messages
-      const rooms = await this.cache.get<string[]>(K_MESSAGES_ROOMS);
-      if (rooms && rooms.length) {
-        const map = new Map<string, any[]>();
-        for (const roomId of rooms) {
-          const roomKey = `${K_MESSAGES_ROOM_PREFIX}${roomId}_v1`;
-          const msgs = await this.cache.get<any[]>(roomKey);
-          if (msgs) map.set(roomId, msgs);
-        }
-        this._messages$.next(map);
-      }
-    } catch (e) {
-      console.warn('hydrateFromCache error', e);
-    }
-  }
+  //     // messages (per-room). load list of rooms and hydrate each room's messages
+  //     const rooms = await this.cache.get<string[]>(K_MESSAGES_ROOMS);
+  //     if (rooms && rooms.length) {
+  //       const map = new Map<string, any[]>();
+  //       for (const roomId of rooms) {
+  //         const roomKey = `${K_MESSAGES_ROOM_PREFIX}${roomId}_v1`;
+  //         const msgs = await this.cache.get<any[]>(roomKey);
+  //         if (msgs) map.set(roomId, msgs);
+  //       }
+  //       this._messages$.next(map);
+  //     }
+  //   } catch (e) {
+  //     console.warn('hydrateFromCache error', e);
+  //   }
+  // }
 
-  // ---------- Auto-persist setup (MobX-like autorun) ----------
-  private setupAutoPersist(): void {
-    // Conversations
-    this._conversations$.pipe(debounceTime(300)).subscribe(async (val) => {
-      if (
-        this.lastSavedSnapshots.conversations &&
-        this.isEqual(this.lastSavedSnapshots.conversations, val)
-      )
-        return;
-      try {
-        await this.cache.set(K_CONVERSATIONS, val);
-        this.lastSavedSnapshots.conversations = JSON.parse(JSON.stringify(val));
-      } catch (e) {
-        console.error(e);
-      }
-    });
+  // // ---------- Auto-persist setup (MobX-like autorun) ----------
+  // private setupAutoPersist(): void {
+  //   // Conversations
+  //   this._conversations$.pipe(debounceTime(300)).subscribe(async (val) => {
+  //     if (
+  //       this.lastSavedSnapshots.conversations &&
+  //       this.isEqual(this.lastSavedSnapshots.conversations, val)
+  //     )
+  //       return;
+  //     try {
+  //       await this.cache.set(K_CONVERSATIONS, val);
+  //       this.lastSavedSnapshots.conversations = JSON.parse(JSON.stringify(val));
+  //     } catch (e) {
+  //       console.error(e);
+  //     }
+  //   });
 
-    // Platform Users
-    this._platformUsers$.pipe(debounceTime(300)).subscribe(async (val) => {
-      if (
-        this.lastSavedSnapshots.platformUsers &&
-        this.isEqual(this.lastSavedSnapshots.platformUsers, val)
-      )
-        return;
-      try {
-        await this.cache.set(K_PLATFORM_USERS, val);
-        this.lastSavedSnapshots.platformUsers = JSON.parse(JSON.stringify(val));
-      } catch (e) {
-        console.error(e);
-      }
-    });
+  //   // Platform Users
+  //   this._platformUsers$.pipe(debounceTime(300)).subscribe(async (val) => {
+  //     if (
+  //       this.lastSavedSnapshots.platformUsers &&
+  //       this.isEqual(this.lastSavedSnapshots.platformUsers, val)
+  //     )
+  //       return;
+  //     try {
+  //       await this.cache.set(K_PLATFORM_USERS, val);
+  //       this.lastSavedSnapshots.platformUsers = JSON.parse(JSON.stringify(val));
+  //     } catch (e) {
+  //       console.error(e);
+  //     }
+  //   });
 
-    // Device Contacts
-    this._deviceContacts$.pipe(debounceTime(300)).subscribe(async (val) => {
-      if (
-        this.lastSavedSnapshots.deviceContacts &&
-        this.isEqual(this.lastSavedSnapshots.deviceContacts, val)
-      )
-        return;
-      try {
-        await this.cache.set(K_DEVICE_CONTACTS, val);
-        this.lastSavedSnapshots.deviceContacts = JSON.parse(
-          JSON.stringify(val)
-        );
-      } catch (e) {
-        console.error(e);
-      }
-    });
+  //   // Device Contacts
+  //   this._deviceContacts$.pipe(debounceTime(300)).subscribe(async (val) => {
+  //     if (
+  //       this.lastSavedSnapshots.deviceContacts &&
+  //       this.isEqual(this.lastSavedSnapshots.deviceContacts, val)
+  //     )
+  //       return;
+  //     try {
+  //       await this.cache.set(K_DEVICE_CONTACTS, val);
+  //       this.lastSavedSnapshots.deviceContacts = JSON.parse(
+  //         JSON.stringify(val)
+  //       );
+  //     } catch (e) {
+  //       console.error(e);
+  //     }
+  //   });
 
-    // Offsets (Map -> object)
-    this._offsets$.pipe(debounceTime(300)).subscribe(async (m) => {
-      const obj = this.mapToObject<number>(m);
-      if (
-        this.lastSavedSnapshots.offsets &&
-        this.isEqual(this.lastSavedSnapshots.offsets, obj)
-      )
-        return;
-      try {
-        await this.cache.set(K_OFFSETS, obj);
-        this.lastSavedSnapshots.offsets = { ...obj };
-      } catch (e) {
-        console.error(e);
-      }
-    });
+  //   // Offsets (Map -> object)
+  //   this._offsets$.pipe(debounceTime(300)).subscribe(async (m) => {
+  //     const obj = this.mapToObject<number>(m);
+  //     if (
+  //       this.lastSavedSnapshots.offsets &&
+  //       this.isEqual(this.lastSavedSnapshots.offsets, obj)
+  //     )
+  //       return;
+  //     try {
+  //       await this.cache.set(K_OFFSETS, obj);
+  //       this.lastSavedSnapshots.offsets = { ...obj };
+  //     } catch (e) {
+  //       console.error(e);
+  //     }
+  //   });
 
-    // Presence
-    this._presenceSubject$.pipe(debounceTime(300)).subscribe(async (m) => {
-      const obj = this.mapToObject<any>(m);
-      if (
-        this.lastSavedSnapshots.presence &&
-        this.isEqual(this.lastSavedSnapshots.presence, obj)
-      )
-        return;
-      try {
-        await this.cache.set(K_PRESENCE, obj);
-        this.lastSavedSnapshots.presence = { ...obj };
-      } catch (e) {
-        console.error(e);
-      }
-    });
+  //   // Presence
+  //   this._presenceSubject$.pipe(debounceTime(300)).subscribe(async (m) => {
+  //     const obj = this.mapToObject<any>(m);
+  //     if (
+  //       this.lastSavedSnapshots.presence &&
+  //       this.isEqual(this.lastSavedSnapshots.presence, obj)
+  //     )
+  //       return;
+  //     try {
+  //       await this.cache.set(K_PRESENCE, obj);
+  //       this.lastSavedSnapshots.presence = { ...obj };
+  //     } catch (e) {
+  //       console.error(e);
+  //     }
+  //   });
 
-    // Typing status
-    this._typingStatus$.pipe(debounceTime(200)).subscribe(async (m) => {
-      const obj = this.mapToObject<boolean>(m);
-      if (
-        this.lastSavedSnapshots.typing &&
-        this.isEqual(this.lastSavedSnapshots.typing, obj)
-      )
-        return;
-      try {
-        await this.cache.set(K_TYPING, obj);
-        this.lastSavedSnapshots.typing = { ...obj };
-      } catch (e) {
-        console.error(e);
-      }
-    });
+  //   // Typing status
+  //   this._typingStatus$.pipe(debounceTime(200)).subscribe(async (m) => {
+  //     const obj = this.mapToObject<boolean>(m);
+  //     if (
+  //       this.lastSavedSnapshots.typing &&
+  //       this.isEqual(this.lastSavedSnapshots.typing, obj)
+  //     )
+  //       return;
+  //     try {
+  //       await this.cache.set(K_TYPING, obj);
+  //       this.lastSavedSnapshots.typing = { ...obj };
+  //     } catch (e) {
+  //       console.error(e);
+  //     }
+  //   });
 
-    this._messages$
-      .pipe(debounceTime(500)) // slightly longer debounce for messages
-      .subscribe(async (messagesMap) => {
-        try {
-          const currentRooms = Array.from(messagesMap.keys());
+  //   this._messages$
+  //     .pipe(debounceTime(500)) // slightly longer debounce for messages
+  //     .subscribe(async (messagesMap) => {
+  //       try {
+  //         const currentRooms = Array.from(messagesMap.keys());
 
-          // Persist each room's messages
-          for (const roomId of currentRooms) {
-            const msgs = messagesMap.get(roomId) || [];
-            const key = `${K_MESSAGES_ROOM_PREFIX}${roomId}_v1`;
+  //         // Persist each room's messages
+  //         for (const roomId of currentRooms) {
+  //           const msgs = messagesMap.get(roomId) || [];
+  //           const key = `${K_MESSAGES_ROOM_PREFIX}${roomId}_v1`;
 
-            // Check if this room's messages changed
-            const cachedMsgs = await this.cache.get<IMessage[]>(key);
-            if (!this.isEqual(cachedMsgs, msgs)) {
-              await this.cache.set(key, msgs);
-            }
-          }
+  //           // Check if this room's messages changed
+  //           const cachedMsgs = await this.cache.get<IMessage[]>(key);
+  //           if (!this.isEqual(cachedMsgs, msgs)) {
+  //             await this.cache.set(key, msgs);
+  //           }
+  //         }
 
-          // Update the rooms list
-          await this.cache.set(K_MESSAGES_ROOMS, currentRooms);
-        } catch (e) {
-          console.error('Error auto-persisting messages:', e);
-        }
-      });
+  //         // Update the rooms list
+  //         await this.cache.set(K_MESSAGES_ROOMS, currentRooms);
+  //       } catch (e) {
+  //         console.error('Error auto-persisting messages:', e);
+  //       }
+  //     });
 
-    // _messages$ is persisted per-room using helper functions, not entire map here.
-    // But we keep the BehaviorSubject in memory and persist changes via persistRoomMessages when a room changes.
-  }
+  //   // _messages$ is persisted per-room using helper functions, not entire map here.
+  //   // But we keep the BehaviorSubject in memory and persist changes via persistRoomMessages when a room changes.
+  // }
 
-  // ---------- Per-room message persistence helpers ----------
-  // store only the room passed (reduces write size)
-  public async persistRoomMessages(roomId: string): Promise<void> {
-    try {
-      const messagesMap = this._messages$.value;
-      const msgs = messagesMap.get(roomId) || [];
-      const key = `${K_MESSAGES_ROOM_PREFIX}${roomId}_v1`;
-      await this.cache.set(key, msgs);
+  // // ---------- Per-room message persistence helpers ----------
+  // // store only the room passed (reduces write size)
+  // public async persistRoomMessages(roomId: string): Promise<void> {
+  //   try {
+  //     const messagesMap = this._messages$.value;
+  //     const msgs = messagesMap.get(roomId) || [];
+  //     const key = `${K_MESSAGES_ROOM_PREFIX}${roomId}_v1`;
+  //     await this.cache.set(key, msgs);
 
-      // maintain list of roomIds
-      let rooms = (await this.cache.get<string[]>(K_MESSAGES_ROOMS)) || [];
-      if (!rooms.includes(roomId)) {
-        rooms = [...rooms, roomId];
-        await this.cache.set(K_MESSAGES_ROOMS, rooms);
-      }
-    } catch (e) {
-      console.error('persistRoomMessages error', e);
-    }
-  }
+  //     // maintain list of roomIds
+  //     let rooms = (await this.cache.get<string[]>(K_MESSAGES_ROOMS)) || [];
+  //     if (!rooms.includes(roomId)) {
+  //       rooms = [...rooms, roomId];
+  //       await this.cache.set(K_MESSAGES_ROOMS, rooms);
+  //     }
+  //   } catch (e) {
+  //     console.error('persistRoomMessages error', e);
+  //   }
+  // }
 
-  // delete cached messages for a room
-  public async clearRoomMessages(roomId: string): Promise<void> {
-    try {
-      const key = `${K_MESSAGES_ROOM_PREFIX}${roomId}_v1`;
-      await this.cache.clear(key);
-      // remove from rooms list
-      const rooms = (await this.cache.get<string[]>(K_MESSAGES_ROOMS)) || [];
-      const newRooms = rooms.filter((r) => r !== roomId);
-      await this.cache.set(K_MESSAGES_ROOMS, newRooms);
-      // also remove from in-memory map
-      const map = new Map(this._messages$.value);
-      map.delete(roomId);
-      this._messages$.next(map);
-    } catch (e) {
-      console.error(e);
-    }
-  }
+  // // delete cached messages for a room
+  // public async clearRoomMessages(roomId: string): Promise<void> {
+  //   try {
+  //     const key = `${K_MESSAGES_ROOM_PREFIX}${roomId}_v1`;
+  //     await this.cache.clear(key);
+  //     // remove from rooms list
+  //     const rooms = (await this.cache.get<string[]>(K_MESSAGES_ROOMS)) || [];
+  //     const newRooms = rooms.filter((r) => r !== roomId);
+  //     await this.cache.set(K_MESSAGES_ROOMS, newRooms);
+  //     // also remove from in-memory map
+  //     const map = new Map(this._messages$.value);
+  //     map.delete(roomId);
+  //     this._messages$.next(map);
+  //   } catch (e) {
+  //     console.error(e);
+  //   }
+  // }
 
-  // call this to update messages in memory and persist only that room
-  public async updateRoomMessages(
-    roomId: string,
-    messages: any[]
-  ): Promise<void> {
-    const map = new Map(this._messages$.value);
-    map.set(roomId, messages);
-    this._messages$.next(map);
-    // persist
-    await this.persistRoomMessages(roomId);
-  }
+  // // call this to update messages in memory and persist only that room
+  // public async updateRoomMessages(
+  //   roomId: string,
+  //   messages: any[]
+  // ): Promise<void> {
+  //   const map = new Map(this._messages$.value);
+  //   map.set(roomId, messages);
+  //   this._messages$.next(map);
+  //   // persist
+  //   await this.persistRoomMessages(roomId);
+  // }
 
-  // ---------- Other scalar helpers ----------
-  public async setSenderId(id: string) {
-    this.senderId = id;
-    await this.cache.set(CACHE_PREFIX + 'senderId_v1', id);
-  }
+  // // ---------- Other scalar helpers ----------
+  // public async setSenderId(id: string) {
+  //   this.senderId = id;
+  //   await this.cache.set(CACHE_PREFIX + 'senderId_v1', id);
+  // }
 
-  public async setForwardMessages(list: any[]) {
-    this.forwardMessages = list;
-    await this.cache.set(CACHE_PREFIX + 'forwardMsgs_v1', list);
-  }
+  // public async setForwardMessages(list: any[]) {
+  //   this.forwardMessages = list;
+  //   await this.cache.set(CACHE_PREFIX + 'forwardMsgs_v1', list);
+  // }
 
-  public async setAppInitialized(flag: boolean) {
-    this.isAppInitialized = flag;
-    await this.cache.set(CACHE_PREFIX + 'isAppInitialized_v1', flag);
-  }
+  // public async setAppInitialized(flag: boolean) {
+  //   this.isAppInitialized = flag;
+  //   await this.cache.set(CACHE_PREFIX + 'isAppInitialized_v1', flag);
+  // }
 
-  // ---------- Clear / migrate ----------
-  public async clearAllCache(): Promise<void> {
-    const keysToClear = [
-      K_CONVERSATIONS,
-      K_PLATFORM_USERS,
-      K_DEVICE_CONTACTS,
-      K_OFFSETS,
-      K_PRESENCE,
-      K_TYPING,
-      K_MESSAGES_ROOMS,
-      // plus per-room keys: get rooms and clear them
-    ];
-    // clear per-room
-    const rooms = (await this.cache.get<string[]>(K_MESSAGES_ROOMS)) || [];
-    for (const r of rooms) {
-      await this.cache.clear(`${K_MESSAGES_ROOM_PREFIX}${r}_v1`);
-    }
-    // clear listed keys
-    for (const k of keysToClear) {
-      await this.cache.clear(k);
-    }
-  }
+  // // ---------- Clear / migrate ----------
+  // public async clearAllCache(): Promise<void> {
+  //   const keysToClear = [
+  //     K_CONVERSATIONS,
+  //     K_PLATFORM_USERS,
+  //     K_DEVICE_CONTACTS,
+  //     K_OFFSETS,
+  //     K_PRESENCE,
+  //     K_TYPING,
+  //     K_MESSAGES_ROOMS,
+  //     // plus per-room keys: get rooms and clear them
+  //   ];
+  //   // clear per-room
+  //   const rooms = (await this.cache.get<string[]>(K_MESSAGES_ROOMS)) || [];
+  //   for (const r of rooms) {
+  //     await this.cache.clear(`${K_MESSAGES_ROOM_PREFIX}${r}_v1`);
+  //   }
+  //   // clear listed keys
+  //   for (const k of keysToClear) {
+  //     await this.cache.clear(k);
+  //   }
+  // }
 
-  public async logCacheContents() {
-    console.log('=== 🔍 Firebase Chat Cache Contents ===');
+  // public async logCacheContents() {
+  //   console.log('=== 🔍 Firebase Chat Cache Contents ===');
 
-    // Simple keys
-    const conversations = await this.cache.get<any>(
-      'firebase_chat_conversations_v1'
-    );
-    const platformUsers = await this.cache.get<any>(
-      'firebase_chat_platformUsers_v1'
-    );
-    const deviceContacts = await this.cache.get<any>(
-      'firebase_chat_deviceContacts_v1'
-    );
-    const offsets = await this.cache.get<any>('firebase_chat_offsets_v1');
-    const presence = await this.cache.get<any>('firebase_chat_presence_v1');
-    const typing = await this.cache.get<any>('firebase_chat_typing_v1');
-    const senderId = await this.cache.get<any>('firebase_chat_senderId_v1');
-    const forwardMsgs = await this.cache.get<any>(
-      'firebase_chat_forwardMsgs_v1'
-    );
-    const isAppInit = await this.cache.get<any>(
-      'firebase_chat_isAppInitialized_v1'
-    );
-    const rooms = await this.cache.get<string[]>(
-      'firebase_chat_message_rooms_v1'
-    );
+  //   // Simple keys
+  //   const conversations = await this.cache.get<any>(
+  //     'firebase_chat_conversations_v1'
+  //   );
+  //   const platformUsers = await this.cache.get<any>(
+  //     'firebase_chat_platformUsers_v1'
+  //   );
+  //   const deviceContacts = await this.cache.get<any>(
+  //     'firebase_chat_deviceContacts_v1'
+  //   );
+  //   const offsets = await this.cache.get<any>('firebase_chat_offsets_v1');
+  //   const presence = await this.cache.get<any>('firebase_chat_presence_v1');
+  //   const typing = await this.cache.get<any>('firebase_chat_typing_v1');
+  //   const senderId = await this.cache.get<any>('firebase_chat_senderId_v1');
+  //   const forwardMsgs = await this.cache.get<any>(
+  //     'firebase_chat_forwardMsgs_v1'
+  //   );
+  //   const isAppInit = await this.cache.get<any>(
+  //     'firebase_chat_isAppInitialized_v1'
+  //   );
+  //   const rooms = await this.cache.get<string[]>(
+  //     'firebase_chat_message_rooms_v1'
+  //   );
 
-    // console.log('🗂️ Conversations:', conversations);
-    // console.log('👥 Platform Users:', platformUsers);
-    // console.log('📱 Device Contacts:', deviceContacts);
-    // console.log('📜 Offsets:', offsets);
-    // console.log('🟢 Presence:', presence);
-    // console.log('⌨️ Typing:', typing);
-    // console.log('📤 SenderId:', senderId);
-    // console.log('📦 Forward Messages:', forwardMsgs);
-    // console.log('🚀 Is App Initialized:', isAppInit);
-    // console.log('💬 Cached Rooms:', rooms);
+  //   // console.log('🗂️ Conversations:', conversations);
+  //   // console.log('👥 Platform Users:', platformUsers);
+  //   // console.log('📱 Device Contacts:', deviceContacts);
+  //   // console.log('📜 Offsets:', offsets);
+  //   // console.log('🟢 Presence:', presence);
+  //   // console.log('⌨️ Typing:', typing);
+  //   // console.log('📤 SenderId:', senderId);
+  //   // console.log('📦 Forward Messages:', forwardMsgs);
+  //   // console.log('🚀 Is App Initialized:', isAppInit);
+  //   // console.log('💬 Cached Rooms:', rooms);
 
-    // Per-room messages
-    if (rooms && rooms.length) {
-      for (const roomId of rooms) {
-        const roomKey = `firebase_chat_messages_room_${roomId}_v1`;
-        const msgs = await this.cache.get<any[]>(roomKey);
-        console.log(
-          `💬 Messages for Room [${roomId}] →`,
-          msgs?.length || 0,
-          'messages'
-        );
-      }
-    }
+  //   // Per-room messages
+  //   if (rooms && rooms.length) {
+  //     for (const roomId of rooms) {
+  //       const roomKey = `firebase_chat_messages_room_${roomId}_v1`;
+  //       const msgs = await this.cache.get<any[]>(roomKey);
+  //       console.log(
+  //         `💬 Messages for Room [${roomId}] →`,
+  //         msgs?.length || 0,
+  //         'messages'
+  //       );
+  //     }
+  //   }
 
-    console.log('=== ✅ End of Cache Dump ===');
-  }
+  //   console.log('=== ✅ End of Cache Dump ===');
+  // }
 
   private isWeb(): boolean {
     return !(
@@ -591,6 +591,8 @@ export class FirebaseChatService {
     const existing = new Map(this._messages$.value);
     const currentMessages =
       existing.get(this.currentChat?.roomId as string) || [];
+    const messageIdSet = new Set(currentMessages.map((m) => m.msgId));
+    if (messageIdSet.has(msg.msgId)) return;
     currentMessages?.push({ ...msg, isMe: msg.sender === this.senderId });
     existing.set(
       this.currentChat?.roomId as string,
@@ -720,7 +722,10 @@ export class FirebaseChatService {
           const decryptedText = await this.encryptionService.decrypt(
             data.text as string
           );
-          this.pushMsgToChat({ msgId: msgKey, ...data, text: decryptedText });
+          //if data.attachment need to process attachment file(download file using mediaId and save to received folder finally add locally saved url to previewUrl)
+
+          this.pushMsgToChat({ msgId: msgKey, ...data, text: decryptedText, attachment : {...data.attachment , previewUrl : ""} });
+          // also save message sqlite
         }
       },
       onChange: async (msgKey, data) => {
@@ -772,7 +777,7 @@ export class FirebaseChatService {
     try {
       this.senderId = rootUserId || '';
       if (rootUserId) {
-        await this.setSenderId(rootUserId);
+        // await this.setSenderId(rootUserId);  //this uses in cache code
       }
 
       if (this.isAppInitialized) {
@@ -808,7 +813,7 @@ export class FirebaseChatService {
       this.setupPresence();
       //  this.syncReceipt();
       this.isAppInitialized = true;
-      await this.setAppInitialized(true);
+      // await this.setAppInitialized(true);  //this use in cache code
     } catch (err) {
       console.error('initApp failed', err);
       try {
@@ -1945,13 +1950,13 @@ export class FirebaseChatService {
     }
   }
 
- async loadMessages(limit = 20, intial=false) {
-   const roomId = this.currentChat?.roomId as string;
+  async loadMessages(limit = 20, intial = false) {
+    const roomId = this.currentChat?.roomId as string;
     try {
-      if(intial){
+      if (intial) {
         const currentMessagesMap = new Map(this._messages$.value);
         const existingMessages = currentMessagesMap.get(roomId) || [];
-        if(existingMessages.length>0) return
+        if (existingMessages.length > 0) return;
       }
       const currentOffset = this._offsets$.value.get(roomId) || 0;
       const newMessages = await this.sqliteService.getMessages(
@@ -1967,12 +1972,15 @@ export class FirebaseChatService {
 
       const currentMessagesMap = new Map(this._messages$.value);
       const existingMessages = currentMessagesMap.get(roomId) || [];
-      const mergedMessages = Array.from(new Set([...existingMessages, ...newMessages]));
+      const mergedMessages = Array.from(
+        new Set([...existingMessages, ...newMessages])
+      );
       currentMessagesMap.set(roomId, mergedMessages);
       this._messages$.next(currentMessagesMap);
       const newOffsetMap = new Map(this._offsets$.value);
       newOffsetMap.set(roomId, currentOffset + newMessages.length);
       this._offsets$.next(newOffsetMap);
+      console.count('#loadMessages called');
     } catch (error) {
       console.error('Failed to load messages:', error);
     }
@@ -2326,7 +2334,6 @@ export class FirebaseChatService {
 
     const snapshot = await get(roomRef);
     const existing = snapshot.val() || {};
-    const existingKeys = new Set(Object.keys(existing));
 
     if (handlers.onAdd) {
       const items = Object.entries(existing).map(([k, v]: any) => ({
@@ -2340,9 +2347,13 @@ export class FirebaseChatService {
     const addedHandler = onChildAdded(roomRef, (snap) => {
       const key = snap.key!;
       const val = snap.val();
+      const currentMessagesMap = new Map(this._messages$.value);
+      const existingMessages = currentMessagesMap.get(roomId) || [];
+      const existingKeys = new Set(existingMessages.map((m) => m.msgId));
       if (existingKeys.has(key)) {
         return;
       }
+      console.log('new message added');
       handlers.onAdd?.(key, val, true); // isNew = true
     });
 
@@ -2423,18 +2434,26 @@ export class FirebaseChatService {
   // Core methods that perform writes / important operations
   // =====================
 
-  // async sendMessage(msg: Partial<IMessage & { attachment: IAttachment }>) {
+  // async sendMessage(msg: Partial<IMessage & { attachment?: any }>) {
+  //   // console.log(msg, "from firebase chat screvie")
   //   try {
-  //     const { attachment, ...message } = msg;
+  //     const { attachment:{localUrl, ...restAttachment}, translations, ...message } = msg;
   //     const roomId = this.currentChat?.roomId as string;
   //     const members = this.currentChat?.members || roomId.split('_');
+
+  //     // 🧠 Encrypt only the main visible text (translated or original)
   //     const encryptedText = await this.encryptionService.encrypt(
   //       msg.text as string
   //     );
-  //     const messageToSave = {
+  //     console.log({ restAttachment });
+  //     // Prepare message object for saving
+  //     const messageToSave: Partial<IMessage> = {
   //       ...message,
   //       status: 'sent',
   //       roomId,
+  //       ...(restAttachment ? { attachment: restAttachment } : {}),
+  //       text: msg.text, // store plaintext (for SQLite local view)
+  //       translations: translations || undefined,
   //       receipts: {
   //         read: {
   //           status: false,
@@ -2446,13 +2465,16 @@ export class FirebaseChatService {
   //         },
   //       },
   //     };
+
+  //     // Prepare meta (for conversation list)
   //     const meta: Partial<IChatMeta> = {
   //       type: this.currentChat?.type || 'private',
   //       lastmessageAt: message.timestamp as string,
-  //       lastmessageType: attachment ? attachment.type : 'text',
+  //       lastmessageType: restAttachment ? restAttachment.type : 'text',
   //       lastmessage: encryptedText || '',
   //     };
 
+  //     // 🧩 Update unread counts and chat meta in userchats/{member}/{roomId}
   //     for (const member of members) {
   //       const ref = rtdbRef(this.db, `userchats/${member}/${roomId}`);
   //       const idxSnap = await rtdbGet(ref);
@@ -2462,44 +2484,50 @@ export class FirebaseChatService {
   //           isArhived: false,
   //           isPinned: false,
   //           isLocked: false,
-  //           unreadCount: member==this.senderId ? 0 : 1,
+  //           unreadCount: member === this.senderId ? 0 : 1,
   //         });
   //       } else {
   //         await rtdbUpdate(ref, {
   //           ...meta,
-  //          ...(member!==this.senderId && { unreadCount: (idxSnap.val().unreadCount || 0) + 1})
+  //           ...(member !== this.senderId && {
+  //             unreadCount: (idxSnap.val().unreadCount || 0) + 1,
+  //           }),
   //         });
   //       }
   //     }
 
+  //     // 🧩 Save message in RTDB chats/{roomId}/{msgId}
   //     const messagesRef = ref(this.db, `chats/${roomId}/${message.msgId}`);
   //     await rtdbSet(messagesRef, {
   //       ...messageToSave,
-  //       text: encryptedText,
+  //       text: encryptedText, // store encrypted version
+  //       // 🔒 store translations unencrypted (for viewing later)
+  //       ...(translations ? { translations } : {}),
   //     });
 
+  //     // 🧩 Mark delivered if receiver is online
   //     for (const member of members) {
   //       if (member === this.senderId) continue;
   //       const isReceiverOnline = !!this.membersPresence.get(member)?.isOnline;
   //       if (isReceiverOnline) {
   //         this.markAsDelivered(message.msgId as string, member);
-  //         console.log('mark delivered clicked');
+  //         console.log('Mark delivered triggered (receiver online)');
   //       }
   //     }
-  //     if (attachment) {
-  //       this.sqliteService.saveAttachment(attachment);
-  //       this.sqliteService.saveMessage({
-  //         ...messageToSave,
-  //         isMe: true,
-  //       } as IMessage);
-  //     } else {
-  //       this.sqliteService.saveMessage({
-  //         ...messageToSave,
-  //         isMe: true,
-  //       } as IMessage);
+
+  //     // 🧩 Save locally (SQLite)
+  //     if (restAttachment) {
+  //       this.sqliteService.saveAttachment(restAttachment);
   //     }
+  //     this.sqliteService.saveMessage({
+  //       ...messageToSave,
+  //       isMe: true,
+  //     } as IMessage);
+
+  //     // 🧩 Push to local chat stream (UI)
   //     this.pushMsgToChat({
   //       ...messageToSave,
+  //       attachment : {...restAttachment , previewUrl : localUrl},
   //       isMe: true,
   //     });
   //   } catch (error) {
@@ -2507,104 +2535,110 @@ export class FirebaseChatService {
   //   }
   // }
 
-  async sendMessage(msg: Partial<IMessage & { attachment?: IAttachment }>) {
-    try {
-      const { attachment, translations, ...message } = msg;
-      const roomId = this.currentChat?.roomId as string;
-      const members = this.currentChat?.members || roomId.split('_');
-
-      // 🧠 Encrypt only the main visible text (translated or original)
-      const encryptedText = await this.encryptionService.encrypt(
-        msg.text as string
-      );
-      console.log({attachment})
-      // Prepare message object for saving
-      const messageToSave: Partial<IMessage> = {
-        ...message,
-        status: 'sent',
-        roomId,
-        ...(attachment ? { attachment } : {}),
-        text: msg.text, // store plaintext (for SQLite local view)
-        translations: translations || undefined,
-        receipts: {
-          read: {
-            status: false,
-            readBy: [],
-          },
-          delivered: {
-            status: false,
-            deliveredTo: [],
-          },
+  async sendMessage(msg: Partial<IMessage & { attachment?: any }>) {
+  try {
+    // 🔹 Safely destructure attachment
+    const { attachment, translations, ...message } = msg;
+    const { localUrl, ...restAttachment } = attachment || { localUrl: undefined };
+    
+    const roomId = this.currentChat?.roomId as string;
+    const members = this.currentChat?.members || roomId.split('_');
+    
+    // 🧠 Encrypt only the main visible text (translated or original)
+    const encryptedText = await this.encryptionService.encrypt(
+      msg.text as string
+    );
+    
+    console.log({ restAttachment });
+    
+    // Prepare message object for saving
+    const messageToSave: Partial<IMessage> = {
+      ...message,
+      status: 'sent',
+      roomId,
+      ...(attachment && Object.keys(restAttachment).length > 0 ? { attachment: restAttachment } : {}),
+      text: msg.text, // store plaintext (for SQLite local view)
+      translations: translations || undefined,
+      receipts: {
+        read: {
+          status: false,
+          readBy: [],
         },
-      };
-
-      // Prepare meta (for conversation list)
-      const meta: Partial<IChatMeta> = {
-        type: this.currentChat?.type || 'private',
-        lastmessageAt: message.timestamp as string,
-        lastmessageType: attachment ? attachment.type : 'text',
-        lastmessage: encryptedText || '',
-      };
-
-      // 🧩 Update unread counts and chat meta in userchats/{member}/{roomId}
-      for (const member of members) {
-        const ref = rtdbRef(this.db, `userchats/${member}/${roomId}`);
-        const idxSnap = await rtdbGet(ref);
-        if (!idxSnap.exists()) {
-          await rtdbSet(ref, {
-            ...meta,
-            isArhived: false,
-            isPinned: false,
-            isLocked: false,
-            unreadCount: member === this.senderId ? 0 : 1,
-          });
-        } else {
-          await rtdbUpdate(ref, {
-            ...meta,
-            ...(member !== this.senderId && {
-              unreadCount: (idxSnap.val().unreadCount || 0) + 1,
-            }),
-          });
-        }
+        delivered: {
+          status: false,
+          deliveredTo: [],
+        },
+      },
+    };
+    
+    // Prepare meta (for conversation list)
+    const meta: Partial<IChatMeta> = {
+      type: this.currentChat?.type || 'private',
+      lastmessageAt: message.timestamp as string,
+      lastmessageType: attachment ? restAttachment.type : 'text',
+      lastmessage: encryptedText || '',
+    };
+    
+    // 🧩 Update unread counts and chat meta in userchats/{member}/{roomId}
+    for (const member of members) {
+      const ref = rtdbRef(this.db, `userchats/${member}/${roomId}`);
+      const idxSnap = await rtdbGet(ref);
+      if (!idxSnap.exists()) {
+        await rtdbSet(ref, {
+          ...meta,
+          isArhived: false,
+          isPinned: false,
+          isLocked: false,
+          unreadCount: member === this.senderId ? 0 : 1,
+        });
+      } else {
+        await rtdbUpdate(ref, {
+          ...meta,
+          ...(member !== this.senderId && {
+            unreadCount: (idxSnap.val().unreadCount || 0) + 1,
+          }),
+        });
       }
-
-      // 🧩 Save message in RTDB chats/{roomId}/{msgId}
-      const messagesRef = ref(this.db, `chats/${roomId}/${message.msgId}`);
-      await rtdbSet(messagesRef, {
-        ...messageToSave,
-        text: encryptedText, // store encrypted version
-        // 🔒 store translations unencrypted (for viewing later)
-        ...(translations ? { translations } : {}),
-      });
-
-      // 🧩 Mark delivered if receiver is online
-      for (const member of members) {
-        if (member === this.senderId) continue;
-        const isReceiverOnline = !!this.membersPresence.get(member)?.isOnline;
-        if (isReceiverOnline) {
-          this.markAsDelivered(message.msgId as string, member);
-          console.log('Mark delivered triggered (receiver online)');
-        }
-      }
-
-      // 🧩 Save locally (SQLite)
-      if (attachment) {
-        this.sqliteService.saveAttachment(attachment);
-      }
-      this.sqliteService.saveMessage({
-        ...messageToSave,
-        isMe: true,
-      } as IMessage);
-
-      // 🧩 Push to local chat stream (UI)
-      this.pushMsgToChat({
-        ...messageToSave,
-        isMe: true,
-      });
-    } catch (error) {
-      console.error('Error in sending message', error);
     }
+    
+    // 🧩 Save message in RTDB chats/{roomId}/{msgId}
+    const messagesRef = ref(this.db, `chats/${roomId}/${message.msgId}`);
+    await rtdbSet(messagesRef, {
+      ...messageToSave,
+      text: encryptedText, // store encrypted version
+      // 🔒 store translations unencrypted (for viewing later)
+      ...(translations ? { translations } : {}),
+    });
+    
+    // 🧩 Mark delivered if receiver is online
+    for (const member of members) {
+      if (member === this.senderId) continue;
+      const isReceiverOnline = !!this.membersPresence.get(member)?.isOnline;
+      if (isReceiverOnline) {
+        this.markAsDelivered(message.msgId as string, member);
+        console.log('Mark delivered triggered (receiver online)');
+      }
+    }
+    
+    // 🧩 Save locally (SQLite)
+    if (attachment && Object.keys(restAttachment).length > 0) {
+      this.sqliteService.saveAttachment(restAttachment);
+    }
+    this.sqliteService.saveMessage({
+      ...messageToSave,
+      isMe: true,
+    } as IMessage);
+    
+    // 🧩 Push to local chat stream (UI)
+    this.pushMsgToChat({
+      ...messageToSave,
+      ...(attachment && localUrl ? { attachment: { ...restAttachment, previewUrl: localUrl } } : {}),
+      isMe: true,
+    });
+  } catch (error) {
+    console.error('Error in sending message', error);
   }
+}
 
   getUserLanguage(userId: string | number) {
     const url = `${this.baseUrl}/get-language/${userId}`;

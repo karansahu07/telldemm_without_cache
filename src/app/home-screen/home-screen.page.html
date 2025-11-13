@@ -107,7 +107,7 @@
           [attr.aria-label]="'home.actions.scan' | translate"
         >
           <!-- <img src="assets/images/qr-code.svg" alt="" /> -->
-           <i class="fa-solid fa-qrcode homemainicons"></i>
+          <i class="fa-solid fa-qrcode homemainicons"></i>
         </ion-button>
 
         <ion-button
@@ -115,7 +115,7 @@
           [attr.aria-label]="'home.actions.camera' | translate"
         >
           <!-- <img src="assets/images/camera.svg" alt="" /> -->
-            <i class="fa-solid fa-camera homemainicons"></i>
+          <i class="fa-solid fa-camera homemainicons"></i>
         </ion-button>
 
         <ion-button
@@ -123,7 +123,7 @@
           [attr.aria-label]="'home.actions.menu' | translate"
         >
           <!-- <img src="assets/images/dots (1).svg" alt="" /> -->
-           <i class="fa-solid fa-ellipsis-vertical homemainicons"></i>
+          <i class="fa-solid fa-ellipsis-vertical homemainicons"></i>
         </ion-button>
       </ion-buttons>
     </ion-toolbar>
@@ -218,7 +218,7 @@
 <ion-content [fullscreen]="true">
   <!-- Loader skeleton -->
   <ion-list *ngIf="isLoading" aria-busy="true" aria-live="polite">
-     <ion-item *ngFor="let i of [1,2,3,4,5,6,7,8,9]" class="for_top">
+    <ion-item *ngFor="let i of [1,2,3,4,5,6,7,8,9]" class="for_top">
       <ion-avatar slot="start">
         <ion-skeleton-text
           animated
@@ -390,10 +390,7 @@
       </ion-label>
 
       <div slot="end" class="chat-meta">
-        <p class="time">
-          {{ chat?.lastMessageAt ? (chat.lastMessageAt | date: 'shortTime') : ''
-          }}
-        </p>
+        <p class="time">{{ getTimeStamp(chat?.lastMessageAt) }}</p>
 
         <ion-badge
           *ngIf="(+ (chat?.unreadCount ?? 0)) > 0"

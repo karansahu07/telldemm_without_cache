@@ -224,16 +224,32 @@
       </ng-template>
 
       <ion-buttons *ngIf="!showSearchBar" slot="end" style="margin-top: 15px">
-        <ion-button style="color: black">
+        <!-- <ion-button style="color: black">
           <ion-icon name="videocam-outline" style="font-size: 35px"></ion-icon>
+        </ion-button> -->
+        <ion-button style="color: black" class="chat_ion_button">
+          <ion-icon
+            name="videocam-outline"
+            style="font-size: 35px"
+            class="chatting_head_icons"
+          ></ion-icon>
         </ion-button>
-        <ion-button (click)="goToCallingScreen()" style="color: black">
+        <!-- <ion-button (click)="goToCallingScreen()" style="color: black">
           <ion-icon name="call-outline" style="font-size: 28px"></ion-icon>
+        </ion-button> -->
+        <ion-button (click)="goToCallingScreen()" style="color: black" class="chat_ion_button">
+          <ion-icon
+            name="call-outline"
+            style="font-size: 28px"
+            class="chatting_head_icons"
+          ></ion-icon>
         </ion-button>
-        <ion-button (click)="openOptions($event)" style="color: black">
+        <!-- <ion-button (click)="openOptions($event)" style="color: black"> -->
+          <ion-button (click)="openOptions($event)" style="color: black" class="chat_ion_button">
           <ion-icon
             name="ellipsis-vertical-outline"
             style="font-size: 28px"
+            class="chatting_head_icons"
           ></ion-icon>
         </ion-button>
       </ion-buttons>
@@ -241,59 +257,9 @@
   </ion-toolbar>
 </ion-header>
 
-<!-- BLOCK BANNERS -->
-<!-- <div *ngIf="chatType === 'private'">
-  <div *ngIf="iBlocked" class="blocked-banner" style="padding:8px; text-align:center; background:#fff3f3; color:#b00020;">
-    You have blocked {{ receiver_name }}. Messages won't be sent.
-    <button ion-button (click)="unblockFromChat()" style="margin-left:8px; border:none; background:transparent; color: #0a66ff;">Unblock</button>
-  </div>
-
-  <div *ngIf="!iBlocked && theyBlocked" class="blocked-banner" style="padding:8px; text-align:center; background:#fff7e6; color:#b36b00;">
-    You cannot send messages to {{ receiver_name }} — they have blocked you.
-  </div>
-</div> -->
-
 <ion-content class="chat-background" [fullscreen]="true" [scrollEvents]="true">
   <!-- Pinned Message Banner (Alternative/Mobile View) -->
-  <!-- <div
-    *ngIf="pinnedMessage && pinnedMessageDetails && showMobilePinnedBanner"
-    class="pinned-message-banner"
-    (click)="scrollToPinnedMessage()"
-  >
-    <div class="pinned-content">
-      <div class="pinned-header">
-        <ion-icon name="pin" class="pin-icon"></ion-icon>
-        <span class="pinned-text">Pinned Message</span>
-        <ion-icon
-          name="close"
-          class="unpin-icon"
-          (click)="unpinMessage(); $event.stopPropagation()"
-        ></ion-icon>
-      </div>
-      <div class="pinned-message-preview">
-        <span class="pinned-sender" *ngIf="chatType === 'group'"
-          >{{ pinnedMessageDetails.sender_name }}:</span
-        >
-
- 
-        <span
-          *ngIf="pinnedMessageDetails.text && !pinnedMessageDetails.attachment"
-          class="pinned-text-content"
-        >
-          {{ pinnedMessageDetails.text.length > 50 ? (pinnedMessageDetails.text
-          | slice:0:50) + '...' : pinnedMessageDetails.text }}
-        </span>
-
-
-        <span *ngIf="pinnedMessageDetails.attachment" class="pinned-attachment">
-          <ion-icon
-            [name]="getAttachmentIcon(pinnedMessageDetails.attachment.type)"
-          ></ion-icon>
-          {{ getAttachmentPreview(pinnedMessageDetails.attachment) }}
-        </span>
-      </div>
-    </div>
-  </div> -->
+  <div class="fordark"><img src="/assets/images/chat_bg.jpg" alt="" /></div>
 
   <div
     #scrollContainer
@@ -377,7 +343,7 @@
             </span>
 
             <!-- Replied Message -->
-            <div
+        <div
               class="replied-message"
               *ngIf="msg.replyToMsgId"
               (click)="scrollToRepliedMessage(msg.replyToMsgId)"
@@ -385,32 +351,28 @@
               <ng-container
                 *ngIf="getRepliedMessage(msg.replyToMsgId) as repliedMsg"
               >
-                <div class="replied-container">
+                <div
+                  class="replied-container"
+                  (click)="scrollToRepliedMessage(msg.replyToMsgId)"
+                >
                   <div class="replied-header">
                     <ion-icon
                       name="arrow-undo-outline"
                       class="reply-icon"
                     ></ion-icon>
                     <span class="replied-sender">
-                      {{ repliedMsg.isMe ? 'You' : (replyTo?.sender?.username ||
-                      chatTitle || 'Unknown') }}
+                      {{ repliedMsg.isMe ? 'You' : repliedMsg.sender }}
                     </span>
                   </div>
-
                   <div class="replied-content">
-                    <!-- Show text if available -->
                     <div class="replied-text" *ngIf="repliedMsg.text">
                       {{ getReplyPreviewText(repliedMsg) }}
                     </div>
-
-                    <!-- Show attachment preview if no text but has attachment -->
                     <div
                       class="replied-attachment"
-                      *ngIf="!repliedMsg.text && repliedMsg.attachment"
+                      *ngIf="repliedMsg.attachment"
                     >
-                      <ion-icon
-                        [name]="getAttachmentIcon(repliedMsg.attachment.type)"
-                      ></ion-icon>
+                      <ion-icon name="attach-outline"></ion-icon>
                       {{ getReplyPreviewText(repliedMsg) }}
                     </div>
                   </div>
@@ -572,13 +534,6 @@
               [class.right]="msg.sender_id === senderId"
               [class.left]="msg.sender_id !== senderId"
             >
-              <!-- <div class="badge"
-           *ngFor="let b of getReactionBadges(msg)"
-           [class.mine]="b.mine"
-           (click)="addReaction(msg, b.emoji)">
-        <span class="emoji">{{ b.emoji }}</span>
-        <span class="cnt" *ngIf="b.count > 1">{{ b.count }}</span>
-      </div> -->
               <div
                 class="badge"
                 *ngFor="let b of msg.reactions"

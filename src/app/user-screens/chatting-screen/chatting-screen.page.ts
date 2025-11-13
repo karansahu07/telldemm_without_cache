@@ -1709,7 +1709,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
 
   onForward() {
     console.log("this. selected message ", this.selectedMessages)
-    this.chatService.setForwardMessages(this.selectedMessages);
+    this.chatService.setForwardMessage(this.selectedMessages);
     this.selectedMessages = [];
     this.router.navigate(['/forwardmessage']);
   }
@@ -2753,7 +2753,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
         };
         console.log(localMessage.attachment)
         // Save file locally into "sent" folder (existing behavior)
-        await this.FileService.saveFileToSent(
+         localMessage.attachment.localUrl = await this.FileService.saveFileToSent(
           this.selectedAttachment.fileName,
           this.selectedAttachment.blob
         );
@@ -2771,6 +2771,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // Send using chat service (this will persist to RTDB, SQLite, etc.)
+    console.log({localMessage})
     await this.chatService.sendMessage(localMessage);
 
     // Clear UI state exactly like before

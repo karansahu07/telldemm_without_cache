@@ -1,9 +1,9 @@
 <ion-header>
-  <ion-toolbar style="--background: #f0f0f0; --color: #000000;">
+  <ion-toolbar class="ion_toolbar">
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/settings" [attr.aria-label]="'common.back' | translate"></ion-back-button>
     </ion-buttons>
-    <ion-title>{{ 'appUpdates.title' | translate }}</ion-title>
+    <ion-title class="ion_title">{{ 'appUpdates.title' | translate }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -11,14 +11,14 @@
   <ion-list lines="inset">
     <!-- Installed -->
     <ion-item>
-      <ion-icon slot="start" name="information-circle-outline" aria-hidden="true"></ion-icon>
+      <ion-icon slot="start" name="information-circle-outline" aria-hidden="true" class="setting_icons"></ion-icon>
       <ion-label><h2>{{ 'appUpdates.version' | translate }}</h2></ion-label>
       <ion-note slot="end" class="version">{{ version }}</ion-note>
     </ion-item>
 
     <!-- Latest (only if known) -->
     <ion-item *ngIf="latestVersion">
-      <ion-icon slot="start" name="sparkles-outline" aria-hidden="true"></ion-icon>
+      <ion-icon slot="start" name="sparkles-outline" aria-hidden="true" class="setting_icons"></ion-icon>
       <ion-label><h2>{{ 'appUpdates.latestAvailable' | translate }}</h2></ion-label>
       <ion-note slot="end">{{ latestVersion }}</ion-note>
     </ion-item>
@@ -40,7 +40,7 @@
 
     <!-- Manual check -->
     <ion-item button detail (click)="checkForUpdates()" [attr.aria-label]="'appUpdates.checkForUpdates.title' | translate">
-      <ion-icon slot="start" name="download-outline" aria-hidden="true"></ion-icon>
+      <ion-icon slot="start" name="download-outline" aria-hidden="true" class="setting_icons"></ion-icon>
       <ion-label>
         <h2>{{ 'appUpdates.checkForUpdates.title' | translate }}</h2>
         <p>{{ 'appUpdates.checkForUpdates.description' | translate }}</p>

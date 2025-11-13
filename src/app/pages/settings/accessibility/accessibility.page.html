@@ -1,12 +1,12 @@
 <ion-header>
-  <ion-toolbar style="--background: #ffffff; --color: #000000;">
+  <ion-toolbar class="ion_toolbar">
     <ion-buttons slot="start">
       <ion-back-button
         defaultHref="/settings"
         [attr.aria-label]="'common.back' | translate">
       </ion-back-button>
     </ion-buttons>
-    <ion-title>{{ 'accessibility.title' | translate }}</ion-title>
+    <ion-title class="ion_title">{{ 'accessibility.title' | translate }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -19,7 +19,7 @@
 
     <!-- Increase Contrast -->
     <ion-item>
-      <ion-icon slot="start" name="contrast-outline" aria-hidden="true"></ion-icon>
+      <ion-icon slot="start" name="contrast-outline" aria-hidden="true" class="setting_icons"></ion-icon>
       <ion-label>
         <h2>{{ 'accessibility.increaseContrast.title' | translate }}</h2>
         <p>{{ 'accessibility.increaseContrast.desc' | translate }}</p>
@@ -49,7 +49,7 @@
 
     <!-- Large Text -->
     <ion-item>
-      <ion-icon slot="start" name="text-outline" aria-hidden="true"></ion-icon>
+      <ion-icon slot="start" name="text-outline" aria-hidden="true" class="setting_icons"></ion-icon>
       <ion-label>
         <h2>{{ 'accessibility.largeText.title' | translate }}</h2>
         <p>{{ 'accessibility.largeText.desc' | translate }}</p>
@@ -64,7 +64,7 @@
 
     <!-- Grayscale -->
     <ion-item>
-      <ion-icon slot="start" name="color-filter-outline" aria-hidden="true"></ion-icon>
+      <ion-icon slot="start" name="color-filter-outline" aria-hidden="true" class="setting_icons"></ion-icon>
       <ion-label>
         <h2>{{ 'accessibility.grayscale.title' | translate }}</h2>
         <p>{{ 'accessibility.grayscale.desc' | translate }}</p>

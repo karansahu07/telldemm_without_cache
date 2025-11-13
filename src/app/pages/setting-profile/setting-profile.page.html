@@ -1,12 +1,12 @@
 <ion-header [translucent]="true">
-  <ion-toolbar>
+  <ion-toolbar style="padding-top: 26px;">
     <ion-buttons slot="start">
       <ion-back-button
         defaultHref="/home"
         [attr.aria-label]="'common.back' | translate">
       </ion-back-button>
     </ion-buttons>
-    <ion-title>{{ 'profilePage.title' | translate }}</ion-title>
+    <ion-title class="ion_title">{{ 'profilePage.title' | translate }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -25,7 +25,7 @@
   <ion-list lines="none">
     <ion-item button detail="false" (click)="goToUpdateName()"
               [attr.aria-label]="'profilePage.fields.name' | translate">
-      <ion-icon name="person-outline" slot="start" aria-hidden="true"></ion-icon>
+      <ion-icon name="person-outline" slot="start" aria-hidden="true" class="setting_icons"></ion-icon>
       <ion-label>
         <h2>{{ 'profilePage.fields.name' | translate }}</h2>
         <p>{{ user.name }}</p>
@@ -34,7 +34,7 @@
 
     <ion-item button detail (click)="goToUpdateStatus()"
               [attr.aria-label]="'profilePage.fields.about' | translate">
-      <ion-icon name="information-circle-outline" slot="start" aria-hidden="true"></ion-icon>
+      <ion-icon name="information-circle-outline" slot="start" aria-hidden="true" class="setting_icons"></ion-icon>
       <ion-label>
         <h2>{{ 'profilePage.fields.about' | translate }}</h2>
         <p>{{ user.about }}</p>
@@ -42,7 +42,7 @@
     </ion-item>
 
     <ion-item>
-      <ion-icon name="call-outline" slot="start" aria-hidden="true"></ion-icon>
+      <ion-icon name="call-outline" slot="start" aria-hidden="true" class="setting_icons"></ion-icon>
       <ion-label>
         <h2>{{ 'profilePage.fields.phone' | translate }}</h2>
         <p>{{ user.phone }}</p>
@@ -50,7 +50,7 @@
     </ion-item>
 
     <ion-item>
-      <ion-icon name="link-outline" slot="start" aria-hidden="true"></ion-icon>
+      <ion-icon name="link-outline" slot="start" aria-hidden="true" class="setting_icons"></ion-icon>
       <ion-label>
         <h2>{{ 'profilePage.fields.links' | translate }}</h2>
         <p class="add-links" (click)="addLinks()">{{ 'profilePage.buttons.addLinks' | translate }}</p>

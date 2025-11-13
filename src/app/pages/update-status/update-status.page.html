@@ -1,9 +1,9 @@
 <ion-header translucent>
-  <ion-toolbar color="light">
+  <ion-toolbar style="padding-top: 28px;">
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/setting-profile"></ion-back-button>
     </ion-buttons>
-    <ion-title>About</ion-title>
+    <ion-title class="ion_title">About</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -29,13 +29,11 @@
       </ion-input>
     </ion-item>
 
-    <ion-button
-      expand="block"
-      color="danger"
+    <button
       type="submit"
-      [disabled]="!status || status.trim().length === 0 || isSaving">
+      [disabled]="!status || status.trim().length === 0 || isSaving" class="save_button">
       Save
-    </ion-button>
+    </button>
   </form>
 
   <div class="divider"><span>Select About</span></div>

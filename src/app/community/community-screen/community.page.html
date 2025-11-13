@@ -1,7 +1,6 @@
 <ion-header [translucent]="true">
   <ion-toolbar class="tooler">
     <ion-title slot="start" class="ion-text-start">
-      <!-- {{ 'community.title' | translate }} -->
       <h2 class="heading">{{ 'community.title' | translate }}</h2>
     </ion-title>
 
@@ -26,18 +25,6 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <!-- Pull to Refresh -->
-  <ion-refresher slot="fixed" (ionRefresh)="refreshCommunities($event)">
-    <ion-refresher-content></ion-refresher-content>
-  </ion-refresher>
-
-  <!-- Loading Spinner -->
-  <div *ngIf="loading" class="loading-container">
-    <ion-spinner name="crescent"></ion-spinner>
-    <p>{{ 'community.loading' | translate }}</p>
-  </div>
-
-  <!-- New Community Button -->
   <ion-item
     lines="none"
     class="new-community"
@@ -54,80 +41,48 @@
     </ion-label>
   </ion-item>
 
-  <!-- Empty State -->
-  <div *ngIf="!loading && joinedCommunities.length === 0" class="empty-state">
-    <ion-icon name="people-outline" class="empty-icon"></ion-icon>
-    <h3>{{ 'community.emptyCommunities' | translate }}</h3>
-    <p>{{ 'community.emptyDescription' | translate }}</p>
-  </div>
-
-  <!-- Communities List -->
   <ng-container *ngFor="let community of joinedCommunities">
-    <!-- Community Header -->
-    <ion-item class="community-item" lines="none">
+    <ion-item class="community-item">
       <ion-avatar slot="start">
-        <img [src]="community.icon" [alt]="community.name" />
+        <img [src]="community.icon" />
       </ion-avatar>
       <ion-label>
         <h2>{{ community.name }}</h2>
-        <p>
-          {{ community.totalGroups }} {{ community.totalGroups === 1 ?
-          ('community.group' | translate) : ('community.groups' | translate) }}
-        </p>
       </ion-label>
     </ion-item>
 
-    <!-- ✅ Display Max 3 Groups -->
     <ion-list lines="none" class="group-list">
       <ion-item
-        *ngFor="let group of community.displayGroups"
+        *ngFor="let group of community.groups"
         button
         (click)="goToGroupChat(group.id)"
-        [attr.aria-label]="group.name"
       >
         <ion-icon
           slot="start"
-          [name]="getGroupIcon(group)"
-          [color]="group.isSystemGroup ? 'primary' : 'medium'"
+          [name]="group.type === 'announcement' ? 'megaphone-outline' : 'chatbox-outline'"
         >
         </ion-icon>
         <ion-label>
           <h3>{{ group.name }}</h3>
-          <p class="group-type">{{ getGroupTypeLabel(group) }}</p>
+          <p>
+            {{ ('community.groupType.' + (group.type || 'normal')) | translate
+            }}
+          </p>
         </ion-label>
-        <!-- System group badge -->
-        <!-- <ion-badge 
-          *ngIf="group.isSystemGroup" 
-          slot="end" 
-          color="primary">
-          {{ 'community.systemGroup' | translate }}
-        </ion-badge> -->
       </ion-item>
     </ion-list>
 
-    <!-- ✅ View All Button (only if more than 3 groups) -->
     <ion-item
-      *ngIf="community.hasMore"
       lines="none"
       button
       detail="false"
       (click)="goToAddGroupCommunity(community)"
-      class="view-all-button"
       [attr.aria-label]="'community.viewAll' | translate"
     >
-      <ion-icon
-        name="chevron-forward-outline"
-        slot="start"
-        color="primary"
-      ></ion-icon>
-      <ion-label color="primary">
-        {{ 'community.viewAll' | translate }} ({{ community.totalGroups - 3 }}
-        {{ 'community.more' | translate }})
-      </ion-label>
+      <ion-label color="primary"
+        >{{ 'community.viewAll' | translate }}</ion-label
+      >
     </ion-item>
-
-    <!-- Divider between communities -->
-    <div class="community-divider"></div>
   </ng-container>
 </ion-content>
 

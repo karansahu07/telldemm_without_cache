@@ -43,7 +43,7 @@ ion-label p {
 
 /* privacy note section */
 .privacy-note {
-  margin-top: 22px;
+  margin-top: 0px;
   padding: 18px 16px;
   font-size: 14px;
   color: color-mix(in srgb, var(--ion-text-color) 65%, transparent);
@@ -52,7 +52,18 @@ ion-label p {
 
 /* privacy link */
 .privacy-link {
-  color: var(--ion-color-success, #15803d);
+  color: var(--ion-color-primary);
   font-weight: 600;
   text-decoration: none;
+}
+
+
+.ion_title{
+    color: var(--ion-color-primary);
+    padding: 0px !important;
+    // padding-bottom: 28px !important;
+}
+
+ion-toolbar {
+  padding-top: 28px !important;
 }

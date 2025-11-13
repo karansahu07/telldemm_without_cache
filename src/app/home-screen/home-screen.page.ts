@@ -1411,6 +1411,7 @@ export class HomeScreenPage implements OnInit, OnDestroy {
       return date.toLocaleDateString();
     }
   }
+
   getTimeStamp(lastMessageAt: string | Date | undefined): string {
     if (!lastMessageAt) return '';
  
@@ -1433,16 +1434,13 @@ export class HomeScreenPage implements OnInit, OnDestroy {
         hour12: true,
       });
     } else if (isYesterday) {
-      // Return 'Yesterday' or translated text
       return this.translate.instant('home.time.yesterday');
     } else if (date.getFullYear() === now.getFullYear()) {
-      // Same year: Return only date without year (e.g., "11 Nov")
       return date.toLocaleDateString([], {
         day: 'numeric', 
         month: 'short' 
       });
     } else {
-      // Different year: Return full date (e.g., "11/11/2024")
       return date.toLocaleDateString();
     }
 }

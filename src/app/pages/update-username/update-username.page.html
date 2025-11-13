@@ -1,9 +1,9 @@
 <ion-header>
-  <ion-toolbar color="danger">
+  <ion-toolbar >
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/profile-screen"></ion-back-button>
     </ion-buttons>
-    <ion-title>Update Name</ion-title>
+    <ion-title class="ion_title">Update Name</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -16,20 +16,20 @@
         name="name"
         maxlength="25"
         required
-        placeholder="Enter your name">
+        placeholder="Enter your name"
+      >
       </ion-input>
     </ion-item>
 
-    <div class="char-count">
-      {{ name.length || 0 }}/25
-    </div>
+    <div class="char-count">{{ name.length || 0 }}/25</div>
 
     <p class="note">
-      People will see this name if you interact with them and they don’t have you saved as a contact.
+      People will see this name if you interact with them and they don’t have
+      you saved as a contact.
     </p>
 
-    <ion-button expand="block" color="danger" type="submit" [disabled]="!nameForm.form.valid">
+    <button class="save_button" type="submit" [disabled]="!nameForm.form.valid">
       Save
-    </ion-button>
+    </button>
   </form>
 </ion-content>

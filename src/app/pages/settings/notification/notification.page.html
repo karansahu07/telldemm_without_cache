@@ -1,12 +1,12 @@
 <ion-header>
-  <ion-toolbar style="--background: #f0f0f0; --color: #000000;">
+  <ion-toolbar class="ion_toolbar">
     <ion-buttons slot="start">
       <ion-back-button
         defaultHref="/settings"
         [attr.aria-label]="'common.back' | translate">
       </ion-back-button>
     </ion-buttons>
-    <ion-title>{{ 'notifications.title' | translate }}</ion-title>
+    <ion-title class="ion_title">{{ 'notifications.title' | translate }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -28,7 +28,7 @@
     <!-- Message notifications -->
     <ion-item button detail (click)="openMessageNotifications()"
               [attr.aria-label]="'notifications.message.title' | translate">
-      <ion-icon slot="start" name="chatbubble-ellipses-outline" aria-hidden="true"></ion-icon>
+      <ion-icon slot="start" name="chatbubble-ellipses-outline" aria-hidden="true" class="setting_icons"> </ion-icon>
       <ion-label>
         <h2>{{ 'notifications.message.title' | translate }}</h2>
         <p>{{ 'notifications.message.desc' | translate }}</p>
@@ -38,7 +38,7 @@
     <!-- Group chat notifications -->
     <ion-item button detail (click)="openGroupNotifications()"
               [attr.aria-label]="'notifications.group.title' | translate">
-      <ion-icon slot="start" name="people-outline" aria-hidden="true"></ion-icon>
+      <ion-icon slot="start" name="people-outline" aria-hidden="true" class="setting_icons"></ion-icon>
       <ion-label>
         <h2>{{ 'notifications.group.title' | translate }}</h2>
         <p>{{ 'notifications.group.desc' | translate }}</p>
@@ -48,7 +48,7 @@
     <!-- Call notifications -->
     <ion-item button detail (click)="openCallNotifications()"
               [attr.aria-label]="'notifications.call.title' | translate">
-      <ion-icon slot="start" name="call-outline" aria-hidden="true"></ion-icon>
+      <ion-icon slot="start" name="call-outline" aria-hidden="true" class="setting_icons"></ion-icon>
       <ion-label>
         <h2>{{ 'notifications.call.title' | translate }}</h2>
         <p>{{ 'notifications.call.desc' | translate }}</p>
