@@ -140,9 +140,8 @@
 
 
   <!-- Media Section (Common) -->
-  <div class="main-media">
+  <!-- <div class="main-media">
     <div class="all-media">
-      <!-- <p class="docs">Media, Links, and docs</p> -->
       <p class="docs">{{ 'userabout.media.title' | translate }}</p>
       <div class="media-count">
         <ion-button fill="clear" routerLink="/" class="no-decoration">20</ion-button>
@@ -150,7 +149,6 @@
       </div>
     </div>
 
-    <!-- Swiper Gallery -->
     <swiper-container [attr.slides-per-view]="4" [attr.space-between]="10" class="slider">
       <swiper-slide *ngFor="let item of [].constructor(15)" class="slider-swip">
         <div class="image-wrapper">
@@ -158,26 +156,17 @@
         </div>
       </swiper-slide>
     </swiper-container>
-  </div>
+  </div> -->
 
   <!-- Notification Section (Common) -->
   <ion-list lines="none" class="noti-list">
     <!-- <ion-item>
-      <ion-icon name="notifications-outline" slot="start" class="all-icon"></ion-icon>
-      <ion-label class="Encry">Notifications</ion-label>
-    </ion-item> -->
-    <ion-item>
       <ion-icon name="notifications-outline" slot="start" class="all-icon"></ion-icon>
       <ion-label class="Encry">{{ 'userabout.notifications' | translate }}</ion-label>
     </ion-item>
     <ion-item>
       <ion-icon name="image-outline" slot="start" class="all-icon"></ion-icon>
       <ion-label class="Encry">{{ 'userabout.mediaVisibility' | translate }}</ion-label>
-    </ion-item>
-
-    <!-- <ion-item>
-      <ion-icon name="image-outline" slot="start" class="all-icon"></ion-icon>
-      <ion-label class="Encry">Media Visibility</ion-label>
     </ion-item> -->
   </ion-list>
 

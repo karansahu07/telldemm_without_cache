@@ -29,16 +29,16 @@ export class MenuPopoverComponent implements OnInit {
       this.menuOptions = [
         { labelKey: 'menu.newGroup', route: '/contact-screen' },
         { labelKey: 'menu.newCommunity', route: '/community-screen' },
-        { labelKey: 'menu.newBroadcast' },
-        { labelKey: 'menu.starred' },
-        { labelKey: 'menu.readAll' },
+        // { labelKey: 'menu.newBroadcast' },
+        // { labelKey: 'menu.starred' },
+        // { labelKey: 'menu.readAll' },
         { labelKey: 'menu.settings', route: '/setting-screen' }
       ];
     } else if (this.currentUrl.includes('/status')) {
       this.menuOptions = [
         { labelKey: 'menu.createChannels' },
-        { labelKey: 'menu.statusPrivacy' },
-        { labelKey: 'menu.starred' },
+        // { labelKey: 'menu.statusPrivacy' },
+        // { labelKey: 'menu.starred' },
         { labelKey: 'menu.settings', route: '/setting-screen' }
       ];
     } else if (this.currentUrl.includes('/community-screen')) {
@@ -47,7 +47,7 @@ export class MenuPopoverComponent implements OnInit {
       ];
     } else if (this.currentUrl.includes('/calls-screen')) {
       this.menuOptions = [
-        { labelKey: 'menu.clearCallLogs' },
+        // { labelKey: 'menu.clearCallLogs' },
         { labelKey: 'menu.settings', route: '/setting-screen' }
       ];
     }
