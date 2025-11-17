@@ -776,6 +776,7 @@
     </div>
 
    <!-- 🌐 Translation Options (Updated) -->
+<!-- 🌐 Translation Options (Updated) -->
 <div
   *ngIf="showTranslationOptions"
   class="translation-options"
@@ -826,6 +827,116 @@
       Translating...
     </span>
   </ion-button>
+</div>
+
+<!-- 🌐 TRANSLATION CARD (Simplified & Cleaner) - Shows up to 3 translations -->
+<div
+  *ngIf="translationCard?.visible"
+  class="translation-card"
+  role="region"
+  aria-label="Translation preview"
+  style="
+    background: white;
+    border-radius: 12px;
+    padding: 12px;
+    margin-top: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-left: 3px solid #3880ff;
+  "
+>
+  <!-- CARD HEADER -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <ion-icon name="language-outline" style="font-size: 18px; color: #3880ff;"></ion-icon>
+      <strong style="font-size: 13px; color: #333;">
+        <!-- {{ translationCard?.items?.length }} Translation{{ translationCard?.items?.length > 1 ? 's' : '' }} Ready -->
+          <ng-container *ngIf="translationCard?.items?.length as count">
+  <strong style="font-size: 13px; color: #333;">
+    {{ count }} Translation{{ count > 1 ? 's' : '' }} Ready
+  </strong>
+</ng-container>
+
+<!-- Fallback (if items is empty or undefined) -->
+<ng-container *ngIf="!(translationCard?.items?.length)">
+  <strong style="font-size: 13px; color: #333;">
+    0 Translations Ready
+  </strong>
+</ng-container>
+
+      </strong>
+    </div>
+    <small style="color: #666; font-size: 11px;">
+      {{ translationCard?.createdAt | date: 'shortTime' }}
+    </small>
+  </div>
+
+  <!-- CARD BODY - All Translations -->
+  <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;">
+    <div
+      *ngFor="let t of (translationCard?.items || []); let i = index"
+      style="
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 8px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      "
+      [style.border-left]="i === 0 ? '3px solid #28a745' : (t.label.includes('Receiver') ? '3px solid #ff6b6b' : '3px solid #3880ff')"
+    >
+      <!-- Language Label & Code -->
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 11px; font-weight: 600;" 
+              [style.color]="i === 0 ? '#28a745' : (t.label.includes('Receiver') ? '#ff6b6b' : '#3880ff')">
+          {{ t.label }}
+        </span>
+        <span style="
+          font-size: 10px;
+          background: #e0e0e0;
+          padding: 2px 6px;
+          border-radius: 4px;
+          color: #666;
+        ">
+          {{ t.code }}
+        </span>
+      </div>
+      
+      <!-- Translated Text -->
+      <div style="font-size: 13px; color: #333; line-height: 1.4;">
+        {{ t.text }}
+      </div>
+    </div>
+
+    <!-- EMPTY STATE -->
+    <div
+      *ngIf="!(translationCard?.items?.length)"
+      style="text-align: center; padding: 12px; color: #999; font-size: 12px;"
+    >
+      No translations available
+    </div>
+  </div>
+
+  <!-- CARD ACTIONS -->
+  <div style="display: flex; justify-content: flex-end; gap: 8px;">
+    <ion-button 
+      size="small" 
+      fill="clear" 
+      color="medium"
+      (click)="closeTranslationCard()"
+      style="--padding-start: 10px; --padding-end: 10px;"
+    >
+      Cancel
+    </ion-button>
+    <ion-button 
+      size="small" 
+      color="primary" 
+      (click)="sendFromTranslationCard()"
+      style="--padding-start: 12px; --padding-end: 12px;"
+    >
+      <ion-icon name="send-outline" slot="start" style="font-size: 16px;"></ion-icon>
+      Send
+    </ion-button>
+  </div>
 </div>
 
 <!-- 🌐 TRANSLATION CARD (Simplified & Cleaner) -->

@@ -4259,8 +4259,7 @@ isTranslatingCustom = false; // ✅ NEW: For custom language selection
 
 translationApiBase =
   // 'https://script.google.com/macros/s/AKfycbyxnbC6LBpbtdMw2rLVqCRvqbHkT97CPQo9Ta9by1QpCMBH25BE6edivkNj5_dYp1qj/exec';
-  'https://script.google.com/macros/s/AKfycbxpr7MVGsJNzDTZoBWa_IuTd8z5C9ZDfM3iENhuqBN01hgKiU2fF-Hc3DZ1c0u9KzHZ/exec';
-
+'https://script.google.com/macros/s/AKfycbxpr7MVGsJNzDTZoBWa_IuTd8z5C9ZDfM3iENhuqBN01hgKiU2fF-Hc3DZ1c0u9KzHZ/exec';
 languageMap: Record<string, string> = {
   'ar-EG': 'Arabic (Egypt)',
   'ar-SA': 'Arabic (Saudi Arabia)',
@@ -4585,7 +4584,7 @@ async onSelectTranslateLanguage(event: any) {
 }
 
 /**
- * ✅ NEW: Fetch custom language translation (with auto-detect)
+ * ✅ UPDATED: Fetch custom language translation + receiver language (parallel)
  */
 async fetchCustomTranslation(
   mode: 'translateCustom',
@@ -4594,42 +4593,69 @@ async fetchCustomTranslation(
   targetLabel: string,
   targetApiLang: string
 ) {
-  // ✅ Auto-detect source language, no need to check if target is English
-  const params = new HttpParams()
+  const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
+  
+  const promises: Promise<any>[] = [];
+
+  // ✅ Fetch custom language translation
+  const customParams = new HttpParams()
     .set('text', originalText)
     .set('to', targetApiLang);
+  
+  promises.push(
+    this.http.get(this.translationApiBase, { params: customParams, responseType: 'json' }).toPromise()
+  );
 
-  this.http.get(this.translationApiBase, { params, responseType: 'json' }).subscribe({
-    next: (response: any) => {
-      if (response.success && response.translatedText) {
-        const detectedLang = response.detectedSource || 'unknown';
-        const detectedLabel = this.languageName(this.normalizeLocaleCode(detectedLang)) || detectedLang;
-        
-        this.showCustomTranslationCard(
-          mode, 
-          originalText, 
-          targetCode, 
-          targetLabel, 
-          response.translatedText,
-          detectedLang,
-          detectedLabel
-        );
-      } else {
-        this.showToast('Translation failed', 'warning');
-      }
+  // ✅ Fetch receiver language translation (if different from custom selected)
+  if (recvApiLang !== targetApiLang) {
+    const recvParams = new HttpParams()
+      .set('text', originalText)
+      .set('to', recvApiLang);
+    
+    promises.push(
+      this.http.get(this.translationApiBase, { params: recvParams, responseType: 'json' }).toPromise()
+    );
+  }
+
+  try {
+    const results = await Promise.all(promises);
+    
+    const customResponse = results[0];
+    const receiverResponse = results[1]; // undefined if same language
+
+    if (customResponse?.success && customResponse.translatedText) {
+      const detectedLang = customResponse.detectedSource || 'unknown';
+      const detectedLabel = this.languageName(this.normalizeLocaleCode(detectedLang)) || detectedLang;
       
-      this.isTranslatingCustom = false;
-    },
-    error: (err) => {
-      console.error('Translation error', err);
-      this.showToast('Translation failed', 'danger');
-      this.isTranslatingCustom = false;
+      let receiverTranslation = null;
+      if (receiverResponse?.success && receiverResponse.translatedText) {
+        receiverTranslation = receiverResponse.translatedText;
+      }
+
+      this.showCustomTranslationCard(
+        mode, 
+        originalText, 
+        targetCode, 
+        targetLabel, 
+        customResponse.translatedText,
+        detectedLang,
+        detectedLabel,
+        receiverTranslation
+      );
+    } else {
+      this.showToast('Translation failed', 'warning');
     }
-  });
+    
+    this.isTranslatingCustom = false;
+  } catch (err) {
+    console.error('Translation error', err);
+    this.showToast('Translation failed', 'danger');
+    this.isTranslatingCustom = false;
+  }
 }
 
 /**
- * ✅ UPDATED: Show custom translation card with detected source language
+ * ✅ UPDATED: Show custom translation card with detected source + receiver language
  */
 showCustomTranslationCard(
   mode: 'translateCustom',
@@ -4638,7 +4664,8 @@ showCustomTranslationCard(
   targetLabel: string,
   translation: string,
   detectedSourceCode?: string,
-  detectedSourceLabel?: string
+  detectedSourceLabel?: string,
+  receiverTranslation?: string | null
 ) {
   const items: TranslationItem[] = [];
 
@@ -4651,12 +4678,21 @@ showCustomTranslationCard(
     });
   }
 
-  // Add translated language
+  // Add custom selected language translation
   items.push({
     code: targetCode,
     label: targetLabel,
     text: translation
   });
+
+  // ✅ Add receiver language translation (if available and different)
+  if (receiverTranslation && targetCode !== this.receiverLangCode) {
+    items.push({
+      code: this.receiverLangCode,
+      label: this.languageName(this.receiverLangCode) + ' (Receiver)',
+      text: receiverTranslation
+    });
+  }
 
   this.translationCard = {
     visible: true,
@@ -4832,7 +4868,7 @@ async sendOriginalWithTranslation() {
 }
 
 /**
- * UPDATED: Send message from translation card (with auto-detected source)
+ * UPDATED: Send message from translation card (handles multiple translations)
  */
 async sendFromTranslationCard() {
   if (!this.translationCard) return;
@@ -4842,9 +4878,20 @@ async sendFromTranslationCard() {
   const originalText = this.messageText?.trim() || '';
   const now = Date.now();
 
-  // Find original and translated items
-  const originalItem = items[0]; // First item is always the detected source
-  const translatedItem = items[1]; // Second item is the translation
+  // Find items by matching codes
+  const originalItem = items.find(item => 
+    item.label.includes('Original') || 
+    items.indexOf(item) === 0
+  );
+  
+  const customItem = mode === 'translateCustom' 
+    ? items.find(item => !item.label.includes('Original') && !item.label.includes('Receiver'))
+    : null;
+    
+  const receiverItem = items.find(item => 
+    item.label.includes('Receiver') || 
+    item.code === this.receiverLangCode
+  );
 
   const translationsPayload: IMessage['translations'] = {
     original: {
@@ -4857,36 +4904,45 @@ async sendFromTranslationCard() {
   let visibleTextForSender: string = originalText;
 
   if (mode === 'translateCustom') {
-    // Custom language translation - store in otherLanguage
-    if (translatedItem) {
+    // Custom language translation - sender sees custom translation
+    if (customItem) {
       translationsPayload.otherLanguage = {
-        code: translatedItem.code,
-        label: translatedItem.label,
-        text: translatedItem.text
+        code: customItem.code,
+        label: customItem.label,
+        text: customItem.text
       };
-      visibleTextForSender = translatedItem.text;
+      visibleTextForSender = customItem.text;
+    }
+    
+    // Also include receiver translation if available
+    if (receiverItem) {
+      translationsPayload.receiverLanguage = {
+        code: receiverItem.code,
+        label: receiverItem.label,
+        text: receiverItem.text
+      };
     }
     
   } else if (mode === 'translateToReceiver') {
-    // Receiver translation
-    if (translatedItem) {
+    // Receiver translation - sender sees receiver translation
+    if (receiverItem) {
       translationsPayload.receiverLanguage = {
-        code: translatedItem.code,
-        label: translatedItem.label,
-        text: translatedItem.text
+        code: receiverItem.code,
+        label: receiverItem.label,
+        text: receiverItem.text
       };
-      visibleTextForSender = translatedItem.text;
+      visibleTextForSender = receiverItem.text;
     }
     
   } else if (mode === 'sendOriginal') {
-    // Original with receiver translation
+    // Original with receiver translation - sender sees original
     visibleTextForSender = originalText;
     
-    if (translatedItem) {
+    if (receiverItem) {
       translationsPayload.receiverLanguage = {
-        code: translatedItem.code,
-        label: translatedItem.label,
-        text: translatedItem.text
+        code: receiverItem.code,
+        label: receiverItem.label,
+        text: receiverItem.text
       };
     }
   }
