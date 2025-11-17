@@ -91,6 +91,13 @@ export interface IMessage {
       label: string;
       text: string;
     };
+
+    // newly added - support for "other language" translate module
+    otherLanguage?: {
+      code: string;
+      label: string;
+      text: string;
+    };
   };
 
   localUrl?: string;

@@ -3418,253 +3418,362 @@ async ensureTranslationConsent(): Promise<boolean> {
 }
 
 
-// ✅ NEW: Loading states for translation buttons
-isTranslatingToMy = false;
-isTranslatingToReceiver = false;
-isTranslatingOriginal = false;
+// // ✅ NEW: Loading states for translation buttons
+// isTranslatingToMy = false;
+// isTranslatingToReceiver = false;
+// isTranslatingOriginal = false;
 
-translationApiBase =
-  'https://script.google.com/macros/s/AKfycbyxnbC6LBpbtdMw2rLVqCRvqbHkT97CPQo9Ta9by1QpCMBH25BE6edivkNj5_dYp1qj/exec';
+// translationApiBase =
+//   'https://script.google.com/macros/s/AKfycbyxnbC6LBpbtdMw2rLVqCRvqbHkT97CPQo9Ta9by1QpCMBH25BE6edivkNj5_dYp1qj/exec';
 
-languageMap: Record<string, string> = {
-  'ar-EG': 'Arabic (Egypt)',
-  'ar-SA': 'Arabic (Saudi Arabia)',
-  'bn-BD': 'Bengali (Bangladesh)',
-  'de-DE': 'German (Germany)',
-  'en-GB': 'English (UK)',
-  'en-IN': 'English (India)',
-  'en-US': 'English (US)',
-  'es-ES': 'Spanish (Spain)',
-  'es-MX': 'Spanish (Mexico)',
-  'fa-IR': 'Persian (Iran)',
-  'fr-FR': 'French (France)',
-  'gu-IN': 'Gujarati (India)',
-  'hi-IN': 'Hindi (India)',
-  'it-IT': 'Italian (Italy)',
-  'ja-JP': 'Japanese',
-  'ko-KR': 'Korean',
-  'mr-IN': 'Marathi (India)',
-  'pa-IN': 'Punjabi (India)',
-  'pt-BR': 'Portuguese (Brazil)',
-  'pt-PT': 'Portuguese (Portugal)',
-  'ru-RU': 'Russian',
-  'ta-IN': 'Tamil (India)',
-  'te-IN': 'Telugu (India)',
-  'th-TH': 'Thai',
-  'tr-TR': 'Turkish',
-  'ur-PK': 'Urdu (Pakistan)',
-  'vi-VN': 'Vietnamese',
-  'zh-CN': 'Chinese (Simplified)',
-  'zh-TW': 'Chinese (Traditional)',
-};
+// languageMap: Record<string, string> = {
+//   'ar-EG': 'Arabic (Egypt)',
+//   'ar-SA': 'Arabic (Saudi Arabia)',
+//   'bn-BD': 'Bengali (Bangladesh)',
+//   'de-DE': 'German (Germany)',
+//   'en-GB': 'English (UK)',
+//   'en-IN': 'English (India)',
+//   'en-US': 'English (US)',
+//   'es-ES': 'Spanish (Spain)',
+//   'es-MX': 'Spanish (Mexico)',
+//   'fa-IR': 'Persian (Iran)',
+//   'fr-FR': 'French (France)',
+//   'gu-IN': 'Gujarati (India)',
+//   'hi-IN': 'Hindi (India)',
+//   'it-IT': 'Italian (Italy)',
+//   'ja-JP': 'Japanese',
+//   'ko-KR': 'Korean',
+//   'mr-IN': 'Marathi (India)',
+//   'pa-IN': 'Punjabi (India)',
+//   'pt-BR': 'Portuguese (Brazil)',
+//   'pt-PT': 'Portuguese (Portugal)',
+//   'ru-RU': 'Russian',
+//   'ta-IN': 'Tamil (India)',
+//   'te-IN': 'Telugu (India)',
+//   'th-TH': 'Thai',
+//   'tr-TR': 'Turkish',
+//   'ur-PK': 'Urdu (Pakistan)',
+//   'vi-VN': 'Vietnamese',
+//   'zh-CN': 'Chinese (Simplified)',
+//   'zh-TW': 'Chinese (Traditional)',
+// };
 
-languageName(code: string): string {
-  return this.languageMap[code] || code;
-}
+// languageName(code: string): string {
+//   return this.languageMap[code] || code;
+// }
 
-apiLanguageCode(localeCode: string): string {
-  const specialCases: Record<string, string> = {
-    'zh-CN': 'zh',
-    'zh-TW': 'zh-TW',
-    'pt-BR': 'pt',
-    'pt-PT': 'pt',
-    'en-GB': 'en',
-    'en-IN': 'en',
-    'es-ES': 'es',
-    'es-MX': 'es',
-  };
+// apiLanguageCode(localeCode: string): string {
+//   const specialCases: Record<string, string> = {
+//     'zh-CN': 'zh',
+//     'zh-TW': 'zh-TW',
+//     'pt-BR': 'pt',
+//     'pt-PT': 'pt',
+//     'en-GB': 'en',
+//     'en-IN': 'en',
+//     'es-ES': 'es',
+//     'es-MX': 'es',
+//   };
 
-  if (specialCases[localeCode]) {
-    return specialCases[localeCode];
-  }
+//   if (specialCases[localeCode]) {
+//     return specialCases[localeCode];
+//   }
 
-  return localeCode.split('-')[0];
-}
+//   return localeCode.split('-')[0];
+// }
 
-async loadLanguages() {
-  try {
-    // Load my language from local storage
-    const myLang = localStorage.getItem('app_language');
-    this.myLangCode = myLang || this.myLangCode;
-    this.myLangLabel = this.languageName(this.myLangCode) || 'My Language';
+// async loadLanguages() {
+//   try {
+//     // Load my language from local storage
+//     const myLang = localStorage.getItem('app_language');
+//     this.myLangCode = myLang || this.myLangCode;
+//     this.myLangLabel = this.languageName(this.myLangCode) || 'My Language';
 
-    console.log("khusa called");
-// http://localhost:8100/chatting-screen?receiverId=76
-    // ✅ Fetch receiver ID (assuming it's stored in localStorage)
-    // const receiverId = localStorage.getItem('receiverId');
-    // const receiverId = "76";
+//     console.log("khusa called");
+// // http://localhost:8100/chatting-screen?receiverId=76
+//     // ✅ Fetch receiver ID (assuming it's stored in localStorage)
+//     // const receiverId = localStorage.getItem('receiverId');
+//     // const receiverId = "76";
 
-    // ✅ Get receiverId from URL query params
-    const receiverId = this.route.snapshot.queryParamMap.get('receiverId');
-
-
-    if (receiverId) {
-
-      // Call API to get receiver's language
-      this.chatService.getUserLanguage(receiverId).subscribe(
-        (res) => {
-          if (res && res.language) {
-            this.receiverLangCode = res.language;
-            this.receiverLangLabel = this.languageName(res.language) || 'Receiver Language';
-
-            // Optionally save to localStorage for reuse
-            localStorage.setItem('receiverLang', res.language);
-          } else {
-            console.warn('⚠️ Receiver language not found in API response');
-          }
-        },
-        (err) => {
-          console.error('❌ Error fetching receiver language:', err);
-        }
-      );
-    } else {
-      console.warn('⚠️ No receiverId found in localStorage');
-      // Fallback to stored receiver language
-      const storedReceiverLang = localStorage.getItem('receiverLang');
-      this.receiverLangCode = storedReceiverLang || this.receiverLangCode;
-      this.receiverLangLabel =
-        this.languageName(this.receiverLangCode) || 'Receiver Language';
-    }
-  } catch (err) {
-    console.warn('Failed to load language preferences', err);
-  }
-}
+//     // ✅ Get receiverId from URL query params
+//     const receiverId = this.route.snapshot.queryParamMap.get('receiverId');
 
 
-/**
- * Normalize backend language codes (e.g., "hi" -> "hi-IN", keep "hi-IN" as-is).
- */
-normalizeLocaleCode(code: string): string {
-  if (!code) return code;
+//     if (receiverId) {
 
-  // lowercase for comparison (keeps original case in return)
-  const lower = code.trim().toLowerCase();
-  const keys = Object.keys(this.languageMap);
+//       // Call API to get receiver's language
+//       this.chatService.getUserLanguage(receiverId).subscribe(
+//         (res) => {
+//           if (res && res.language) {
+//             this.receiverLangCode = res.language;
+//             this.receiverLangLabel = this.languageName(res.language) || 'Receiver Language';
 
-  // 1️⃣ Exact match in map (case-insensitive)
-  const exactKey = keys.find(k => k.toLowerCase() === lower);
-  if (exactKey) return exactKey;
+//             // Optionally save to localStorage for reuse
+//             localStorage.setItem('receiverLang', res.language);
+//           } else {
+//             console.warn('⚠️ Receiver language not found in API response');
+//           }
+//         },
+//         (err) => {
+//           console.error('❌ Error fetching receiver language:', err);
+//         }
+//       );
+//     } else {
+//       console.warn('⚠️ No receiverId found in localStorage');
+//       // Fallback to stored receiver language
+//       const storedReceiverLang = localStorage.getItem('receiverLang');
+//       this.receiverLangCode = storedReceiverLang || this.receiverLangCode;
+//       this.receiverLangLabel =
+//         this.languageName(this.receiverLangCode) || 'Receiver Language';
+//     }
+//   } catch (err) {
+//     console.warn('Failed to load language preferences', err);
+//   }
+// }
 
-  // 2️⃣ Starts-with match (like "hi" → "hi-IN")
-  const partialKey = keys.find(k => k.toLowerCase().startsWith(lower + '-'));
-  if (partialKey) return partialKey;
-
-  // 3️⃣ Fallback map for common 2-letter codes
-  const fallbackMap: Record<string, string> = {
-    en: 'en-IN',
-    hi: 'hi-IN',
-    bn: 'bn-BD',
-    ta: 'ta-IN',
-    te: 'te-IN',
-    gu: 'gu-IN',
-    mr: 'mr-IN',
-    pa: 'pa-IN',
-    pt: 'pt-BR',
-    es: 'es-ES',
-    fr: 'fr-FR',
-    de: 'de-DE',
-    ar: 'ar-SA',
-    zh: 'zh-CN',
-  };
-  if (fallbackMap[lower]) return fallbackMap[lower];
-
-  // 4️⃣ Otherwise return as-is
-  return code;
-}
-
-
-// // Card state
-translationCard: {
-  visible: boolean;
-  mode: 'translateToMy' | 'translateToReceiver' | 'sendOriginal' | null;
-  items: TranslationItem[];
-  createdAt: Date;
-} | null = null;
 
 // /**
-//  * CASE 1: Translate to My Language
-//  * CASE 2: Translate to Receiver Language
-//  * Note: Original messageText is always in English (NOT shown in card)
-//  * Shows: My Language translation + Receiver Language translation (only non-English)
+//  * Normalize backend language codes (e.g., "hi" -> "hi-IN", keep "hi-IN" as-is).
 //  */
-// //   async translateTo(target: 'my' | 'receiver') {
-// //   const text = this.messageText?.trim();
-// //   if (!text) {
-// //     this.showToast('Type something to translate', 'warning');
-// //     return;
-// //   }
+// normalizeLocaleCode(code: string): string {
+//   if (!code) return code;
 
-// //  // ✅ Step 1: Ensure user consent before API call
-// //   const allowed = await this.ensureTranslationConsent();
-// //   if (!allowed) return;
+//   // lowercase for comparison (keeps original case in return)
+//   const lower = code.trim().toLowerCase();
+//   const keys = Object.keys(this.languageMap);
 
-// //   // ✅ Step 2: Determine target language
-// //   const targetLocale = target === 'my' ? this.myLangCode : this.receiverLangCode;
-// //   const toLang = this.apiLanguageCode(targetLocale);
+//   // 1️⃣ Exact match in map (case-insensitive)
+//   const exactKey = keys.find(k => k.toLowerCase() === lower);
+//   if (exactKey) return exactKey;
 
-// //   // ✅ Step 3: Skip translation API if target is English
-// //   if (toLang === 'en') {
-// //     this.showToast('No translation needed (already English)', 'medium');
-// //     return;
-// //   }
+//   // 2️⃣ Starts-with match (like "hi" → "hi-IN")
+//   const partialKey = keys.find(k => k.toLowerCase().startsWith(lower + '-'));
+//   if (partialKey) return partialKey;
 
-// //   // // ✅ Set loading state
-// //   // if (target === 'my') {
-// //   //   this.isTranslatingToMy = true;
-// //   // } else {
-// //   //   this.isTranslatingToReceiver = true;
-// //   // }
+//   // 3️⃣ Fallback map for common 2-letter codes
+//   const fallbackMap: Record<string, string> = {
+//     en: 'en-IN',
+//     hi: 'hi-IN',
+//     bn: 'bn-BD',
+//     ta: 'ta-IN',
+//     te: 'te-IN',
+//     gu: 'gu-IN',
+//     mr: 'mr-IN',
+//     pa: 'pa-IN',
+//     pt: 'pt-BR',
+//     es: 'es-ES',
+//     fr: 'fr-FR',
+//     de: 'de-DE',
+//     ar: 'ar-SA',
+//     zh: 'zh-CN',
+//   };
+//   if (fallbackMap[lower]) return fallbackMap[lower];
 
-// //   // const targetLocale = target === 'my' ? this.myLangCode : this.receiverLangCode;
-// //   // const toLang = this.apiLanguageCode(targetLocale);
-  
-// //   // Source is always English
-// //   const fromLang = 'en';
+//   // 4️⃣ Otherwise return as-is
+//   return code;
+// }
 
-// //   const params = new HttpParams()
-// //     .set('text', text)
-// //     .set('from', fromLang)
-// //     .set('to', toLang);
 
-// //   const url = this.translationApiBase;
+// // // Card state
+// translationCard: {
+//   visible: boolean;
+//   mode: 'translateToMy' | 'translateToReceiver' | 'sendOriginal' | null;
+//   items: TranslationItem[];
+//   createdAt: Date;
+// } | null = null;
 
-// //   this.http.get(url, { params, responseType: 'text' }).subscribe({
-// //     next: (raw: any) => {
-// //       const result = this.parseTranslationResponse(raw);
 
-// //       if (result) {
-// //         this.translatedPreview = result;
-// //         try { localStorage.setItem('lastTranslatedText', result); } catch { }
+// // /**
+// //  * Parse translation API response
+// //  */
+// parseTranslationResponse(raw: any): string | null {
+//   let result: string | null = null;
 
-// //         // Now fetch the OTHER translation to show both
-// //         if (target === 'my') {
-// //           this.fetchAndShowBothTranslations('translateToMy', text, result);
-// //         } else {
-// //           this.fetchAndShowBothTranslations('translateToReceiver', text, result);
-// //         }
-// //       } else {
-// //         this.showToast('Translation returned empty result', 'warning');
-// //         // ✅ Reset loading state
-// //         this.isTranslatingToMy = false;
-// //         this.isTranslatingToReceiver = false;
-// //       }
-// //     },
-// //     error: (err) => {
-// //       console.error('Translation API error', err);
-// //       this.showToast('Translation failed. Try again later.', 'danger');
-// //       // ✅ Reset loading state
-// //       this.isTranslatingToMy = false;
-// //       this.isTranslatingToReceiver = false;
-// //     }
-// //   });
-// // }
-// // ============================================
-// // COMPLETE TRANSLATION SYSTEM - FIXED VERSION
-// // ============================================
+//   if (raw == null) {
+//     return null;
+//   }
+
+//   if (typeof raw === 'string') {
+//     const trimmed = raw.trim();
+
+//     if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || 
+//         (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+//       try {
+//         const parsed = JSON.parse(trimmed);
+//         if (parsed.translatedText) {
+//           result = parsed.translatedText;
+//         } else if (parsed.data?.translations?.[0]) {
+//           result = parsed.data.translations[0].translatedText;
+//         } else if (parsed.text) {
+//           result = parsed.text;
+//         } else {
+//           result = JSON.stringify(parsed);
+//         }
+//       } catch {
+//         result = raw;
+//       }
+//     } else {
+//       result = raw;
+//     }
+//   } else if (typeof raw === 'object') {
+//     if (raw.translatedText) result = raw.translatedText;
+//     else if (raw.text) result = raw.text;
+//     else if (raw.data?.translations?.[0]) result = raw.data.translations[0].translatedText;
+//     else result = JSON.stringify(raw);
+//   }
+
+//   return result;
+// }
+
+// // /**
+// //  * Close translation card
+// //  */
+// closeTranslationCard() {
+//   if (this.translationCard) {
+//     this.translationCard.visible = false;
+//   }
+// }
+
+
+
+
+// // // ---------- per-message UI state ----------
+// messageToggleMap: Map<string, { activeCode: string; showAll: boolean }> = new Map();
+
+// // // Return array of available translations from msg.translations
+// getAllTranslationsArray(msg: any): { code: string; label: string; text: string }[] {
+//   if (!msg?.translations) return [];
+//   const arr: { code: string; label: string; text: string }[] = [];
+
+//   if (msg.translations.original) {
+//     arr.push({
+//       code: msg.translations.original.code || 'en',
+//       label: msg.translations.original.label || 'English (Original)',
+//       text: msg.translations.original.text || ''
+//     });
+//   }
+//   if (msg.translations.myLanguage) {
+//     arr.push({
+//       code: msg.translations.myLanguage.code,
+//       label: msg.translations.myLanguage.label,
+//       text: msg.translations.myLanguage.text || ''
+//     });
+//   }
+//   if (msg.translations.receiverLanguage) {
+//     arr.push({
+//       code: msg.translations.receiverLanguage.code,
+//       label: msg.translations.receiverLanguage.label,
+//       text: msg.translations.receiverLanguage.text || ''
+//     });
+//   }
+
+//   // dedupe by code
+//   const seen = new Set<string>();
+//   return arr.filter(item => {
+//     if (!item.code) return false;
+//     if (seen.has(item.code)) return false;
+//     seen.add(item.code);
+//     return true;
+//   });
+// }
+
+// // /** ensure map entry exists */
+// ensureToggleState(msg: any) {
+//   if (!this.messageToggleMap.has(msg.msgId)) {
+//     let active = 'original';
+//     if (msg.translations) {
+//       const all = this.getAllTranslationsArray(msg);
+//       // prefer whichever translation matches visible msg.text
+//       const matched = all.find(t => t.text && (msg.text || '').trim() === t.text.trim());
+//       if (matched) active = matched.code;
+//       else if (msg.translations.myLanguage) active = msg.translations.myLanguage.code;
+//       else if (msg.translations.receiverLanguage) active = msg.translations.receiverLanguage.code;
+//       else active = msg.translations.original?.code || 'original';
+//     }
+//     this.messageToggleMap.set(msg.msgId, { activeCode: active, showAll: false });
+//   }
+// }
+
+// getActiveTranslationLabel(msg: any): string | null {
+//   if (!msg.translations) return null;
+//   this.ensureToggleState(msg);
+//   const st = this.messageToggleMap.get(msg.msgId)!;
+//   const all = this.getAllTranslationsArray(msg);
+//   const found = all.find(x => x.code === st.activeCode);
+//   return found ? found.label : (st.activeCode === 'original' ? 'English (Original)' : null);
+// }
+
+// getActiveTranslationShortCode(msg: any) {
+//   this.ensureToggleState(msg);
+//   const st = this.messageToggleMap.get(msg.msgId)!;
+//   return st.activeCode;
+// }
+
+// isTranslationLabelled(msg: any) {
+//   this.ensureToggleState(msg);
+//   const st = this.messageToggleMap.get(msg.msgId)!;
+//   return st.activeCode !== 'original';
+// }
+
+// getDisplayedText(msg: any) {
+//   this.ensureToggleState(msg);
+//   const st = this.messageToggleMap.get(msg.msgId)!;
+//   if (!msg.translations) return msg.text || '';
+//   const all = this.getAllTranslationsArray(msg);
+//   const found = all.find(x => x.code === st.activeCode);
+//   if (found) return found.text;
+//   if (st.activeCode === 'original' && msg.translations.original) return msg.translations.original.text;
+//   return msg.text || '';
+// }
+
+// cycleTranslation(msg: any) {
+//   if (!msg.translations) return;
+//   this.ensureToggleState(msg);
+//   const st = this.messageToggleMap.get(msg.msgId)!;
+//   const arr = this.getAllTranslationsArray(msg);
+//   // codes list; ensure 'original' present (use its code)
+//   const codes = arr.map(a => a.code);
+//   if (msg.translations.original && !codes.includes(msg.translations.original.code || 'original')) {
+//     codes.push(msg.translations.original.code || 'original');
+//   }
+//   // find next
+//   const idx = codes.indexOf(st.activeCode);
+//   const next = (idx === -1 || idx === codes.length - 1) ? codes[0] : codes[idx + 1];
+//   st.activeCode = next;
+//   this.messageToggleMap.set(msg.msgId, st);
+// }
+
+// setActiveTranslation(msg: any, code: string) {
+//   this.ensureToggleState(msg);
+//   const st = this.messageToggleMap.get(msg.msgId)!;
+//   st.activeCode = code;
+//   st.showAll = false;
+//   this.messageToggleMap.set(msg.msgId, st);
+// }
+
+// toggleShowAllTranslations(msg: any) {
+//   this.ensureToggleState(msg);
+//   const st = this.messageToggleMap.get(msg.msgId)!;
+//   st.showAll = !st.showAll;
+//   this.messageToggleMap.set(msg.msgId, st);
+// }
+
+// isShowingAllTranslations(msg: any) {
+//   this.ensureToggleState(msg);
+//   return this.messageToggleMap.get(msg.msgId)!.showAll;
+// }
+
+// async copyToClipboard(text: string) {
+//   try {
+//     await navigator.clipboard.writeText(text);
+//     this.showToast?.('Copied', 'success');
+//   } catch (err) {
+//     this.showToast?.('Copy failed', 'danger');
+//   }
+// }
+
 
 // /**
 //  * CASE 1 & 2: Translate to My Language OR Translate to Receiver Language
-//  * Always fetches BOTH translations and shows them in preview card
 //  */
 // async translateTo(target: 'my' | 'receiver') {
 //   const text = this.messageText?.trim();
@@ -3688,20 +3797,21 @@ translationCard: {
 //   const myApiLang = this.apiLanguageCode(this.myLangCode);
 //   const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
 
-//   // Step 4: Fetch BOTH translations in parallel
-//   this.fetchBothTranslationsParallel(
-//     target === 'my' ? 'translateToMy' : 'translateToReceiver',
-//     text,
-//     myApiLang,
-//     recvApiLang
-//   );
+//   // Step 4: Fetch translations based on mode
+//   if (target === 'my') {
+//     // TRANSLATE TO MY: Fetch both (sender + receiver)
+//     this.fetchBothTranslationsParallel('translateToMy', text, myApiLang, recvApiLang);
+//   } else {
+//     // TRANSLATE TO RECEIVER: Fetch only receiver translation
+//     this.fetchReceiverTranslationOnly('translateToReceiver', text, recvApiLang);
+//   }
 // }
 
 // /**
-//  * Fetch both translations in parallel for better UX
+//  * Fetch BOTH translations (for "Translate to My" mode)
 //  */
 // async fetchBothTranslationsParallel(
-//   mode: 'translateToMy' | 'translateToReceiver',
+//   mode: 'translateToMy',
 //   originalText: string,
 //   myApiLang: string,
 //   recvApiLang: string
@@ -3744,50 +3854,88 @@ translationCard: {
 //     );
 //   }
 
-//   // Wait for all translations
 //   try {
 //     const results = await Promise.all(promises);
     
-//     // Build translations object
 //     const translations: any = {};
 //     results.forEach(r => {
 //       if (r.lang === 'my') translations.my = r.text;
 //       if (r.lang === 'receiver') translations.receiver = r.text;
 //     });
 
-//     // If language is English, use original
 //     if (myApiLang === 'en') translations.my = originalText;
 //     if (recvApiLang === 'en') translations.receiver = originalText;
 
-//     this.showTranslationPreviewCard(mode, originalText, translations);
+//     // Show BOTH translations for "Translate to My" mode
+//     this.showBothTranslationsCard(mode, originalText, translations);
     
 //   } catch (err) {
 //     console.error('Translation failed', err);
 //     this.showToast('Translation failed', 'danger');
 //   } finally {
 //     this.isTranslatingToMy = false;
-//     this.isTranslatingToReceiver = false;
 //   }
 // }
 
 // /**
-//  * Show preview card with BOTH translations
+//  * Fetch ONLY receiver translation (for "Translate to Receiver" mode)
 //  */
-// showTranslationPreviewCard(
-//   mode: 'translateToMy' | 'translateToReceiver',
+// async fetchReceiverTranslationOnly(
+//   mode: 'translateToReceiver',
+//   originalText: string,
+//   recvApiLang: string
+// ) {
+//   // If receiver language is English, no need to translate
+//   if (recvApiLang === 'en') {
+//     this.showToast('Receiver language is English, no translation needed', 'medium');
+//     this.isTranslatingToReceiver = false;
+//     return;
+//   }
+
+//   const params = new HttpParams()
+//     .set('text', originalText)
+//     .set('from', 'en')
+//     .set('to', recvApiLang);
+
+//   this.http.get(this.translationApiBase, { params, responseType: 'text' }).subscribe({
+//     next: (raw: any) => {
+//       const receiverTranslation = this.parseTranslationResponse(raw);
+
+//       if (receiverTranslation) {
+//         // Show ONLY receiver translation
+//         this.showReceiverOnlyCard(mode, originalText, receiverTranslation);
+//       } else {
+//         this.showToast('Translation failed', 'warning');
+//       }
+      
+//       this.isTranslatingToReceiver = false;
+//     },
+//     error: (err) => {
+//       console.error('Translation error', err);
+//       this.showToast('Translation failed', 'danger');
+//       this.isTranslatingToReceiver = false;
+//     }
+//   });
+// }
+
+// /**
+//  * Show card with BOTH translations (Translate to My mode)
+//  */
+// showBothTranslationsCard(
+//   mode: 'translateToMy',
 //   originalText: string,
 //   translations: { my: string; receiver: string }
 // ) {
 //   const items: TranslationItem[] = [];
 
-//   // ALWAYS add My Language (preview for sender)
+//   // Add My Language
 //   items.push({
 //     code: this.myLangCode,
 //     label: this.languageName(this.myLangCode) + ' (You)',
 //     text: translations.my
 //   });
 
-//   // ALWAYS add Receiver Language (what receiver will see)
+//   // Add Receiver Language
 //   items.push({
 //     code: this.receiverLangCode,
 //     label: this.languageName(this.receiverLangCode) + ' (Receiver)',
@@ -3806,8 +3954,35 @@ translationCard: {
 // }
 
 // /**
+//  * Show card with ONLY receiver translation (Translate to Receiver mode)
+//  */
+// showReceiverOnlyCard(
+//   mode: 'translateToReceiver',
+//   originalText: string,
+//   receiverTranslation: string
+// ) {
+//   const items: TranslationItem[] = [];
+
+//   // Add ONLY Receiver Language
+//   items.push({
+//     code: this.receiverLangCode,
+//     label: this.languageName(this.receiverLangCode) + ' (Receiver)',
+//     text: receiverTranslation
+//   });
+
+//   this.translationCard = {
+//     visible: true,
+//     mode,
+//     items,
+//     createdAt: new Date()
+//   };
+
+//   this.showToast('Translation ready', 'success');
+//   try { this.cdr.detectChanges(); } catch { }
+// }
+
+// /**
 //  * CASE 3: Send Original with auto-translation to receiver
-//  * Only shows receiver's translation in preview (sender sees original)
 //  */
 // async sendOriginalWithTranslation() {
 //   const text = this.messageText?.trim();
@@ -3816,7 +3991,6 @@ translationCard: {
 //     return;
 //   }
 
-//   // Ensure consent
 //   const allowed = await this.ensureTranslationConsent();
 //   if (!allowed) return;
 
@@ -3824,11 +3998,10 @@ translationCard: {
 
 //   const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
 
-//   // If receiver language is English, just send directly
+//   // If receiver language is English, send directly
 //   if (recvApiLang === 'en') {
 //     this.isTranslatingOriginal = false;
-//     // Send immediately without preview
-//     this.sendDirectMessage(text, text); // Both sender and receiver see English
+//     this.sendDirectMessage(text, text);
 //     return;
 //   }
 
@@ -3843,7 +4016,6 @@ translationCard: {
 //       const receiverTranslation = this.parseTranslationResponse(raw);
 
 //       if (receiverTranslation) {
-//         // Show preview with ONLY receiver translation
 //         const items: TranslationItem[] = [{
 //           code: this.receiverLangCode,
 //           label: this.languageName(this.receiverLangCode) + ' (Receiver will see)',
@@ -3873,7 +4045,7 @@ translationCard: {
 // }
 
 // /**
-//  * Send message from translation card with proper translations object
+//  * Send message from translation card
 //  */
 // async sendFromTranslationCard() {
 //   if (!this.translationCard) return;
@@ -3883,7 +4055,6 @@ translationCard: {
 //   const originalText = this.messageText?.trim() || '';
 //   const now = Date.now();
 
-//   // Build translations payload
 //   const translationsPayload: IMessage['translations'] = {
 //     original: {
 //       code: 'en',
@@ -3893,16 +4064,12 @@ translationCard: {
 //   };
 
 //   let visibleTextForSender: string = originalText;
-//   let visibleTextForReceiver: string = originalText;
 
-//   // Find translations by code
 //   const myItem = items.find(i => i.code === this.myLangCode);
 //   const recvItem = items.find(i => i.code === this.receiverLangCode);
 
 //   if (mode === 'translateToMy') {
-//     // Sender chose "Translate to My Language"
-//     // Sender sees: My Language | Receiver sees: Receiver Language
-    
+//     // Sender sees: My Language
 //     if (myItem) {
 //       translationsPayload.myLanguage = {
 //         code: myItem.code,
@@ -3918,35 +4085,21 @@ translationCard: {
 //         label: recvItem.label,
 //         text: recvItem.text
 //       };
-//       visibleTextForReceiver = recvItem.text;
 //     }
     
 //   } else if (mode === 'translateToReceiver') {
-//     // Sender chose "Translate to Receiver Language"
-//     // Sender sees: Receiver's translation (preview) | Receiver sees: Receiver Language
-    
+//     // Sender sees: Receiver's translation (preview)
 //     if (recvItem) {
 //       translationsPayload.receiverLanguage = {
 //         code: recvItem.code,
 //         label: recvItem.label,
 //         text: recvItem.text
 //       };
-//       visibleTextForSender = recvItem.text; // Sender sees receiver's translation
-//       visibleTextForReceiver = recvItem.text;
-//     }
-    
-//     if (myItem) {
-//       translationsPayload.myLanguage = {
-//         code: myItem.code,
-//         label: myItem.label,
-//         text: myItem.text
-//       };
+//       visibleTextForSender = recvItem.text;
 //     }
     
 //   } else if (mode === 'sendOriginal') {
-//     // Sender chose "Send Original"
-//     // Sender sees: Original English | Receiver sees: Receiver Language
-    
+//     // Sender sees: Original English
 //     visibleTextForSender = originalText;
     
 //     if (recvItem) {
@@ -3955,14 +4108,12 @@ translationCard: {
 //         label: recvItem.label,
 //         text: recvItem.text
 //       };
-//       visibleTextForReceiver = recvItem.text;
 //     }
 //   }
 
-//   // Create message object
 //   const localMessage: Partial<IMessage & { attachment?: any }> = {
 //     sender: this.senderId,
-//     text: visibleTextForSender, // What sender sees in their chat bubble
+//     text: visibleTextForSender,
 //     translations: translationsPayload,
 //     timestamp: now,
 //     msgId: uuidv4(),
@@ -3973,11 +4124,9 @@ translationCard: {
 //     reactions: []
 //   };
 
-//   // Send message
 //   await this.chatService.sendMessage(localMessage);
 
-//   // Cleanup
-//   this.messageText = ''; // Clear input
+//   this.messageText = '';
 //   this.translationCard.visible = false;
 //   this.translationCard = null;
 //   this.showSendButton = false;
@@ -3992,7 +4141,7 @@ translationCard: {
 // }
 
 // /**
-//  * Helper: Send message directly without preview card
+//  * Helper: Send message directly
 //  */
 // async sendDirectMessage(senderText: string, receiverText: string) {
 //   const now = Date.now();
@@ -4034,393 +4183,222 @@ translationCard: {
 // }
 
 // /**
-//  * Helper: Get text that receiver will see based on their language
+//  * Show toast notification
+//  * @param message - The message to display
+//  * @param color - Toast color ('success' | 'danger' | 'warning' | 'medium' | 'primary' | 'secondary')
+//  * @param duration - Duration in milliseconds (default: 2000)
+//  * @param position - Position ('top' | 'middle' | 'bottom')
 //  */
-// getReceiverViewText(msg: any): string {
-//   if (!msg) return '';
-  
-//   // Check if message has receiver's language translation
-//   if (msg.translations?.receiverLanguage?.text) {
-//     return msg.translations.receiverLanguage.text;
-//   }
-  
-//   // Fallback to original
-//   if (msg.translations?.original?.text) {
-//     return msg.translations.original.text;
-//   }
-  
-//   // Last resort
-//   return msg.text || '';
-// }
-
-// /**
-//  * Fetch both translations (my language + receiver language) and prepare card
-//  * Note: English (Original) is NOT shown in card, only translations
-//  */
-// // fetchAndShowBothTranslations(
-// //   mode: 'translateToMy' | 'translateToReceiver',
-// //   originalText: string,
-// //   firstTranslation: string
-// // ) {
-// //   const myCode = this.myLangCode;
-// //   const recvCode = this.receiverLangCode;
-// //   const myApiLang = this.apiLanguageCode(myCode);
-// //   const recvApiLang = this.apiLanguageCode(recvCode);
-
-// //   // Determine which translation we already have and which we need
-// //   const needToFetch = mode === 'translateToMy' ? recvApiLang : myApiLang;
-
-// //   const params = new HttpParams()
-// //     .set('text', originalText)
-// //     .set('from', 'en')
-// //     .set('to', needToFetch);
-
-// //   this.http.get(this.translationApiBase, { params, responseType: 'text' }).subscribe({
-// //     next: (raw: any) => {
-// //       const secondTranslation = this.parseTranslationResponse(raw);
-
-// //       // Build the card with ONLY translations (no English original)
-// //       const items: TranslationItem[] = [];
-
-// //       // 1. My Language translation (if not English)
-// //       if (myApiLang !== 'en') {
-// //         const myTranslation = mode === 'translateToMy' ? firstTranslation : secondTranslation;
-// //         items.push({
-// //           code: myCode,
-// //           label: this.languageName(myCode),
-// //           text: myTranslation || '(translation unavailable)'
-// //         });
-// //       }
-
-// //       // 2. Receiver Language translation (if not English)
-// //       if (recvApiLang !== 'en') {
-// //         const recvTranslation = mode === 'translateToReceiver' ? firstTranslation : secondTranslation;
-// //         items.push({
-// //           code: recvCode,
-// //           label: this.languageName(recvCode),
-// //           text: recvTranslation || '(translation unavailable)'
-// //         });
-// //       }
-
-// //       this.translationCard = {
-// //         visible: true,
-// //         mode,
-// //         items,
-// //         createdAt: new Date()
-// //       };
-
-// //       // ✅ Reset loading state
-// //       this.isTranslatingToMy = false;
-// //       this.isTranslatingToReceiver = false;
-
-// //       this.showToast('Translations ready', 'success');
-// //       try { this.cdr.detectChanges(); } catch { }
-// //     },
-// //     error: (err) => {
-// //       console.error('Failed to fetch second translation', err);
-// //       // Show card with partial data
-// //       this.showPartialTranslationCard(mode, originalText, firstTranslation);
-      
-// //       // ✅ Reset loading state
-// //       this.isTranslatingToMy = false;
-// //       this.isTranslatingToReceiver = false;
-// //     }
-// //   });
-// // }
-
-// /**
-//  * Fetch both translations (my language + receiver language) and prepare card
-//  * FIXED: Now shows BOTH translations in preview card (including English if applicable)
-//  * Note: In chat bubbles, English original won't be stored separately if it's the visible text
-//  */
-// fetchAndShowBothTranslations(
-//   mode: 'translateToMy' | 'translateToReceiver',
-//   originalText: string,
-//   firstTranslation: string
+// async showToast(
+//   message: string, 
+//   color: string = 'medium', 
+//   duration: number = 2000,
+//   position: 'top' | 'middle' | 'bottom' = 'bottom'
 // ) {
-//   const myCode = this.myLangCode;
-//   const recvCode = this.receiverLangCode;
-//   const myApiLang = this.apiLanguageCode(myCode);
-//   const recvApiLang = this.apiLanguageCode(recvCode);
-
-//   // Determine which translation we already have and which we need
-//   const needToFetch = mode === 'translateToMy' ? recvApiLang : myApiLang;
-
-//   // ✅ If we need to fetch English, skip API call (English = original)
-//   if (needToFetch === 'en') {
-//     // Build card with what we have
-//     const items: TranslationItem[] = [];
-
-//     // Add the non-English translation we already got
-//     if (mode === 'translateToMy') {
-//       // First translation was to My Language (non-English)
-//       items.push({
-//         code: myCode,
-//         label: this.languageName(myCode),
-//         text: firstTranslation
-//       });
-//       // Receiver's language is English, show original
-//       items.push({
-//         code: recvCode,
-//         label: this.languageName(recvCode),
-//         text: originalText
-//       });
-//     } else {
-//       // First translation was to Receiver's Language (non-English)
-//       items.push({
-//         code: recvCode,
-//         label: this.languageName(recvCode),
-//         text: firstTranslation
-//       });
-//       // My language is English, show original
-//       items.push({
-//         code: myCode,
-//         label: this.languageName(myCode),
-//         text: originalText
-//       });
-//     }
-
-//     this.translationCard = {
-//       visible: true,
-//       mode,
-//       items,
-//       createdAt: new Date()
-//     };
-
-//     this.isTranslatingToMy = false;
-//     this.isTranslatingToReceiver = false;
-//     this.showToast('Translations ready', 'success');
-//     try { this.cdr.detectChanges(); } catch { }
-//     return;
-//   }
-
-//   // Fetch the second translation
-//   const params = new HttpParams()
-//     .set('text', originalText)
-//     .set('from', 'en')
-//     .set('to', needToFetch);
-
-//   this.http.get(this.translationApiBase, { params, responseType: 'text' }).subscribe({
-//     next: (raw: any) => {
-//       const secondTranslation = this.parseTranslationResponse(raw);
-
-//       // ✅ Build the card with BOTH translations (no filtering)
-//       const items: TranslationItem[] = [];
-
-//       // Determine which translation is which
-//       let myTranslation: string;
-//       let recvTranslation: string;
-
-//       if (mode === 'translateToMy') {
-//         myTranslation = firstTranslation;
-//         recvTranslation = secondTranslation || '(translation unavailable)';
-//       } else {
-//         myTranslation = secondTranslation || '(translation unavailable)';
-//         recvTranslation = firstTranslation;
+//   const toast = await this.toastController.create({
+//     message: message,
+//     duration: duration,
+//     color: color,
+//     position: position,
+//     buttons: [
+//       {
+//         text: 'Dismiss',
+//         role: 'cancel'
 //       }
-
-//       // ✅ ALWAYS add My Language (even if English)
-//       items.push({
-//         code: myCode,
-//         label: this.languageName(myCode),
-//         text: myTranslation
-//       });
-
-//       // ✅ ALWAYS add Receiver Language (even if English)
-//       items.push({
-//         code: recvCode,
-//         label: this.languageName(recvCode),
-//         text: recvTranslation
-//       });
-
-//       this.translationCard = {
-//         visible: true,
-//         mode,
-//         items,
-//         createdAt: new Date()
-//       };
-
-//       this.isTranslatingToMy = false;
-//       this.isTranslatingToReceiver = false;
-//       this.showToast('Translations ready', 'success');
-//       try { this.cdr.detectChanges(); } catch { }
-//     },
-//     error: (err) => {
-//       console.error('Failed to fetch second translation', err);
-//       this.showPartialTranslationCard(mode, originalText, firstTranslation);
-      
-//       this.isTranslatingToMy = false;
-//       this.isTranslatingToReceiver = false;
-//     }
-//   });
-// }
-
-
-// /**
-//  * CASE 3: Send Original
-//  * Note: Original messageText is always in English (NOT shown in card)
-//  * Shows: Only Receiver Language translation (if receiver lang is not English)
-//  */
-// // sendOriginalWithTranslation() {
-// //   const text = this.messageText?.trim();
-// //   if (!text) {
-// //     this.showToast('Type something to send', 'warning');
-// //     return;
-// //   }
-
-// //   // ✅ Set loading state
-// //   this.isTranslatingOriginal = true;
-
-// //   const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
-
-// //   // If receiver language is English, just send without showing card
-// //   if (recvApiLang === 'en') {
-// //     this.isTranslatingOriginal = false;
-// //     // Just send the original English text directly
-// //     this.messageText = text;
-// //     // this.sendMessage(); // Uncomment to actually send
-// //     this.showToast('Message ready to send', 'success');
-// //     return;
-// //   }
-
-// //   // Otherwise, fetch receiver translation
-// //   const params = new HttpParams()
-// //     .set('text', text)
-// //     .set('from', 'en')
-// //     .set('to', recvApiLang);
-
-// //   this.http.get(this.translationApiBase, { params, responseType: 'text' }).subscribe({
-// //     next: (raw: any) => {
-// //       const translation = this.parseTranslationResponse(raw);
-
-// //       if (translation) {
-// //         this.prepareTranslationCard('sendOriginal', text, { receiverTranslation: translation });
-// //       } else {
-// //         this.showToast('Translation failed', 'warning');
-// //       }
-      
-// //       // ✅ Reset loading state
-// //       this.isTranslatingOriginal = false;
-// //     },
-// //     error: (err) => {
-// //       console.error('Translation error', err);
-// //       this.showToast('Translation failed', 'danger');
-      
-// //       // ✅ Reset loading state
-// //       this.isTranslatingOriginal = false;
-// //     }
-// //   });
-// // }
-
-// /**
-//  * Prepare translation card based on mode
-//  * Note: English original is NOT shown in card, only translations
-//  */
-// prepareTranslationCard(
-//   mode: 'translateToMy' | 'translateToReceiver' | 'sendOriginal',
-//   originalText: string,
-//   options?: {
-//     myTranslation?: string;
-//     receiverTranslation?: string;
-//     originalOnly?: boolean;
-//   }
-// ) {
-//   const items: TranslationItem[] = [];
-
-//   if (mode === 'sendOriginal') {
-//     // For sendOriginal mode - only show receiver translation
-//     const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
-
-//     if (recvApiLang !== 'en' && options?.receiverTranslation) {
-//       // Show receiver translation only (no English original)
-//       items.push({
-//         code: this.receiverLangCode,
-//         label: this.languageName(this.receiverLangCode),
-//         text: options.receiverTranslation
-//       });
-//     }
-//     // If receiver is English, card won't be shown (handled in sendOriginalWithTranslation)
-//   } else {
-//     // For translateToMy or translateToReceiver modes
-//     // These are handled by fetchAndShowBothTranslations
-//   }
-
-//   this.translationCard = {
-//     visible: true,
-//     mode,
-//     items,
-//     createdAt: new Date()
-//   };
-
-//   try { this.cdr.detectChanges(); } catch { }
-// }
-
-// /**
-//  * Show partial translation card when second translation fails
-//  * Note: English original is NOT shown, only the translation
-//  */
-// // showPartialTranslationCard(
-// //   mode: 'translateToMy' | 'translateToReceiver',
-// //   originalText: string,
-// //   translation: string
-// // ) {
-// //   const items: TranslationItem[] = [];
-
-// //   const targetCode = mode === 'translateToMy' ? this.myLangCode : this.receiverLangCode;
-// //   const targetApiLang = this.apiLanguageCode(targetCode);
-
-// //   // Only add translation if target is not English
-// //   if (targetApiLang !== 'en') {
-// //     items.push({
-// //       code: targetCode,
-// //       label: this.languageName(targetCode),
-// //       text: translation
-// //     });
-// //   }
-
-// //   this.translationCard = {
-// //     visible: true,
-// //     mode,
-// //     items,
-// //     createdAt: new Date()
-// //   };
-
-// //   this.showToast('Partial translation available', 'warning');
-// //   try { this.cdr.detectChanges(); } catch { }
-// // }
-
-// /**
-//  * ✅ UPDATED: Show partial translation card (now shows English too if needed)
-//  */
-// showPartialTranslationCard(
-//   mode: 'translateToMy' | 'translateToReceiver',
-//   originalText: string,
-//   translation: string
-// ) {
-//   const items: TranslationItem[] = [];
-//   const targetCode = mode === 'translateToMy' ? this.myLangCode : this.receiverLangCode;
-
-//   // ✅ Always add the translation we have
-//   items.push({
-//     code: targetCode,
-//     label: this.languageName(targetCode),
-//     text: translation
+//     ]
 //   });
 
-//   this.translationCard = {
-//     visible: true,
-//     mode,
-//     items,
-//     createdAt: new Date()
-//   };
-
-//   this.showToast('Partial translation available', 'warning');
-//   try { this.cdr.detectChanges(); } catch { }
+//   await toast.present();
 // }
 
-// /**
-//  * Parse translation API response
-//  */
+// // Alternative: Simple version without dismiss button
+// async showToastSimple(
+//   message: string, 
+//   color: string = 'medium', 
+//   duration: number = 1500
+// ) {
+//   const toast = await this.toastController.create({
+//     message: message,
+//     duration: duration,
+//     color: color,
+//     position: 'bottom'
+//   });
+
+//   await toast.present();
+// }
+
+// // Alternative: With icon
+// async showToastWithIcon(
+//   message: string, 
+//   color: string = 'success', 
+//   icon: string = 'checkmark-circle'
+// ) {
+//   const toast = await this.toastController.create({
+//     message: message,
+//     duration: 2000,
+//     color: color,
+//     position: 'bottom',
+//     icon: icon,
+//     buttons: [
+//       {
+//         text: 'OK',
+//         role: 'cancel'
+//       }
+//     ]
+//   });
+
+//   await toast.present();
+// }
+
+
+// ✅ NEW: Loading states for translation buttons
+isTranslatingToMy = false;
+isTranslatingToReceiver = false;
+isTranslatingOriginal = false;
+isTranslatingCustom = false; // ✅ NEW: For custom language selection
+
+translationApiBase =
+  // 'https://script.google.com/macros/s/AKfycbyxnbC6LBpbtdMw2rLVqCRvqbHkT97CPQo9Ta9by1QpCMBH25BE6edivkNj5_dYp1qj/exec';
+  'https://script.google.com/macros/s/AKfycbxpr7MVGsJNzDTZoBWa_IuTd8z5C9ZDfM3iENhuqBN01hgKiU2fF-Hc3DZ1c0u9KzHZ/exec';
+
+languageMap: Record<string, string> = {
+  'ar-EG': 'Arabic (Egypt)',
+  'ar-SA': 'Arabic (Saudi Arabia)',
+  'bn-BD': 'Bengali (Bangladesh)',
+  'de-DE': 'German (Germany)',
+  'en-GB': 'English (UK)',
+  'en-IN': 'English (India)',
+  'en-US': 'English (US)',
+  'es-ES': 'Spanish (Spain)',
+  'es-MX': 'Spanish (Mexico)',
+  'fa-IR': 'Persian (Iran)',
+  'fr-FR': 'French (France)',
+  'gu-IN': 'Gujarati (India)',
+  'hi-IN': 'Hindi (India)',
+  'it-IT': 'Italian (Italy)',
+  'ja-JP': 'Japanese',
+  'ko-KR': 'Korean',
+  'mr-IN': 'Marathi (India)',
+  'pa-IN': 'Punjabi (India)',
+  'pt-BR': 'Portuguese (Brazil)',
+  'pt-PT': 'Portuguese (Portugal)',
+  'ru-RU': 'Russian',
+  'ta-IN': 'Tamil (India)',
+  'te-IN': 'Telugu (India)',
+  'th-TH': 'Thai',
+  'tr-TR': 'Turkish',
+  'ur-PK': 'Urdu (Pakistan)',
+  'vi-VN': 'Vietnamese',
+  'zh-CN': 'Chinese (Simplified)',
+  'zh-TW': 'Chinese (Traditional)',
+};
+
+// ✅ NEW: Get all languages as array for dropdown
+get languagesList() {
+  return Object.entries(this.languageMap).map(([code, label]) => ({
+    code,
+    label
+  }));
+}
+
+languageName(code: string): string {
+  return this.languageMap[code] || code;
+}
+
+apiLanguageCode(localeCode: string): string {
+  const specialCases: Record<string, string> = {
+    'zh-CN': 'zh',
+    'zh-TW': 'zh-TW',
+    'pt-BR': 'pt',
+    'pt-PT': 'pt',
+    'en-GB': 'en',
+    'en-IN': 'en',
+    'es-ES': 'es',
+    'es-MX': 'es',
+  };
+
+  if (specialCases[localeCode]) {
+    return specialCases[localeCode];
+  }
+
+  return localeCode.split('-')[0];
+}
+
+async loadLanguages() {
+  try {
+    const myLang = localStorage.getItem('app_language');
+    this.myLangCode = myLang || this.myLangCode;
+    this.myLangLabel = this.languageName(this.myLangCode) || 'My Language';
+
+    const receiverId = this.route.snapshot.queryParamMap.get('receiverId');
+
+    if (receiverId) {
+      this.chatService.getUserLanguage(receiverId).subscribe(
+        (res) => {
+          if (res && res.language) {
+            this.receiverLangCode = res.language;
+            this.receiverLangLabel = this.languageName(res.language) || 'Receiver Language';
+            localStorage.setItem('receiverLang', res.language);
+          } else {
+            console.warn('⚠️ Receiver language not found in API response');
+          }
+        },
+        (err) => {
+          console.error('❌ Error fetching receiver language:', err);
+        }
+      );
+    } else {
+      const storedReceiverLang = localStorage.getItem('receiverLang');
+      this.receiverLangCode = storedReceiverLang || this.receiverLangCode;
+      this.receiverLangLabel =
+        this.languageName(this.receiverLangCode) || 'Receiver Language';
+    }
+  } catch (err) {
+    console.warn('Failed to load language preferences', err);
+  }
+}
+
+normalizeLocaleCode(code: string): string {
+  if (!code) return code;
+
+  const lower = code.trim().toLowerCase();
+  const keys = Object.keys(this.languageMap);
+
+  const exactKey = keys.find(k => k.toLowerCase() === lower);
+  if (exactKey) return exactKey;
+
+  const partialKey = keys.find(k => k.toLowerCase().startsWith(lower + '-'));
+  if (partialKey) return partialKey;
+
+  const fallbackMap: Record<string, string> = {
+    en: 'en-IN',
+    hi: 'hi-IN',
+    bn: 'bn-BD',
+    ta: 'ta-IN',
+    te: 'te-IN',
+    gu: 'gu-IN',
+    mr: 'mr-IN',
+    pa: 'pa-IN',
+    pt: 'pt-BR',
+    es: 'es-ES',
+    fr: 'fr-FR',
+    de: 'de-DE',
+    ar: 'ar-SA',
+    zh: 'zh-CN',
+  };
+  if (fallbackMap[lower]) return fallbackMap[lower];
+
+  return code;
+}
+
+// Card state
+translationCard: {
+  visible: boolean;
+  mode: 'translateCustom' | 'translateToReceiver' | 'sendOriginal' | null;
+  items: TranslationItem[];
+  createdAt: Date;
+} | null = null;
+
 parseTranslationResponse(raw: any): string | null {
   let result: string | null = null;
 
@@ -4460,207 +4438,37 @@ parseTranslationResponse(raw: any): string | null {
   return result;
 }
 
-// /**
-//  * Close translation card
-//  */
 closeTranslationCard() {
   if (this.translationCard) {
     this.translationCard.visible = false;
   }
 }
 
+messageToggleMap: Map<string, { activeCode: string }> = new Map();
 
-
-
-// // async sendFromTranslationCard() {
-// //   if (!this.translationCard) return;
-
-// //   const mode = this.translationCard.mode;
-// //   const items = this.translationCard.items || [];
-// //   const originalText = this.messageText?.trim() || '';
-// //   const now = Date.now();
-
-// //   // Helper to find item by full code match or fallback to 'en'
-// //   const findByCodeOrEn = (code: string | undefined) =>
-// //     items.find(i => i.code === code) || items.find(i => i.code?.startsWith('en')) || undefined;
-
-// //   // Build translations object according to your rules
-// //   const translationsPayload: IMessage['translations'] = {
-// //     original: {
-// //       code: 'en',
-// //       label: 'English (Original)',
-// //       text: originalText
-// //     }
-// //   };
-
-// //   // For 'translateToMy' mode: include sender(my) translation + receiver translation + original
-// //   if (mode === 'translateToMy') {
-// //     const myItem = findByCodeOrEn(this.myLangCode);
-// //     if (myItem) {
-// //       translationsPayload.myLanguage = {
-// //         code: myItem.code,
-// //         label: myItem.label,
-// //         text: myItem.text
-// //       };
-// //     }
-
-// //     const recvItem = findByCodeOrEn(this.receiverLangCode);
-// //     if (recvItem) {
-// //       translationsPayload.receiverLanguage = {
-// //         code: recvItem.code,
-// //         label: recvItem.label,
-// //         text: recvItem.text
-// //       };
-// //     }
-
-// //     // Use myLanguage translation as the visible message text if available, else fallback to original
-// //     const visibleText = translationsPayload.myLanguage?.text || translationsPayload.receiverLanguage?.text || originalText;
-
-// //     const localMessage: Partial<IMessage & { attachment?: any }> = {
-// //       sender: this.senderId,
-// //       text: visibleText,
-// //       translations: translationsPayload,
-// //       timestamp: now,
-// //       msgId: uuidv4(),
-// //       replyToMsgId: this.replyTo?.message.msgId || '',
-// //       isEdit: false,
-// //       isPinned: false,
-// //       type: 'text',
-// //       reactions: []
-// //     };
-
-// //     // send
-// //     await this.chatService.sendMessage(localMessage);
-// //   }
-// //   // For 'translateToReceiver' mode: include receiver translated + original
-// //   else if (mode === 'translateToReceiver') {
-// //     const recvItem = findByCodeOrEn(this.receiverLangCode);
-// //     if (recvItem) {
-// //       translationsPayload.receiverLanguage = {
-// //         code: recvItem.code,
-// //         label: recvItem.label,
-// //         text: recvItem.text
-// //       };
-// //     }
-
-// //     const visibleText = translationsPayload.receiverLanguage?.text || originalText;
-// //     const localMessage: Partial<IMessage & { attachment?: any }> = {
-// //       sender: this.senderId,
-// //       text: visibleText,
-// //       translations: translationsPayload,
-// //       timestamp: now,
-// //       msgId: uuidv4(),
-// //       replyToMsgId: this.replyTo?.message.msgId || '',
-// //       isEdit: false,
-// //       isPinned: false,
-// //       type: 'text',
-// //       reactions: []
-// //     };
-
-// //     await this.chatService.sendMessage(localMessage);
-// //   }
-// //   // For 'sendOriginal' mode: if receiver lang != en include receiver translation + original; otherwise only original
-// //   else if (mode === 'sendOriginal') {
-// //     const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
-
-// //     if (recvApiLang !== 'en') {
-// //       const recvItem = findByCodeOrEn(this.receiverLangCode);
-// //       if (recvItem) {
-// //         translationsPayload.receiverLanguage = {
-// //           code: recvItem.code,
-// //           label: recvItem.label,
-// //           text: recvItem.text
-// //         };
-// //       }
-// //     }
-
-// //     // When user explicitly chose sendOriginal via card, visibleText should be original English
-// //     const visibleText = originalText;
-
-// //     const localMessage: Partial<IMessage & { attachment?: any }> = {
-// //       sender: this.senderId,
-// //       text: visibleText,
-// //       translations: translationsPayload.receiverLanguage ? translationsPayload : { original: translationsPayload.original },
-// //       timestamp: now,
-// //       msgId: uuidv4(),
-// //       replyToMsgId: this.replyTo?.message.msgId || '',
-// //       isEdit: false,
-// //       isPinned: false,
-// //       type: 'text',
-// //       reactions: []
-// //     };
-
-// //     await this.chatService.sendMessage(localMessage);
-// //   } else {
-// //     console.warn('Unknown translation card mode', mode);
-// //     this.showToast('Nothing to send', 'warning');
-// //     return;
-// //   }
-
-// //   // Hide card and show toast; DO NOT overwrite this.messageText (so actual send button remains original-only)
-// //   this.translationCard.visible = false;
-// //   this.showToast('Translated message sent', 'success');
-
-// //   // UI cleanup similar to normal send (scroll, typing off, etc.)
-// //   this.showSendButton = false;
-// //   this.replyToMessage = null;
-// //   try { this.stopTypingSignal(); } catch {}
-// //   try { this.scrollToBottom(); } catch {}
-// // }
-
-
-// /**
-//  * Helper: show toast
-//  */
-// showToast(msg: string, color: string = 'medium') {
-//   const toast = document.createElement('ion-toast');
-//   toast.message = msg;
-//   toast.duration = 1500;
-//   toast.color = color;
-//   document.body.appendChild(toast);
-//   toast.present();
-// }
-
-// /**
-//  * Helper for row styling
-//  */
-// getRowType(code: string): string {
-//   if (code === 'en') return 'original';
-//   if (code === this.myLangCode) return 'my-lang';
-//   if (code === this.receiverLangCode) return 'receiver-lang';
-//   return 'other';
-// }
-
-// /**
-//  * Helper: Check if any translation is in progress
-//  */
-// get isTranslating(): boolean {
-//   return this.isTranslatingToMy || this.isTranslatingToReceiver || this.isTranslatingOriginal;
-// }
-
-
-// // ---------- per-message UI state ----------
-messageToggleMap: Map<string, { activeCode: string; showAll: boolean }> = new Map();
-
-// // Return array of available translations from msg.translations
 getAllTranslationsArray(msg: any): { code: string; label: string; text: string }[] {
   if (!msg?.translations) return [];
   const arr: { code: string; label: string; text: string }[] = [];
 
+  // Original language (auto-detected, not always English)
   if (msg.translations.original) {
     arr.push({
-      code: msg.translations.original.code || 'en',
-      label: msg.translations.original.label || 'English (Original)',
+      code: msg.translations.original.code || 'unknown',
+      label: msg.translations.original.label || 'Original',
       text: msg.translations.original.text || ''
     });
   }
-  if (msg.translations.myLanguage) {
+  
+  // Other custom language translation
+  if (msg.translations.otherLanguage) {
     arr.push({
-      code: msg.translations.myLanguage.code,
-      label: msg.translations.myLanguage.label,
-      text: msg.translations.myLanguage.text || ''
+      code: msg.translations.otherLanguage.code,
+      label: msg.translations.otherLanguage.label,
+      text: msg.translations.otherLanguage.text || ''
     });
   }
+  
+  // Receiver's language translation
   if (msg.translations.receiverLanguage) {
     arr.push({
       code: msg.translations.receiverLanguage.code,
@@ -4669,7 +4477,7 @@ getAllTranslationsArray(msg: any): { code: string; label: string; text: string }
     });
   }
 
-  // dedupe by code
+  // Deduplicate by code
   const seen = new Set<string>();
   return arr.filter(item => {
     if (!item.code) return false;
@@ -4679,20 +4487,27 @@ getAllTranslationsArray(msg: any): { code: string; label: string; text: string }
   });
 }
 
-// /** ensure map entry exists */
+/**
+ * Check if message has multiple translations (more than just original)
+ */
+hasMultipleTranslations(msg: any): boolean {
+  if (!msg?.translations) return false;
+  const arr = this.getAllTranslationsArray(msg);
+  return arr.length > 1;
+}
+
 ensureToggleState(msg: any) {
   if (!this.messageToggleMap.has(msg.msgId)) {
     let active = 'original';
     if (msg.translations) {
       const all = this.getAllTranslationsArray(msg);
-      // prefer whichever translation matches visible msg.text
       const matched = all.find(t => t.text && (msg.text || '').trim() === t.text.trim());
       if (matched) active = matched.code;
-      else if (msg.translations.myLanguage) active = msg.translations.myLanguage.code;
+      else if (msg.translations.otherLanguage) active = msg.translations.otherLanguage.code;
       else if (msg.translations.receiverLanguage) active = msg.translations.receiverLanguage.code;
       else active = msg.translations.original?.code || 'original';
     }
-    this.messageToggleMap.set(msg.msgId, { activeCode: active, showAll: false });
+    this.messageToggleMap.set(msg.msgId, { activeCode: active });
   }
 }
 
@@ -4733,200 +4548,173 @@ cycleTranslation(msg: any) {
   this.ensureToggleState(msg);
   const st = this.messageToggleMap.get(msg.msgId)!;
   const arr = this.getAllTranslationsArray(msg);
-  // codes list; ensure 'original' present (use its code)
   const codes = arr.map(a => a.code);
   if (msg.translations.original && !codes.includes(msg.translations.original.code || 'original')) {
     codes.push(msg.translations.original.code || 'original');
   }
-  // find next
   const idx = codes.indexOf(st.activeCode);
   const next = (idx === -1 || idx === codes.length - 1) ? codes[0] : codes[idx + 1];
   st.activeCode = next;
   this.messageToggleMap.set(msg.msgId, st);
 }
 
-setActiveTranslation(msg: any, code: string) {
-  this.ensureToggleState(msg);
-  const st = this.messageToggleMap.get(msg.msgId)!;
-  st.activeCode = code;
-  st.showAll = false;
-  this.messageToggleMap.set(msg.msgId, st);
-}
-
-toggleShowAllTranslations(msg: any) {
-  this.ensureToggleState(msg);
-  const st = this.messageToggleMap.get(msg.msgId)!;
-  st.showAll = !st.showAll;
-  this.messageToggleMap.set(msg.msgId, st);
-}
-
-isShowingAllTranslations(msg: any) {
-  this.ensureToggleState(msg);
-  return this.messageToggleMap.get(msg.msgId)!.showAll;
-}
-
-async copyToClipboard(text: string) {
-  try {
-    await navigator.clipboard.writeText(text);
-    this.showToast?.('Copied', 'success');
-  } catch (err) {
-    this.showToast?.('Copy failed', 'danger');
-  }
-}
-
-// /** fallback simple menu handler for the "⋯" button.
-//  * If you prefer an ion-popover/ion-action-sheet, replace this with your UI.
-//  */
-// openTranslationMenu(msg: any) {
-//   const choices = this.getAllTranslationsArray(msg);
-//   // quick prompt (simple) - mobile friendly action sheet would be better
-//   const labels = choices.map(c => `${c.label} — ${c.code}`);
-//   const selected = window.prompt(`Choose translation:\n${labels.join('\n')}\n\nType the number (1..${labels.length}) or 'o' for original`);
-//   if (!selected) return;
-//   const idx = parseInt(selected, 10);
-//   if (!isNaN(idx) && idx >= 1 && idx <= choices.length) {
-//     this.setActiveTranslation(msg, choices[idx - 1].code);
-//   } else if ((selected || '').toLowerCase() === 'o') {
-//     this.setActiveTranslation(msg, 'original');
-//   }
-// }
-
-// ============================================
-// COMPLETE TRANSLATION SYSTEM - FIXED VERSION
-// ============================================
+// Removed: setActiveTranslation, toggleShowAllTranslations, isShowingAllTranslations, copyToClipboard
+// These are no longer needed with the simplified bubble
 
 /**
- * CASE 1 & 2: Translate to My Language OR Translate to Receiver Language
+ * ✅ NEW: Handle language selection from dropdown
  */
-async translateTo(target: 'my' | 'receiver') {
+async onSelectTranslateLanguage(event: any) {
+  const selectedLang = event.detail.value;
+  if (!selectedLang) return;
+
   const text = this.messageText?.trim();
   if (!text) {
     this.showToast('Type something to translate', 'warning');
     return;
   }
 
-  // Step 1: Ensure user consent
   const allowed = await this.ensureTranslationConsent();
   if (!allowed) return;
 
-  // Step 2: Set loading state
-  if (target === 'my') {
-    this.isTranslatingToMy = true;
-  } else {
-    this.isTranslatingToReceiver = true;
-  }
+  this.isTranslatingCustom = true;
 
-  // Step 3: Determine both target languages
-  const myApiLang = this.apiLanguageCode(this.myLangCode);
-  const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
-
-  // Step 4: Fetch translations based on mode
-  if (target === 'my') {
-    // TRANSLATE TO MY: Fetch both (sender + receiver)
-    this.fetchBothTranslationsParallel('translateToMy', text, myApiLang, recvApiLang);
-  } else {
-    // TRANSLATE TO RECEIVER: Fetch only receiver translation
-    this.fetchReceiverTranslationOnly('translateToReceiver', text, recvApiLang);
-  }
+  const targetApiLang = this.apiLanguageCode(selectedLang.code);
+  
+  await this.fetchCustomTranslation('translateCustom', text, selectedLang.code, selectedLang.label, targetApiLang);
 }
 
 /**
- * Fetch BOTH translations (for "Translate to My" mode)
+ * ✅ NEW: Fetch custom language translation (with auto-detect)
  */
-async fetchBothTranslationsParallel(
-  mode: 'translateToMy',
+async fetchCustomTranslation(
+  mode: 'translateCustom',
   originalText: string,
-  myApiLang: string,
-  recvApiLang: string
+  targetCode: string,
+  targetLabel: string,
+  targetApiLang: string
 ) {
-  const promises: Promise<{ lang: string; text: string }>[] = [];
+  // ✅ Auto-detect source language, no need to check if target is English
+  const params = new HttpParams()
+    .set('text', originalText)
+    .set('to', targetApiLang);
 
-  // Fetch My Language translation (if not English)
-  if (myApiLang !== 'en') {
-    const myParams = new HttpParams()
-      .set('text', originalText)
-      .set('from', 'en')
-      .set('to', myApiLang);
-    
-    promises.push(
-      this.http.get(this.translationApiBase, { params: myParams, responseType: 'text' })
-        .toPromise()
-        .then((raw: any) => ({
-          lang: 'my',
-          text: this.parseTranslationResponse(raw) || originalText
-        }))
-        .catch(() => ({ lang: 'my', text: originalText }))
-    );
-  }
-
-  // Fetch Receiver Language translation (if not English)
-  if (recvApiLang !== 'en') {
-    const recvParams = new HttpParams()
-      .set('text', originalText)
-      .set('from', 'en')
-      .set('to', recvApiLang);
-    
-    promises.push(
-      this.http.get(this.translationApiBase, { params: recvParams, responseType: 'text' })
-        .toPromise()
-        .then((raw: any) => ({
-          lang: 'receiver',
-          text: this.parseTranslationResponse(raw) || originalText
-        }))
-        .catch(() => ({ lang: 'receiver', text: originalText }))
-    );
-  }
-
-  try {
-    const results = await Promise.all(promises);
-    
-    const translations: any = {};
-    results.forEach(r => {
-      if (r.lang === 'my') translations.my = r.text;
-      if (r.lang === 'receiver') translations.receiver = r.text;
-    });
-
-    if (myApiLang === 'en') translations.my = originalText;
-    if (recvApiLang === 'en') translations.receiver = originalText;
-
-    // Show BOTH translations for "Translate to My" mode
-    this.showBothTranslationsCard(mode, originalText, translations);
-    
-  } catch (err) {
-    console.error('Translation failed', err);
-    this.showToast('Translation failed', 'danger');
-  } finally {
-    this.isTranslatingToMy = false;
-  }
+  this.http.get(this.translationApiBase, { params, responseType: 'json' }).subscribe({
+    next: (response: any) => {
+      if (response.success && response.translatedText) {
+        const detectedLang = response.detectedSource || 'unknown';
+        const detectedLabel = this.languageName(this.normalizeLocaleCode(detectedLang)) || detectedLang;
+        
+        this.showCustomTranslationCard(
+          mode, 
+          originalText, 
+          targetCode, 
+          targetLabel, 
+          response.translatedText,
+          detectedLang,
+          detectedLabel
+        );
+      } else {
+        this.showToast('Translation failed', 'warning');
+      }
+      
+      this.isTranslatingCustom = false;
+    },
+    error: (err) => {
+      console.error('Translation error', err);
+      this.showToast('Translation failed', 'danger');
+      this.isTranslatingCustom = false;
+    }
+  });
 }
 
 /**
- * Fetch ONLY receiver translation (for "Translate to Receiver" mode)
+ * ✅ UPDATED: Show custom translation card with detected source language
+ */
+showCustomTranslationCard(
+  mode: 'translateCustom',
+  originalText: string,
+  targetCode: string,
+  targetLabel: string,
+  translation: string,
+  detectedSourceCode?: string,
+  detectedSourceLabel?: string
+) {
+  const items: TranslationItem[] = [];
+
+  // Add detected source language (original)
+  if (detectedSourceCode) {
+    items.push({
+      code: detectedSourceCode,
+      label: detectedSourceLabel || 'Original',
+      text: originalText
+    });
+  }
+
+  // Add translated language
+  items.push({
+    code: targetCode,
+    label: targetLabel,
+    text: translation
+  });
+
+  this.translationCard = {
+    visible: true,
+    mode,
+    items,
+    createdAt: new Date()
+  };
+
+  this.showToast('Translation ready', 'success');
+  try { this.cdr.detectChanges(); } catch { }
+}
+
+/**
+ * UPDATED: Translate to Receiver
+ */
+async translateTo(target: 'receiver') {
+  const text = this.messageText?.trim();
+  if (!text) {
+    this.showToast('Type something to translate', 'warning');
+    return;
+  }
+
+  const allowed = await this.ensureTranslationConsent();
+  if (!allowed) return;
+
+  this.isTranslatingToReceiver = true;
+
+  const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
+  
+  await this.fetchReceiverTranslationOnly('translateToReceiver', text, recvApiLang);
+}
+
+/**
+ * Fetch ONLY receiver translation (with auto-detect)
  */
 async fetchReceiverTranslationOnly(
   mode: 'translateToReceiver',
   originalText: string,
   recvApiLang: string
 ) {
-  // If receiver language is English, no need to translate
-  if (recvApiLang === 'en') {
-    this.showToast('Receiver language is English, no translation needed', 'medium');
-    this.isTranslatingToReceiver = false;
-    return;
-  }
-
+  // ✅ Auto-detect source language
   const params = new HttpParams()
     .set('text', originalText)
-    .set('from', 'en')
     .set('to', recvApiLang);
 
-  this.http.get(this.translationApiBase, { params, responseType: 'text' }).subscribe({
-    next: (raw: any) => {
-      const receiverTranslation = this.parseTranslationResponse(raw);
-
-      if (receiverTranslation) {
-        // Show ONLY receiver translation
-        this.showReceiverOnlyCard(mode, originalText, receiverTranslation);
+  this.http.get(this.translationApiBase, { params, responseType: 'json' }).subscribe({
+    next: (response: any) => {
+      if (response.success && response.translatedText) {
+        const detectedLang = response.detectedSource || 'unknown';
+        const detectedLabel = this.languageName(this.normalizeLocaleCode(detectedLang)) || detectedLang;
+        
+        this.showReceiverOnlyCard(
+          mode, 
+          originalText, 
+          response.translatedText,
+          detectedLang,
+          detectedLabel
+        );
       } else {
         this.showToast('Translation failed', 'warning');
       }
@@ -4942,51 +4730,27 @@ async fetchReceiverTranslationOnly(
 }
 
 /**
- * Show card with BOTH translations (Translate to My mode)
- */
-showBothTranslationsCard(
-  mode: 'translateToMy',
-  originalText: string,
-  translations: { my: string; receiver: string }
-) {
-  const items: TranslationItem[] = [];
-
-  // Add My Language
-  items.push({
-    code: this.myLangCode,
-    label: this.languageName(this.myLangCode) + ' (You)',
-    text: translations.my
-  });
-
-  // Add Receiver Language
-  items.push({
-    code: this.receiverLangCode,
-    label: this.languageName(this.receiverLangCode) + ' (Receiver)',
-    text: translations.receiver
-  });
-
-  this.translationCard = {
-    visible: true,
-    mode,
-    items,
-    createdAt: new Date()
-  };
-
-  this.showToast('Translations ready', 'success');
-  try { this.cdr.detectChanges(); } catch { }
-}
-
-/**
- * Show card with ONLY receiver translation (Translate to Receiver mode)
+ * Show card with ONLY receiver translation (with detected source)
  */
 showReceiverOnlyCard(
   mode: 'translateToReceiver',
   originalText: string,
-  receiverTranslation: string
+  receiverTranslation: string,
+  detectedSourceCode?: string,
+  detectedSourceLabel?: string
 ) {
   const items: TranslationItem[] = [];
 
-  // Add ONLY Receiver Language
+  // Add detected source language (original)
+  if (detectedSourceCode) {
+    items.push({
+      code: detectedSourceCode,
+      label: detectedSourceLabel || 'Original',
+      text: originalText
+    });
+  }
+
+  // Add Receiver Language
   items.push({
     code: this.receiverLangCode,
     label: this.languageName(this.receiverLangCode) + ' (Receiver)',
@@ -5005,7 +4769,7 @@ showReceiverOnlyCard(
 }
 
 /**
- * CASE 3: Send Original with auto-translation to receiver
+ * Send Original with auto-translation (with auto-detect)
  */
 async sendOriginalWithTranslation() {
   const text = this.messageText?.trim();
@@ -5021,29 +4785,29 @@ async sendOriginalWithTranslation() {
 
   const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
 
-  // If receiver language is English, send directly
-  if (recvApiLang === 'en') {
-    this.isTranslatingOriginal = false;
-    this.sendDirectMessage(text, text);
-    return;
-  }
-
-  // Fetch receiver translation
+  // ✅ Auto-detect source language
   const params = new HttpParams()
     .set('text', text)
-    .set('from', 'en')
     .set('to', recvApiLang);
 
-  this.http.get(this.translationApiBase, { params, responseType: 'text' }).subscribe({
-    next: (raw: any) => {
-      const receiverTranslation = this.parseTranslationResponse(raw);
+  this.http.get(this.translationApiBase, { params, responseType: 'json' }).subscribe({
+    next: (response: any) => {
+      if (response.success && response.translatedText) {
+        const detectedLang = response.detectedSource || 'unknown';
+        const detectedLabel = this.languageName(this.normalizeLocaleCode(detectedLang)) || detectedLang;
 
-      if (receiverTranslation) {
-        const items: TranslationItem[] = [{
-          code: this.receiverLangCode,
-          label: this.languageName(this.receiverLangCode) + ' (Receiver will see)',
-          text: receiverTranslation
-        }];
+        const items: TranslationItem[] = [
+          {
+            code: detectedLang,
+            label: detectedLabel + ' (Original)',
+            text: text
+          },
+          {
+            code: this.receiverLangCode,
+            label: this.languageName(this.receiverLangCode) + ' (Receiver will see)',
+            text: response.translatedText
+          }
+        ];
 
         this.translationCard = {
           visible: true,
@@ -5068,7 +4832,7 @@ async sendOriginalWithTranslation() {
 }
 
 /**
- * Send message from translation card
+ * UPDATED: Send message from translation card (with auto-detected source)
  */
 async sendFromTranslationCard() {
   if (!this.translationCard) return;
@@ -5078,58 +4842,51 @@ async sendFromTranslationCard() {
   const originalText = this.messageText?.trim() || '';
   const now = Date.now();
 
+  // Find original and translated items
+  const originalItem = items[0]; // First item is always the detected source
+  const translatedItem = items[1]; // Second item is the translation
+
   const translationsPayload: IMessage['translations'] = {
     original: {
-      code: 'en',
-      label: 'English (Original)',
-      text: originalText
+      code: originalItem?.code || 'unknown',
+      label: originalItem?.label || 'Original',
+      text: originalItem?.text || originalText
     }
   };
 
   let visibleTextForSender: string = originalText;
 
-  const myItem = items.find(i => i.code === this.myLangCode);
-  const recvItem = items.find(i => i.code === this.receiverLangCode);
-
-  if (mode === 'translateToMy') {
-    // Sender sees: My Language
-    if (myItem) {
-      translationsPayload.myLanguage = {
-        code: myItem.code,
-        label: myItem.label,
-        text: myItem.text
+  if (mode === 'translateCustom') {
+    // Custom language translation - store in otherLanguage
+    if (translatedItem) {
+      translationsPayload.otherLanguage = {
+        code: translatedItem.code,
+        label: translatedItem.label,
+        text: translatedItem.text
       };
-      visibleTextForSender = myItem.text;
-    }
-    
-    if (recvItem) {
-      translationsPayload.receiverLanguage = {
-        code: recvItem.code,
-        label: recvItem.label,
-        text: recvItem.text
-      };
+      visibleTextForSender = translatedItem.text;
     }
     
   } else if (mode === 'translateToReceiver') {
-    // Sender sees: Receiver's translation (preview)
-    if (recvItem) {
+    // Receiver translation
+    if (translatedItem) {
       translationsPayload.receiverLanguage = {
-        code: recvItem.code,
-        label: recvItem.label,
-        text: recvItem.text
+        code: translatedItem.code,
+        label: translatedItem.label,
+        text: translatedItem.text
       };
-      visibleTextForSender = recvItem.text;
+      visibleTextForSender = translatedItem.text;
     }
     
   } else if (mode === 'sendOriginal') {
-    // Sender sees: Original English
+    // Original with receiver translation
     visibleTextForSender = originalText;
     
-    if (recvItem) {
+    if (translatedItem) {
       translationsPayload.receiverLanguage = {
-        code: recvItem.code,
-        label: recvItem.label,
-        text: recvItem.text
+        code: translatedItem.code,
+        label: translatedItem.label,
+        text: translatedItem.text
       };
     }
   }
@@ -5163,9 +4920,6 @@ async sendFromTranslationCard() {
   } catch {}
 }
 
-/**
- * Helper: Send message directly
- */
 async sendDirectMessage(senderText: string, receiverText: string) {
   const now = Date.now();
   
@@ -5205,13 +4959,6 @@ async sendDirectMessage(senderText: string, receiverText: string) {
   this.showToast('Message sent', 'success');
 }
 
-/**
- * Show toast notification
- * @param message - The message to display
- * @param color - Toast color ('success' | 'danger' | 'warning' | 'medium' | 'primary' | 'secondary')
- * @param duration - Duration in milliseconds (default: 2000)
- * @param position - Position ('top' | 'middle' | 'bottom')
- */
 async showToast(
   message: string, 
   color: string = 'medium', 
@@ -5234,7 +4981,6 @@ async showToast(
   await toast.present();
 }
 
-// Alternative: Simple version without dismiss button
 async showToastSimple(
   message: string, 
   color: string = 'medium', 
@@ -5250,7 +4996,6 @@ async showToastSimple(
   await toast.present();
 }
 
-// Alternative: With icon
 async showToastWithIcon(
   message: string, 
   color: string = 'success', 
@@ -5272,5 +5017,6 @@ async showToastWithIcon(
 
   await toast.present();
 }
+
 
 }
