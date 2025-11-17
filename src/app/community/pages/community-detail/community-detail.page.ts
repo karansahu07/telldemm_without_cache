@@ -383,6 +383,7 @@ import { CommunityMenuPopoverComponent } from '../../components/community-menu-p
 
 // Group preview modal component
 import { GroupPreviewModalComponent } from '../../components/group-preview-modal/group-preview-modal.component';
+import { AlertController } from '@ionic/angular';
 
 interface CommunityGroup extends IConversation {
   membersCount?: number;
@@ -414,6 +415,7 @@ export class CommunityDetailPage implements OnInit {
   currentUserId: string = '';
   currentUserName: string = '';
   currentUserPhone: string = '';
+  isCreator: boolean = false;
 
   constructor(
     private navCtrl: NavController,
@@ -424,7 +426,8 @@ export class CommunityDetailPage implements OnInit {
     private modalCtrl: ModalController,
     private toastCtrl: ToastController,
     private authService: AuthService,
-    private sqliteService: SqliteService
+    private sqliteService: SqliteService,
+    private alertCtrl: AlertController
   ) {}
 
   ngOnInit() {
@@ -449,117 +452,88 @@ export class CommunityDetailPage implements OnInit {
     });
   }
 
+  // async loadCommunityDetail() {
+  //   if (!this.communityId) return;
+  //   this.loading = true;
+
+  //   try {
+  //     // 1️⃣ Load from SQLite first (instant UI)
+  //     // await this.loadGroupsFromSQLite();
+  //     console.time('loading community');
+  //     // 2️⃣ Fetch community details from Firebase
+  //     this.community = await this.firebaseService.getCommunityDetails(
+  //       this.communityId
+  //     );
+  //     console.log('Community details:', this.community);
+
+  //     if (!this.community) {
+  //       this.memberCount = 0;
+  //       this.groupCount = 0;
+  //       this.loading = false;
+  //       return;
+  //     }
+
+  //     // 3️⃣ Get member count
+  //     // this.memberCount = await this.firebaseService.getCommunityMemberCount(
+  //     //   this.communityId
+  //     // );
+  //     this.memberCount = Object.keys(this.community.members).length;
+
+  //     // 4️⃣ Sync with Firebase (background update)
+  //     await this.syncGroupsWithFirebase();
+  //     console.timeEnd('loading community');
+  //   } catch (err) {
+  //     console.error('loadCommunityDetail error', err);
+  //     const toast = await this.toastCtrl.create({
+  //       message: 'Failed to load community details',
+  //       duration: 2000,
+  //       color: 'danger',
+  //     });
+  //     await toast.present();
+  //   } finally {
+  //     this.loading = false;
+  //   }
+  // }
+
   async loadCommunityDetail() {
-    if (!this.communityId) return;
-    this.loading = true;
+  if (!this.communityId) return;
+  this.loading = true;
 
-    try {
-      // 1️⃣ Load from SQLite first (instant UI)
-      // await this.loadGroupsFromSQLite();
-      console.time('loading community');
-      // 2️⃣ Fetch community details from Firebase
-      this.community = await this.firebaseService.getCommunityDetails(
-        this.communityId
-      );
-      console.log('Community details:', this.community);
+  try {
+    // Fetch community details from Firebase
+    this.community = await this.firebaseService.getCommunityDetails(
+      this.communityId
+    );
+    console.log('Community details:', this.community);
 
-      if (!this.community) {
-        this.memberCount = 0;
-        this.groupCount = 0;
-        this.loading = false;
-        return;
-      }
-
-      // 3️⃣ Get member count
-      // this.memberCount = await this.firebaseService.getCommunityMemberCount(
-      //   this.communityId
-      // );
-      this.memberCount = Object.keys(this.community.members).length;
-
-      // 4️⃣ Sync with Firebase (background update)
-      await this.syncGroupsWithFirebase();
-      console.timeEnd('loading community');
-    } catch (err) {
-      console.error('loadCommunityDetail error', err);
-      const toast = await this.toastCtrl.create({
-        message: 'Failed to load community details',
-        duration: 2000,
-        color: 'danger',
-      });
-      await toast.present();
-    } finally {
+    if (!this.community) {
+      this.memberCount = 0;
+      this.groupCount = 0;
       this.loading = false;
+      return;
     }
+
+    // ✅ CHECK IF CURRENT USER IS THE CREATOR
+    this.isCreator = this.community.createdBy === this.currentUserId;
+    console.log('Is Creator:', this.isCreator, 'Created By:', this.community.createdBy, 'Current User:', this.currentUserId);
+
+    // Get member count
+    this.memberCount = Object.keys(this.community.members || {}).length;
+
+    // Sync groups with Firebase
+    await this.syncGroupsWithFirebase();
+  } catch (err) {
+    console.error('loadCommunityDetail error', err);
+    const toast = await this.toastCtrl.create({
+      message: 'Failed to load community details',
+      duration: 2000,
+      color: 'danger',
+    });
+    await toast.present();
+  } finally {
+    this.loading = false;
   }
-
-  /**
-   * 🔹 Load groups from SQLite (instant)
-   */
-  private async loadGroupsFromSQLite() {
-    try {
-      // Get all conversations from SQLite
-      // const allConversations = await this.sqliteService.getConversations();
-
-      // Filter groups that belong to this community
-      const communityGroups = this.firebaseService.currentConversations.filter(
-        (conv) => conv.type === 'group' && conv.communityId === this.communityId
-      ) as CommunityGroup[];
-
-      console.log('Groups from SQLite:', communityGroups);
-
-      // Reset arrays
-      this.announcementGroup = null;
-      this.generalGroup = null;
-      this.groupsIn = [];
-      this.groupsAvailable = [];
-
-      // Categorize groups
-      for (const group of communityGroups) {
-        const groupTitle = (group.title || '').toLowerCase();
-        const isMember = group.members?.includes(this.currentUserId) || false;
-
-        // Add member status and aliases
-        group.isMember = isMember;
-        group.membersCount = group.members?.length || 0;
-        group.name = group.title; // Add name alias
-        group.id = group.roomId; // Add id alias
-        group.description = ''; // Will be updated from Firebase
-
-        // Categorize by title
-        if (groupTitle === 'announcements') {
-          this.announcementGroup = group;
-        } else if (groupTitle === 'general') {
-          this.generalGroup = group;
-        } else {
-          if (isMember) {
-            this.groupsIn.push(group);
-          } else {
-            this.groupsAvailable.push(group);
-          }
-        }
-      }
-
-      // Update group count
-      this.groupCount = communityGroups.length;
-
-      console.log('Categorized groups:', {
-        announcement: this.announcementGroup,
-        general: this.generalGroup,
-        joined: this.groupsIn,
-        available: this.groupsAvailable,
-      });
-    } catch (error) {
-      console.error('Error loading groups from SQLite:', error);
-    }
-  }
-
-  /**
-   * 🔹 Check if group belongs to this community
-   */
-  private isGroupInCommunity(roomId: string): boolean {
-    // Groups in community have roomId pattern: communityId_groupname or groupId with communityId prefix
-    return roomId.includes(this.communityId || '');
-  }
+}
 
   /**
    * 🔹 Sync groups with Firebase (background)
@@ -701,31 +675,75 @@ export class CommunityDetailPage implements OnInit {
     });
   }
 
+  // async openGroupPreview(group: any) {
+  //   if (!group) return;
+
+  //   const modal = await this.modalCtrl.create({
+  //     component: GroupPreviewModalComponent,
+  //     componentProps: {
+  //       group,
+  //       communityName: this.community?.title || this.community?.name || '',
+  //       currentUserId: this.currentUserId,
+  //       currentUserName: this.currentUserName,
+  //       currentUserPhone: this.currentUserPhone,
+  //     },
+  //     cssClass: 'group-preview-modal-wrapper',
+  //     breakpoints: [0, 0.45, 0.9],
+  //     initialBreakpoint: 0.45,
+  //     backdropDismiss: true,
+  //   });
+
+  //   await modal.present();
+  //   const { data } = await modal.onDidDismiss();
+
+  //   if (data && data.action === 'join' && data.groupId) {
+  //     await this.joinGroup(data.groupId);
+  //   }
+  // }
+
   async openGroupPreview(group: any) {
-    if (!group) return;
+  if (!group) return;
 
-    const modal = await this.modalCtrl.create({
-      component: GroupPreviewModalComponent,
-      componentProps: {
-        group,
-        communityName: this.community?.title || this.community?.name || '',
-        currentUserId: this.currentUserId,
-        currentUserName: this.currentUserName,
-        currentUserPhone: this.currentUserPhone,
-      },
-      cssClass: 'group-preview-modal-wrapper',
-      breakpoints: [0, 0.45, 0.9],
-      initialBreakpoint: 0.45,
-      backdropDismiss: true,
-    });
+  // Prepare group data with all necessary fields
+  const groupData = {
+    roomId: group.roomId || group.id,
+    id: group.roomId || group.id,
+    name: group.name || group.title,
+    title: group.name || group.title,
+    description: group.description || '',
+    membersCount: group.membersCount || 0,
+    members: group.members || [],
+    createdBy: group.createdBy || '',
+    createdByName: group.createdByName || '',
+    createdAt: group.createdAt,
+    avatar: group.avatar || '',
+    communityId: this.communityId,
+  };
 
-    await modal.present();
-    const { data } = await modal.onDidDismiss();
+  console.log('Opening group preview with data:', groupData);
 
-    if (data && data.action === 'join' && data.groupId) {
-      await this.joinGroup(data.groupId);
-    }
+  const modal = await this.modalCtrl.create({
+    component: GroupPreviewModalComponent,
+    componentProps: {
+      group: groupData,
+      communityName: this.community?.title || this.community?.name || '',
+      currentUserId: this.currentUserId,
+      currentUserName: this.currentUserName,
+      currentUserPhone: this.currentUserPhone,
+    },
+    cssClass: 'group-preview-modal-wrapper',
+    breakpoints: [0, 0.45, 0.9],
+    initialBreakpoint: 0.45,
+    backdropDismiss: true,
+  });
+
+  await modal.present();
+  const { data } = await modal.onDidDismiss();
+
+  if (data && data.action === 'join' && data.groupId) {
+    await this.joinGroup(data.groupId);
   }
+}
 
   async joinGroup(groupId: string) {
     if (!this.currentUserId) {
@@ -908,37 +926,131 @@ export class CommunityDetailPage implements OnInit {
     this.navCtrl.back();
   }
 
+  // async presentPopover(ev: any) {
+  //   const pop = await this.popoverCtrl.create({
+  //     component: CommunityMenuPopoverComponent,
+  //     event: ev,
+  //     translucent: true,
+  //   });
+
+  //   await pop.present();
+
+  //   const { data } = await pop.onDidDismiss();
+  //   if (!data || !data.action) return;
+
+  //   const action: string = data.action;
+  //   switch (action) {
+  //     case 'info':
+  //       this.router.navigate(['/community-info'], {
+  //         queryParams: { communityId: this.communityId },
+  //       });
+  //       break;
+  //     case 'invite':
+  //       this.router.navigate(['/invite-members'], {
+  //         queryParams: { communityId: this.communityId },
+  //       });
+  //       break;
+  //     case 'settings':
+  //       this.router.navigate(['/community-settings'], {
+  //         queryParams: { communityId: this.communityId },
+  //       });
+  //       break;
+  //     default:
+  //       break;
+  //   }
+  // }
+
   async presentPopover(ev: any) {
-    const pop = await this.popoverCtrl.create({
-      component: CommunityMenuPopoverComponent,
-      event: ev,
-      translucent: true,
-    });
+  const pop = await this.popoverCtrl.create({
+    component: CommunityMenuPopoverComponent,
+    componentProps: {
+      isCreator: this.isCreator, // ✅ PASS isCreator prop
+    },
+    event: ev,
+    translucent: true,
+  });
 
-    await pop.present();
+  await pop.present();
 
-    const { data } = await pop.onDidDismiss();
-    if (!data || !data.action) return;
+  const { data } = await pop.onDidDismiss();
+  if (!data || !data.action) return;
 
-    const action: string = data.action;
-    switch (action) {
-      case 'info':
-        this.router.navigate(['/community-info'], {
-          queryParams: { communityId: this.communityId },
-        });
-        break;
-      case 'invite':
-        this.router.navigate(['/invite-members'], {
-          queryParams: { communityId: this.communityId },
-        });
-        break;
-      case 'settings':
-        this.router.navigate(['/community-settings'], {
-          queryParams: { communityId: this.communityId },
-        });
-        break;
-      default:
-        break;
-    }
+  const action: string = data.action;
+  switch (action) {
+    case 'info':
+      this.router.navigate(['/community-info'], {
+        queryParams: { communityId: this.communityId },
+      });
+      break;
+    case 'invite':
+      this.router.navigate(['/invite-members'], {
+        queryParams: { communityId: this.communityId },
+      });
+      break;
+    case 'settings':
+      this.router.navigate(['/community-settings'], {
+        queryParams: { communityId: this.communityId },
+      });
+      break;
+    case 'members':
+      // ✅ NEW: Navigate to members page
+      this.router.navigate(['/community-members'], {
+        queryParams: { communityId: this.communityId },
+      });
+      break;
+    case 'exit':
+      // ✅ NEW: Handle exit community
+      this.exitCommunity();
+      break;
+    default:
+      break;
   }
+}
+
+// Add exitCommunity() method:
+async exitCommunity() {
+  const alert = await this.alertCtrl.create({
+    header: 'Exit Community?',
+    message: 'Are you sure you want to leave this community?',
+    buttons: [
+      {
+        text: 'Cancel',
+        role: 'cancel',
+      },
+      {
+        text: 'Exit',
+        role: 'destructive',
+        handler: async () => {
+          try {
+            // Call Firebase service to remove user from community
+            await this.firebaseService.exitCommunity(
+              // this.communityId!,
+              // this.currentUserId
+            );
+
+            const toast = await this.toastCtrl.create({
+              message: 'You have left the community',
+              duration: 2000,
+              color: 'success',
+            });
+            await toast.present();
+
+            // Navigate back to home
+            this.navCtrl.navigateRoot('/tabs/home');
+          } catch (error) {
+            console.error('Exit community error:', error);
+            const toast = await this.toastCtrl.create({
+              message: 'Failed to exit community',
+              duration: 2000,
+              color: 'danger',
+            });
+            await toast.present();
+          }
+        },
+      },
+    ],
+  });
+
+  await alert.present();
+}
 }

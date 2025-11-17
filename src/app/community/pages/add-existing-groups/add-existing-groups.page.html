@@ -82,14 +82,14 @@
       </ion-label>
 
       <!-- show green check for selected -->
-      <ion-icon *ngIf="g.selected" name="checkmark-circle" color="success" slot="end" aria-hidden="true"></ion-icon>
+      <ion-icon *ngIf="g.selected" name="checkmark-circle" color="primary" slot="end" aria-hidden="true"></ion-icon>
     </ion-item>
   </ion-list>
 
   <!-- Floating forward button -->
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
     <ion-fab-button
-      color="success"
+      color="primary"
       (click)="confirmSelection()"
       [disabled]="selectedCount===0"
       [attr.aria-label]="'add_existing_groups_page.actions.confirm' | translate"

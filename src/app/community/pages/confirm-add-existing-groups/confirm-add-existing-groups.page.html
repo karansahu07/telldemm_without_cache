@@ -10,7 +10,7 @@
 <!-- fixed footer button -->
 <ion-footer translucent>
   <ion-toolbar>
-    <ion-button expand="block" color="success" (click)="addToCommunity()" [disabled]="adding">
+    <ion-button expand="block" color="primary" (click)="addToCommunity()" [disabled]="adding">
       <ion-icon slot="start" name="add-circle-outline"></ion-icon>
       <span *ngIf="!adding">Add to community</span>
       <span *ngIf="adding">Adding...</span>

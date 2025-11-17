@@ -5,9 +5,14 @@ import {
   IonContent,
   NavController,
   IonRouterOutlet,
+  ToastController,
 } from '@ionic/angular';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { FirebaseChatService } from 'src/app/services/firebase-chat.service';
+import { AuthService } from 'src/app/auth/auth.service';
+import { firstValueFrom } from 'rxjs';
+import { ApiService } from 'src/app/services/api/api.service';
 
 @Component({
   selector: 'app-community-info',
@@ -23,11 +28,17 @@ export class CommunityInfoPage implements OnInit {
   communityName: string | null = null;
   memberCount = 0;
   groupCount = 0;
+  isScrolled: boolean = false;
+  chatTitle = 'Test';
+   currentUserId: string = '';
+   isCreator : boolean = false;
+   loading = false;
 
-  // segment: 'community' | 'announcements'
-  segment: 'community' | 'announcements' = 'community';
+  communityMembers: any[] = [];
+  adminIds: string[] = [];
 
-  // sample / placeholder community data (replace with real fetch)
+  activeSection: 'community' | 'announcements' = 'community';
+
   community: any = {
     name: '',
     icon: '',
@@ -38,57 +49,234 @@ export class CommunityInfoPage implements OnInit {
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private navCtrl: NavController
+    private navCtrl: NavController,
+    private firebaseService : FirebaseChatService,
+    private authService: AuthService,
+    private toastCtrl: ToastController,
+    private service : ApiService
   ) {}
 
   ngOnInit() {
-    this.route.queryParams.subscribe((q) => {
-      this.communityId = q['communityId'] || q['id'] || null;
-      this.communityName = q['communityName'] || q['name'] || null;
-
-      // load counts if you want (placeholders for now)
-      this.memberCount = q['members'] ? Number(q['members']) : 2;
-      this.groupCount = q['groups'] ? Number(q['groups']) : 4;
-
-      if (this.communityName) this.community.name = this.communityName;
+    this.route.queryParams.subscribe((params) => {
+      const cid = params['communityId'] || '';
+      this.communityId = cid;
+      console.log("community id is", this.communityId)
     });
-
-    // if you want: fetch community data here using a service
-    // this.loadCommunity();
   }
 
-  async onSegmentChanged(ev?: any) {
-    // when segment changes, gently scroll to the corresponding section
-    this.segment = (ev && ev.detail && ev.detail.value) || this.segment;
-    await this.scrollToSegment(this.segment);
+  ionViewWillEnter() {
+    this.route.queryParams.subscribe((params) => {
+      const cid = params['communityId'] || '';
+      this.communityId = cid;
+       console.log("community id is", this.communityId)
+    });
+
+    this.currentUserId = this.authService?.authData?.userId || '';
+    const allGroups = this.firebaseService.currentConversations.filter(
+        (c) => c.type === 'group' && c.communityId === this.communityId
+      );
+      this.groupCount = allGroups.length;
+      // this.isCreator = this.community.createdBy === this.currentUserId;
+      // console.log("this is creator ", this.isCreator)
+      this.loadCommunityDetail();
+  }
+
+//     async loadCommunityDetail() {
+//   if (!this.communityId) return;
+//   this.loading = true;
+
+//   try {
+//     // Fetch community details from Firebase
+//     this.community = await this.firebaseService.getCommunityDetails(
+//       this.communityId
+//     );
+//     console.log('Community details:', this.community);
+
+//     if (!this.community) {
+//       this.memberCount = 0;
+//       this.groupCount = 0;
+//       this.loading = false;
+//       return;
+//     }
+
+//     // ✅ CHECK IF CURRENT USER IS THE CREATOR
+//     this.isCreator = this.community.createdBy === this.currentUserId;
+//     console.log('Is Creator:', this.isCreator, 'Created By:', this.community.createdBy, 'Current User:', this.currentUserId);
+
+//     // Get member count
+//     this.memberCount = Object.keys(this.community.members || {}).length;
+
+//     // Sync groups with Firebase
+//     // await this.syncGroupsWithFirebase();
+//   } catch (err) {
+//     console.error('loadCommunityDetail error', err);
+//     const toast = await this.toastCtrl.create({
+//       message: 'Failed to load community details',
+//       duration: 2000,
+//       color: 'danger',
+//     });
+//     await toast.present();
+//   } finally {
+//     this.loading = false;
+//   }
+// }
+
+async loadCommunityDetail() {
+    if (!this.communityId) return;
+    this.loading = true;
+
+    try {
+      // Fetch community details from Firebase
+      this.community = await this.firebaseService.getCommunityDetails(
+        this.communityId
+      );
+      console.log('Community details:', this.community);
+
+      if (!this.community) {
+        this.memberCount = 0;
+        this.groupCount = 0;
+        this.communityMembers = []; // 👈 Reset members
+        this.loading = false;
+        return;
+      }
+
+      // ✅ CHECK IF CURRENT USER IS THE CREATOR
+      this.isCreator = this.community.createdBy === this.currentUserId;
+      console.log('Is Creator:', this.isCreator, 'Created By:', this.community.createdBy, 'Current User:', this.currentUserId);
+
+      // Get admin IDs
+      this.adminIds = this.community.adminIds || [];
+
+      // Get member count
+      this.memberCount = Object.keys(this.community.members || {}).length;
+
+      // 👇 Fetch member details with profiles
+      await this.fetchCommunityMembersWithProfiles();
+
+    } catch (err) {
+      console.error('loadCommunityDetail error', err);
+      const toast = await this.toastCtrl.create({
+        message: 'Failed to load community details',
+        duration: 2000,
+        color: 'danger',
+      });
+      await toast.present();
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  // 👇 New method - similar to userabout's fetchGroupWithProfiles
+ async fetchCommunityMembersWithProfiles() {
+  if (!this.community?.members) {
+    this.communityMembers = [];
+    return;
+  }
+
+  const members = this.community.members || {};
+  console.log({members})
+  const memberIds = Object.keys(members);
+  console.log({memberIds})
+  const creatorId = this.community.createdBy;
+  console.log({creatorId})
+
+  const memberPromises = memberIds.map(async (userId) => {
+    const memberData = members[userId];
+    console.log({memberData})
+    
+    try {
+      const userProfileRes: any = await firstValueFrom(
+        this.service.getUserProfilebyId(userId)
+      );
+      console.log({userProfileRes});
+
+      return {
+        user_id: userId,
+        username: userProfileRes?.name || 'Unknown',
+        phone: userProfileRes?.phone_number || '',
+        avatar: userProfileRes?.profile || 'assets/images/user.jfif',
+        isActive: memberData.isActive ?? true,
+        isCreator: userId === creatorId,
+        status : userProfileRes.dp_status,
+      };
+    } catch (err) {
+      console.warn(`Failed to fetch profile for user ${userId}`, err);
+      
+      return {
+        user_id: userId,
+        username: memberData.username || 'Unknown',
+        phone: memberData.phoneNumber || '',
+        avatar: 'assets/images/user.jfif',
+        isActive: memberData.isActive ?? true,
+        isCreator: userId === creatorId,
+      };
+    }
+  });
+
+  this.communityMembers = await Promise.all(memberPromises);
+  this.communityMembers = this.communityMembers.filter(m => m.isActive !== false);
+
+  console.log('Community members with profiles:', this.communityMembers);
+}
+
+  // Helper method to check if user is admin
+  isAdmin(userId: string): boolean {
+    return this.adminIds.includes(String(userId));
+  }
+
+  onScroll(event: any) {
+    const scrollTop = event.detail.scrollTop;
+    this.isScrolled = scrollTop > 10;
+  }
+  setDefaultAvatar(event: Event) {
+    (event.target as HTMLImageElement).src = 'assets/images/user.jfif';
+  }
+  goBackToChat(){
+    // this.navCtrl.back();
+    if(!this.communityId) return;
+    this.router.navigate(['/community-detail'], {
+      queryParams: {
+        communityId: this.communityId,
+      }
+    });
+  }
+
+   setActiveSection(section: 'community' | 'announcements') {
+    this.activeSection = section;
+  }
+
+  onAddGroups() {
+    if(!this.communityId) return;
+    this.router.navigate(['/add-group-community'], {
+      queryParams: {
+        communityId: this.communityId,
+      }
+    });
   }
 
   async scrollToSegment(seg: 'community' | 'announcements') {
-    // short delay so layout stabilized
     await new Promise((r) => setTimeout(r, 80));
     const elId = seg === 'community' ? 'section-community' : 'section-announcements';
     const el = document.getElementById(elId);
     if (!el) {
-      // fallback: scroll to top
       await this.content.scrollToTop(300);
       return;
     }
-    // compute offsetTop relative to ion-content scroll container
     const top = el.offsetTop;
     await this.content.scrollToPoint(0, top, 300);
   }
 
-  // button actions (wire to your logic / services)
   invite() {
     // navigate to invite page or call share link
     //console.log('invite');
     // this.router.navigate(['/community-invite'], { queryParams: { communityId: this.communityId }});
   }
 
-  addMembers() {
-    // go to add members page (pass communityId)
-    this.router.navigate(['/load-all-members'], {
-      queryParams: { communityId: this.communityId, communityName: this.communityName },
+addMembers() {
+    this.router.navigate(['/add-members'], {
+      queryParams: {
+        groupId: this.communityId,
+      }
     });
   }
 
@@ -101,19 +289,16 @@ export class CommunityInfoPage implements OnInit {
 
   // menu actions for community options
   editCommunity() {
-    //console.log('edit community');
-    // navigate to edit page...
-  }
-  manageGroups() {
-    this.router.navigate(['/manage-groups'], {
+    this.router.navigate(['/edit-community-info'], {
       queryParams: { communityId: this.communityId },
     });
   }
+
   communitySettings() {
     //console.log('open community settings');
   }
   viewGroups() {
-    this.router.navigate(['/community-groups'], {
+    this.router.navigate(['/add-group-community'], {
       queryParams: { communityId: this.communityId },
     });
   }

@@ -1,4 +1,4 @@
-<ion-list lines="none">
+<!-- <ion-list lines="none">
   <ion-item button (click)="select('info')">
     <ion-label>{{ 'community_menu_component.info' | translate }}</ion-label>
   </ion-item>
@@ -10,4 +10,42 @@
   <ion-item button (click)="select('settings')">
     <ion-label>{{ 'community_menu_component.settings' | translate }}</ion-label>
   </ion-item>
+</ion-list> -->
+
+<ion-list>
+  <!-- Options for Creator -->
+  <ng-container *ngIf="isCreator">
+    <ion-item button (click)="selectOption('info')">
+      <ion-icon slot="start" name="information-circle-outline"></ion-icon>
+      <ion-label>Community info</ion-label>
+    </ion-item>
+
+    <ion-item button (click)="selectOption('invite')">
+      <ion-icon slot="start" name="person-add-outline"></ion-icon>
+      <ion-label>Invite members</ion-label>
+    </ion-item>
+
+    <ion-item button (click)="selectOption('settings')">
+      <ion-icon slot="start" name="settings-outline"></ion-icon>
+      <ion-label>Community settings</ion-label>
+    </ion-item>
+  </ng-container>
+
+  <!-- Options for Regular Members -->
+  <ng-container *ngIf="!isCreator">
+    <ion-item button (click)="selectOption('info')">
+      <ion-icon slot="start" name="information-circle-outline"></ion-icon>
+      <ion-label>Community info</ion-label>
+    </ion-item>
+
+    <ion-item button (click)="selectOption('members')">
+      <ion-icon slot="start" name="people-outline"></ion-icon>
+      <ion-label>Members</ion-label>
+    </ion-item>
+
+    <ion-item button (click)="selectOption('exit')" lines="none">
+      <ion-icon slot="start" name="exit-outline" color="danger"></ion-icon>
+      <ion-label color="danger">Exit community</ion-label>
+    </ion-item>
+  </ng-container>
 </ion-list>

@@ -3570,6 +3570,10 @@ export class FirebaseChatService {
       };
     }
   }
+  
+  exitCommunity(){
+    console.log("this exit community function is called")
+  }
 
   /**
    * Check if user is member of a community
@@ -4616,6 +4620,37 @@ export class FirebaseChatService {
     const snap = await get(child(ref(this.db), `communities/${communityId}`));
     return snap.exists() ? snap.val() : null;
   }
+
+  async updateCommunityInfo(
+  communityId: string,
+  newName: string,
+  newDescription: string
+): Promise<boolean> {
+  try {
+    const db = getDatabase();
+    const communityRef = ref(db, `communities/${communityId}`);
+
+    // Update community details
+    const updates: any = {
+      title: newName,
+      name: newName, // some communities might use 'name' instead of 'title'
+      description: newDescription,
+      updatedAt: new Date().toISOString()
+    };
+
+    await update(communityRef, updates);
+
+    console.log('✅ Community updated successfully:', communityId);
+    
+    // Optional: Update local cache if you maintain one
+    // this.refreshCommunityInConversations(communityId, newName);
+
+    return true;
+  } catch (error) {
+    console.error('❌ Error updating community info:', error);
+    return false;
+  }
+}
 
   async getGroupMembers(groupId: string): Promise<string[]> {
     const snapshot = await get(ref(this.db, `groups/${groupId}/members`));

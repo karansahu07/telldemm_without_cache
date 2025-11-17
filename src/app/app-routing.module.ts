@@ -306,7 +306,11 @@ const routes: Routes = [
   {
     path: 'theme',
     loadChildren: () => import('./settings/chats/theme/theme.module').then( m => m.ThemePageModule)
+  },  {
+    path: 'edit-community-info',
+    loadChildren: () => import('./community/pages/edit-community-info/edit-community-info.module').then( m => m.EditCommunityInfoPageModule)
   },
+
 
 
 

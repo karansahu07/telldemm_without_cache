@@ -1,0 +1,52 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button (onclick)="onBack()"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Edit community</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <!-- Community image -->
+  <div class="community-photo">
+    <ion-avatar style="background-color: antiquewhite;border-radius: 8px;overflow: hidden;">
+      <img src="assets/images/multiple-users-silhouette (1).png" style="border-radius: 0;"/>
+    </ion-avatar>
+  </div>
+
+  <!-- Community name -->
+  <ion-item lines="full">
+    <ion-label position="stacked">Community name</ion-label>
+    <ion-input
+      type="text"
+      maxlength="100"
+      placeholder="Enter community name"
+      [(ngModel)]="communityName">
+    </ion-input>
+  </ion-item>
+  <div class="char-count">{{ communityName.length || 0 }}/100</div>
+
+  <!-- Community description -->
+  <ion-item>
+    <ion-textarea
+      class="no-padding"
+      autoGrow="true"
+      maxlength="2048"
+      placeholder="Enter your new description"
+      [(ngModel)]="communityDescription">
+    </ion-textarea>
+  </ion-item>
+  <div class="char-count">{{ communityDescription.length || 0 }}/2048</div>
+</ion-content>
+
+<!-- Floating Next button -->
+<ion-footer>
+  <ion-toolbar>
+    <ion-buttons slot="end">
+      <ion-fab-button class="next-btn" (click)="updateCommunity()">
+        <ion-icon name="arrow-forward"></ion-icon>
+      </ion-fab-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-footer>

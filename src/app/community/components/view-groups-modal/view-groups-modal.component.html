@@ -1,0 +1,162 @@
+<ion-header>
+  <ion-toolbar>
+    <div class="modal-handle"></div>
+    <ion-title class="modal-title">{{ communityName }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <!-- Announcements Group -->
+  <div class="section-header" *ngIf="announcementGroup">
+    <ion-text color="medium">
+      <p>Announcements</p>
+    </ion-text>
+  </div>
+
+  <ion-list *ngIf="announcementGroup">
+    <ion-item button (click)="openGroup(announcementGroup)" lines="full">
+      <ion-avatar slot="start">
+        <div class="icon-wrapper announcement-bg">
+          <ion-icon name="megaphone" class="group-icon"></ion-icon>
+        </div>
+      </ion-avatar>
+      <ion-label>
+        <h2>{{ getGroupName(announcementGroup) }}</h2>
+        <p class="group-message" *ngIf="announcementGroup.lastMessage">
+          {{ announcementGroup.lastMessage }}
+        </p>
+      </ion-label>
+      <div slot="end" class="group-info" *ngIf="announcementGroup.updatedAt">
+        <ion-text color="medium" class="date-text">
+          {{ formatDate(announcementGroup.updatedAt) }}
+        </ion-text>
+      </div>
+    </ion-item>
+  </ion-list>
+
+  <!-- Groups You're In -->
+  <div class="section-header" *ngIf="groupsIn && groupsIn.length > 0">
+    <ion-text color="medium">
+      <p>Groups you're in</p>
+    </ion-text>
+  </div>
+
+  <ion-list *ngIf="groupsIn && groupsIn.length > 0">
+    <ion-item
+      *ngFor="let group of groupsIn"
+      button
+      (click)="openGroup(group)"
+      lines="full"
+    >
+      <ion-avatar slot="start">
+        <img
+          [src]="group.avatar || 'assets/images/user.jfif'"
+          alt="Group Avatar"
+          (error)="setDefaultAvatar($event)"
+        />
+      </ion-avatar>
+      <ion-label>
+        <h2>{{ getGroupName(group) }}</h2>
+        <p class="group-message" *ngIf="group.lastMessage">
+          {{ group.lastMessage }}
+        </p>
+        <p class="group-message" *ngIf="!group.lastMessage">
+          Tap to view group
+        </p>
+      </ion-label>
+      <div slot="end" class="group-info" *ngIf="group.updatedAt">
+        <ion-text color="medium" class="date-text">
+          {{ formatDate(group.updatedAt) }}
+        </ion-text>
+      </div>
+    </ion-item>
+  </ion-list>
+
+  <!-- General Group -->
+  <div class="section-header" *ngIf="generalGroup">
+    <ion-text color="medium">
+      <p>General</p>
+    </ion-text>
+  </div>
+
+  <ion-list *ngIf="generalGroup">
+    <ion-item button (click)="openGroup(generalGroup)" lines="full">
+      <ion-avatar slot="start">
+        <div class="icon-wrapper general-bg">
+          <ion-icon name="chatbubbles" class="group-icon"></ion-icon>
+        </div>
+      </ion-avatar>
+      <ion-label>
+        <h2>{{ getGroupName(generalGroup) }}</h2>
+        <p class="group-message" *ngIf="generalGroup.lastMessage">
+          {{ generalGroup.lastMessage }}
+        </p>
+      </ion-label>
+      <div slot="end" class="group-info" *ngIf="generalGroup.updatedAt">
+        <ion-text color="medium" class="date-text">
+          {{ formatDate(generalGroup.updatedAt) }}
+        </ion-text>
+      </div>
+    </ion-item>
+  </ion-list>
+
+  <!-- Groups You Can Join -->
+  <div
+    class="section-header"
+    *ngIf="groupsAvailable && groupsAvailable.length > 0"
+  >
+    <ion-text color="medium">
+      <p>Groups you can join</p>
+    </ion-text>
+  </div>
+
+  <ion-list *ngIf="groupsAvailable && groupsAvailable.length > 0">
+    <ion-item
+      *ngFor="let group of groupsAvailable"
+      button
+      (click)="openGroup(group)"
+      lines="full"
+    >
+      <ion-avatar slot="start">
+        <img
+          [src]="group.avatar || 'assets/images/user.jfif'"
+          alt="Group Avatar"
+          (error)="setDefaultAvatar($event)"
+        />
+      </ion-avatar>
+      <ion-label>
+        <h2>{{ getGroupName(group) }}</h2>
+        <p class="group-description">Request to join</p>
+      </ion-label>
+      <div slot="end" class="join-arrow">
+        <ion-icon name="chevron-forward-outline" color="medium"></ion-icon>
+      </div>
+    </ion-item>
+  </ion-list>
+
+  <!-- Empty State -->
+  <div
+    class="empty-state"
+    *ngIf="
+      !announcementGroup &&
+      !generalGroup &&
+      (!groupsIn || groupsIn.length === 0) &&
+      (!groupsAvailable || groupsAvailable.length === 0)
+    "
+  >
+    <ion-icon name="people-outline"></ion-icon>
+    <h3>No groups yet</h3>
+    <p>Create a group to get started</p>
+  </div>
+
+  <!-- Add Group Button (Only for Creator) -->
+  <div class="add-group-container" *ngIf="isCreator">
+    <ion-button expand="block" color="success" (click)="addGroup()">
+      <ion-icon name="add" slot="start"></ion-icon>
+      Add group
+    </ion-button>
+  </div>
+
+  <!-- Bottom spacing if not creator -->
+  <div class="bottom-spacing" *ngIf="!isCreator"></div>
+</ion-content>

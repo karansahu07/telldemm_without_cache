@@ -1,76 +1,104 @@
-<ion-header class="red-header">
-  <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button (click)="back()"></ion-back-button>
-    </ion-buttons>
+<ion-header [translucent]="true" [class.scrolled]="isScrolled">
+  <ion-toolbar style="padding-top: 30px">
+    <ion-button
+      slot="start"
+      fill="clear"
+      (click)="goBackToChat()"
+      class="backbutton"
+    >
+      <ion-icon name="arrow-back-outline" class="back-icon"></ion-icon>
+    </ion-button>
 
-    <ion-title>
-      <div class="header-title">Community</div>
-    </ion-title>
-  </ion-toolbar>
-
-  <!-- large community top area -->
-  <div class="community-top">
-    <ion-avatar class="community-avatar">
-      <img [src]="community.icon || 'assets/images/multiple-users-silhouette (1).png'" />
-    </ion-avatar>
-
-    <div class="community-meta">
-      <h1 class="community-name">{{ community.name || 'Community' }}</h1>
-      <p class="community-sub">Community · {{ groupCount }} groups</p>
+    <div class="profile-container">
+      <ion-avatar class="profile-avatar">
+        <img
+          [src]="'assets/images/user.jfif'"
+          alt="Profile Picture"
+          (error)="setDefaultAvatar($event)"
+        />
+      </ion-avatar>
+      <ion-label class="profile-name">
+        <h2>{{ community.title }}</h2>
+        <ion-label class="usernumber">
+      Community · {{ groupCount }} groups
+    </ion-label>
+      </ion-label>
     </div>
-  </div>
-
-  <div class="action-row">
-    <ion-button fill="clear" class="action-btn" (click)="invite()">
-      <ion-icon name="link-outline"></ion-icon>
-      <div class="label">Invite</div>
-    </ion-button>
-
-    <ion-button fill="clear" class="action-btn" (click)="addMembers()">
-      <ion-icon name="person-add-outline"></ion-icon>
-      <div class="label">Add members</div>
-    </ion-button>
-
-    <ion-button fill="clear" class="action-btn" (click)="addGroups()">
-      <ion-icon name="people-outline"></ion-icon>
-      <div class="label">Add groups</div>
-    </ion-button>
-  </div>
-
-  <!-- segment for tabs -->
-  <ion-toolbar class="tabs-toolbar">
-    <ion-segment value="community" (ionChange)="onSegmentChanged($event)" [(ngModel)]="segment">
-      <ion-segment-button value="community">
-        <ion-label>Community</ion-label>
-      </ion-segment-button>
-      <ion-segment-button value="announcements">
-        <ion-label>Announcements</ion-label>
-      </ion-segment-button>
-    </ion-segment>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="red-theme-content">
-  <div class="scroll-padding"></div>
+<ion-content
+  [fullscreen]="true"
+  (ionScroll)="onScroll($event)"
+  scrollEvents="true"
+>
+  <div class="center-content">
+    <ion-label class="username"> {{ community.title }} </ion-label>
+    <ion-label class="usernumber">
+      Community · {{ groupCount }} groups
+    </ion-label>
+  </div>
 
-  <!-- community section -->
-  <section id="section-community" class="section">
+  <div class="message-toolbar" style="margin-top: 15px; margin-bottom: 15px">
+    <div class="message-item" (click)="goBackToChat()" *ngIf="isCreator">
+      <ion-avatar class="centered-avatar">
+        <ion-icon name="chatbox-ellipses-outline" class="mess-icon"></ion-icon>
+      </ion-avatar>
+      <ion-label>Invite</ion-label>
+    </div>
+
+    <div class="message-item" (click)="addMembers()">
+      <ion-avatar class="centered-avatar">
+        <ion-icon name="person-add-outline" class="mess-icon"></ion-icon>
+      </ion-avatar>
+      <ion-label>Add members</ion-label>
+    </div>
+
+    <div class="message-item" (click)="onAddGroups()">
+      <ion-avatar class="centered-avatar">
+        <ion-icon name="person-add-outline" class="mess-icon"></ion-icon>
+      </ion-avatar>
+      <ion-label>Add Groups</ion-label>
+    </div>
+  </div>
+
+  <!-- Tab Headers -->
+  <div class="tab-header">
+    <div
+      class="tab-item"
+      [class.active]="activeSection === 'community'"
+      (click)="setActiveSection('community')"
+    >
+      <ion-label>Community</ion-label>
+    </div>
+    <div
+      class="tab-item"
+      [class.active]="activeSection === 'announcements'"
+      (click)="setActiveSection('announcements')"
+    >
+      <ion-label>Announcements</ion-label>
+    </div>
+  </div>
+
+  <!-- Community Section -->
+  <section
+    id="section-community"
+    class="section"
+    *ngIf="activeSection === 'community'"
+  >
     <!-- description / community text -->
     <ion-card class="comm-desc">
-      <ion-card-content>
-        {{ community.description }}
-      </ion-card-content>
+      <ion-card-content> {{ community.description }} </ion-card-content>
     </ion-card>
 
-    <!-- options list -->
-    <ion-list>
+    <!-- Options list - Only for Creator -->
+    <ion-list *ngIf="isCreator">
       <ion-item button (click)="editCommunity()">
         <ion-icon slot="start" name="pencil-outline"></ion-icon>
         <ion-label>Edit community info</ion-label>
       </ion-item>
 
-      <ion-item button (click)="manageGroups()">
+      <ion-item button (click)="onAddGroups()">
         <ion-icon slot="start" name="people-outline"></ion-icon>
         <ion-label>Manage groups</ion-label>
       </ion-item>
@@ -79,70 +107,150 @@
         <ion-icon slot="start" name="settings-outline"></ion-icon>
         <ion-label>Community settings</ion-label>
       </ion-item>
+    </ion-list>
 
+    <ion-list>
       <ion-item button (click)="viewGroups()">
         <ion-icon slot="start" name="people-circle-outline"></ion-icon>
         <ion-label>View groups ({{ groupCount }})</ion-label>
       </ion-item>
     </ion-list>
 
-    <ion-list>
-      <ion-list-header>
-        <ion-label>Community members ({{ memberCount }})</ion-label>
-      </ion-list-header>
+   <!-- Replace the existing Community members section with this -->
+<ion-list>
+  <ion-list-header>
+    <ion-label>Community members ({{ memberCount }})</ion-label>
+  </ion-list-header>
 
-      <ion-item button (click)="addMembers()">
-        <ion-avatar slot="start" class="green-avatar">
-          <ion-icon name="person-add-outline"></ion-icon>
-        </ion-avatar>
-        <ion-label>Add members</ion-label>
-      </ion-item>
+  <ion-item button (click)="addMembers()" *ngIf="isCreator">
+    <ion-button fill="clear" slot="start">
+      <ion-icon
+        name="person-add-outline"
+        slot="start"
+        class="all-icon1"
+      ></ion-icon>
+    </ion-button>
+    <ion-label>Add members</ion-label>
+  </ion-item>
 
-      <!-- mock members - replace with your members loop -->
-      <ion-item>
-        <ion-avatar slot="start">
-          <img src="assets/images/user.jfif" />
-        </ion-avatar>
-        <ion-label>
-          <h3>You</h3>
-          <p class="muted">Community Owner</p>
-        </ion-label>
-      </ion-item>
+  <!-- Current User -->
+  <!-- <ion-item>
+    <ion-avatar slot="start">
+      <img 
+        [src]="'assets/images/user.jfif'" 
+        (error)="setDefaultAvatar($event)"
+      />
+    </ion-avatar>
+    <ion-label>
+      <h3>You</h3>
+      <p class="muted" *ngIf="isCreator">Community Owner</p>
+      <p class="muted" *ngIf="!isCreator && isAdmin(currentUserId)">Community Admin</p>
+    </ion-label>
+  </ion-item> -->
 
-      <!-- <ion-item>
-        <ion-avatar slot="start" class="initial-avatar">KM</ion-avatar>
-        <ion-label>
-          <h3>Khushi MCA</h3>
-          <p class="muted">Change is the end result of all true learning</p>
-        </ion-label>
-      </ion-item> -->
-    </ion-list>
+  <!-- Show all members for creator/admin -->
+  <!-- <ng-container *ngIf="isCreator || isAdmin(currentUserId)"> -->
+  <ng-container>
+    <ion-item *ngFor="let member of communityMembers" [class.hidden]="member.user_id === currentUserId">
+      <ion-avatar slot="start">
+        <img 
+          [src]="member.avatar || 'assets/images/user.jfif'" 
+          (error)="setDefaultAvatar($event)"
+        />
+      </ion-avatar>
+      <ion-label>
+        <div class="Encry">{{ member.username }}</div>
+        <!-- Optional: Show phone number -->
+        <!-- <p style="font-size: 12px; color: gray;">{{ member.phone }}</p> -->
+      </ion-label>
+      
+      <!-- Show badges on right side like group admin -->
+      <ion-badge 
+        *ngIf="member.isCreator" 
+        class="admin-badge" 
+        style="margin-left:6px;font-size:10px;color:red;background-color:#FFD4D4;">
+        Community Owner
+      </ion-badge>
+      <ion-badge 
+        *ngIf="!member.isCreator && isAdmin(member.user_id)" 
+        class="admin-badge" 
+        style="margin-left:6px;font-size:10px;color:blue;background-color:#D4E4FF;">
+        Community Admin
+      </ion-badge>
+    </ion-item>
+  </ng-container>
 
-    <ion-list>
+  <!-- Message for non-creators/non-admins -->
+  <ion-item *ngIf="!isCreator && !isAdmin(currentUserId)">
+    <ion-label class="ion-text-center">
+      <p class="muted">Only community admins can see all members</p>
+    </ion-label>
+  </ion-item>
+</ion-list>
+
+    <!-- Creator-only options -->
+    <ion-list *ngIf="isCreator">
       <ion-item button (click)="assignNewOwner()">
         <ion-icon slot="start" name="people-outline"></ion-icon>
         <ion-label>Assign new owner</ion-label>
       </ion-item>
 
       <ion-item button (click)="exitCommunity()">
-        <ion-icon slot="start" name="log-out-outline" color="danger"></ion-icon>
+        <ion-icon
+          slot="start"
+          name="log-out-outline"
+          color="primary"
+        ></ion-icon>
         <ion-label class="danger">Exit community</ion-label>
       </ion-item>
 
       <ion-item button (click)="reportCommunity()">
-        <ion-icon slot="start" name="warning-outline" color="danger"></ion-icon>
+        <ion-icon
+          slot="start"
+          name="warning-outline"
+          color="primary"
+        ></ion-icon>
         <ion-label class="danger">Report community</ion-label>
       </ion-item>
 
       <ion-item button (click)="deactivateCommunity()">
-        <ion-icon slot="start" name="close-circle-outline" color="danger"></ion-icon>
+        <ion-icon
+          slot="start"
+          name="close-circle-outline"
+          color="primary"
+        ></ion-icon>
         <ion-label class="danger">Deactivate community</ion-label>
+      </ion-item>
+    </ion-list>
+
+    <!-- Non-creator options -->
+    <ion-list *ngIf="!isCreator">
+      <ion-item button (click)="exitCommunity()">
+        <ion-icon
+          slot="start"
+          name="log-out-outline"
+          color="primary"
+        ></ion-icon>
+        <ion-label class="danger">Exit community</ion-label>
+      </ion-item>
+
+      <ion-item button (click)="reportCommunity()">
+        <ion-icon
+          slot="start"
+          name="warning-outline"
+          color="primary"
+        ></ion-icon>
+        <ion-label class="danger">Report community</ion-label>
       </ion-item>
     </ion-list>
   </section>
 
-  <!-- announcements section -->
-  <section id="section-announcements" class="section">
+  <!-- Announcements Section -->
+  <section
+    id="section-announcements"
+    class="section"
+    *ngIf="activeSection === 'announcements'"
+  >
     <ion-list>
       <ion-item>
         <ion-icon slot="start" name="notifications-outline"></ion-icon>
@@ -185,6 +293,5 @@
       </ion-item>
     </ion-list>
   </section>
-
   <div class="bottom-space"></div>
 </ion-content>
