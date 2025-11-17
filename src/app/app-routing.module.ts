@@ -310,6 +310,10 @@ const routes: Routes = [
     path: 'edit-community-info',
     loadChildren: () => import('./community/pages/edit-community-info/edit-community-info.module').then( m => m.EditCommunityInfoPageModule)
   },
+  {
+    path: 'add-members-community',
+    loadChildren: () => import('./community/pages/add-members-community/add-members-community.module').then( m => m.AddMembersCommunityPageModule)
+  },
 
 
 

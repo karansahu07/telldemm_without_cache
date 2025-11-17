@@ -4652,6 +4652,124 @@ export class FirebaseChatService {
   }
 }
 
+async addMembersToCommunity(communityId: string, userIds: string[]): Promise<void> {
+  try {
+    // 1. Get community data to find announcement group ID
+    const communityRef = ref(this.db, `communities/${communityId}`);
+    // const groupRef = ref(this.db, `groups`);
+    const communitySnap = await get(communityRef);
+    
+    if (!communitySnap.exists()) {
+      throw new Error('Community not found');
+    }
+    
+    const communityData = communitySnap.val();
+    console.log({communityData})
+    const announcementGroupId = communityData.announcementGroupId;       //this will find
+    const generalGroupId = communityData.generalGroupId;
+    
+    if (!announcementGroupId) {
+      throw new Error('Announcement group not found for this community');
+    }
+    
+    // 2. Prepare updates object
+    const updates: any = {};
+    const timestamp = Date.now();
+    
+    // Build communityGroups array for ICommunityMeta
+    const communityGroups: string[] = [];
+    if (announcementGroupId) communityGroups.push(announcementGroupId);
+    if (generalGroupId) communityGroups.push(generalGroupId);
+    
+    // Get all groups in community
+    const allGroupsObj = communityData.groups || {};
+    Object.keys(allGroupsObj).forEach(gid => {
+      if (gid && !communityGroups.includes(gid)) {
+        communityGroups.push(gid);
+      }
+    });
+    
+    // Create community chat meta (similar to createCommunity)
+    const communityChatMeta: ICommunityChatMeta = {
+      type: 'community',
+      lastmessageAt: timestamp,
+      lastmessageType: 'text',
+      lastmessage: '',
+      unreadCount: 0,
+      isArchived: false,
+      isPinned: false,
+      isLocked: false,
+      communityGroups: communityGroups
+    };
+    
+    // Create announcement group chat meta
+    const announcementChatMeta: IChatMeta = {
+      type: 'group',
+      lastmessageAt: timestamp,
+      lastmessageType: 'text',
+      lastmessage: '',
+      unreadCount: 0,
+      isArchived: false,
+      isPinned: false,
+      isLocked: false
+    };
+    
+    // Add members to community and their userchats
+    for (const userId of userIds) {
+      // Add to community members
+      updates[`communities/${communityId}/members/${userId}`] = {
+        joinedAt: timestamp,
+        role: 'member',
+        userId: userId,
+        isActive: true,
+        username: '',
+        phoneNumber: ''
+      };
+      
+      // ✅ Add community chat meta to user's userchats (NOT users node)
+      updates[`userchats/${userId}/${communityId}`] = communityChatMeta;
+    }
+    
+    // Add members to announcement group and their userchats
+    for (const userId of userIds) {
+      // Add to announcement group members
+      updates[`groups/${announcementGroupId}/members/${userId}`] = {
+        joinedAt: timestamp,
+        role: 'member',
+        userId: userId,
+        isActive: true,
+        username: '',
+        phoneNumber: ''
+      };
+      
+      // ✅ Add announcement group chat meta to user's userchats (NOT users node)
+      updates[`userchats/${userId}/${announcementGroupId}`] = announcementChatMeta;
+    }
+    
+    // Update member counts
+    const currentCommunityMemberCount = communityData.memberCount || 0;
+    updates[`communities/${communityId}/memberCount`] = currentCommunityMemberCount + userIds.length;
+    
+    // Get announcement group data for member count
+    const announcementGroupRef = ref(this.db, `groups/${announcementGroupId}`);
+    const announcementGroupSnap = await get(announcementGroupRef);
+    
+    if (announcementGroupSnap.exists()) {
+      const announcementGroupData = announcementGroupSnap.val();
+      const currentGroupMemberCount = announcementGroupData.memberCount || 0;
+      updates[`groups/${announcementGroupId}/memberCount`] = currentGroupMemberCount + userIds.length;
+    }
+    
+    // 3. Execute all updates atomically
+    await update(ref(this.db), updates);
+    
+    console.log(`Successfully added ${userIds.length} members to community and announcement group`);
+  } catch (error) {
+    console.error('Error adding members to community:', error);
+    throw error;
+  }
+}
+
   async getGroupMembers(groupId: string): Promise<string[]> {
     const snapshot = await get(ref(this.db, `groups/${groupId}/members`));
     const membersObj = snapshot.val();

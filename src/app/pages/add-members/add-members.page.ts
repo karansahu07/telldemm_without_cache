@@ -37,7 +37,6 @@ export class AddMembersPage implements OnInit {
   ngOnInit() {
     this.loadDeviceMatchedContacts();
     this.groupId = this.route.snapshot.queryParamMap.get('groupId') || '';
-    // //console.log("load device contacts",this.loadDeviceMatchedContacts);
   }
 
   async showToast(message: string, color: 'success' | 'danger' = 'success') {
@@ -77,15 +76,6 @@ async loadDeviceMatchedContacts(): Promise<void> {
         isOnPlatform: true,
         selected: false,
       })),
-      // Optional: Uncomment if you want to include non-platform device contacts
-      // ...nonPfUsers.map((dc: any) => ({
-      //   user_id: null,
-      //   name: dc.username ?? dc.phoneNumber,
-      //   image: dc.avatar ?? 'assets/images/user.jfif',
-      //   phone_number: String(dc.phoneNumber),
-      //   isOnPlatform: false,
-      //   selected: false,
-      // })),
     ];
 
     // Initialize filtered list for search
@@ -114,74 +104,6 @@ async loadDeviceMatchedContacts(): Promise<void> {
       user.name?.toLowerCase().includes(search)
     );
   }
-
-// async addSelectedMembers() {
-//   if (!this.groupId) {
-//     this.showToast('Group ID not found', 'danger');
-//     return;
-//   }
-
-//   const selected = this.selectedUsers.map(u => ({
-//     user_id: u.user_id,
-//     name: u.name,
-//     phone_number: u.phone_number
-//   }));
-
-//   if (selected.length === 0) {
-//     this.showToast('No members selected', 'danger');
-//     return;
-//   }
-
-//   const db = getDatabase();
-//   const updates: any = {};
-
-//   selected.forEach(member => {
-//     // Add to group members in Firebase
-//     updates[`groups/${this.groupId}/members/${member.user_id}`] = {
-//       name: member.name,
-//       phone_number: member.phone_number,
-//       status: 'active',
-//       role: 'member'
-//     };
-
-//     // Remove from pastmembers if exists
-//     updates[`groups/${this.groupId}/pastmembers/${member.user_id}`] = null;
-//   });
-
-//   try {
-//     // Update Firebase
-//     await update(ref(db), updates);
-
-//     // Get backendGroupId from Firebase
-//     const backendGroupIdSnap = await get(ref(db, `groups/${this.groupId}/backendGroupId`));
-//     const backendGroupId = backendGroupIdSnap.val();
-
-//     if (!backendGroupId) {
-//       this.showToast("Backend group ID missing", "danger");
-//       return;
-//     }
-
-//     // Sync each member to backend
-//     selected.forEach(member => {
-//       this.service.addGroupMember(
-//         Number(backendGroupId), // backend group_id
-//         Number(member.user_id), // user_id
-//         2 // role_id (2 = member, 1 = admin etc.)
-//       ).subscribe({
-//         next: () => {},
-//         error: () => {
-//           this.showToast(`Failed to sync member ${member.name}`, 'danger');
-//         }
-//       });
-//     });
-
-//     this.showToast('Members added successfully 🎉', 'success');
-//     this.navCtrl.back();
-
-//   } catch {
-//     this.showToast('Error adding members', 'danger');
-//   }
-// }
 
 async addSelectedMembers() {
   if (!this.groupId) {

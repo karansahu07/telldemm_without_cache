@@ -273,9 +273,9 @@ async loadCommunityDetail() {
   }
 
 addMembers() {
-    this.router.navigate(['/add-members'], {
+    this.router.navigate(['/add-members-community'], {
       queryParams: {
-        groupId: this.communityId,
+        communityId: this.communityId,
       }
     });
   }
