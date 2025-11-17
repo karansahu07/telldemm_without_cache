@@ -1,0 +1,12 @@
+.hero {
+  text-align: center;
+  padding: 24px 16px;
+  .big {
+    --width: 96px;
+    --height: 96px;
+    margin: 0 auto;
+  }
+  h1 { margin: 8px 0 0 0; font-size: 1.2rem; }
+  .meta { color: var(--ion-color-medium); }
+  .actions { margin-top: 12px; display:flex; justify-content:center; gap:8px; }
+}

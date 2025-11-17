@@ -1,0 +1,51 @@
+<!-- <ion-header translucent>
+  <ion-toolbar>
+    <ion-buttons slot="start"><ion-back-button></ion-back-button></ion-buttons>
+    <ion-title>{{ channel?.name || 'Channel' }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="showPrivacy()">Privacy</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content fullscreen>
+  <div class="hero">
+    <ion-avatar class="big">
+      <img [src]="channel?.avatar || 'assets/default-avatar.png'"/>
+    </ion-avatar>
+    <h1>{{ channel?.name }}</h1>
+    <p class="meta">Channel • {{ channel?.followers | number }} followers</p>
+    <div class="actions">
+      <ion-button color="success">Follow</ion-button>
+      <ion-button fill="clear"><ion-icon name="share-outline"></ion-icon></ion-button>
+      <ion-button fill="clear"><ion-icon name="arrow-redo-outline"></ion-icon></ion-button>
+    </div>
+  </div>
+
+  <ion-list>
+    <ion-item lines="none">
+      <ion-label>
+        <h3>About</h3>
+        <p>{{ channel?.description }}</p>
+      </ion-label>
+    </ion-item>
+
+    <ion-item button detail (click)="openFeed(channel?.id)">
+      
+      <ion-label>View posts</ion-label>
+    </ion-item>
+
+    <ion-item>
+      <ion-label>
+        <h3>Public channel</h3>
+        <p>Anyone can find this channel and see what's been shared.</p>
+      </ion-label>
+    </ion-item>
+
+    <ion-item button (click)="reportChannel()">
+      <ion-icon slot="start" name="flag-outline"></ion-icon>
+      <ion-label>Report channel</ion-label>
+    </ion-item>
+  </ion-list>
+</ion-content>
+ -->

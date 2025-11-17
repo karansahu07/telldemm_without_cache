@@ -1,0 +1,30 @@
+<ion-header translucent>
+  <ion-toolbar>
+    <ion-buttons slot="start"><ion-back-button></ion-back-button></ion-buttons>
+    <ion-title>Channel posts</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content fullscreen>
+  <ion-list>
+    <ion-item *ngFor="let p of posts" lines="none">
+      <ion-card>
+        <img *ngIf="p.image" [src]="p.image" />
+        <ion-card-header>
+          <ion-card-subtitle>{{ p.author }}</ion-card-subtitle>
+          <ion-card-title>{{ p.title }}</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <p>{{ p.body }}</p>
+          <div class="reactions">
+            <!-- <app-reaction-button (clicked)="react(p, '👍')" [count]="p.reactions?.['👍']"></app-reaction-button>
+            <app-reaction-button (clicked)="react(p, '👍')" [count]="p.reactions?.['👍']"></app-reaction-button>
+            <app-reaction-button (clicked)="react(p, '❤️')" [count]="p.reactions?.['❤️']"></app-reaction-button>
+            <app-reaction-button (clicked)="react(p, '😂')" [count]="p.reactions?.['😂']"></app-reaction-button> -->
+            <ion-button fill="clear" slot="end" size="small"><ion-icon name="share-outline"></ion-icon></ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </ion-item>
+  </ion-list>
+</ion-content>

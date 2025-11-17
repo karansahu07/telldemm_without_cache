@@ -7,16 +7,13 @@
 
       <ion-buttons slot="end" class="header-icons">
         <ion-button fill="clear">
-          <!-- <img src="assets/images/qr-code.svg" class="header-img"/> -->
-          <i class="fa-solid fa-qrcode homemainicons"></i>
+          <img src="assets/images/qr-code.svg" class="header-img" />
         </ion-button>
         <ion-button fill="clear">
-          <!-- <img src="assets/images/camera.svg" class="header-img"/> -->
-          <i class="fa-solid fa-camera homemainicons"></i>
+          <img src="assets/images/camera.svg" class="header-img" />
         </ion-button>
         <ion-button (click)="presentPopover($event)">
-          <!-- <img src="assets/images/dots (1).svg" class="header-img"/> -->
-          <i class="fa-solid fa-ellipsis-vertical homemainicons"></i>
+          <img src="assets/images/dots (1).svg" class="header-img" />
         </ion-button>
       </ion-buttons>
     </div>
@@ -28,34 +25,19 @@
     <p class="Your">Your Status</p>
 
     <div class="status-row">
-      <div class="main-black" style="display: flex; margin-left: 0px">
+      <div class="main-black" style="display: flex; margin-left: 0px;">
         <div class="image-wrapperss">
-          <img
-            src="assets/images/status_image.png"
-            alt="Ellipse-img"
-            class="Ellipseee"
-          />
-          <img
-            src="assets/images/plus_status.png"
-            alt="plus-img"
-            class="plusimg"
-          />
+          <img src="assets/images/Ellipse 9.svg" alt="Ellipse-img" class="Ellipseee" />
+          <img src="assets/images/plus.png" alt="plus-img" class="plusimg" />
           <p class="Add-status">Add Status</p>
         </div>
       </div>
 
       <swiper-container slides-per-view="auto" space-between="5" class="slider">
-        <swiper-slide
-          *ngFor="let item of [].constructor(15)"
-          class="slider-swip"
-        >
+        <swiper-slide *ngFor="let item of [].constructor(15)" class="slider-swip">
           <div class="image-wrapper">
             <img src="assets/images/Rectangle 24.svg" alt="Rectangle-img" />
-            <img
-              src="assets/images/status_image.png"
-              alt="Ellipse-img"
-              class="Ellipse"
-            />
+            <img src="assets/images/Ellipse 9.svg" alt="Ellipse-img" class="Ellipse" />
           </div>
         </swiper-slide>
       </swiper-container>
@@ -63,57 +45,79 @@
 
     <div class="channels-main">
       <p class="Status">Channels</p>
-      <p class="Explore" (click)="toggleIcon()">
+
+      <p class="Explore" (click)="goToChannels()">
         Explore
-        <ion-icon
-          name="chevron-forward-outline"
-          [class.rotate]="isRotated"
-        ></ion-icon>
+        <ion-icon name="chevron-forward-outline" [class.rotate]="isRotated"></ion-icon>
       </p>
     </div>
 
-    <ion-list>
-      <ion-item *ngFor="let chat of filteredChats" (click)="openChat(chat)">
+    <!-- --- My Channels (from backend) --- -->
+    <ion-list *ngIf="!isLoadingChannels">
+      <ion-list-header>
+        <ion-label>My Channels</ion-label>
+      </ion-list-header>
+
+      <ion-item *ngFor="let ch of myChannels" (click)="openChat(ch)">
         <ion-avatar slot="start">
-          <img src="assets/images/user.jfif" />
+          <img [src]="ch.channel_dp || 'assets/images/user.jfif'" />
         </ion-avatar>
+
         <ion-label>
-          <p class="chat-message">{{ chat.name }}</p>
-          <p [style.color]="chat.unread ? '#bc8c2c' : '#444343'">
-            {{ chat.message }}
-          </p>
+          <p class="chat-message">{{ ch.channel_name }}</p>
+          <p class="followers">{{ (ch.followers_count ?? 0) + ' followers' }}</p>
         </ion-label>
+
         <div slot="end" class="chat-meta">
-          <p class="time" style="color: #ff1414">{{ chat.time }}</p>
-          <ion-badge *ngIf="chat.unread">{{ chat.unreadCount }}</ion-badge>
+          <ion-button fill="clear" size="small" (click)="onFollowClick($event, ch)">
+            <ion-icon slot="start" name="checkmark-done-outline"></ion-icon>
+            <span>Following</span>
+          </ion-button>
         </div>
+      </ion-item>
+
+      <ion-item *ngIf="myChannels.length === 0">
+        <ion-label>You are not following any channels yet</ion-label>
       </ion-item>
     </ion-list>
 
-    <div>
+    <!-- Loading state if channels are still being fetched -->
+    <ng-container *ngIf="isLoadingChannels">
+      <ion-item>
+        <ion-spinner name="crescent"></ion-spinner>
+        <ion-label>Loading channels...</ion-label>
+      </ion-item>
+    </ng-container>
+
+    <!-- --- Find channels to follow (public channels list) --- -->
+    <div style="margin-top: 12px;">
       <p class="channels">Find channels to follow</p>
-      <ion-list>
-        <ion-item
-          *ngFor="let chat of filteredchannels"
-          (click)="openChat(chat)"
-        >
+
+      <ion-list *ngIf="!isLoadingChannels">
+        <ion-item *ngFor="let ch of filteredchannels" (click)="openChat(ch)">
           <ion-avatar slot="start">
-            <img src="assets/images/user.jfif" />
+            <img [src]="ch.channel_dp || 'assets/images/user.jfif'" />
           </ion-avatar>
+
           <ion-label>
-            <p class="chat-India">{{ chat.name }}</p>
-            <p class="followers">{{ chat.followers }} followers</p>
+            <p class="chat-India">{{ ch.channel_name }}</p>
+            <p class="followers">{{ (ch.followers_count ?? 0) + ' followers' }}</p>
           </ion-label>
+
           <div slot="end" class="chat-meta">
-            <button>Follow Now</button>
+            <button type="button" (click)="onFollowClick($event, ch)" [attr.aria-pressed]="isFollowing(ch)">
+              <span *ngIf="!isFollowing(ch)">Follow Now</span>
+              <span *ngIf="isFollowing(ch)">Following</span>
+            </button>
           </div>
+        </ion-item>
+
+        <ion-item *ngIf="publicChannels.length === 0">
+          <ion-label>No channels found</ion-label>
         </ion-item>
       </ion-list>
     </div>
   </div>
-  <!-- <div class="work-img">
-  <img src="assets/images/workinprogress.jpg" alt="">
-</div> -->
 </ion-content>
 
 <app-footer-tabs [totalUnreadUpdates]="totalUnreadUpdates"></app-footer-tabs>
