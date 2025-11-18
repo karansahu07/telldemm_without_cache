@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 import { ChannelService, Category, Region } from '../../services/channel';
+import { AuthService } from 'src/app/auth/auth.service';
 
 @Component({
   selector: 'app-add-channel-modal',
@@ -39,7 +40,8 @@ export class AddChannelModalComponent implements OnInit {
     private modalCtrl: ModalController,
     private channelService: ChannelService,
     private loadingCtrl: LoadingController,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private authService:AuthService
   ) { }
 
   ngOnInit(): void {
@@ -227,7 +229,9 @@ async submit() {
   if (!this.category_id) return this.presentToast("Please select a category");
   if (!this.region_id) return this.presentToast("Please select a region");
 
-  const createdById = 52;
+  // const createdById = 52;
+  const createdById = this.authService.authData?.userId || '';;
+
 
   const loader = await this.loadingCtrl.create({
     message: "Creating channel..."

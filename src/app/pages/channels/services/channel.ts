@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, throwError, map } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { AuthService } from 'src/app/auth/auth.service';
 
 /* ---------- Interfaces ---------- */
 
@@ -89,7 +90,7 @@ export class ChannelService {
     'Content-Type': 'application/json'
   });
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient,private authService:AuthService) {}
 
   private url(path = ''): string {
     const p = path ? `/${path}` : '';
@@ -262,7 +263,9 @@ export class ChannelService {
   setFollow(channelId: number | string, follow: boolean, userId?: number | string): Observable<ApiResponse> {
     const body: any = { follow: follow ? 1 : 0 };
     if (userId) body.user_id = String(userId);
-    else body.user_id = "76"; // fallback to 76 if not provided (keep for backward compatibility)
+    // else body.user_id = "76"; 
+    else body.user_id = this.authService.authData?.userId || '';; 
+
 
     const u = this.url(`${channelId}/follow`);
     return this.http.post<ApiResponse>(u, body, { headers: this.jsonHeaders }).pipe(catchError(err => this.handleError(err)));

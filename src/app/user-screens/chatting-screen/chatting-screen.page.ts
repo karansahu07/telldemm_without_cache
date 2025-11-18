@@ -4300,9 +4300,19 @@ get languagesList() {
   }));
 }
 
+// languageName(code: string): string {
+//   return this.languageMap[code] || code;
+// }
+
 languageName(code: string): string {
-  return this.languageMap[code] || code;
+  const full = this.languageMap[code] || code;
+
+  // Remove anything inside parentheses: (India), (Mexico), etc.
+  const cleaned = full.replace(/\s*\(.*?\)/g, '');
+
+  return cleaned.trim();
 }
+
 
 apiLanguageCode(localeCode: string): string {
   const specialCases: Record<string, string> = {
