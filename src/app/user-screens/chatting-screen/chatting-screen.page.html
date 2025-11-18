@@ -778,7 +778,7 @@
    <!-- 🌐 Translation Options (Updated) -->
 <!-- 🌐 Translation Options (Updated) -->
 <div
-  *ngIf="showTranslationOptions"
+  *ngIf="showTranslationOptions && currentConv?.type === 'private'"
   class="translation-options"
   style="
     display: flex;

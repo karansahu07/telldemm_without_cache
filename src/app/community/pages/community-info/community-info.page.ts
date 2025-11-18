@@ -81,46 +81,6 @@ export class CommunityInfoPage implements OnInit {
       this.loadCommunityDetail();
   }
 
-//     async loadCommunityDetail() {
-//   if (!this.communityId) return;
-//   this.loading = true;
-
-//   try {
-//     // Fetch community details from Firebase
-//     this.community = await this.firebaseService.getCommunityDetails(
-//       this.communityId
-//     );
-//     console.log('Community details:', this.community);
-
-//     if (!this.community) {
-//       this.memberCount = 0;
-//       this.groupCount = 0;
-//       this.loading = false;
-//       return;
-//     }
-
-//     // ✅ CHECK IF CURRENT USER IS THE CREATOR
-//     this.isCreator = this.community.createdBy === this.currentUserId;
-//     console.log('Is Creator:', this.isCreator, 'Created By:', this.community.createdBy, 'Current User:', this.currentUserId);
-
-//     // Get member count
-//     this.memberCount = Object.keys(this.community.members || {}).length;
-
-//     // Sync groups with Firebase
-//     // await this.syncGroupsWithFirebase();
-//   } catch (err) {
-//     console.error('loadCommunityDetail error', err);
-//     const toast = await this.toastCtrl.create({
-//       message: 'Failed to load community details',
-//       duration: 2000,
-//       color: 'danger',
-//     });
-//     await toast.present();
-//   } finally {
-//     this.loading = false;
-//   }
-// }
-
 async loadCommunityDetail() {
     if (!this.communityId) return;
     this.loading = true;
@@ -140,7 +100,6 @@ async loadCommunityDetail() {
         return;
       }
 
-      // ✅ CHECK IF CURRENT USER IS THE CREATOR
       this.isCreator = this.community.createdBy === this.currentUserId;
       console.log('Is Creator:', this.isCreator, 'Created By:', this.community.createdBy, 'Current User:', this.currentUserId);
 
@@ -306,7 +265,7 @@ addMembers() {
     //console.log('assign owner');
   }
   exitCommunity() {
-    //console.log('exit community');
+    // current userId 
   }
   reportCommunity() {
     //console.log('report community');
