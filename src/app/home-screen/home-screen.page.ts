@@ -1885,40 +1885,42 @@ export class HomeScreenPage implements OnInit, OnDestroy {
         resultType: CameraResultType.Uri,
       });
       this.capturedImage = image.webPath!;
+      console.log({image})
+      console.log("captured image", this.capturedImage)
     } catch (error) {
       console.error('Camera error:', error);
     }
   }
 
   async scanBarcode() {
-    try {
-      if (!Capacitor.isNativePlatform()) {
-        alert(this.translate.instant('home.scan.onlyDevice'));
-        return;
-      }
-      const permission = await BarcodeScanner.checkPermission({ force: true });
-      if (!permission.granted) {
-        alert(this.translate.instant('home.scan.permission'));
-        return;
-      }
-      await BarcodeScanner.prepare();
-      await BarcodeScanner.hideBackground();
-      document.body.classList.add('scanner-active');
+    // try {
+    //   if (!Capacitor.isNativePlatform()) {
+    //     alert(this.translate.instant('home.scan.onlyDevice'));
+    //     return;
+    //   }
+    //   const permission = await BarcodeScanner.checkPermission({ force: true });
+    //   if (!permission.granted) {
+    //     alert(this.translate.instant('home.scan.permission'));
+    //     return;
+    //   }
+    //   await BarcodeScanner.prepare();
+    //   await BarcodeScanner.hideBackground();
+    //   document.body.classList.add('scanner-active');
 
-      const result = await BarcodeScanner.startScan();
-      if (result?.hasContent) {
-        this.scannedText = result.content;
-      } else {
-        alert(this.translate.instant('home.scan.notFound'));
-      }
-    } catch (error) {
-      console.error('Barcode Scan Error:', error);
-      alert(this.translate.instant('home.scan.error'));
-    } finally {
-      await BarcodeScanner.showBackground();
-      await BarcodeScanner.stopScan();
-      document.body.classList.remove('scanner-active');
-    }
+    //   const result = await BarcodeScanner.startScan();
+    //   if (result?.hasContent) {
+    //     this.scannedText = result.content;
+    //   } else {
+    //     alert(this.translate.instant('home.scan.notFound'));
+    //   }
+    // } catch (error) {
+    //   console.error('Barcode Scan Error:', error);
+    //   alert(this.translate.instant('home.scan.error'));
+    // } finally {
+    //   await BarcodeScanner.showBackground();
+    //   await BarcodeScanner.stopScan();
+    //   document.body.classList.remove('scanner-active');
+    // }
   }
 
   getRoomId(a: string, b: string): string {

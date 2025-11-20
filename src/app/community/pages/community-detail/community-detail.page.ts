@@ -6,6 +6,7 @@ import {
   PopoverController,
   ModalController,
   ToastController,
+  LoadingController,
 } from '@ionic/angular';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FirebaseChatService } from '../../../services/firebase-chat.service';
@@ -61,7 +62,8 @@ export class CommunityDetailPage implements OnInit {
     private toastCtrl: ToastController,
     private authService: AuthService,
     private sqliteService: SqliteService,
-    private alertCtrl: AlertController
+    private alertCtrl: AlertController,
+    private loadingCtrl: LoadingController,
   ) {}
 
   ngOnInit() {
@@ -102,7 +104,6 @@ export class CommunityDetailPage implements OnInit {
       return;
     }
 
-    // ✅ CHECK IF CURRENT USER IS THE CREATOR
     this.isCreator = this.community.createdBy === this.currentUserId;
     console.log('Is Creator:', this.isCreator, 'Created By:', this.community.createdBy, 'Current User:', this.currentUserId);
 
@@ -200,7 +201,7 @@ export class CommunityDetailPage implements OnInit {
       // console.log()
 
       // Save to SQLite for next time
-      // await this.saveGroupsToSQLite();
+      // await this.saveGroupsToSQLite();            //this will perform
     } catch (error) {
       console.error('Error syncing with Firebase:', error);
     }
@@ -263,32 +264,6 @@ export class CommunityDetailPage implements OnInit {
       queryParams: { communityId: this.communityId },
     });
   }
-
-  // async openGroupPreview(group: any) {
-  //   if (!group) return;
-
-  //   const modal = await this.modalCtrl.create({
-  //     component: GroupPreviewModalComponent,
-  //     componentProps: {
-  //       group,
-  //       communityName: this.community?.title || this.community?.name || '',
-  //       currentUserId: this.currentUserId,
-  //       currentUserName: this.currentUserName,
-  //       currentUserPhone: this.currentUserPhone,
-  //     },
-  //     cssClass: 'group-preview-modal-wrapper',
-  //     breakpoints: [0, 0.45, 0.9],
-  //     initialBreakpoint: 0.45,
-  //     backdropDismiss: true,
-  //   });
-
-  //   await modal.present();
-  //   const { data } = await modal.onDidDismiss();
-
-  //   if (data && data.action === 'join' && data.groupId) {
-  //     await this.joinGroup(data.groupId);
-  //   }
-  // }
 
   async openGroupPreview(group: any) {
   if (!group) return;
@@ -457,20 +432,17 @@ export class CommunityDetailPage implements OnInit {
   }
 
   async openGroupChat(groupId: string | undefined, groupName?: string) {
-    // Validate groupId
     if (!groupId) {
       console.error('Invalid group ID');
       return;
     }
 
-    // Check if user is a member
     const isMember =
       this.groupsIn.some((g) => g.roomId === groupId) ||
       (this.announcementGroup && this.announcementGroup.roomId === groupId) ||
       (this.generalGroup && this.generalGroup.roomId === groupId);
 
     if (!isMember) {
-      // If not a member, show preview modal
       const grp = this.groupsAvailable.find((g) => g.roomId === groupId) || {
         roomId: groupId,
         title: groupName,
@@ -479,7 +451,6 @@ export class CommunityDetailPage implements OnInit {
       return;
     }
 
-    // ✅ CREATE CHAT OBJECT (similar to home screen)
     const chatObject = {
       roomId: groupId,
       type: 'group',
@@ -487,10 +458,8 @@ export class CommunityDetailPage implements OnInit {
       communityId: this.communityId,
     };
 
-    // ✅ CALL FIREBASE SERVICE (unread count reset)
     await this.firebaseService.openChat(chatObject);
 
-    // ✅ NAVIGATE TO CHATTING SCREEN
     this.router.navigate(['/community-chat'], {
       queryParams: {
         receiverId: groupId,
@@ -514,40 +483,6 @@ export class CommunityDetailPage implements OnInit {
   back() {
     this.navCtrl.back();
   }
-
-  // async presentPopover(ev: any) {
-  //   const pop = await this.popoverCtrl.create({
-  //     component: CommunityMenuPopoverComponent,
-  //     event: ev,
-  //     translucent: true,
-  //   });
-
-  //   await pop.present();
-
-  //   const { data } = await pop.onDidDismiss();
-  //   if (!data || !data.action) return;
-
-  //   const action: string = data.action;
-  //   switch (action) {
-  //     case 'info':
-  //       this.router.navigate(['/community-info'], {
-  //         queryParams: { communityId: this.communityId },
-  //       });
-  //       break;
-  //     case 'invite':
-  //       this.router.navigate(['/invite-members'], {
-  //         queryParams: { communityId: this.communityId },
-  //       });
-  //       break;
-  //     case 'settings':
-  //       this.router.navigate(['/community-settings'], {
-  //         queryParams: { communityId: this.communityId },
-  //       });
-  //       break;
-  //     default:
-  //       break;
-  //   }
-  // }
 
   async presentPopover(ev: any) {
   const pop = await this.popoverCtrl.create({
@@ -589,7 +524,7 @@ export class CommunityDetailPage implements OnInit {
       break;
     case 'exit':
       // ✅ NEW: Handle exit community
-      this.exitCommunity();
+      // this.exitCommunity();
       break;
     default:
       break;
@@ -598,9 +533,29 @@ export class CommunityDetailPage implements OnInit {
 
 // Add exitCommunity() method:
 async exitCommunity() {
+  if (!this.communityId || !this.currentUserId) {
+    const toast = await this.toastCtrl.create({
+      message: 'Unable to exit community',
+      duration: 2000,
+      color: 'danger',
+    });
+    await toast.present();
+    return;
+  }
+
+  if (this.isCreator) {
+    const toast = await this.toastCtrl.create({
+      message: 'Creator cannot exit the community. Please assign a new owner first.',
+      duration: 3000,
+      color: 'warning',
+    });
+    await toast.present();
+    return;
+  }
+
   const alert = await this.alertCtrl.create({
-    header: 'Exit Community?',
-    message: 'Are you sure you want to leave this community?',
+    header: 'Exit Community',
+    message: `Are you sure you want to exit "${this.community.name || 'this community'}"?`,
     buttons: [
       {
         text: 'Cancel',
@@ -610,36 +565,57 @@ async exitCommunity() {
         text: 'Exit',
         role: 'destructive',
         handler: async () => {
-          try {
-            // Call Firebase service to remove user from community
-            await this.firebaseService.exitCommunity(
-              // this.communityId!,
-              // this.currentUserId
-            );
-
-            const toast = await this.toastCtrl.create({
-              message: 'You have left the community',
-              duration: 2000,
-              color: 'success',
-            });
-            await toast.present();
-
-            // Navigate back to home
-            this.navCtrl.navigateRoot('/tabs/home');
-          } catch (error) {
-            console.error('Exit community error:', error);
-            const toast = await this.toastCtrl.create({
-              message: 'Failed to exit community',
-              duration: 2000,
-              color: 'danger',
-            });
-            await toast.present();
-          }
+          await this.performExitCommunity();
         },
       },
     ],
   });
 
   await alert.present();
+}
+
+private async performExitCommunity() {
+  const loading = await this.loadingCtrl.create({
+    message: 'Exiting community...',
+  });
+  await loading.present();
+
+  try {
+    const result = await this.firebaseService.exitCommunity(
+      this.communityId!,
+      this.currentUserId
+    );
+
+    await loading.dismiss();
+
+    if (result.success) {
+      const toast = await this.toastCtrl.create({
+        message: 'Successfully exited the community',
+        duration: 2000,
+        color: 'success',
+      });
+      await toast.present();
+
+      // Navigate back to chats
+      this.router.navigate(['/home-screen'], { replaceUrl: true });
+    } else {
+      const toast = await this.toastCtrl.create({
+        message: result.message,
+        duration: 2000,
+        color: 'danger',
+      });
+      await toast.present();
+    }
+  } catch (error) {
+    await loading.dismiss();
+    console.error('Exit community error:', error);
+
+    const toast = await this.toastCtrl.create({
+      message: 'Failed to exit community. Please try again.',
+      duration: 2000,
+      color: 'danger',
+    });
+    await toast.present();
+  }
 }
 }

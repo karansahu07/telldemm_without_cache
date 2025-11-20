@@ -3571,9 +3571,72 @@ export class FirebaseChatService {
     }
   }
   
-  exitCommunity(){
-    console.log("this exit community function is called")
+ async exitCommunity(
+    communityId: string,
+    userId: string
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      if (!communityId || !userId) {
+        return { success: false, message: 'Invalid community ID or user ID' };
+      }
+
+      // Get community details
+      const communityRef = rtdbRef(this.db, `communities/${communityId}`);
+      const communitySnap = await rtdbGet(communityRef);
+
+      if (!communitySnap.exists()) {
+        return { success: false, message: 'Community not found' };
+      }
+
+      const communityData = communitySnap.val();
+
+      // Check if user is the creator
+      if (communityData.createdBy === userId) {
+        return {
+          success: false,
+          message:
+            'Creator cannot exit the community. Please assign a new owner first.',
+        };
+      }
+
+      // Check if user is a member
+      if (!communityData.members?.[userId]) {
+        return {
+          success: false,
+          message: 'You are not a member of this community',
+        };
+      }
+
+      // Remove member from community
+      const updates: Record<string, any> = {};
+      updates[`/communities/${communityId}/members/${userId}`] = null;
+
+      // Update member count
+      const currentMemberCount = Object.keys(
+        communityData.members || {}
+      ).length;
+      updates[`/communities/${communityId}/memberCount`] = Math.max(
+        0,
+        currentMemberCount - 1
+      );
+
+      await rtdbUpdate(rtdbRef(this.db, '/'), updates);
+
+      console.log(`✅ User ${userId} removed from community ${communityId}`);
+
+      return {
+        success: true,
+        message: 'Successfully exited the community',
+      };
+    } catch (error) {
+      console.error('exitCommunity error:', error);
+      return {
+        success: false,
+        message: 'Failed to exit community. Please try again.',
+      };
+    }
   }
+
 
   /**
    * Check if user is member of a community

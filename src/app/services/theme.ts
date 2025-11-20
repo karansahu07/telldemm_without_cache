@@ -158,7 +158,7 @@ export class ThemeService {
     // background
     if (t.backgroundType === 'solid') {
       root.style.setProperty('--chat-bg', t.backgroundValue || this.default.backgroundValue);
-      root.style.setProperty('--chat-bg-image', 'none');
+      root.style.setProperty('--chat-bg-image', `url('/assets/images/chat_bg.jpg')`);
     } else if (t.backgroundType === 'gradient') {
       // gradients can't be in background-color so set bg to transparent and image to gradient
       root.style.setProperty('--chat-bg', 'transparent');

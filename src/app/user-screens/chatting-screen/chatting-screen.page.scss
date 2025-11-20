@@ -12,10 +12,10 @@ ion-toolbar {
 
 /* ===== Chat Background ===== */
 .chat-background {
-  --background: url('/assets/images/chatbackground.svg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  --background: var(--chat-bg-image);
+  // background-size: cover;
+  // background-position: center;
+  // background-repeat: no-repeat;
 }
 
 /* ===== Chat Messages ===== */

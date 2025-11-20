@@ -6,6 +6,8 @@ import {
   NavController,
   IonRouterOutlet,
   ToastController,
+  AlertController,
+  LoadingController,
 } from '@ionic/angular';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -53,7 +55,9 @@ export class CommunityInfoPage implements OnInit {
     private firebaseService : FirebaseChatService,
     private authService: AuthService,
     private toastCtrl: ToastController,
-    private service : ApiService
+    private service : ApiService,
+    private alertCtrl: AlertController,
+  private loadingCtrl: LoadingController,
   ) {}
 
   ngOnInit() {
@@ -264,9 +268,93 @@ addMembers() {
   assignNewOwner() {
     //console.log('assign owner');
   }
-  exitCommunity() {
-    // current userId 
+  
+async exitCommunity() {
+  if (!this.communityId || !this.currentUserId) {
+    const toast = await this.toastCtrl.create({
+      message: 'Unable to exit community',
+      duration: 2000,
+      color: 'danger',
+    });
+    await toast.present();
+    return;
   }
+
+  if (this.isCreator) {
+    const toast = await this.toastCtrl.create({
+      message: 'Creator cannot exit the community. Please assign a new owner first.',
+      duration: 3000,
+      color: 'warning',
+    });
+    await toast.present();
+    return;
+  }
+
+  const alert = await this.alertCtrl.create({
+    header: 'Exit Community',
+    message: `Are you sure you want to exit "${this.community.name || 'this community'}"?`,
+    buttons: [
+      {
+        text: 'Cancel',
+        role: 'cancel',
+      },
+      {
+        text: 'Exit',
+        role: 'destructive',
+        handler: async () => {
+          await this.performExitCommunity();
+        },
+      },
+    ],
+  });
+
+  await alert.present();
+}
+
+private async performExitCommunity() {
+  const loading = await this.loadingCtrl.create({
+    message: 'Exiting community...',
+  });
+  await loading.present();
+
+  try {
+    const result = await this.firebaseService.exitCommunity(
+      this.communityId!,
+      this.currentUserId
+    );
+
+    await loading.dismiss();
+
+    if (result.success) {
+      const toast = await this.toastCtrl.create({
+        message: 'Successfully exited the community',
+        duration: 2000,
+        color: 'success',
+      });
+      await toast.present();
+
+      // Navigate back to chats
+      this.router.navigate(['/home-screen'], { replaceUrl: true });
+    } else {
+      const toast = await this.toastCtrl.create({
+        message: result.message,
+        duration: 2000,
+        color: 'danger',
+      });
+      await toast.present();
+    }
+  } catch (error) {
+    await loading.dismiss();
+    console.error('Exit community error:', error);
+
+    const toast = await this.toastCtrl.create({
+      message: 'Failed to exit community. Please try again.',
+      duration: 2000,
+      color: 'danger',
+    });
+    await toast.present();
+  }
+}
   reportCommunity() {
     //console.log('report community');
   }

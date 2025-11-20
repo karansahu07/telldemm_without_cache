@@ -737,6 +737,7 @@ export class AppComponent implements OnInit {
     // ----------------------------
     let fromNotification = false;
     const navigation = this.router.getCurrentNavigation();
+    // console.log({navigation})
     if (navigation?.extras?.state?.['fromNotification']) {
       fromNotification = true;
     } else if (localStorage.getItem('fromNotification') === 'true') {

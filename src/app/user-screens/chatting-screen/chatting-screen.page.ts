@@ -96,11 +96,49 @@ interface IconDescriptor {
   title?: string;
 }
 
-// structure for translation items
+// // structure for translation items
+// interface TranslationItem {
+//   code: string;   // e.g., 'en', 'hi-IN', 'orig'
+//   label: string;  // e.g., 'English', 'Hindi', 'Original'
+//   text: string;   // the text
+// }
+
+// ========================================
+// 📦 INTERFACES
+// ========================================
+
+// Translation Item Structure
 interface TranslationItem {
-  code: string;   // e.g., 'en', 'hi-IN', 'orig'
-  label: string;  // e.g., 'English', 'Hindi', 'Original'
-  text: string;   // the text
+  code: string;   // e.g., 'en', 'hi-IN', 'ar-SA'
+  label: string;  // e.g., 'English', 'Hindi', 'Arabic (Saudi Arabia)'
+  text: string;   // the translated text
+}
+
+// Translation Card State
+interface TranslationCard {
+  visible: boolean;
+  mode: 'translateCustom' | 'translateToReceiver' | 'sendOriginal';
+  items: TranslationItem[];
+  createdAt: Date;
+}
+
+// Message Translations Structure
+interface MessageTranslations {
+  original: {
+    code: string;
+    label: string;
+    text: string;
+  };
+  otherLanguage?: {
+    code: string;
+    label: string;
+    text: string;
+  };
+  receiverLanguage?: {
+    code: string;
+    label: string;
+    text: string;
+  };
 }
 
 @Component({
@@ -4667,6 +4705,58 @@ async fetchCustomTranslation(
 /**
  * ✅ UPDATED: Show custom translation card with detected source + receiver language
  */
+// showCustomTranslationCard(
+//   mode: 'translateCustom',
+//   originalText: string,
+//   targetCode: string,
+//   targetLabel: string,
+//   translation: string,
+//   detectedSourceCode?: string,
+//   detectedSourceLabel?: string,
+//   receiverTranslation?: string | null
+// ) {
+//   const items: TranslationItem[] = [];
+
+//   // Add detected source language (original)
+//   if (detectedSourceCode) {
+//     items.push({
+//       code: detectedSourceCode,
+//       label: detectedSourceLabel || 'Original',
+//       text: originalText
+//     });
+//   }
+
+//   // Add custom selected language translation
+//   items.push({
+//     code: targetCode,
+//     label: targetLabel,
+//     text: translation
+//   });
+
+//   // ✅ Add receiver language translation (if available and different)
+//   if (receiverTranslation && targetCode !== this.receiverLangCode) {
+//     items.push({
+//       code: this.receiverLangCode,
+//       label: this.languageName(this.receiverLangCode) + ' (Receiver)',
+//       text: receiverTranslation
+//     });
+//   }
+
+//   this.translationCard = {
+//     visible: true,
+//     mode,
+//     items,
+//     createdAt: new Date()
+//   };
+
+//   this.showToast('Translation ready', 'success');
+//   try { this.cdr.detectChanges(); } catch { }
+// }
+
+// ========================================
+// 🎨 SHOW CUSTOM TRANSLATION CARD
+// ========================================
+
 showCustomTranslationCard(
   mode: 'translateCustom',
   originalText: string,
@@ -4679,7 +4769,7 @@ showCustomTranslationCard(
 ) {
   const items: TranslationItem[] = [];
 
-  // Add detected source language (original)
+  // [0] Add detected source language (original)
   if (detectedSourceCode) {
     items.push({
       code: detectedSourceCode,
@@ -4688,14 +4778,14 @@ showCustomTranslationCard(
     });
   }
 
-  // Add custom selected language translation
+  // [1] Add custom selected language translation
   items.push({
     code: targetCode,
     label: targetLabel,
     text: translation
   });
 
-  // ✅ Add receiver language translation (if available and different)
+  // [2] Add receiver language translation (if available and different from custom)
   if (receiverTranslation && targetCode !== this.receiverLangCode) {
     items.push({
       code: this.receiverLangCode,
@@ -4778,6 +4868,45 @@ async fetchReceiverTranslationOnly(
 /**
  * Show card with ONLY receiver translation (with detected source)
  */
+// showReceiverOnlyCard(
+//   mode: 'translateToReceiver',
+//   originalText: string,
+//   receiverTranslation: string,
+//   detectedSourceCode?: string,
+//   detectedSourceLabel?: string
+// ) {
+//   const items: TranslationItem[] = [];
+
+//   // Add detected source language (original)
+//   if (detectedSourceCode) {
+//     items.push({
+//       code: detectedSourceCode,
+//       label: detectedSourceLabel || 'Original',
+//       text: originalText
+//     });
+//   }
+
+//   // Add Receiver Language
+//   items.push({
+//     code: this.receiverLangCode,
+//     label: this.languageName(this.receiverLangCode) + ' (Receiver)',
+//     text: receiverTranslation
+//   });
+
+//   this.translationCard = {
+//     visible: true,
+//     mode,
+//     items,
+//     createdAt: new Date()
+//   };
+
+//   this.showToast('Translation ready', 'success');
+//   try { this.cdr.detectChanges(); } catch { }
+// }
+// ========================================
+// 🎨 SHOW RECEIVER ONLY CARD
+// ========================================
+
 showReceiverOnlyCard(
   mode: 'translateToReceiver',
   originalText: string,
@@ -4787,7 +4916,7 @@ showReceiverOnlyCard(
 ) {
   const items: TranslationItem[] = [];
 
-  // Add detected source language (original)
+  // [0] Add detected source language (original)
   if (detectedSourceCode) {
     items.push({
       code: detectedSourceCode,
@@ -4796,7 +4925,7 @@ showReceiverOnlyCard(
     });
   }
 
-  // Add Receiver Language
+  // [1] Add Receiver Language
   items.push({
     code: this.receiverLangCode,
     label: this.languageName(this.receiverLangCode) + ' (Receiver)',
@@ -4813,6 +4942,55 @@ showReceiverOnlyCard(
   this.showToast('Translation ready', 'success');
   try { this.cdr.detectChanges(); } catch { }
 }
+
+
+// ========================================
+// 🎨 SHOW SEND ORIGINAL CARD
+// ========================================
+
+showSendOriginalCard(
+  originalText: string,
+  receiverTranslation: string,
+  detectedSourceCode: string,
+  detectedSourceLabel: string
+) {
+  const items: TranslationItem[] = [
+    // [0] Original
+    {
+      code: detectedSourceCode,
+      label: detectedSourceLabel + ' (Original)',
+      text: originalText
+    },
+    // [1] Receiver will see
+    {
+      code: this.receiverLangCode,
+      label: this.languageName(this.receiverLangCode) + ' (Receiver will see)',
+      text: receiverTranslation
+    }
+  ];
+
+  this.translationCard = {
+    visible: true,
+    mode: 'sendOriginal',
+    items,
+    createdAt: new Date()
+  };
+
+  this.showToast('Preview ready', 'success');
+  try { this.cdr.detectChanges(); } catch { }
+}
+
+// ========================================
+// 🔧 HELPER: CLOSE TRANSLATION CARD
+// ========================================
+
+// closeTranslationCard() {
+//   if (this.translationCard) {
+//     this.translationCard.visible = false;
+//     this.translationCard = null;
+//   }
+// }
+
 
 /**
  * Send Original with auto-translation (with auto-detect)
@@ -4880,30 +5058,219 @@ async sendOriginalWithTranslation() {
 /**
  * UPDATED: Send message from translation card (handles multiple translations)
  */
+// async sendFromTranslationCard() {
+//   if (!this.translationCard) return;
+
+//   console.log("%%%%%",this.translationCard);
+
+// // {
+// //     "visible": false,
+// //     "mode": "translateCustom",
+// //     "items": [
+// //         {
+// //             "code": "en",
+// //             "label": "English",
+// //             "text": "hello"
+// //         },
+// //         {
+// //             "code": "ar-SA",
+// //             "label": "Arabic (Saudi Arabia)",
+// //             "text": "مرحبًا"
+// //         },
+// //         {
+// //             "code": "hi-IN",
+// //             "label": "Hindi (Receiver)",
+// //             "text": "नमस्ते"
+// //         }
+// //     ],
+// //     "createdAt": "2025-11-19T08:18:39.172Z"
+// // }
+
+//   const mode = this.translationCard.mode;
+//   const items = this.translationCard.items || [];
+//   const originalText = this.messageText?.trim() || '';
+//   const now = Date.now();
+
+//   // Find items by matching codes
+//   const originalItem = items.find(item => 
+//     item.label.includes('Original') || 
+//     items.indexOf(item) === 0
+//   );
+  
+//   const customItem = mode === 'translateCustom' 
+//     ? items.find(item => !item.label.includes('Original') && !item.label.includes('Receiver'))
+//     : null;
+    
+//   const receiverItem = items.find(item => 
+//     item.label.includes('Receiver') || 
+//     item.code === this.receiverLangCode
+//   );
+
+//   const translationsPayload: IMessage['translations'] = {
+//     original: {
+//       code: originalItem?.code || 'unknown',
+//       label: originalItem?.label || 'Original',
+//       text: originalItem?.text || originalText
+//     }
+//   };
+
+//   let visibleTextForSender: string = originalText;
+
+//   if (mode === 'translateCustom') {
+//     // Custom language translation - sender sees custom translation
+//     if (customItem) {
+//       translationsPayload.otherLanguage = {
+//         code: customItem.code,
+//         label: customItem.label,
+//         text: customItem.text
+//       };
+//       visibleTextForSender = customItem.text;
+//     }
+    
+//     // Also include receiver translation if available
+//     if (receiverItem) {
+//       translationsPayload.receiverLanguage = {
+//         code: receiverItem.code,
+//         label: receiverItem.label,
+//         text: receiverItem.text
+//       };
+//     }
+    
+//   } else if (mode === 'translateToReceiver') {
+//     // Receiver translation - sender sees receiver translation
+//     if (receiverItem) {
+//       translationsPayload.receiverLanguage = {
+//         code: receiverItem.code,
+//         label: receiverItem.label,
+//         text: receiverItem.text
+//       };
+//       visibleTextForSender = receiverItem.text;
+//     }
+    
+//   } else if (mode === 'sendOriginal') {
+//     // Original with receiver translation - sender sees original
+//     visibleTextForSender = originalText;
+    
+//     if (receiverItem) {
+//       translationsPayload.receiverLanguage = {
+//         code: receiverItem.code,
+//         label: receiverItem.label,
+//         text: receiverItem.text
+//       };
+//     }
+//   }
+
+//   const localMessage: Partial<IMessage & { attachment?: any }> = {
+//     sender: this.senderId,
+//     text: visibleTextForSender,
+//     translations: translationsPayload,
+//     timestamp: now,
+//     msgId: uuidv4(),
+//     replyToMsgId: this.replyTo?.message.msgId || '',
+//     isEdit: false,
+//     isPinned: false,
+//     type: 'text',
+//     reactions: []
+//   };
+
+//   console.log("%%%% localMessage",localMessage);
+
+// //  {
+// //     "sender": "52",
+// //     "text": "hello",
+// //     "translations": {
+// //         "original": {
+// //             "code": "en",
+// //             "label": "English",
+// //             "text": "hello"
+// //         },
+// //         "otherLanguage": {
+// //             "code": "en",
+// //             "label": "English",
+// //             "text": "hello"
+// //         },
+// //         "receiverLanguage": {
+// //             "code": "hi-IN",
+// //             "label": "Hindi (Receiver)",
+// //             "text": "नमस्ते"
+// //         }
+// //     },
+// //     "timestamp": 1763540321944,
+// //     "msgId": "37778d32-66ed-4eb6-a6e3-6ad7e6ef2808",
+// //     "replyToMsgId": "",
+// //     "isEdit": false,
+// //     "isPinned": false,
+// //     "type": "text",
+// //     "reactions": []
+// // }
+
+//   await this.chatService.sendMessage(localMessage);
+
+//   this.messageText = '';
+//   this.translationCard.visible = false;
+//   this.translationCard = null;
+//   this.showSendButton = false;
+//   this.replyToMessage = null;
+  
+//   this.showToast('Message sent', 'success');
+  
+//   try { 
+//     this.stopTypingSignal();
+//     this.scrollToBottom();
+//   } catch {}
+// }
+
 async sendFromTranslationCard() {
   if (!this.translationCard) return;
+
+  console.log("📋 Translation Card:", this.translationCard);
 
   const mode = this.translationCard.mode;
   const items = this.translationCard.items || [];
   const originalText = this.messageText?.trim() || '';
   const now = Date.now();
 
-  // Find items by matching codes
-  const originalItem = items.find(item => 
-    item.label.includes('Original') || 
-    items.indexOf(item) === 0
-  );
-  
-  const customItem = mode === 'translateCustom' 
-    ? items.find(item => !item.label.includes('Original') && !item.label.includes('Receiver'))
-    : null;
-    
-  const receiverItem = items.find(item => 
-    item.label.includes('Receiver') || 
-    item.code === this.receiverLangCode
-  );
+  // ✅ FIXED: Identify items by array position (reliable & predictable)
+  // Array structure based on mode:
+  // - translateCustom:    [0]=Original, [1]=Custom, [2]=Receiver (if different)
+  // - translateToReceiver: [0]=Original, [1]=Receiver
+  // - sendOriginal:        [0]=Original, [1]=Receiver
 
-  const translationsPayload: IMessage['translations'] = {
+  const originalItem = items[0]; // First item is always the detected source
+  
+  let customItem: TranslationItem | null = null;
+  let receiverItem: TranslationItem | null = null;
+
+  // Determine which items are custom vs receiver based on mode
+  if (mode === 'translateCustom') {
+    // Custom translation mode
+    if (items.length === 3) {
+      // We have: Original, Custom, Receiver
+      customItem = items[1];
+      receiverItem = items[2];
+    } else if (items.length === 2) {
+      // We have: Original, and one translation
+      // Check if it's the receiver language or custom
+      if (items[1]?.code === this.receiverLangCode) {
+        // User selected receiver language as custom = treat as receiver only
+        receiverItem = items[1];
+        customItem = null;
+      } else {
+        // User selected different language = custom without receiver
+        customItem = items[1];
+        receiverItem = null;
+      }
+    }
+  } else if (mode === 'translateToReceiver') {
+    // Direct to receiver mode: only receiver translation
+    receiverItem = items[1];
+  } else if (mode === 'sendOriginal') {
+    // Send original with receiver preview
+    receiverItem = items[1];
+  }
+
+  // ✅ Build translations payload
+  const translationsPayload: MessageTranslations = {
     original: {
       code: originalItem?.code || 'unknown',
       label: originalItem?.label || 'Original',
@@ -4913,6 +5280,7 @@ async sendFromTranslationCard() {
 
   let visibleTextForSender: string = originalText;
 
+  // Set payload based on mode
   if (mode === 'translateCustom') {
     // Custom language translation - sender sees custom translation
     if (customItem) {
@@ -4957,6 +5325,7 @@ async sendFromTranslationCard() {
     }
   }
 
+  // ✅ Build final message
   const localMessage: Partial<IMessage & { attachment?: any }> = {
     sender: this.senderId,
     text: visibleTextForSender,
@@ -4970,8 +5339,12 @@ async sendFromTranslationCard() {
     reactions: []
   };
 
+  console.log("✅ Local Message:", localMessage);
+
+  // Send message
   await this.chatService.sendMessage(localMessage);
 
+  // Reset state
   this.messageText = '';
   this.translationCard.visible = false;
   this.translationCard = null;
