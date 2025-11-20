@@ -96,6 +96,46 @@
     </ion-item>
   </ion-list>
 
+  <!-- ✅ NEW: Translation Feature (Static English Fallback) -->
+  <ion-list>
+    <ion-list-header>Translation</ion-list-header>
+
+    <ion-item lines="inset">
+      <ion-icon slot="start" name="language-outline" class="item-icon setting_icons" aria-hidden="true"></ion-icon>
+      <ion-label>
+        <div class="label-title">Enable Translation</div>
+        <ion-note class="label-sub">Translate messages you send</ion-note>
+      </ion-label>
+      <ion-toggle slot="end"
+                  [(ngModel)]="translationEnabled"
+                  (ionChange)="onTranslationToggle($event)"
+                  [attr.aria-label]="'Enable Translation'">
+      </ion-toggle>
+    </ion-item>
+
+    <!-- ✅ Show privacy notice when translation is enabled -->
+    <ion-item *ngIf="translationEnabled" lines="none" class="translation-notice">
+      <ion-icon slot="start" name="information-circle-outline" color="primary" aria-hidden="true"></ion-icon>
+      <ion-label class="ion-text-wrap">
+        <ion-note style="font-size: 12px; color: var(--ion-color-medium);">
+          Translated messages may be processed by external services for accuracy. Your data remains private and is not stored.
+        </ion-note>
+      </ion-label>
+    </ion-item>
+
+    <!-- ✅ Reset consent button (optional, for testing or user control) -->
+    <ion-item *ngIf="translationEnabled" button lines="inset" (click)="resetTranslationConsent()"
+              [attr.aria-label]="'Reset Consent'">
+      <ion-icon slot="start" name="refresh-outline" class="item-icon setting_icons" color="danger" aria-hidden="true"></ion-icon>
+      <ion-label>
+        <div class="label-title" style="color: var(--ion-color-danger);">
+          Reset Consent
+        </div>
+        <ion-note class="label-sub">Clear translation consent and disable the feature</ion-note>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+
   <!-- Chats management -->
   <ion-list>
     <ion-list-header>{{ 'chats.sections.management' | translate }}</ion-list-header>

@@ -1,11 +1,15 @@
+// ========================================
+// 📄 chats.page.ts - UPDATED with Consent Key Removal on Toggle Off
+// ========================================
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { IonicModule, ToastController } from '@ionic/angular';
+import { AlertController, IonicModule, ToastController } from '@ionic/angular';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 const STORAGE_KEY = 'settings.chats';
+const TRANSLATION_CONSENT_KEY = 'translation.consent';
 
 type FontSize = 'small' | 'medium' | 'large';
 
@@ -15,6 +19,7 @@ interface ChatsSettings {
   keepArchived: boolean;
   fontSize: FontSize;
   voiceTranscriptsEnabled: boolean;
+  translationEnabled: boolean; // ✅ NEW
 }
 
 @Component({
@@ -30,13 +35,14 @@ export class ChatsPage implements OnInit {
   keepArchived = true;
   fontSize: FontSize = 'medium';
   voiceTranscriptsEnabled = false;
-
+  translationEnabled = false; // ✅ NEW
   preview = 'assets/wallpaper-preview.jpg';
   lastBackup: string | null = null;
 
   constructor(
     private router: Router,
     private toastCtrl: ToastController,
+    private alertCtrl: AlertController, // ✅ NEW: For consent dialog
     private translate: TranslateService
   ) {}
 
@@ -49,20 +55,23 @@ export class ChatsPage implements OnInit {
   openTheme() {
     this.router.navigate(['settings', 'chats', 'theme']);
   }
-  openChatTheme() {
-    // this.router.navigate(['settings', 'chats', 'wallpaper']);
-      this.router.navigateByUrl('theme');
 
+  openChatTheme() {
+    this.router.navigateByUrl('theme');
   }
+
   openFontSize() {
     this.router.navigate(['settings', 'chats', 'font-size']);
   }
+
   openChatBackup() {
     this.router.navigate(['settings', 'chats', 'backup']);
   }
+
   openTransferChats() {
     this.router.navigate(['settings', 'chats', 'transfer']);
   }
+
   openChatHistory() {
     this.router.navigate(['settings', 'chats', 'history']);
   }
@@ -108,6 +117,104 @@ export class ChatsPage implements OnInit {
     );
   }
 
+  // ========================================
+  // ✅ FIXED: Translation Toggle Handler (Uses Event to Detect Direction)
+  // ========================================
+  async onTranslationToggle(event: any) {
+    const newValue = event.detail.checked; // This is the intended new state after toggle
+    const previousValue = !newValue; // Since it's a toggle, previous is the opposite
+
+    if (!newValue) {
+      // Turning OFF: No consent needed, just disable and remove consent key
+      this.translationEnabled = false;
+      localStorage.removeItem(TRANSLATION_CONSENT_KEY);
+      localStorage.removeItem("translationConsent");
+
+
+      this.saveSettings();
+      await this.showToast('Translation disabled');
+      return;
+    }
+
+    // Turning ON: Check consent
+    const hasConsent = localStorage.getItem(TRANSLATION_CONSENT_KEY) === 'true';
+   
+    if (!hasConsent) {
+      const userConsent = await this.showTranslationConsentDialog();
+      if (!userConsent) {
+        // User declined: Revert to previous state (OFF)
+        this.translationEnabled = false;
+        await this.showToast('Translation consent declined');
+        return;
+      }
+      // User accepted: Save consent
+      localStorage.setItem(TRANSLATION_CONSENT_KEY, 'true');
+    }
+
+    // Enable translation
+    this.translationEnabled = true;
+    this.saveSettings();
+    await this.showToast('Translation enabled');
+  }
+
+  // ========================================
+  // ✅ NEW: Consent Dialog (Static English)
+  // ========================================
+  async showTranslationConsentDialog(): Promise<boolean> {
+    return new Promise(async (resolve) => {
+      const alert = await this.alertCtrl.create({
+        header: 'Enable Translation',
+        message: 'By enabling translation, you consent to sending chat messages to our secure translation service for processing. Your messages are not stored or shared with third parties, and translation occurs on-device where possible.',
+        backdropDismiss: false,
+        buttons: [
+          {
+            text: 'Decline',
+            role: 'cancel',
+            cssClass: 'alert-button-cancel',
+            handler: () => {
+              resolve(false);
+            }
+          },
+          {
+            text: 'Accept',
+            cssClass: 'alert-button-confirm',
+            handler: () => {
+              resolve(true);
+            }
+          }
+        ]
+      });
+      await alert.present();
+    });
+  }
+
+  // ========================================
+  // ✅ NEW: Reset Translation Consent (Static English)
+  // ========================================
+  async resetTranslationConsent() {
+    const alert = await this.alertCtrl.create({
+      header: 'Reset Translation Consent',
+      message: 'This will clear your consent for message translation and disable the feature. You can re-enable it later.',
+      buttons: [
+        {
+          text: this.translate.instant('common.cancel'),
+          role: 'cancel'
+        },
+        {
+          text: 'Reset',
+          cssClass: 'alert-button-danger',
+          handler: () => {
+            localStorage.removeItem(TRANSLATION_CONSENT_KEY);
+            this.translationEnabled = false;
+            this.saveSettings();
+            this.showToast('Translation consent reset');
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
   /* ---------- Persistence ---------- */
   loadSettings() {
     try {
@@ -119,6 +226,7 @@ export class ChatsPage implements OnInit {
       if (typeof s.keepArchived === 'boolean') this.keepArchived = s.keepArchived;
       if (s.fontSize === 'small' || s.fontSize === 'medium' || s.fontSize === 'large') this.fontSize = s.fontSize;
       if (typeof s.voiceTranscriptsEnabled === 'boolean') this.voiceTranscriptsEnabled = s.voiceTranscriptsEnabled;
+      if (typeof s.translationEnabled === 'boolean') this.translationEnabled = s.translationEnabled; // ✅ NEW
     } catch (e) {
       console.warn('Could not load chat settings', e);
     }
@@ -130,7 +238,8 @@ export class ChatsPage implements OnInit {
       mediaVisibility: this.mediaVisibility,
       keepArchived: this.keepArchived,
       fontSize: this.fontSize,
-      voiceTranscriptsEnabled: this.voiceTranscriptsEnabled
+      voiceTranscriptsEnabled: this.voiceTranscriptsEnabled,
+      translationEnabled: this.translationEnabled // ✅ NEW
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
@@ -138,7 +247,7 @@ export class ChatsPage implements OnInit {
       console.warn('Could not save chat settings', e);
     }
   }
-
+ 
   /* ---------- Helpers ---------- */
   async showToast(message: string, duration = 1400) {
     const t = await this.toastCtrl.create({ message, duration, position: 'bottom' });
