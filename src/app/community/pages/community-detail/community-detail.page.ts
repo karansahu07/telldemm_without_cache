@@ -163,11 +163,14 @@ export class CommunityDetailPage implements OnInit {
         this.generalGroup = this.convertToConversation(generalGroup, true);
       }
 
+      // const allGroups = this.firebaseService.currentConversations.filter(
+      //   (c) => c.type === 'group' && c.communityId === this.communityId               
+      // );
       const allGroups = this.firebaseService.currentConversations.filter(
         (c) => c.type === 'group' && c.communityId === this.communityId
       );
       // Update member groups
-      // console.log({allGroups})
+      console.log({allGroups})
       this.groupsIn = allGroups
         .filter(
           (c) =>

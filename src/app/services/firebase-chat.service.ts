@@ -4118,6 +4118,238 @@ export class FirebaseChatService {
    * Add multiple groups to a community with all member syncing
    * ✅ UPDATED: Now adds community meta to all group members' userchats
    */
+  // async addGroupsToCommunity(params: {
+  //   communityId: string;
+  //   groupIds: string[];
+  //   backendCommunityId?: string | null;
+  //   currentUserId?: string;
+  // }): Promise<{
+  //   success: boolean;
+  //   message: string;
+  //   addedMembersCount?: number;
+  //   updatedAnnouncementGroup?: boolean;
+  // }> {
+  //   try {
+  //     const { communityId, groupIds, backendCommunityId, currentUserId } =
+  //       params;
+
+  //     if (!communityId || !groupIds?.length) {
+  //       return {
+  //         success: false,
+  //         message: 'Community ID or group IDs missing',
+  //       };
+  //     }
+
+  //     const updates: Record<string, any> = {};
+  //     const newMemberIds = new Set<string>();
+
+  //     // 1️⃣ Get community info first (to get existing meta)
+  //     let communityInfo: any = null;
+  //     try {
+  //       communityInfo = await this.getCommunityInfo(communityId);
+  //     } catch (err) {
+  //       console.warn('Failed to load community info:', err);
+  //     }
+
+  //     // 2️⃣ Link groups to community and collect members
+  //     for (const groupId of groupIds) {
+  //       updates[`/communities/${communityId}/groups/${groupId}`] = true;
+  //       updates[`/groups/${groupId}/communityId`] = communityId;
+
+  //       try {
+  //         const groupInfo: any = await this.getGroupInfo(groupId);
+
+  //         // Backend sync if backendCommunityId provided
+  //         if (backendCommunityId) {
+  //           const backendGroupId =
+  //             groupInfo?.backendGroupId ?? groupInfo?.backend_group_id ?? null;
+
+  //           if (backendGroupId && currentUserId) {
+  //             try {
+  //               await firstValueFrom(
+  //                 this.apiService.addGroupToCommunity(
+  //                   backendCommunityId,
+  //                   String(backendGroupId),
+  //                   Number(currentUserId) || 0
+  //                 )
+  //               );
+  //             } catch (apiErr) {
+  //               console.warn(
+  //                 `Backend API failed for group ${groupId}:`,
+  //                 apiErr
+  //               );
+  //             }
+  //           }
+  //         }
+
+  //         // Collect members from this group
+  //         if (groupInfo?.members) {
+  //           Object.keys(groupInfo.members).forEach((memberId) => {
+  //             if (memberId) newMemberIds.add(memberId);
+  //           });
+  //         }
+  //       } catch (err) {
+  //         console.warn(`Failed to process group ${groupId}:`, err);
+  //       }
+  //     }
+
+  //     // 3️⃣ Merge with existing community members
+  //     let existingMembersObj: any = {};
+  //     try {
+  //       existingMembersObj = communityInfo?.members || {};
+  //       Object.keys(existingMembersObj).forEach((memberId) => {
+  //         if (memberId) newMemberIds.add(memberId);
+  //       });
+  //     } catch (err) {
+  //       console.warn('Failed to load existing community members:', err);
+  //     }
+
+  //     // 4️⃣ Get announcement and general group IDs (for communityGroups array)
+  //     const announcementGroupId = await this.findCommunityAnnouncementGroupId(
+  //       communityId
+  //     );
+  //     const generalGroupId = await this.findCommunityGeneralGroupId(
+  //       communityId
+  //     );
+
+  //     // Build communityGroups array (system groups + newly added groups)
+  //     const communityGroups: string[] = [];
+  //     if (announcementGroupId) communityGroups.push(announcementGroupId);
+  //     if (generalGroupId) communityGroups.push(generalGroupId);
+  //     groupIds.forEach((gid) => communityGroups.push(gid));
+
+  //     // 5️⃣ Create community chat meta for new members
+  //     const communityChatMeta: ICommunityChatMeta = {
+  //       type: 'community',
+  //       lastmessageAt: Date.now(),
+  //       lastmessageType: 'text',
+  //       lastmessage: '',
+  //       unreadCount: 0,
+  //       isArchived: false,
+  //       isPinned: false,
+  //       isLocked: false,
+  //       communityGroups: communityGroups, // ✅ All groups in community
+  //     };
+
+  //     // 6️⃣ Add all members to community + userchats
+  //     newMemberIds.forEach((userId) => {
+  //       // Add to community members
+  //       updates[`/communities/${communityId}/members/${userId}`] = {
+  //         isActive: true,
+  //         joinedAt: Date.now(),
+  //       };
+
+  //       // 🆕 Add community meta to user's chats (THIS IS THE KEY CHANGE!)
+  //       updates[`/userchats/${userId}/${communityId}`] = communityChatMeta;
+
+  //       // Legacy index (optional, for backward compatibility)
+  //     //   updates[
+  //     //     `/usersInCommunity/${userId}/joinedCommunities/${communityId}`
+  //     //   ] = true;
+  //     });
+
+  //     // 7️⃣ Update community member count
+  //     updates[`/communities/${communityId}/membersCount`] = newMemberIds.size;
+
+  //     // 8️⃣ Update announcement group
+  //     let updatedAnnouncementGroup = false;
+  //     if (announcementGroupId) {
+  //       try {
+  //         const annGroupInfo = await this.getGroupInfo(announcementGroupId);
+  //         const existingAnnMembers = annGroupInfo?.members || {};
+  //         const annMemberSet = new Set<string>(Object.keys(existingAnnMembers));
+
+  //         newMemberIds.forEach((userId) => {
+  //           if (!annMemberSet.has(userId)) {
+  //             updates[`/groups/${announcementGroupId}/members/${userId}`] = {
+  //               isActive: true,
+  //               username: '',
+  //               phoneNumber: '',
+  //             };
+  //             updates[`/userchats/${userId}/${announcementGroupId}`] = {
+  //               type: 'group',
+  //               lastmessageAt: Date.now(),
+  //               lastmessageType: 'text',
+  //               lastmessage: '',
+  //               unreadCount: 0,
+  //               isArchived: false,
+  //               isPinned: false,
+  //               isLocked: false,
+  //             };
+  //             annMemberSet.add(userId);
+  //           }
+  //         });
+
+  //         updates[`/groups/${announcementGroupId}/membersCount`] =
+  //           annMemberSet.size;
+  //         updatedAnnouncementGroup = true;
+  //       } catch (err) {
+  //         console.warn('Failed to update announcement group:', err);
+  //       }
+  //     }
+
+  //     // 9️⃣ Update general group
+  //     if (generalGroupId) {
+  //       try {
+  //         const genGroupInfo = await this.getGroupInfo(generalGroupId);
+  //         const existingGenMembers = genGroupInfo?.members || {};
+  //         const genMemberSet = new Set<string>(Object.keys(existingGenMembers));
+
+  //         newMemberIds.forEach((userId) => {
+  //           if (!genMemberSet.has(userId)) {
+  //             updates[`/groups/${generalGroupId}/members/${userId}`] = {
+  //               isActive: true,
+  //               username: '',
+  //               phoneNumber: '',
+  //             };
+  //             updates[`/userchats/${userId}/${generalGroupId}`] = {
+  //               type: 'group',
+  //               lastmessageAt: Date.now(),
+  //               lastmessageType: 'text',
+  //               lastmessage: '',
+  //               unreadCount: 0,
+  //               isArchived: false,
+  //               isPinned: false,
+  //               isLocked: false,
+  //             };
+  //             genMemberSet.add(userId);
+  //           }
+  //         });
+
+  //         updates[`/groups/${generalGroupId}/membersCount`] = genMemberSet.size;
+  //       } catch (err) {
+  //         console.warn('Failed to update general group:', err);
+  //       }
+  //     }
+
+  //     // 🔟 Apply all updates atomically
+  //     await this.bulkUpdate(updates);
+
+  //     console.log(
+  //       `✅ Added ${groupIds.length} groups with ${newMemberIds.size} members`
+  //     );
+  //     console.log(
+  //       `✅ Community meta added to ${newMemberIds.size} members' userchats`
+  //     );
+
+  //     return {
+  //       success: true,
+  //       message: `Successfully added ${groupIds.length} group(s) with ${newMemberIds.size} member(s)`,
+  //       addedMembersCount: newMemberIds.size,
+  //       updatedAnnouncementGroup,
+  //     };
+  //   } catch (error) {
+  //     console.error('addGroupsToCommunity error:', error);
+  //     return {
+  //       success: false,
+  //       message:
+  //         error instanceof Error
+  //           ? error.message
+  //           : 'Failed to add groups to community',
+  //     };
+  //   }
+  // }
+
   async addGroupsToCommunity(params: {
     communityId: string;
     groupIds: string[];
@@ -4142,6 +4374,8 @@ export class FirebaseChatService {
 
       const updates: Record<string, any> = {};
       const newMemberIds = new Set<string>();
+      // 🆕 Track which user is member of which group
+      const groupMembersMap = new Map<string, Set<string>>(); // groupId -> Set of userIds
 
       // 1️⃣ Get community info first (to get existing meta)
       let communityInfo: any = null;
@@ -4184,9 +4418,14 @@ export class FirebaseChatService {
 
           // Collect members from this group
           if (groupInfo?.members) {
+            const groupMemberSet = new Set<string>();
             Object.keys(groupInfo.members).forEach((memberId) => {
-              if (memberId) newMemberIds.add(memberId);
+              if (memberId) {
+                newMemberIds.add(memberId);
+                groupMemberSet.add(memberId);
+              }
             });
+            groupMembersMap.set(groupId, groupMemberSet);
           }
         } catch (err) {
           console.warn(`Failed to process group ${groupId}:`, err);
@@ -4231,7 +4470,26 @@ export class FirebaseChatService {
         communityGroups: communityGroups, // ✅ All groups in community
       };
 
-      // 6️⃣ Add all members to community + userchats
+      // 🆕 6️⃣ Get existing userchats for all members to check what already exists
+      const existingUserChatsMap = new Map<string, Set<string>>(); // userId -> Set of existing chatIds
+      
+      for (const userId of newMemberIds) {
+        try {
+          const userChatsRef = rtdbRef(this.db, `userchats/${userId}`);
+          const snapshot = await rtdbGet(userChatsRef);
+          if (snapshot.exists()) {
+            const existingChats = snapshot.val();
+            existingUserChatsMap.set(userId, new Set(Object.keys(existingChats)));
+          } else {
+            existingUserChatsMap.set(userId, new Set());
+          }
+        } catch (err) {
+          console.warn(`Failed to get existing chats for user ${userId}:`, err);
+          existingUserChatsMap.set(userId, new Set());
+        }
+      }
+
+      // 7️⃣ Add all members to community + userchats (only if not exists)
       newMemberIds.forEach((userId) => {
         // Add to community members
         updates[`/communities/${communityId}/members/${userId}`] = {
@@ -4239,19 +4497,41 @@ export class FirebaseChatService {
           joinedAt: Date.now(),
         };
 
-        // 🆕 Add community meta to user's chats (THIS IS THE KEY CHANGE!)
-        updates[`/userchats/${userId}/${communityId}`] = communityChatMeta;
-
-        // Legacy index (optional, for backward compatibility)
-        updates[
-          `/usersInCommunity/${userId}/joinedCommunities/${communityId}`
-        ] = true;
+        const existingChats = existingUserChatsMap.get(userId) || new Set();
+        
+        // Add community meta to user's chats (only if not exists)
+        if (!existingChats.has(communityId)) {
+          updates[`/userchats/${userId}/${communityId}`] = communityChatMeta;
+        }
       });
 
-      // 7️⃣ Update community member count
+      // 🆕 7.5️⃣ Add group chat meta for each user in their respective groups (only if not exists)
+      const groupChatMeta = {
+        type: 'group',
+        lastmessageAt: Date.now(),
+        lastmessageType: 'text',
+        lastmessage: '',
+        unreadCount: 0,
+        isArchived: false,
+        isPinned: false,
+        isLocked: false,
+      };
+
+      for (const [groupId, memberIds] of groupMembersMap.entries()) {
+        for (const userId of memberIds) {
+          const existingChats = existingUserChatsMap.get(userId) || new Set();
+          
+          // Only add if not already exists
+          if (!existingChats.has(groupId)) {
+            updates[`/userchats/${userId}/${groupId}`] = groupChatMeta;
+          }
+        }
+      }
+
+      // 8️⃣ Update community member count
       updates[`/communities/${communityId}/membersCount`] = newMemberIds.size;
 
-      // 8️⃣ Update announcement group
+      // 9️⃣ Update announcement group
       let updatedAnnouncementGroup = false;
       if (announcementGroupId) {
         try {
@@ -4266,16 +4546,20 @@ export class FirebaseChatService {
                 username: '',
                 phoneNumber: '',
               };
-              updates[`/userchats/${userId}/${announcementGroupId}`] = {
-                type: 'group',
-                lastmessageAt: Date.now(),
-                lastmessageType: 'text',
-                lastmessage: '',
-                unreadCount: 0,
-                isArchived: false,
-                isPinned: false,
-                isLocked: false,
-              };
+              
+              const existingChats = existingUserChatsMap.get(userId) || new Set();
+              if (!existingChats.has(announcementGroupId)) {
+                updates[`/userchats/${userId}/${announcementGroupId}`] = {
+                  type: 'group',
+                  lastmessageAt: Date.now(),
+                  lastmessageType: 'text',
+                  lastmessage: '',
+                  unreadCount: 0,
+                  isArchived: false,
+                  isPinned: false,
+                  isLocked: false,
+                };
+              }
               annMemberSet.add(userId);
             }
           });
@@ -4288,7 +4572,7 @@ export class FirebaseChatService {
         }
       }
 
-      // 9️⃣ Update general group
+      // 🔟 Update general group
       if (generalGroupId) {
         try {
           const genGroupInfo = await this.getGroupInfo(generalGroupId);
@@ -4302,16 +4586,20 @@ export class FirebaseChatService {
                 username: '',
                 phoneNumber: '',
               };
-              updates[`/userchats/${userId}/${generalGroupId}`] = {
-                type: 'group',
-                lastmessageAt: Date.now(),
-                lastmessageType: 'text',
-                lastmessage: '',
-                unreadCount: 0,
-                isArchived: false,
-                isPinned: false,
-                isLocked: false,
-              };
+              
+              const existingChats = existingUserChatsMap.get(userId) || new Set();
+              if (!existingChats.has(generalGroupId)) {
+                updates[`/userchats/${userId}/${generalGroupId}`] = {
+                  type: 'group',
+                  lastmessageAt: Date.now(),
+                  lastmessageType: 'text',
+                  lastmessage: '',
+                  unreadCount: 0,
+                  isArchived: false,
+                  isPinned: false,
+                  isLocked: false,
+                };
+              }
               genMemberSet.add(userId);
             }
           });
@@ -4322,14 +4610,17 @@ export class FirebaseChatService {
         }
       }
 
-      // 🔟 Apply all updates atomically
+      // 1️⃣1️⃣ Apply all updates atomically
       await this.bulkUpdate(updates);
 
       console.log(
         `✅ Added ${groupIds.length} groups with ${newMemberIds.size} members`
       );
       console.log(
-        `✅ Community meta added to ${newMemberIds.size} members' userchats`
+        `✅ Community meta added to members' userchats (skipped existing)`
+      );
+      console.log(
+        `✅ Group chats added to members' userchats for ${groupMembersMap.size} groups (skipped existing)`
       );
 
       return {
@@ -5025,26 +5316,95 @@ async addMembersToCommunity(communityId: string, userIds: string[]): Promise<voi
     }
   }
 
+  // async addMembersToGroup(roomId: string, userIds: string[]) {
+  //   try {
+  //     const memberRef = rtdbRef(this.db, `groups/${roomId}/members`);
+  //     const snap = await rtdbGet(memberRef);
+  //     const members: IGroup['members'] = snap.val();
+  //     const newMembers: IGroup['members'] = {};
+  //     for (const userId of userIds) {
+  //       console.log(this.currentUsers, 'this.currentUsers');
+  //       const user = this.currentUsers.find((u) => u.userId == userId);
+  //       console.log(user, 'this.currentUsers');
+  //       newMembers[userId] = {
+  //         isActive: true,
+  //         phoneNumber: user?.phoneNumber as string,
+  //         username: user?.username as string,
+  //       };
+  //     }
+  //     console.log({ newMembers });
+  //     await rtdbSet(memberRef, { ...members, ...newMembers });
+  //   } catch (error) {
+  //     console.error('Error adding members in group', error);
+  //   }
+  // }
+
   async addMembersToGroup(roomId: string, userIds: string[]) {
     try {
       const memberRef = rtdbRef(this.db, `groups/${roomId}/members`);
       const snap = await rtdbGet(memberRef);
-      const members: IGroup['members'] = snap.val();
+      const members: IGroup['members'] = snap.val() || {};
       const newMembers: IGroup['members'] = {};
+      const updates: Record<string, any> = {};
+
+      // Get existing userchats to avoid overwriting
+      const existingUserChatsMap = new Map<string, boolean>();
+      
+      for (const userId of userIds) {
+        try {
+          const userChatRef = rtdbRef(this.db, `userchats/${userId}/${roomId}`);
+          const chatSnap = await rtdbGet(userChatRef);
+          existingUserChatsMap.set(userId, chatSnap.exists());
+        } catch (err) {
+          existingUserChatsMap.set(userId, false);
+        }
+      }
+
+      // Prepare new members and their userchats
       for (const userId of userIds) {
         console.log(this.currentUsers, 'this.currentUsers');
         const user = this.currentUsers.find((u) => u.userId == userId);
         console.log(user, 'this.currentUsers');
+        
         newMembers[userId] = {
           isActive: true,
           phoneNumber: user?.phoneNumber as string,
           username: user?.username as string,
         };
+
+        // Add to userchats only if not already exists
+        if (!existingUserChatsMap.get(userId)) {
+          updates[`/userchats/${userId}/${roomId}`] = {
+            type: 'group',
+            lastmessageAt: Date.now(),
+            lastmessageType: 'text',
+            lastmessage: '',
+            unreadCount: 0,
+            isArchived: false,
+            isPinned: false,
+            isLocked: false,
+          };
+        }
       }
+
       console.log({ newMembers });
-      await rtdbSet(memberRef, { ...members, ...newMembers });
+      
+      // Add members to group
+      updates[`/groups/${roomId}/members`] = { ...members, ...newMembers };
+      
+      // Update member count
+      const totalMembers = Object.keys({ ...members, ...newMembers }).length;
+      updates[`/groups/${roomId}/membersCount`] = totalMembers;
+
+      // Apply all updates atomically
+      await this.bulkUpdate(updates);
+      
+      console.log(`✅ Added ${userIds.length} members to group ${roomId}`);
+      console.log(`✅ Updated userchats for new members (skipped existing)`);
+      
     } catch (error) {
       console.error('Error adding members in group', error);
+      throw error;
     }
   }
 
