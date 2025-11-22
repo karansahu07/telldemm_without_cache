@@ -36,6 +36,8 @@ export interface Message {
     filePath?: string;
     caption?: string;
     previewUrl?: string | null;
+    localUrl? : string;
+    cdnUrl? : string;
   };
 
   replyToMessageId?: string | undefined;

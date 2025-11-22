@@ -1,0 +1,49 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Select Contacts</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <ion-searchbar [(ngModel)]="searchText" placeholder="Search by name"></ion-searchbar>
+
+  <!-- Loading Spinner -->
+   <ion-spinner *ngIf="isLoading" name="dots" style="display: block; margin: auto;"></ion-spinner>
+
+  <!-- Selected chips -->
+  <div *ngIf="selectedUsers.length > 0" class="selected-chip-row">
+    <ion-chip *ngFor="let user of selectedUsers" (click)="toggleSelect(user)">
+      <ion-avatar>
+        <img [src]="user.image" />
+      </ion-avatar>
+      <ion-label>{{ user.name }}</ion-label>
+      <ion-icon name="close-circle" (click)="toggleSelect(user)"></ion-icon>
+    </ion-chip>
+  </div>
+
+  <!-- User list -->
+  <ion-list>
+    <ion-item *ngFor="let user of filteredUsers()" (click)="toggleSelect(user)">
+      <ion-avatar slot="start">
+        <img [src]="user.image" />
+      </ion-avatar>
+      <ion-label>
+        <h2>{{ user.name }}</h2>
+        <p>{{ user.message }}</p>
+      </ion-label>
+      <ion-checkbox slot="end" [(ngModel)]="user.selected" (ionChange)="checkboxChanged(user)"></ion-checkbox>
+    </ion-item>
+  </ion-list>
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <ion-button expand="block" [disabled]="selectedUsers.length === 0" class="add-btn">
+      Add ({{ selectedUsers.length }})
+    </ion-button>
+  </ion-toolbar>
+</ion-footer>

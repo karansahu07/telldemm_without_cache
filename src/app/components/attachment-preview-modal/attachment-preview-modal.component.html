@@ -1,66 +1,10 @@
-<!-- <ion-header translucent>
-  <ion-toolbar>
-    <ion-title>Attachment</ion-title>
-    <ion-buttons slot="end">
-      <ion-button (click)="closeModal()">
-        <ion-icon name="close-outline"></ion-icon>
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content [fullscreen]="true" class="ion-padding" style="display: flex; justify-content: center; align-items: center;">
-  <ng-container *ngIf="attachment?.type === 'image'">
-    <img [src]="attachment.base64Data" alt="Preview" style="max-width: 100%; border-radius: 10px;" />
-  </ng-container>
-
-  <ng-container *ngIf="attachment?.type === 'video'">
-    <video controls style="width: 100%; border-radius: 10px;">
-      <source [src]="attachment.base64Data" [type]="attachment.mimeType || 'video/mp4'" />
-    </video>
-  </ng-container>
-
-  <ng-container *ngIf="attachment?.type === 'audio'">
-    <audio controls style="width: 100%;">
-      <source [src]="attachment.base64Data" [type]="attachment.mimeType || 'audio/mpeg'" />
-    </audio>
-  </ng-container>
-
-  <ng-container *ngIf="attachment?.type === 'file'">
-    <ion-icon name="document-outline" size="large"></ion-icon>
-    <p>{{ attachment.fileName }}</p>
-    <a [href]="attachment.base64Data" [download]="attachment.fileName" target="_blank" rel="noopener">
-      <ion-button expand="block">Download</ion-button>
-    </a>
-  </ng-container>
-
-  <p *ngIf="attachment?.caption" style="margin-top: 10px; text-align: center;">
-    {{ attachment.caption }}
-  </p>
-</ion-content> -->
-
-
-
-<!-- <ion-header translucent>
-  <ion-toolbar>
-    <ion-title>Attachment</ion-title>
-    <ion-buttons slot="end">
-      <ion-button (click)="closeModal()">
-        <ion-icon name="close-outline"></ion-icon>
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header> -->
-
-<!-- changes by homah start  -->
-
 <ion-header [translucent]="true" *ngIf="showUI">
   <ion-toolbar>
     <!-- Left: Back Button -->
     <ion-buttons slot="start" style="color: black; width: 8%; margin-top: 15px">
-        <ion-button (click)="closeModal()">
-    <ion-icon name="arrow-back-outline"></ion-icon>
-  </ion-button>
+      <ion-button (click)="closeModal()">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </ion-button>
     </ion-buttons>
 
     <!-- Center: Chat Avatar and Name OR Search Input -->
@@ -151,63 +95,15 @@
   </ion-toolbar>
 </ion-header>
 
-
 <ion-content
   [fullscreen]="true"
   class="ion-padding"
   style="display: flex; justify-content: center; align-items: center"
 >
-  <!-- <div class="view-content">
-    <ng-container *ngIf="attachment?.type === 'image'">
-      <img
-        [src]="attachment.base64Data"
-        alt="Preview"
-        style="max-width: 100%; border-radius: 10px"
-      />
-    </ng-container>
-
-    <ng-container *ngIf="attachment?.type === 'video'">
-      <video controls style="width: 100%; border-radius: 10px">
-        <source
-          [src]="attachment.base64Data"
-          [type]="attachment.mimeType || 'video/mp4'"
-        />
-      </video>
-    </ng-container>
-
-    <ng-container *ngIf="attachment?.type === 'audio'">
-      <audio controls style="width: 100%">
-        <source
-          [src]="attachment.base64Data"
-          [type]="attachment.mimeType || 'audio/mpeg'"
-        />
-      </audio>
-    </ng-container>
-
-    <ng-container *ngIf="attachment?.type === 'file'">
-      <ion-icon name="document-outline" size="large"></ion-icon>
-      <p>{{ attachment.fileName }}</p>
-      <a
-        [href]="attachment.base64Data"
-        [download]="attachment.fileName"
-        target="_blank"
-        rel="noopener"
-      >
-        <ion-button expand="block">Download</ion-button>
-      </a>
-    </ng-container>
-
-    <p *ngIf="attachment?.caption" style="margin-top: 10px; text-align: center">
-      {{ attachment.caption }}
-    </p>
-  </div> -->
-
-
-
   <div class="view-content">
     <ng-container *ngIf="attachment?.type === 'image'">
       <img
-        [src]="attachment.previewUrl"
+        [src]="attachment.cdnUrl"
         alt="Preview"
         (click)="toggleUI()"
         style="max-width: 100%; border-radius: 10px"
@@ -221,7 +117,7 @@
         style="width: 100%; border-radius: 10px"
       >
         <source
-          [src]="attachment.previewUrl"
+          [src]="attachment.cdnUrl"
           [type]="attachment.mimeType || 'video/mp4'"
         />
       </video>
@@ -230,7 +126,7 @@
     <ng-container *ngIf="attachment?.type === 'audio'">
       <audio controls style="width: 100%">
         <source
-          [src]="attachment.previewUrl"
+          [src]="attachment.cdnUrl"
           [type]="attachment.mimeType || 'audio/mpeg'"
         />
       </audio>
@@ -240,7 +136,7 @@
       <ion-icon name="document-outline" size="large"></ion-icon>
       <p>{{ attachment.fileName }}</p>
       <a
-        [href]="attachment.previewUrl"
+        [href]="attachment.cdnUrl"
         [download]="attachment.fileName"
         target="_blank"
         rel="noopener"
@@ -253,10 +149,7 @@
       {{ attachment.caption }}
     </p>
   </div>
-
-
 </ion-content>
-
 
 <ion-footer *ngIf="showUI">
   <ion-toolbar>
@@ -274,4 +167,3 @@
     </ion-buttons>
   </ion-toolbar>
 </ion-footer>
-

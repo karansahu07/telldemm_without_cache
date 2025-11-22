@@ -17,7 +17,7 @@ export interface IUser {
   phoneNumber: string;
   lastSeen?: Date;
   avatar?: string;
-  status?: string;   //mapping of status
+  status?: string; //mapping of status
   isOnPlatform?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
@@ -28,7 +28,7 @@ export interface IUser {
 //   roomId: string;
 //   sender: string;
 //   type: 'text' | 'image' | 'audio' | 'video' | 'pdf' | 'other';
-  
+
 //   text?: string;
 //   localUrl?: string;
 //   cdnUrl?: string;
@@ -67,10 +67,10 @@ export interface IMessage {
   msgId: string;
   roomId: string;
   sender: string;
-  sender_name : string;
-  receiver_id : string;
+  sender_name: string;
+  receiver_id: string;
   type: 'text' | 'image' | 'audio' | 'video' | 'pdf' | 'other';
-  
+
   // the text that will be displayed as the message body (for translated-send this may be a translated text)
   text?: string;
 
@@ -113,7 +113,7 @@ export interface IMessage {
   reactions: { userId: string; emoji: string | null }[];
   replyToMsgId: string;
   isEdit: boolean;
-  isPinned? : boolean;
+  isPinned?: boolean;
   isForwarded?: boolean;
   receipts?: {
     read: {
@@ -133,9 +133,9 @@ export interface IMessage {
   };
 }
 
-
 export interface IAttachment {
   type: 'audio' | 'video' | 'image' | 'pdf' | 'other';
+  msgId: string;
   mediaId?: string;
   fileName?: string;
   mimeType?: string;
@@ -150,7 +150,7 @@ export interface IConversation {
   title?: string;
   phoneNumber?: string;
   type: 'private' | 'group' | 'community';
-  communityId? : string;
+  communityId?: string;
   isMyself?: boolean;
   avatar?: string;
   members?: string[];
@@ -192,9 +192,9 @@ export interface IGroupMember {
   isActive?: boolean;
 }
 
-  export interface GroupMemberDisplay extends IGroupMember {
+export interface GroupMemberDisplay extends IGroupMember {
   user_id: string;
-  phone: string;  // alias for phoneNumber
+  phone: string; // alias for phoneNumber
   avatar?: string;
   role?: string;
   publicKeyHex?: string | null;
@@ -245,9 +245,9 @@ export interface IChatMeta {
   lastmessageType: IMessage['type'];
   lastmessage: string;
   unreadCount: number | string;
-  isArchived : boolean;
-  isPinned : boolean;
-  isLocked : boolean;
+  isArchived: boolean;
+  isPinned: boolean;
+  isLocked: boolean;
 }
 // Note: Make sure IChatMeta is defined like this (if not already):
 /*
@@ -329,7 +329,8 @@ const TABLE_SCHEMAS = {
   `,
   attachments: `
     CREATE TABLE IF NOT EXISTS attachments (
-      mediaId INTEGER PRIMARY KEY AUTOINCREMENT,
+    msgId TEXT,
+      mediaId TEXT PRIMARY KEY,
       type TEXT,
       fileName TEXT,
       mimeType TEXT,
@@ -382,7 +383,6 @@ const TABLE_SCHEMAS = {
     FOREIGN KEY (mediaId) REFERENCES attachments(mediaId)
   );
 `,
-
 };
 
 @Injectable({
@@ -431,8 +431,6 @@ export class SqliteService {
       console.error('❌ SQLite init error:', error);
     }
   }
-
-
 
   /** ----------------- DB INIT ----------------- **/
   private async initDB() {
@@ -732,7 +730,7 @@ export class SqliteService {
           res.values?.map((c) => ({
             ...c,
             type: c.type,
-            communityId : c.communityId,
+            communityId: c.communityId,
             isMyself: !!c.isMyself,
             isArchived: !!c.isArchived,
             isPinned: !!c.isPinned,
@@ -757,20 +755,20 @@ export class SqliteService {
   // }
 
   async deleteConversation(roomId: string) {
-  return this.withOpState('deleteConversation', async () => {
-    // Delete attachments
-    await this.db.run(
-      'DELETE FROM attachments WHERE mediaId IN (SELECT mediaId FROM messages WHERE roomId = ?)',
-      [roomId]
-    );
-    
-    // Delete messages
-    await this.db.run('DELETE FROM messages WHERE roomId = ?', [roomId]);
-    
-    // Delete conversation
-    await this.db.run('DELETE FROM conversations WHERE roomId = ?', [roomId]);
-  });
-}
+    return this.withOpState('deleteConversation', async () => {
+      // Delete attachments
+      await this.db.run(
+        'DELETE FROM attachments WHERE mediaId IN (SELECT mediaId FROM messages WHERE roomId = ?)',
+        [roomId]
+      );
+
+      // Delete messages
+      await this.db.run('DELETE FROM messages WHERE roomId = ?', [roomId]);
+
+      // Delete conversation
+      await this.db.run('DELETE FROM conversations WHERE roomId = ?', [roomId]);
+    });
+  }
 
   async deleteConversations(roomIds: string[]) {
     return this.withOpState('deleteConversations', async () => {
@@ -791,7 +789,7 @@ export class SqliteService {
   // async saveMessage(message: IMessage) {
   //   return this.withOpState('saveMessage', async () => {
   //     const sql = `
-  //       INSERT INTO messages 
+  //       INSERT INTO messages
   //       (msgId, roomId, sender, type, text,mediaId, isMe, status, timestamp, receipts, deletedFor, replyToMsgId, reactions, isEdit )
   //       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   //     `;
@@ -816,44 +814,44 @@ export class SqliteService {
   // }
 
   async saveMessage(message: IMessage) {
-  return this.withOpState('saveMessage', async () => {
-    const sql = `
+    return this.withOpState('saveMessage', async () => {
+      const sql = `
       INSERT INTO messages 
       (msgId, roomId, sender, sender_name, receiver_id, type, text, translations, mediaId, isMe, status, timestamp, receipts, deletedFor, replyToMsgId, reactions, isEdit)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-    const params = [
-      message.msgId,
-      message.roomId,
-      message.sender,
-      message.sender_name,
-      message.receiver_id,
-      message.type || 'text',
-      message.text ?? null,
-      // store translations as JSON string or null
-      message.translations ? JSON.stringify(message.translations) : null,
-      message.mediaId ?? null,
-      message.isMe ? 1 : 0,
-      message.status ?? null,
-      String(message.timestamp),
-      JSON.stringify(message.receipts ?? {}),
-      JSON.stringify(message.deletedFor ?? {}),
-      message.replyToMsgId ?? '',
-      JSON.stringify(message.reactions ?? []),
-      message.isEdit ? 1 : 0,
-    ];
+      const params = [
+        message.msgId,
+        message.roomId,
+        message.sender,
+        message.sender_name,
+        message.receiver_id,
+        message.type || 'text',
+        message.text ?? null,
+        // store translations as JSON string or null
+        message.translations ? JSON.stringify(message.translations) : null,
+        message.mediaId ?? null,
+        message.isMe ? 1 : 0,
+        message.status ?? null,
+        String(message.timestamp),
+        JSON.stringify(message.receipts ?? {}),
+        JSON.stringify(message.deletedFor ?? {}),
+        message.replyToMsgId ?? '',
+        JSON.stringify(message.reactions ?? []),
+        message.isEdit ? 1 : 0,
+      ];
 
-    await this.db.run(sql, params);
-  });
-}
-
+      await this.db.run(sql, params);
+    });
+  }
 
   saveAttachment(attachment: IAttachment) {
     return this.withOpState('saveAttachment', async () => {
-      const query = `INSERT INTO attachments (mediaId, type, fileName, mimeType, fileSize, caption, localUrl, cdnUrl)
-      VALUES(?,?,?,?,?,?,?,?) `;
+      const query = `INSERT INTO attachments (msgId,mediaId, type, fileName, mimeType, fileSize, caption, localUrl, cdnUrl)
+      VALUES(?,?,?,?,?,?,?,?,?) `;
       await this.db.run(query, [
+        attachment.msgId || '',
         attachment.mediaId || '',
         attachment.type || '',
         attachment.fileName || '',
@@ -866,6 +864,17 @@ export class SqliteService {
     });
   }
 
+  async getAttachment(msgId : string): Promise<IAttachment | null>{
+     return this.withOpState(
+      `getAttachment`,
+      async() => {
+        const sql = `SELECT * FROM msgId WHERE attachments WHERE msgId = ?`
+        const res = await this.db.query(sql,[msgId])
+        return res.values?.[0] || null
+      }
+    );
+  }
+
   async getMessages(
     roomId: string,
     limit = 20,
@@ -876,16 +885,26 @@ export class SqliteService {
       async () => {
         const sql = `SELECT * FROM messages WHERE roomId = ? ORDER BY timestamp DESC LIMIT ? OFFSET ?`;
         const res = await this.db.query(sql, [roomId, limit, offset]);
+        const msgIds = res.values?.map((m) => m.msgId) || [];
+        const placeholders = msgIds.map(() => '?').join(',');
+
+        const attachQuery = `SELECT * FROM attachments WHERE msgId IN (${placeholders})`;
+
+        const res2 = await this.db.query(attachQuery, msgIds);
         return (
-          res.values?.reverse().map((msg) => ({
-            ...msg,
-            receipts: JSON.parse(msg.receipts || '{}'),
-            reactions: JSON.parse(msg.reactions || '[]'),
-            deletedFor: JSON.parse(msg.deletedFor || '{}'),
-            isMe: !!msg.isMe,
-            isEdit: !!msg.isEdit,
-            timestamp: this.toDate(msg.timestamp),
-          })) ?? []
+          res.values?.reverse().map((msg) => {
+            const attachment = res2.values?.find(a=> a.msgId == msg.msgId)
+            return {
+              ...msg,
+              ...(attachment && {attachment}),
+              receipts: JSON.parse(msg.receipts || '{}'),
+              reactions: JSON.parse(msg.reactions || '[]'),
+              deletedFor: JSON.parse(msg.deletedFor || '{}'),
+              isMe: !!msg.isMe,
+              isEdit: !!msg.isEdit,
+              timestamp: this.toDate(msg.timestamp),
+            };
+          }) ?? []
         );
       },
       []
@@ -925,15 +944,15 @@ export class SqliteService {
     });
   }
 
-async updateMessageDeletionStatus(
-  msgId: string,
-  deletedFor: { everyone: boolean; users: string[] }
-) {
-  return this.withOpState('updateMessageDeletionStatus', async () => {
-    const sql = `UPDATE messages SET deletedFor = ? WHERE msgId = ?`;
-    await this.db.run(sql, [JSON.stringify(deletedFor), msgId]);
-  });
-}
+  async updateMessageDeletionStatus(
+    msgId: string,
+    deletedFor: { everyone: boolean; users: string[] }
+  ) {
+    return this.withOpState('updateMessageDeletionStatus', async () => {
+      const sql = `UPDATE messages SET deletedFor = ? WHERE msgId = ?`;
+      await this.db.run(sql, [JSON.stringify(deletedFor), msgId]);
+    });
+  }
 
   async updateMessageStatus(msgId: string, status: IMessage['status']) {
     return this.withOpState('updateMessageStatus', async () => {
@@ -1018,33 +1037,33 @@ async updateMessageDeletionStatus(
 
   /** ----------------- SIMPLE DEBUG FUNCTION ----------------- **/
 
-/**
- * Print all tables data in console
- * Bas isko call karo aur sab kuch console mein aa jayega
- */
-async printAllTables() {
-  try {
-    console.log('========== DATABASE DATA ==========\n');
+  /**
+   * Print all tables data in console
+   * Bas isko call karo aur sab kuch console mein aa jayega
+   */
+  async printAllTables() {
+    try {
+      console.log('========== DATABASE DATA ==========\n');
 
-    // Users
-    const users = await this.db.query('SELECT * FROM users');
-    console.log('👥 USERS:', users.values);
+      // Users
+      const users = await this.db.query('SELECT * FROM users');
+      console.log('👥 USERS:', users.values);
 
-    // Conversations
-    const conversations = await this.db.query('SELECT * FROM conversations');
-    console.log('\n💬 CONVERSATIONS:', conversations.values);
+      // Conversations
+      const conversations = await this.db.query('SELECT * FROM conversations');
+      console.log('\n💬 CONVERSATIONS:', conversations.values);
 
-    // Messages
-    const messages = await this.db.query('SELECT * FROM messages');
-    console.log('\n📨 MESSAGES:', messages.values);
+      // Messages
+      const messages = await this.db.query('SELECT * FROM messages');
+      console.log('\n📨 MESSAGES:', messages.values);
 
-    // Attachments
-    const attachments = await this.db.query('SELECT * FROM attachments');
-    console.log('\n📎 ATTACHMENTS:', attachments.values);
+      // Attachments
+      const attachments = await this.db.query('SELECT * FROM attachments');
+      console.log('\n📎 ATTACHMENTS:', attachments.values);
 
-    console.log('\n===================================');
-  } catch (error) {
-    console.error('❌ Error:', error);
+      console.log('\n===================================');
+    } catch (error) {
+      console.error('❌ Error:', error);
+    }
   }
-}
 }

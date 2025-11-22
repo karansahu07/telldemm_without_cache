@@ -718,7 +718,7 @@ async function handlePrivateNotification(
     }
  
     // ✅ Avoid self notification
-    if (messageData.sender_id === messageData.receiver_id) {
+    if (messageData.sender === messageData.receiver_id) {
       console.log("Self message, notification not sent");
       return;
     }
@@ -774,8 +774,8 @@ async function handlePrivateNotification(
       data: {
         payload: JSON.stringify({
           roomId: String(roomId),
-          senderId: String(messageData.receiver_id),
-          receiverId: String(messageData.sender),
+          senderId: String(messageData.sender),
+          receiverId: String(messageData.receiver_id),
           messageId: String(messageId),
           chatType: "private",
           timestamp: String(messageData.timestamp),
@@ -906,7 +906,7 @@ async function handleGroupNotification(
           data: {
             payload: JSON.stringify({
               roomId: String(roomId),
-              senderId: String(messageData.sender_id),
+              senderId: String(messageData.sender),
               messageId: String(messageId),
               chatType: "group",
               groupName: String(groupName),

@@ -4,6 +4,7 @@ import {
   AlertController,
   IonicModule,
   PopoverController,
+  ToastController,
 } from '@ionic/angular';
 import { FooterTabsComponent } from '../components/footer-tabs/footer-tabs.component';
 import { Router } from '@angular/router';
@@ -106,6 +107,12 @@ export class HomeScreenPage implements OnInit, OnDestroy {
   })[] = [];
   archievedCount: number = 0;
 
+  selectedAttachment: any = null;
+showPreviewModal: boolean = false;
+messageText = '';
+isSending = false;
+receiver_name = '';
+
   constructor(
     private router: Router,
     private popoverCtrl: PopoverController,
@@ -121,7 +128,8 @@ export class HomeScreenPage implements OnInit, OnDestroy {
     private resetapp: Resetapp,
     private versionService: VersionCheck,
     private translate: TranslateService,
-    private sqlite: SqliteService
+    private sqlite: SqliteService,
+    private toastCtrl: ToastController,
   ) { }
 
   async ngOnInit() {
@@ -1877,20 +1885,107 @@ export class HomeScreenPage implements OnInit, OnDestroy {
     this.router.navigate(['/contact-screen']);
   }
 
+  // async openCamera() {
+  //   try {
+  //     const image = await Camera.getPhoto({
+  //       source: CameraSource.Camera,
+  //       quality: 90,
+  //       resultType: CameraResultType.Uri,
+  //     });
+  //     this.capturedImage = image.webPath!;
+  //     console.log({image})
+  //     console.log("captured image", this.capturedImage)
+  //   } catch (error) {
+  //     console.error('Camera error:', error);
+  //   }
+  // }
+
   async openCamera() {
+  try {
+    const image = await Camera.getPhoto({
+      source: CameraSource.Camera,
+      quality: 90,
+      resultType: CameraResultType.Uri,
+    });
+
+    if (!image.webPath) {
+      throw new Error('No image path returned');
+    }
+
+    const response = await fetch(image.webPath);
+    const blob = await response.blob();
+
+    const timestamp = Date.now();
+    const fileName = `camera_${timestamp}.${image.format || 'jpg'}`;
+    const mimeType = `image/${image.format || 'jpeg'}`;
+
+    const previewUrl = URL.createObjectURL(blob);
+
+    this.selectedAttachment = {
+      type: 'image',
+      blob: blob,
+      fileName: fileName,
+      mimeType: mimeType,
+      fileSize: blob.size,
+      previewUrl: previewUrl,
+    };
+
+    this.showPreviewModal = true;
+
+  } catch (error) {
+    console.error('Camera error:', error);
+    
+    const toast = await this.toastCtrl.create({
+      message: 'Failed to capture photo. Please try again.',
+      duration: 2000,
+      color: 'danger',
+    });
+    await toast.present();
+  }
+}
+
+cancelAttachment() {
+  if (this.selectedAttachment?.previewUrl) {
     try {
-      const image = await Camera.getPhoto({
-        source: CameraSource.Camera,
-        quality: 90,
-        resultType: CameraResultType.Uri,
-      });
-      this.capturedImage = image.webPath!;
-      console.log({image})
-      console.log("captured image", this.capturedImage)
-    } catch (error) {
-      console.error('Camera error:', error);
+      URL.revokeObjectURL(this.selectedAttachment.previewUrl);
+    } catch (e) {
+      console.warn('Failed to revoke preview URL:', e);
     }
   }
+  
+  this.selectedAttachment = null;
+  this.showPreviewModal = false;
+  this.messageText = '';
+}
+
+// async goToContactList() {
+//   // if (this.isSending) return;
+//   console.log("this go to contact list called")
+//    this.router.navigate(['/select-contact-list'], {
+//       // state: {
+//       //   attachmentData: attachmentData,
+//       //   fromCamera: true
+//       // }
+//     });
+// }
+
+async goToContactList() {
+  console.log("this go to contact list called");
+  
+  this.showPreviewModal = false;
+  
+  setTimeout(() => {
+    this.router.navigate(['/select-contact-list'], 
+    //   {
+    //   state: {
+    //     attachmentData: this.selectedAttachment,
+    //     caption: this.messageText.trim(),
+    //     fromCamera: true
+    //   }
+    // }
+  );
+  });
+}
 
   async scanBarcode() {
     // try {

@@ -2746,6 +2746,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
         console.log({mediaId})
         localMessage.attachment = {
           type: this.selectedAttachment.type,
+          msgId,
           mediaId,
           fileName: this.selectedAttachment.fileName,
           mimeType: this.selectedAttachment.mimeType,

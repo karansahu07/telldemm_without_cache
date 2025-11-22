@@ -252,7 +252,11 @@ const routes: Routes = [
   {
     path: 'channels',
     loadChildren: () => import('./pages/channels/channels/channels.module').then( m => m.ChannelsPageModule)
+  },  {
+    path: 'select-contact-list',
+    loadChildren: () => import('./pages/select-contact-list/select-contact-list.module').then( m => m.SelectContactListPageModule)
   },
+
 
 
 

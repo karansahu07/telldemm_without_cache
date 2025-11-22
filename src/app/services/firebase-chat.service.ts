@@ -61,6 +61,7 @@ import { EncryptionService } from './encryption.service';
 import { AuthService } from '../auth/auth.service';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { CacheService } from './cache.service';
+import { FileSystemService } from './file-system.service';
 // import isEqual from 'lodash.isequal';
 
 const CACHE_PREFIX = 'firebase_chat_';
@@ -141,7 +142,8 @@ export class FirebaseChatService {
     private networkService: NetworkService,
     private encryptionService: EncryptionService,
     private authService: AuthService,
-    private http: HttpClient
+    private http: HttpClient,
+    private fileSystemService: FileSystemService
   ) {
     // this.init();
   }
@@ -588,17 +590,24 @@ export class FirebaseChatService {
   }
 
   pushMsgToChat(msg: any) {
+    console.log('message attachment', msg.attachment);
     const existing = new Map(this._messages$.value);
     const currentMessages =
-      existing.get(this.currentChat?.roomId as string) || [];
+    existing.get(this.currentChat?.roomId as string) || [];
     const messageIdSet = new Set(currentMessages.map((m) => m.msgId));
     if (messageIdSet.has(msg.msgId)) return;
-    currentMessages?.push({ ...msg, isMe: msg.sender === this.senderId });
+    currentMessages?.push({
+      ...msg,
+      attachment: { ...msg.attachment },
+      isMe: msg.sender === this.senderId,
+    });
     existing.set(
       this.currentChat?.roomId as string,
       currentMessages as IMessage[]
     );
-    // console.log({ currentMessages });
+    
+    console.log({ currentMessages });
+    // return
     this._messages$.next(existing);
   }
 
@@ -723,8 +732,18 @@ export class FirebaseChatService {
             data.text as string
           );
           //if data.attachment need to process attachment file(download file using mediaId and save to received folder finally add locally saved url to previewUrl)
-
-          this.pushMsgToChat({ msgId: msgKey, ...data, text: decryptedText, attachment : {...data.attachment , previewUrl : ""} });
+          // const cdnUrl = '';
+      //     const res = await firstValueFrom(
+      //   this.apiService.getDownloadUrl(data.attachment.mediaId)
+      // );
+      // const cdnUrl = res.status ? res.downloadUrl : '';
+          console.log("this msg sent by me")
+          this.pushMsgToChat({
+            msgId: msgKey,
+            ...data,
+            text: decryptedText,
+            attachment: { ...data.attachment },
+          });
           // also save message sqlite
         }
       },
@@ -951,6 +970,31 @@ export class FirebaseChatService {
       this._memberUnsubs.clear();
       this.membersPresence.clear();
     };
+  }
+
+  async getPreviewUrl(msg: IMessage & { attachment: IAttachment }) {
+    let previewUrl: string | null = null;
+    let attachment;
+    if (!msg.attachment.localUrl) {
+      attachment = await this.sqliteService.getAttachment(msg.msgId);
+      previewUrl = await this.fileSystemService.getFilePreview(
+        attachment?.localUrl as string
+      );
+      if(!previewUrl){
+        const res = await firstValueFrom(
+        this.apiService.getDownloadUrl(attachment?.mediaId as string)
+      );
+       previewUrl = res.status ? res.downloadUrl : '';
+      }
+    } else {
+      previewUrl = await this.fileSystemService.getFilePreview(
+        msg.attachment.localUrl as string
+      );
+      if (!previewUrl) {
+        previewUrl = msg.attachment.cdnUrl as string;
+      }
+    }
+    return previewUrl;
   }
 
   getPresenceStatus(userId: string): MemberPresence | null {
@@ -1771,7 +1815,7 @@ export class FirebaseChatService {
           ...payload,
           text: decryptedText,
           ...(payload.attachment && {
-            attachment: { ...payload.attachment, previewUrl: cdnUrl },
+            attachment: { ...payload.attachment, cdnUrl },
           }),
         };
       };
@@ -2435,9 +2479,14 @@ export class FirebaseChatService {
   // =====================
 
   // async sendMessage(msg: Partial<IMessage & { attachment?: any }>) {
-  //   // console.log(msg, "from firebase chat screvie")
+  //   // debugger;
   //   try {
-  //     const { attachment:{localUrl, ...restAttachment}, translations, ...message } = msg;
+  //     // 🔹 Safely destructure attachment
+  //     const { attachment, translations, ...message } = msg;
+  //     const { localUrl, ...restAttachment } = attachment || {
+  //       localUrl: undefined,
+  //     };
+
   //     const roomId = this.currentChat?.roomId as string;
   //     const members = this.currentChat?.members || roomId.split('_');
 
@@ -2445,13 +2494,14 @@ export class FirebaseChatService {
   //     const encryptedText = await this.encryptionService.encrypt(
   //       msg.text as string
   //     );
+
   //     console.log({ restAttachment });
+
   //     // Prepare message object for saving
   //     const messageToSave: Partial<IMessage> = {
   //       ...message,
   //       status: 'sent',
   //       roomId,
-  //       ...(restAttachment ? { attachment: restAttachment } : {}),
   //       text: msg.text, // store plaintext (for SQLite local view)
   //       translations: translations || undefined,
   //       receipts: {
@@ -2470,7 +2520,7 @@ export class FirebaseChatService {
   //     const meta: Partial<IChatMeta> = {
   //       type: this.currentChat?.type || 'private',
   //       lastmessageAt: message.timestamp as string,
-  //       lastmessageType: restAttachment ? restAttachment.type : 'text',
+  //       lastmessageType: attachment ? restAttachment.type : 'text',
   //       lastmessage: encryptedText || '',
   //     };
 
@@ -2496,10 +2546,18 @@ export class FirebaseChatService {
   //       }
   //     }
 
+  //     const res = await firstValueFrom(
+  //       this.apiService.getDownloadUrl(restAttachment.mediaId)
+  //     );
+  //     const cdnUrl = res.status ? res.downloadUrl : '';
+
   //     // 🧩 Save message in RTDB chats/{roomId}/{msgId}
   //     const messagesRef = ref(this.db, `chats/${roomId}/${message.msgId}`);
   //     await rtdbSet(messagesRef, {
   //       ...messageToSave,
+  //        ...(attachment && Object.keys(restAttachment).length > 0
+  //         ? { attachment: {...restAttachment, cdnUrl} }
+  //         : {}),
   //       text: encryptedText, // store encrypted version
   //       // 🔒 store translations unencrypted (for viewing later)
   //       ...(translations ? { translations } : {}),
@@ -2516,20 +2574,31 @@ export class FirebaseChatService {
   //     }
 
   //     // 🧩 Save locally (SQLite)
-  //     if (restAttachment) {
-  //       this.sqliteService.saveAttachment(restAttachment);
+
+      
+
+  //     const previewUrl = await this.fileSystemService.getFilePreview(localUrl);
+
+  //     // 🧩 Push to local chat stream (UI)
+  //     this.pushMsgToChat({
+  //       ...messageToSave,
+  //       ...(attachment && localUrl
+  //         ? { attachment: { ...restAttachment, localUrl : previewUrl, cdnUrl } }
+  //         : {}),
+  //       isMe: true,
+  //     });
+
+  //     if (attachment && Object.keys(restAttachment).length > 0) {
+  //       this.sqliteService.saveAttachment({
+  //         ...restAttachment,
+  //         localUrl : previewUrl,
+  //         cdnUrl,
+  //       });
   //     }
   //     this.sqliteService.saveMessage({
   //       ...messageToSave,
   //       isMe: true,
   //     } as IMessage);
-
-  //     // 🧩 Push to local chat stream (UI)
-  //     this.pushMsgToChat({
-  //       ...messageToSave,
-  //       attachment : {...restAttachment , previewUrl : localUrl},
-  //       isMe: true,
-  //     });
   //   } catch (error) {
   //     console.error('Error in sending message', error);
   //   }
@@ -2537,49 +2606,33 @@ export class FirebaseChatService {
 
   async sendMessage(msg: Partial<IMessage & { attachment?: any }>) {
   try {
-    // 🔹 Safely destructure attachment
-    const { attachment, translations, ...message } = msg;
+    const { attachment, translations, ...message } = msg || {};
     const { localUrl, ...restAttachment } = attachment || { localUrl: undefined };
-    
+
     const roomId = this.currentChat?.roomId as string;
-    const members = this.currentChat?.members || roomId.split('_');
-    
-    // 🧠 Encrypt only the main visible text (translated or original)
-    const encryptedText = await this.encryptionService.encrypt(
-      msg.text as string
-    );
-    
-    console.log({ restAttachment });
-    
-    // Prepare message object for saving
+    const members = this.currentChat?.members || (roomId ? roomId.split('_') : []);
+
+    const encryptedText = await this.encryptionService.encrypt(msg.text as string);
+
     const messageToSave: Partial<IMessage> = {
       ...message,
       status: 'sent',
       roomId,
-      ...(attachment && Object.keys(restAttachment).length > 0 ? { attachment: restAttachment } : {}),
-      text: msg.text, // store plaintext (for SQLite local view)
+      text: msg.text,
       translations: translations || undefined,
       receipts: {
-        read: {
-          status: false,
-          readBy: [],
-        },
-        delivered: {
-          status: false,
-          deliveredTo: [],
-        },
+        read: { status: false, readBy: [] },
+        delivered: { status: false, deliveredTo: [] },
       },
     };
-    
-    // Prepare meta (for conversation list)
+
     const meta: Partial<IChatMeta> = {
       type: this.currentChat?.type || 'private',
       lastmessageAt: message.timestamp as string,
       lastmessageType: attachment ? restAttachment.type : 'text',
       lastmessage: encryptedText || '',
     };
-    
-    // 🧩 Update unread counts and chat meta in userchats/{member}/{roomId}
+
     for (const member of members) {
       const ref = rtdbRef(this.db, `userchats/${member}/${roomId}`);
       const idxSnap = await rtdbGet(ref);
@@ -2600,17 +2653,33 @@ export class FirebaseChatService {
         });
       }
     }
-    
-    // 🧩 Save message in RTDB chats/{roomId}/{msgId}
+
+    let cdnUrl = '';
+    let previewUrl: string | null = null;
+
+    const hasAttachment = !!attachment && Object.keys(restAttachment || {}).length > 0;
+
+    if (hasAttachment) {
+      if (restAttachment.mediaId) {
+        const res: any = await firstValueFrom(
+          this.apiService.getDownloadUrl(restAttachment.mediaId)
+        );
+        cdnUrl = res?.status ? res.downloadUrl : '';
+      }
+
+      if (localUrl) {
+        previewUrl = await this.fileSystemService.getFilePreview(localUrl);
+      }
+    }
+
     const messagesRef = ref(this.db, `chats/${roomId}/${message.msgId}`);
     await rtdbSet(messagesRef, {
       ...messageToSave,
-      text: encryptedText, // store encrypted version
-      // 🔒 store translations unencrypted (for viewing later)
+      ...(hasAttachment ? { attachment: { ...restAttachment, cdnUrl } } : {}),
+      text: encryptedText,
       ...(translations ? { translations } : {}),
     });
-    
-    // 🧩 Mark delivered if receiver is online
+
     for (const member of members) {
       if (member === this.senderId) continue;
       const isReceiverOnline = !!this.membersPresence.get(member)?.isOnline;
@@ -2619,26 +2688,33 @@ export class FirebaseChatService {
         console.log('Mark delivered triggered (receiver online)');
       }
     }
-    
-    // 🧩 Save locally (SQLite)
-    if (attachment && Object.keys(restAttachment).length > 0) {
-      this.sqliteService.saveAttachment(restAttachment);
+
+    const uiMsg: Partial<IMessage> = {
+      ...messageToSave,
+      ...(hasAttachment && (localUrl || cdnUrl)
+        ? { attachment: { ...restAttachment, localUrl: previewUrl || localUrl, cdnUrl } }
+        : {}),
+      isMe: true,
+    };
+    this.pushMsgToChat(uiMsg);
+
+    if (hasAttachment) {
+      this.sqliteService.saveAttachment({
+        ...restAttachment,
+        localUrl: previewUrl || localUrl,
+        cdnUrl,
+      });
     }
+
     this.sqliteService.saveMessage({
       ...messageToSave,
       isMe: true,
     } as IMessage);
-    
-    // 🧩 Push to local chat stream (UI)
-    this.pushMsgToChat({
-      ...messageToSave,
-      ...(attachment && localUrl ? { attachment: { ...restAttachment, previewUrl: localUrl } } : {}),
-      isMe: true,
-    });
   } catch (error) {
     console.error('Error in sending message', error);
   }
 }
+
 
   getUserLanguage(userId: string | number) {
     const url = `${this.baseUrl}/get-language/${userId}`;
@@ -3570,8 +3646,8 @@ export class FirebaseChatService {
       };
     }
   }
-  
- async exitCommunity(
+
+  async exitCommunity(
     communityId: string,
     userId: string
   ): Promise<{ success: boolean; message: string }> {
@@ -3636,7 +3712,6 @@ export class FirebaseChatService {
       };
     }
   }
-
 
   /**
    * Check if user is member of a community
@@ -4118,238 +4193,6 @@ export class FirebaseChatService {
    * Add multiple groups to a community with all member syncing
    * ✅ UPDATED: Now adds community meta to all group members' userchats
    */
-  // async addGroupsToCommunity(params: {
-  //   communityId: string;
-  //   groupIds: string[];
-  //   backendCommunityId?: string | null;
-  //   currentUserId?: string;
-  // }): Promise<{
-  //   success: boolean;
-  //   message: string;
-  //   addedMembersCount?: number;
-  //   updatedAnnouncementGroup?: boolean;
-  // }> {
-  //   try {
-  //     const { communityId, groupIds, backendCommunityId, currentUserId } =
-  //       params;
-
-  //     if (!communityId || !groupIds?.length) {
-  //       return {
-  //         success: false,
-  //         message: 'Community ID or group IDs missing',
-  //       };
-  //     }
-
-  //     const updates: Record<string, any> = {};
-  //     const newMemberIds = new Set<string>();
-
-  //     // 1️⃣ Get community info first (to get existing meta)
-  //     let communityInfo: any = null;
-  //     try {
-  //       communityInfo = await this.getCommunityInfo(communityId);
-  //     } catch (err) {
-  //       console.warn('Failed to load community info:', err);
-  //     }
-
-  //     // 2️⃣ Link groups to community and collect members
-  //     for (const groupId of groupIds) {
-  //       updates[`/communities/${communityId}/groups/${groupId}`] = true;
-  //       updates[`/groups/${groupId}/communityId`] = communityId;
-
-  //       try {
-  //         const groupInfo: any = await this.getGroupInfo(groupId);
-
-  //         // Backend sync if backendCommunityId provided
-  //         if (backendCommunityId) {
-  //           const backendGroupId =
-  //             groupInfo?.backendGroupId ?? groupInfo?.backend_group_id ?? null;
-
-  //           if (backendGroupId && currentUserId) {
-  //             try {
-  //               await firstValueFrom(
-  //                 this.apiService.addGroupToCommunity(
-  //                   backendCommunityId,
-  //                   String(backendGroupId),
-  //                   Number(currentUserId) || 0
-  //                 )
-  //               );
-  //             } catch (apiErr) {
-  //               console.warn(
-  //                 `Backend API failed for group ${groupId}:`,
-  //                 apiErr
-  //               );
-  //             }
-  //           }
-  //         }
-
-  //         // Collect members from this group
-  //         if (groupInfo?.members) {
-  //           Object.keys(groupInfo.members).forEach((memberId) => {
-  //             if (memberId) newMemberIds.add(memberId);
-  //           });
-  //         }
-  //       } catch (err) {
-  //         console.warn(`Failed to process group ${groupId}:`, err);
-  //       }
-  //     }
-
-  //     // 3️⃣ Merge with existing community members
-  //     let existingMembersObj: any = {};
-  //     try {
-  //       existingMembersObj = communityInfo?.members || {};
-  //       Object.keys(existingMembersObj).forEach((memberId) => {
-  //         if (memberId) newMemberIds.add(memberId);
-  //       });
-  //     } catch (err) {
-  //       console.warn('Failed to load existing community members:', err);
-  //     }
-
-  //     // 4️⃣ Get announcement and general group IDs (for communityGroups array)
-  //     const announcementGroupId = await this.findCommunityAnnouncementGroupId(
-  //       communityId
-  //     );
-  //     const generalGroupId = await this.findCommunityGeneralGroupId(
-  //       communityId
-  //     );
-
-  //     // Build communityGroups array (system groups + newly added groups)
-  //     const communityGroups: string[] = [];
-  //     if (announcementGroupId) communityGroups.push(announcementGroupId);
-  //     if (generalGroupId) communityGroups.push(generalGroupId);
-  //     groupIds.forEach((gid) => communityGroups.push(gid));
-
-  //     // 5️⃣ Create community chat meta for new members
-  //     const communityChatMeta: ICommunityChatMeta = {
-  //       type: 'community',
-  //       lastmessageAt: Date.now(),
-  //       lastmessageType: 'text',
-  //       lastmessage: '',
-  //       unreadCount: 0,
-  //       isArchived: false,
-  //       isPinned: false,
-  //       isLocked: false,
-  //       communityGroups: communityGroups, // ✅ All groups in community
-  //     };
-
-  //     // 6️⃣ Add all members to community + userchats
-  //     newMemberIds.forEach((userId) => {
-  //       // Add to community members
-  //       updates[`/communities/${communityId}/members/${userId}`] = {
-  //         isActive: true,
-  //         joinedAt: Date.now(),
-  //       };
-
-  //       // 🆕 Add community meta to user's chats (THIS IS THE KEY CHANGE!)
-  //       updates[`/userchats/${userId}/${communityId}`] = communityChatMeta;
-
-  //       // Legacy index (optional, for backward compatibility)
-  //     //   updates[
-  //     //     `/usersInCommunity/${userId}/joinedCommunities/${communityId}`
-  //     //   ] = true;
-  //     });
-
-  //     // 7️⃣ Update community member count
-  //     updates[`/communities/${communityId}/membersCount`] = newMemberIds.size;
-
-  //     // 8️⃣ Update announcement group
-  //     let updatedAnnouncementGroup = false;
-  //     if (announcementGroupId) {
-  //       try {
-  //         const annGroupInfo = await this.getGroupInfo(announcementGroupId);
-  //         const existingAnnMembers = annGroupInfo?.members || {};
-  //         const annMemberSet = new Set<string>(Object.keys(existingAnnMembers));
-
-  //         newMemberIds.forEach((userId) => {
-  //           if (!annMemberSet.has(userId)) {
-  //             updates[`/groups/${announcementGroupId}/members/${userId}`] = {
-  //               isActive: true,
-  //               username: '',
-  //               phoneNumber: '',
-  //             };
-  //             updates[`/userchats/${userId}/${announcementGroupId}`] = {
-  //               type: 'group',
-  //               lastmessageAt: Date.now(),
-  //               lastmessageType: 'text',
-  //               lastmessage: '',
-  //               unreadCount: 0,
-  //               isArchived: false,
-  //               isPinned: false,
-  //               isLocked: false,
-  //             };
-  //             annMemberSet.add(userId);
-  //           }
-  //         });
-
-  //         updates[`/groups/${announcementGroupId}/membersCount`] =
-  //           annMemberSet.size;
-  //         updatedAnnouncementGroup = true;
-  //       } catch (err) {
-  //         console.warn('Failed to update announcement group:', err);
-  //       }
-  //     }
-
-  //     // 9️⃣ Update general group
-  //     if (generalGroupId) {
-  //       try {
-  //         const genGroupInfo = await this.getGroupInfo(generalGroupId);
-  //         const existingGenMembers = genGroupInfo?.members || {};
-  //         const genMemberSet = new Set<string>(Object.keys(existingGenMembers));
-
-  //         newMemberIds.forEach((userId) => {
-  //           if (!genMemberSet.has(userId)) {
-  //             updates[`/groups/${generalGroupId}/members/${userId}`] = {
-  //               isActive: true,
-  //               username: '',
-  //               phoneNumber: '',
-  //             };
-  //             updates[`/userchats/${userId}/${generalGroupId}`] = {
-  //               type: 'group',
-  //               lastmessageAt: Date.now(),
-  //               lastmessageType: 'text',
-  //               lastmessage: '',
-  //               unreadCount: 0,
-  //               isArchived: false,
-  //               isPinned: false,
-  //               isLocked: false,
-  //             };
-  //             genMemberSet.add(userId);
-  //           }
-  //         });
-
-  //         updates[`/groups/${generalGroupId}/membersCount`] = genMemberSet.size;
-  //       } catch (err) {
-  //         console.warn('Failed to update general group:', err);
-  //       }
-  //     }
-
-  //     // 🔟 Apply all updates atomically
-  //     await this.bulkUpdate(updates);
-
-  //     console.log(
-  //       `✅ Added ${groupIds.length} groups with ${newMemberIds.size} members`
-  //     );
-  //     console.log(
-  //       `✅ Community meta added to ${newMemberIds.size} members' userchats`
-  //     );
-
-  //     return {
-  //       success: true,
-  //       message: `Successfully added ${groupIds.length} group(s) with ${newMemberIds.size} member(s)`,
-  //       addedMembersCount: newMemberIds.size,
-  //       updatedAnnouncementGroup,
-  //     };
-  //   } catch (error) {
-  //     console.error('addGroupsToCommunity error:', error);
-  //     return {
-  //       success: false,
-  //       message:
-  //         error instanceof Error
-  //           ? error.message
-  //           : 'Failed to add groups to community',
-  //     };
-  //   }
-  // }
-
   async addGroupsToCommunity(params: {
     communityId: string;
     groupIds: string[];
@@ -4374,8 +4217,6 @@ export class FirebaseChatService {
 
       const updates: Record<string, any> = {};
       const newMemberIds = new Set<string>();
-      // 🆕 Track which user is member of which group
-      const groupMembersMap = new Map<string, Set<string>>(); // groupId -> Set of userIds
 
       // 1️⃣ Get community info first (to get existing meta)
       let communityInfo: any = null;
@@ -4418,14 +4259,9 @@ export class FirebaseChatService {
 
           // Collect members from this group
           if (groupInfo?.members) {
-            const groupMemberSet = new Set<string>();
             Object.keys(groupInfo.members).forEach((memberId) => {
-              if (memberId) {
-                newMemberIds.add(memberId);
-                groupMemberSet.add(memberId);
-              }
+              if (memberId) newMemberIds.add(memberId);
             });
-            groupMembersMap.set(groupId, groupMemberSet);
           }
         } catch (err) {
           console.warn(`Failed to process group ${groupId}:`, err);
@@ -4470,26 +4306,7 @@ export class FirebaseChatService {
         communityGroups: communityGroups, // ✅ All groups in community
       };
 
-      // 🆕 6️⃣ Get existing userchats for all members to check what already exists
-      const existingUserChatsMap = new Map<string, Set<string>>(); // userId -> Set of existing chatIds
-      
-      for (const userId of newMemberIds) {
-        try {
-          const userChatsRef = rtdbRef(this.db, `userchats/${userId}`);
-          const snapshot = await rtdbGet(userChatsRef);
-          if (snapshot.exists()) {
-            const existingChats = snapshot.val();
-            existingUserChatsMap.set(userId, new Set(Object.keys(existingChats)));
-          } else {
-            existingUserChatsMap.set(userId, new Set());
-          }
-        } catch (err) {
-          console.warn(`Failed to get existing chats for user ${userId}:`, err);
-          existingUserChatsMap.set(userId, new Set());
-        }
-      }
-
-      // 7️⃣ Add all members to community + userchats (only if not exists)
+      // 6️⃣ Add all members to community + userchats
       newMemberIds.forEach((userId) => {
         // Add to community members
         updates[`/communities/${communityId}/members/${userId}`] = {
@@ -4497,41 +4314,19 @@ export class FirebaseChatService {
           joinedAt: Date.now(),
         };
 
-        const existingChats = existingUserChatsMap.get(userId) || new Set();
-        
-        // Add community meta to user's chats (only if not exists)
-        if (!existingChats.has(communityId)) {
-          updates[`/userchats/${userId}/${communityId}`] = communityChatMeta;
-        }
+        // 🆕 Add community meta to user's chats (THIS IS THE KEY CHANGE!)
+        updates[`/userchats/${userId}/${communityId}`] = communityChatMeta;
+
+        // Legacy index (optional, for backward compatibility)
+        updates[
+          `/usersInCommunity/${userId}/joinedCommunities/${communityId}`
+        ] = true;
       });
 
-      // 🆕 7.5️⃣ Add group chat meta for each user in their respective groups (only if not exists)
-      const groupChatMeta = {
-        type: 'group',
-        lastmessageAt: Date.now(),
-        lastmessageType: 'text',
-        lastmessage: '',
-        unreadCount: 0,
-        isArchived: false,
-        isPinned: false,
-        isLocked: false,
-      };
-
-      for (const [groupId, memberIds] of groupMembersMap.entries()) {
-        for (const userId of memberIds) {
-          const existingChats = existingUserChatsMap.get(userId) || new Set();
-          
-          // Only add if not already exists
-          if (!existingChats.has(groupId)) {
-            updates[`/userchats/${userId}/${groupId}`] = groupChatMeta;
-          }
-        }
-      }
-
-      // 8️⃣ Update community member count
+      // 7️⃣ Update community member count
       updates[`/communities/${communityId}/membersCount`] = newMemberIds.size;
 
-      // 9️⃣ Update announcement group
+      // 8️⃣ Update announcement group
       let updatedAnnouncementGroup = false;
       if (announcementGroupId) {
         try {
@@ -4546,20 +4341,16 @@ export class FirebaseChatService {
                 username: '',
                 phoneNumber: '',
               };
-              
-              const existingChats = existingUserChatsMap.get(userId) || new Set();
-              if (!existingChats.has(announcementGroupId)) {
-                updates[`/userchats/${userId}/${announcementGroupId}`] = {
-                  type: 'group',
-                  lastmessageAt: Date.now(),
-                  lastmessageType: 'text',
-                  lastmessage: '',
-                  unreadCount: 0,
-                  isArchived: false,
-                  isPinned: false,
-                  isLocked: false,
-                };
-              }
+              updates[`/userchats/${userId}/${announcementGroupId}`] = {
+                type: 'group',
+                lastmessageAt: Date.now(),
+                lastmessageType: 'text',
+                lastmessage: '',
+                unreadCount: 0,
+                isArchived: false,
+                isPinned: false,
+                isLocked: false,
+              };
               annMemberSet.add(userId);
             }
           });
@@ -4572,7 +4363,7 @@ export class FirebaseChatService {
         }
       }
 
-      // 🔟 Update general group
+      // 9️⃣ Update general group
       if (generalGroupId) {
         try {
           const genGroupInfo = await this.getGroupInfo(generalGroupId);
@@ -4586,20 +4377,16 @@ export class FirebaseChatService {
                 username: '',
                 phoneNumber: '',
               };
-              
-              const existingChats = existingUserChatsMap.get(userId) || new Set();
-              if (!existingChats.has(generalGroupId)) {
-                updates[`/userchats/${userId}/${generalGroupId}`] = {
-                  type: 'group',
-                  lastmessageAt: Date.now(),
-                  lastmessageType: 'text',
-                  lastmessage: '',
-                  unreadCount: 0,
-                  isArchived: false,
-                  isPinned: false,
-                  isLocked: false,
-                };
-              }
+              updates[`/userchats/${userId}/${generalGroupId}`] = {
+                type: 'group',
+                lastmessageAt: Date.now(),
+                lastmessageType: 'text',
+                lastmessage: '',
+                unreadCount: 0,
+                isArchived: false,
+                isPinned: false,
+                isLocked: false,
+              };
               genMemberSet.add(userId);
             }
           });
@@ -4610,17 +4397,14 @@ export class FirebaseChatService {
         }
       }
 
-      // 1️⃣1️⃣ Apply all updates atomically
+      // 🔟 Apply all updates atomically
       await this.bulkUpdate(updates);
 
       console.log(
         `✅ Added ${groupIds.length} groups with ${newMemberIds.size} members`
       );
       console.log(
-        `✅ Community meta added to members' userchats (skipped existing)`
-      );
-      console.log(
-        `✅ Group chats added to members' userchats for ${groupMembersMap.size} groups (skipped existing)`
+        `✅ Community meta added to ${newMemberIds.size} members' userchats`
       );
 
       return {
@@ -4976,153 +4760,158 @@ export class FirebaseChatService {
   }
 
   async updateCommunityInfo(
-  communityId: string,
-  newName: string,
-  newDescription: string
-): Promise<boolean> {
-  try {
-    const db = getDatabase();
-    const communityRef = ref(db, `communities/${communityId}`);
+    communityId: string,
+    newName: string,
+    newDescription: string
+  ): Promise<boolean> {
+    try {
+      const db = getDatabase();
+      const communityRef = ref(db, `communities/${communityId}`);
 
-    // Update community details
-    const updates: any = {
-      title: newName,
-      name: newName, // some communities might use 'name' instead of 'title'
-      description: newDescription,
-      updatedAt: new Date().toISOString()
-    };
-
-    await update(communityRef, updates);
-
-    console.log('✅ Community updated successfully:', communityId);
-    
-    // Optional: Update local cache if you maintain one
-    // this.refreshCommunityInConversations(communityId, newName);
-
-    return true;
-  } catch (error) {
-    console.error('❌ Error updating community info:', error);
-    return false;
-  }
-}
-
-async addMembersToCommunity(communityId: string, userIds: string[]): Promise<void> {
-  try {
-    // 1. Get community data to find announcement group ID
-    const communityRef = ref(this.db, `communities/${communityId}`);
-    // const groupRef = ref(this.db, `groups`);
-    const communitySnap = await get(communityRef);
-    
-    if (!communitySnap.exists()) {
-      throw new Error('Community not found');
-    }
-    
-    const communityData = communitySnap.val();
-    // console.log({communityData})
-    // const announcementGroupId = communityData.announcementGroupId;       //this will find
-    // const generalGroupId = communityData.generalGroupId;
-    
-    // if (!announcementGroupId) {
-    //   throw new Error('Announcement group not found for this community');
-    // }
-    
-    // 2. Prepare updates object
-    const updates: any = {};
-    const timestamp = Date.now();
-    
-    // Build communityGroups array for ICommunityMeta
-    const communityGroups: string[] = [];
-    // if (announcementGroupId) communityGroups.push(announcementGroupId);
-    // if (generalGroupId) communityGroups.push(generalGroupId);
-    
-    // Get all groups in community
-    // const allGroupsObj = communityData.groups || {};
-    // Object.keys(allGroupsObj).forEach(gid => {
-    //   if (gid && !communityGroups.includes(gid)) {
-    //     communityGroups.push(gid);
-    //   }
-    // });
-    
-    // Create community chat meta (similar to createCommunity)
-    const communityChatMeta: ICommunityChatMeta = {
-      type: 'community',
-      lastmessageAt: timestamp,
-      lastmessageType: 'text',
-      lastmessage: '',
-      unreadCount: 0,
-      isArchived: false,
-      isPinned: false,
-      isLocked: false,
-      communityGroups: communityGroups
-    };
-    
-    // Create announcement group chat meta
-    const announcementChatMeta: IChatMeta = {
-      type: 'group',
-      lastmessageAt: timestamp,
-      lastmessageType: 'text',
-      lastmessage: '',
-      unreadCount: 0,
-      isArchived: false,
-      isPinned: false,
-      isLocked: false
-    };
-    
-    // Add members to community and their userchats
-    for (const userId of userIds) {
-      // Add to community members
-      updates[`communities/${communityId}/members/${userId}`] = {
-        joinedAt: timestamp,
-        role: 'member',
-        userId: userId,
-        isActive: true,
-        username: '',
-        phoneNumber: ''
+      // Update community details
+      const updates: any = {
+        title: newName,
+        name: newName, // some communities might use 'name' instead of 'title'
+        description: newDescription,
+        updatedAt: new Date().toISOString(),
       };
-      
-      // ✅ Add community chat meta to user's userchats (NOT users node)
-      updates[`userchats/${userId}/${communityId}`] = communityChatMeta;
+
+      await update(communityRef, updates);
+
+      console.log('✅ Community updated successfully:', communityId);
+
+      // Optional: Update local cache if you maintain one
+      // this.refreshCommunityInConversations(communityId, newName);
+
+      return true;
+    } catch (error) {
+      console.error('❌ Error updating community info:', error);
+      return false;
     }
-    
-    // Add members to announcement group and their userchats
-    for (const userId of userIds) {
-      // Add to announcement group members
-      // updates[`groups/${announcementGroupId}/members/${userId}`] = {
-      //   joinedAt: timestamp,
-      //   role: 'member',
-      //   userId: userId,
-      //   isActive: true,
-      //   username: '',
-      //   phoneNumber: ''
-      // };
-      
-      // ✅ Add announcement group chat meta to user's userchats (NOT users node)
-    //   updates[`userchats/${userId}/${announcementGroupId}`] = announcementChatMeta;
-    }
-    
-    // Update member counts
-    const currentCommunityMemberCount = communityData.memberCount || 0;
-    updates[`communities/${communityId}/memberCount`] = currentCommunityMemberCount + userIds.length;
-    
-    // Get announcement group data for member count
-    // const announcementGroupRef = ref(this.db, `groups/${announcementGroupId}`);
-    // const announcementGroupSnap = await get(announcementGroupRef);
-    
-    // if (announcementGroupSnap.exists()) {
-    //   const announcementGroupData = announcementGroupSnap.val();
-    //   const currentGroupMemberCount = announcementGroupData.memberCount || 0;
-    //   updates[`groups/${announcementGroupId}/memberCount`] = currentGroupMemberCount + userIds.length;
-    // }
-    
-    // 3. Execute all updates atomically
-    await update(ref(this.db), updates);
-    
-    console.log(`Successfully added ${userIds.length} members to community and announcement group`);
-  } catch (error) {
-    console.error('Error adding members to community:', error);
-    throw error;
   }
-}
+
+  async addMembersToCommunity(
+    communityId: string,
+    userIds: string[]
+  ): Promise<void> {
+    try {
+      // 1. Get community data to find announcement group ID
+      const communityRef = ref(this.db, `communities/${communityId}`);
+      // const groupRef = ref(this.db, `groups`);
+      const communitySnap = await get(communityRef);
+
+      if (!communitySnap.exists()) {
+        throw new Error('Community not found');
+      }
+
+      const communityData = communitySnap.val();
+      // console.log({communityData})
+      // const announcementGroupId = communityData.announcementGroupId;       //this will find
+      // const generalGroupId = communityData.generalGroupId;
+
+      // if (!announcementGroupId) {
+      //   throw new Error('Announcement group not found for this community');
+      // }
+
+      // 2. Prepare updates object
+      const updates: any = {};
+      const timestamp = Date.now();
+
+      // Build communityGroups array for ICommunityMeta
+      const communityGroups: string[] = [];
+      // if (announcementGroupId) communityGroups.push(announcementGroupId);
+      // if (generalGroupId) communityGroups.push(generalGroupId);
+
+      // Get all groups in community
+      // const allGroupsObj = communityData.groups || {};
+      // Object.keys(allGroupsObj).forEach(gid => {
+      //   if (gid && !communityGroups.includes(gid)) {
+      //     communityGroups.push(gid);
+      //   }
+      // });
+
+      // Create community chat meta (similar to createCommunity)
+      const communityChatMeta: ICommunityChatMeta = {
+        type: 'community',
+        lastmessageAt: timestamp,
+        lastmessageType: 'text',
+        lastmessage: '',
+        unreadCount: 0,
+        isArchived: false,
+        isPinned: false,
+        isLocked: false,
+        communityGroups: communityGroups,
+      };
+
+      // Create announcement group chat meta
+      const announcementChatMeta: IChatMeta = {
+        type: 'group',
+        lastmessageAt: timestamp,
+        lastmessageType: 'text',
+        lastmessage: '',
+        unreadCount: 0,
+        isArchived: false,
+        isPinned: false,
+        isLocked: false,
+      };
+
+      // Add members to community and their userchats
+      for (const userId of userIds) {
+        // Add to community members
+        updates[`communities/${communityId}/members/${userId}`] = {
+          joinedAt: timestamp,
+          role: 'member',
+          userId: userId,
+          isActive: true,
+          username: '',
+          phoneNumber: '',
+        };
+
+        // ✅ Add community chat meta to user's userchats (NOT users node)
+        updates[`userchats/${userId}/${communityId}`] = communityChatMeta;
+      }
+
+      // Add members to announcement group and their userchats
+      for (const userId of userIds) {
+        // Add to announcement group members
+        // updates[`groups/${announcementGroupId}/members/${userId}`] = {
+        //   joinedAt: timestamp,
+        //   role: 'member',
+        //   userId: userId,
+        //   isActive: true,
+        //   username: '',
+        //   phoneNumber: ''
+        // };
+        // ✅ Add announcement group chat meta to user's userchats (NOT users node)
+        //   updates[`userchats/${userId}/${announcementGroupId}`] = announcementChatMeta;
+      }
+
+      // Update member counts
+      const currentCommunityMemberCount = communityData.memberCount || 0;
+      updates[`communities/${communityId}/memberCount`] =
+        currentCommunityMemberCount + userIds.length;
+
+      // Get announcement group data for member count
+      // const announcementGroupRef = ref(this.db, `groups/${announcementGroupId}`);
+      // const announcementGroupSnap = await get(announcementGroupRef);
+
+      // if (announcementGroupSnap.exists()) {
+      //   const announcementGroupData = announcementGroupSnap.val();
+      //   const currentGroupMemberCount = announcementGroupData.memberCount || 0;
+      //   updates[`groups/${announcementGroupId}/memberCount`] = currentGroupMemberCount + userIds.length;
+      // }
+
+      // 3. Execute all updates atomically
+      await update(ref(this.db), updates);
+
+      console.log(
+        `Successfully added ${userIds.length} members to community and announcement group`
+      );
+    } catch (error) {
+      console.error('Error adding members to community:', error);
+      throw error;
+    }
+  }
 
   async getGroupMembers(groupId: string): Promise<string[]> {
     const snapshot = await get(ref(this.db, `groups/${groupId}/members`));
@@ -5316,95 +5105,26 @@ async addMembersToCommunity(communityId: string, userIds: string[]): Promise<voi
     }
   }
 
-  // async addMembersToGroup(roomId: string, userIds: string[]) {
-  //   try {
-  //     const memberRef = rtdbRef(this.db, `groups/${roomId}/members`);
-  //     const snap = await rtdbGet(memberRef);
-  //     const members: IGroup['members'] = snap.val();
-  //     const newMembers: IGroup['members'] = {};
-  //     for (const userId of userIds) {
-  //       console.log(this.currentUsers, 'this.currentUsers');
-  //       const user = this.currentUsers.find((u) => u.userId == userId);
-  //       console.log(user, 'this.currentUsers');
-  //       newMembers[userId] = {
-  //         isActive: true,
-  //         phoneNumber: user?.phoneNumber as string,
-  //         username: user?.username as string,
-  //       };
-  //     }
-  //     console.log({ newMembers });
-  //     await rtdbSet(memberRef, { ...members, ...newMembers });
-  //   } catch (error) {
-  //     console.error('Error adding members in group', error);
-  //   }
-  // }
-
   async addMembersToGroup(roomId: string, userIds: string[]) {
     try {
       const memberRef = rtdbRef(this.db, `groups/${roomId}/members`);
       const snap = await rtdbGet(memberRef);
-      const members: IGroup['members'] = snap.val() || {};
+      const members: IGroup['members'] = snap.val();
       const newMembers: IGroup['members'] = {};
-      const updates: Record<string, any> = {};
-
-      // Get existing userchats to avoid overwriting
-      const existingUserChatsMap = new Map<string, boolean>();
-      
-      for (const userId of userIds) {
-        try {
-          const userChatRef = rtdbRef(this.db, `userchats/${userId}/${roomId}`);
-          const chatSnap = await rtdbGet(userChatRef);
-          existingUserChatsMap.set(userId, chatSnap.exists());
-        } catch (err) {
-          existingUserChatsMap.set(userId, false);
-        }
-      }
-
-      // Prepare new members and their userchats
       for (const userId of userIds) {
         console.log(this.currentUsers, 'this.currentUsers');
         const user = this.currentUsers.find((u) => u.userId == userId);
         console.log(user, 'this.currentUsers');
-        
         newMembers[userId] = {
           isActive: true,
           phoneNumber: user?.phoneNumber as string,
           username: user?.username as string,
         };
-
-        // Add to userchats only if not already exists
-        if (!existingUserChatsMap.get(userId)) {
-          updates[`/userchats/${userId}/${roomId}`] = {
-            type: 'group',
-            lastmessageAt: Date.now(),
-            lastmessageType: 'text',
-            lastmessage: '',
-            unreadCount: 0,
-            isArchived: false,
-            isPinned: false,
-            isLocked: false,
-          };
-        }
       }
-
       console.log({ newMembers });
-      
-      // Add members to group
-      updates[`/groups/${roomId}/members`] = { ...members, ...newMembers };
-      
-      // Update member count
-      const totalMembers = Object.keys({ ...members, ...newMembers }).length;
-      updates[`/groups/${roomId}/membersCount`] = totalMembers;
-
-      // Apply all updates atomically
-      await this.bulkUpdate(updates);
-      
-      console.log(`✅ Added ${userIds.length} members to group ${roomId}`);
-      console.log(`✅ Updated userchats for new members (skipped existing)`);
-      
+      await rtdbSet(memberRef, { ...members, ...newMembers });
     } catch (error) {
       console.error('Error adding members in group', error);
-      throw error;
     }
   }
 
