@@ -1,6 +1,14 @@
 import { Injectable } from '@angular/core';
-import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } from '@capacitor/push-notifications';
-import { LocalNotifications, LocalNotificationActionPerformed } from '@capacitor/local-notifications';
+import {
+  PushNotifications,
+  Token,
+  PushNotificationSchema,
+  ActionPerformed,
+} from '@capacitor/push-notifications';
+import {
+  LocalNotifications,
+  LocalNotificationActionPerformed,
+} from '@capacitor/local-notifications';
 import { getDatabase, ref, remove, set } from 'firebase/database';
 import { Router } from '@angular/router';
 import { Platform, ToastController } from '@ionic/angular';
@@ -10,7 +18,7 @@ import { PluginListenerHandle } from '@capacitor/core';
 import { ApiService } from './api/api.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class FcmService {
   private fcmToken: string = '';
@@ -19,9 +27,9 @@ export class FcmService {
     private router: Router,
     private platform: Platform,
     private toastController: ToastController,
-    private authService : AuthService,
-    private service : ApiService
-  ) { }
+    private authService: AuthService,
+    private service: ApiService
+  ) {}
 
   // Helper to actively request a fresh token and return it (one-time listener)
   private async getFreshToken(timeoutMs = 8000): Promise<string> {
@@ -44,16 +52,19 @@ export class FcmService {
           }
         };
 
-        listener = await PushNotifications.addListener('registration', (token: Token) => {
-          try {
-            this.fcmToken = token.value;
-            cleanup();
-            resolve(token.value);
-          } catch (e) {
-            cleanup();
-            reject(e);
+        listener = await PushNotifications.addListener(
+          'registration',
+          (token: Token) => {
+            try {
+              this.fcmToken = token.value;
+              cleanup();
+              resolve(token.value);
+            } catch (e) {
+              cleanup();
+              reject(e);
+            }
           }
-        });
+        );
 
         // Register to trigger token generation/refresh
         await PushNotifications.register();
@@ -71,8 +82,16 @@ export class FcmService {
         // Ensure we clear timeout when resolved/rejected
         const origResolve = resolve;
         const origReject = reject;
-        resolve = (v: any) => { clearTimeout(timer); origResolve(v); return v; };
-        reject = (err: any) => { clearTimeout(timer); origReject(err); throw err; };
+        resolve = (v: any) => {
+          clearTimeout(timer);
+          origResolve(v);
+          return v;
+        };
+        reject = (err: any) => {
+          clearTimeout(timer);
+          origReject(err);
+          throw err;
+        };
       } catch (err) {
         reject(err);
       }
@@ -126,10 +145,13 @@ export class FcmService {
       });
 
       // 📩 Foreground push
-      PushNotifications.addListener('pushNotificationReceived', async (notification: PushNotificationSchema) => {
-        //console.log('📩 Foreground push received:', notification);
-        await this.showLocalNotification(notification);
-      });
+      PushNotifications.addListener(
+        'pushNotificationReceived',
+        async (notification: PushNotificationSchema) => {
+          //console.log('📩 Foreground push received:', notification);
+          await this.showLocalNotification(notification);
+        }
+      );
 
       // 👉 CRITICAL: Background notification tapped
       // PushNotifications.addListener('pushNotificationActionPerformed', (notification: ActionPerformed) => {
@@ -138,25 +160,24 @@ export class FcmService {
       // });
 
       PushNotifications.addListener(
-  'pushNotificationActionPerformed',
-  (notification: ActionPerformed) => {
-    console.log("👉 Raw notification tap:", notification);
+        'pushNotificationActionPerformed',
+        (notification: ActionPerformed) => {
+          console.log('👉 Raw notification tap:', notification);
 
-    let payload = notification.notification?.data?.payload;
-    let data: any = {};
+          let payload = notification.notification?.data?.payload;
+          let data: any = {};
 
-    try {
-      if (payload) data = JSON.parse(payload);
-    } catch (e) {
-      console.error("❌ JSON parse error:", e);
-    }
+          try {
+            if (payload) data = JSON.parse(payload);
+          } catch (e) {
+            console.error('❌ JSON parse error:', e);
+          }
 
-    console.log("👉 Parsed tap data:", data);
+          console.log('👉 Parsed tap data:', data);
 
-    this.handleNotificationTap(data);
-  }
-);
-
+          this.handleNotificationTap(data);
+        }
+      );
 
       // 👉 Local notification tapped (when shown in foreground)
       // LocalNotifications.addListener('localNotificationActionPerformed', (evt: LocalNotificationActionPerformed) => {
@@ -165,24 +186,23 @@ export class FcmService {
       // });
 
       LocalNotifications.addListener(
-  'localNotificationActionPerformed',
-  (evt: LocalNotificationActionPerformed) => {
-    console.log("👉 Local tap event:", evt);
+        'localNotificationActionPerformed',
+        (evt: LocalNotificationActionPerformed) => {
+          console.log('👉 Local tap event:', evt);
 
-    let payload = evt.notification?.extra?.payload;
-    let data: any = {};
+          let payload = evt.notification?.extra?.payload;
+          let data: any = {};
 
-    try {
-      if (payload) data = JSON.parse(payload);
-    } catch (e) {
-      console.error("❌ JSON parse error:", e);
-    }
+          try {
+            if (payload) data = JSON.parse(payload);
+          } catch (e) {
+            console.error('❌ JSON parse error:', e);
+          }
 
-    console.log("👉 Parsed Local tap data:", data);
-    this.handleNotificationTap(data);
-  }
-);
-
+          console.log('👉 Parsed Local tap data:', data);
+          this.handleNotificationTap(data);
+        }
+      );
 
       // ✅ ADDITIONAL: Handle app state resume (for better reliability)
       App.addListener('appStateChange', ({ isActive }) => {
@@ -210,52 +230,51 @@ export class FcmService {
     }
   }
 
-//  private handleNotificationTap(data: any) {
-//    console.log('🎯 Handling notification tap with data:', data);
+  //  private handleNotificationTap(data: any) {
+  //    console.log('🎯 Handling notification tap with data:', data);
 
-//    const userid = this.authService.authData?.userId;
-//    //console.log("userid", userid);
+  //    const userid = this.authService.authData?.userId;
+  //    //console.log("userid", userid);
 
-//    if (!data || Object.keys(data).length === 0) {
-//      //console.log('No notification data available, navigating to home');
-//      this.router.navigate(['/home-screen']);
-//      return;
-//    }
+  //    if (!data || Object.keys(data).length === 0) {
+  //      //console.log('No notification data available, navigating to home');
+  //      this.router.navigate(['/home-screen']);
+  //      return;
+  //    }
 
-//    const receiverId = data.receiverId;
+  //    const receiverId = data.receiverId;
 
-//    if (receiverId) {
-//      this.router.navigate(['/chatting-screen'], {
-//        queryParams: { receiverId },
-//        state: { fromNotification: true }
-//      });
+  //    if (receiverId) {
+  //      this.router.navigate(['/chatting-screen'], {
+  //        queryParams: { receiverId },
+  //        state: { fromNotification: true }
+  //      });
 
-//      // Persist flag for later reloads
-//      localStorage.setItem('fromNotification', 'true');
-//    } else {
-//      //console.log('Could not resolve receiverId, navigating to home');
-//      this.router.navigate(['/home-screen']);
-//    }
-//  }
+  //      // Persist flag for later reloads
+  //      localStorage.setItem('fromNotification', 'true');
+  //    } else {
+  //      //console.log('Could not resolve receiverId, navigating to home');
+  //      this.router.navigate(['/home-screen']);
+  //    }
+  //  }
 
-private handleNotificationTap(data: any) {
-  console.log("🎯 Final Tap Data Received:", data);
+  private handleNotificationTap(data: any) {
+    console.log('🎯 Final Tap Data Received:', data);
 
-  const receiverId = data?.receiverId;
+    const receiverId = data?.receiverId;
 
-  if (receiverId) {
-    this.router.navigate(['/chatting-screen'], {
-      queryParams: { receiverId }
-      // state: { fromNotification: true }
-    });
+    if (receiverId) {
+      this.router.navigate(['/chatting-screen'], {
+        queryParams: { receiverId },
+        // state: { fromNotification: true }
+      });
 
-    localStorage.setItem("fromNotification", "true");
-    return;
+      localStorage.setItem('fromNotification', 'true');
+      return;
+    }
+
+    this.router.navigate(['/home-screen']);
   }
-
-  this.router.navigate(['/home-screen']);
-}
-
 
   // ✅ Check for pending notifications (when app becomes active)
   private async checkForPendingNotifications() {
@@ -276,8 +295,10 @@ private handleNotificationTap(data: any) {
     try {
       // ✅ Extract data properly - check both data and body for FCM structure
       const notificationData = notification.data || {};
-      const title = notificationData.title || notification.title || 'New Message';
-      const body = notificationData.body || notification.body || 'You have a new message';
+      const title =
+        notificationData.title || notification.title || 'New Message';
+      const body =
+        notificationData.body || notification.body || 'You have a new message';
 
       await LocalNotifications.schedule({
         notifications: [
@@ -288,9 +309,9 @@ private handleNotificationTap(data: any) {
             extra: notificationData,
             smallIcon: 'ic_notification',
             sound: 'default',
-            schedule: { at: new Date(Date.now() + 500) }
-          }
-        ]
+            schedule: { at: new Date(Date.now() + 500) },
+          },
+        ],
       });
 
       const toast = await this.toastController.create({
@@ -303,9 +324,9 @@ private handleNotificationTap(data: any) {
             text: '',
             handler: () => {
               this.handleNotificationTap(notificationData);
-            }
-          }
-        ]
+            },
+          },
+        ],
       });
 
       await toast.present();
@@ -315,11 +336,18 @@ private handleNotificationTap(data: any) {
   }
 
   // ✅ Save FCM token & user info to Firebase
-  async saveFcmTokenToDatabase(userId: string, userName: string, userPhone: string) {
+  async saveFcmTokenToDatabase(
+    userId: string,
+    userName: string,
+    userPhone: string
+  ) {
     try {
       if (!this.fcmToken) {
         //console.log('⚠️ FCM Token not available yet, will retry in 2s...');
-        setTimeout(() => this.saveFcmTokenToDatabase(userId, userName, userPhone), 2000);
+        setTimeout(
+          () => this.saveFcmTokenToDatabase(userId, userName, userPhone),
+          2000
+        );
         return;
       }
 
@@ -331,7 +359,7 @@ private handleNotificationTap(data: any) {
         phone: userPhone,
         fcmToken: this.fcmToken,
         platform: this.isIos() ? 'ios' : 'android',
-        lastActive: new Date().toISOString()
+        lastActive: new Date().toISOString(),
       };
 
       await set(userRef, userData);
@@ -358,7 +386,10 @@ private handleNotificationTap(data: any) {
           const tokenRef = ref(db, `users/${userId}/fcmToken`);
           await set(tokenRef, this.fcmToken);
           // also update lastActive or whatever metadata you want
-          await set(ref(db, `users/${userId}/lastActive`), new Date().toISOString());
+          await set(
+            ref(db, `users/${userId}/lastActive`),
+            new Date().toISOString()
+          );
           //console.log('✅ FCM Token refreshed and updated successfully:', this.fcmToken);
         } else {
           console.warn('⚠️ No fresh token received, skipping DB update');
@@ -396,39 +427,39 @@ private handleNotificationTap(data: any) {
   // }
 
   async deleteFcmToken(userId: string) {
-  try {
-    if (!userId) {
-      console.warn('⚠️ deleteFcmToken: userId is required');
-      return;
+    try {
+      if (!userId) {
+        console.warn('⚠️ deleteFcmToken: userId is required');
+        return;
+      }
+
+      const db = getDatabase();
+      const userRef = ref(db, `users/${userId}/fcmToken`);
+
+      // Remove token from Firebase
+      await remove(userRef);
+      // //console.log('🗑️ User token deleted successfully from Firebase:', userId);
+
+      // Also call backend logout API
+      const UserId = Number(userId);
+      if (!Number.isNaN(UserId)) {
+        this.service.logoutUser(UserId).subscribe({
+          next: (res) => {
+            //console.log('✅ Backend logout success:', res);
+          },
+          error: (err) => {
+            console.error('❌ Backend logout failed:', err);
+          },
+        });
+      } else {
+        console.warn(
+          '⚠️ Provided userId is not numeric — skipping backend logout API call'
+        );
+      }
+    } catch (error) {
+      console.error('❌ Error deleting user token:', error);
     }
-
-    const db = getDatabase();
-    const userRef = ref(db, `users/${userId}/fcmToken`);
-
-    // Remove token from Firebase
-    await remove(userRef);
-    // //console.log('🗑️ User token deleted successfully from Firebase:', userId);
-
-    // Also call backend logout API
-    const UserId = Number(userId);
-    if (!Number.isNaN(UserId)) {
-      this.service.logoutUser(UserId).subscribe({
-        next: (res) => {
-          //console.log('✅ Backend logout success:', res);
-        },
-        error: (err) => {
-          console.error('❌ Backend logout failed:', err);
-        }
-      });
-    } else {
-      console.warn('⚠️ Provided userId is not numeric — skipping backend logout API call');
-    }
-
-  } catch (error) {
-    console.error('❌ Error deleting user token:', error);
   }
-}
-
 
   async setUserOffline(userId: string) {
     try {

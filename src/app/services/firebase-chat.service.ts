@@ -731,12 +731,13 @@ export class FirebaseChatService {
           const decryptedText = await this.encryptionService.decrypt(
             data.text as string
           );
-          //if data.attachment need to process attachment file(download file using mediaId and save to received folder finally add locally saved url to previewUrl)
+          //if data.attachment need to process attachment file(download file using mediaId and save to received folder finally add locally saved url to previewUrl)  localUrl !=
           // const cdnUrl = '';
       //     const res = await firstValueFrom(
       //   this.apiService.getDownloadUrl(data.attachment.mediaId)
       // );
       // const cdnUrl = res.status ? res.downloadUrl : '';
+      
           console.log("this msg sent by me")
           this.pushMsgToChat({
             msgId: msgKey,
@@ -1327,162 +1328,6 @@ export class FirebaseChatService {
 
     return conv;
   }
-
-  // async syncConversationWithServer(): Promise<void> {
-  //   try {
-  //     if (!this.senderId) {
-  //       console.warn('syncConversationWithServer: senderId is not set');
-  //       return;
-  //     }
-
-  //     this._isSyncing$.next(true);
-
-  //     const userChatsPath = `userchats/${this.senderId}`;
-  //     const userChatsRef = rtdbRef(this.db, userChatsPath);
-  //     const snapshot: DataSnapshot = await rtdbGet(userChatsRef);
-  //     const userChats = snapshot.val() || {};
-  //     const conversations: IConversation[] = [];
-  //     const roomIds = Object.keys(userChats);
-  //     for (const roomId of roomIds) {
-  //       const meta: IChatMeta = userChats[roomId] || {};
-  //       try {
-  //         const type: IConversation['type'] = meta.type;
-  //         if (type === 'private') {
-  //           const conv = await this.fetchPrivateConvDetails(roomId, meta);
-  //           conversations.push(conv);
-  //         } else if (type === 'group' || type === 'community') {
-  //           const conv = await this.fetchGroupConDetails(roomId, meta);
-  //           conversations.push(conv);
-  //         } else {
-  //           conversations.push({
-  //             roomId,
-  //             type: 'private',
-  //             title: roomId,
-  //             lastMessage: meta?.lastmessage,
-  //             lastMessageAt: meta?.lastmessageAt
-  //               ? new Date(Number(meta.lastmessageAt))
-  //               : undefined,
-  //             unreadCount: Number(meta?.unreadCount) || 0,
-  //           } as IConversation);
-  //         }
-  //       } catch (innerErr) {
-  //         console.error('Error building conversation for', roomId, innerErr);
-  //       }
-  //     }
-
-  //     const existing = this._conversations$.value;
-  //     const newConversations = conversations.filter(
-  //       ({ roomId }) => !existing.some((c) => c.roomId === roomId)
-  //     );
-
-  //     if (newConversations.length) {
-  //       for (const conv of newConversations) {
-  //         await this.sqliteService.createConversation({ ...conv });
-  //       }
-  //       this._conversations$.next([...existing, ...newConversations]);
-  //     }
-
-  //     if (this._userChatsListener) {
-  //       try {
-  //         this._userChatsListener();
-  //       } catch {}
-  //       this._userChatsListener = null;
-  //     }
-  //     const onUserChatsChange = async (snap: DataSnapshot) => {
-  //       const updatedData: IChatMeta = snap.val() || {};
-  //       const current = [...this._conversations$.value];
-  //       for (const [roomId, meta] of Object.entries(updatedData)) {
-  //         const idx = current.findIndex((c) => c.roomId === roomId);
-  //         const chatMeta: IChatMeta = { ...meta, roomId };
-  //         console.log('chat changed', chatMeta);
-  //         try {
-  //           if (idx > -1) {
-  //             const decryptedText = await this.encryptionService.decrypt(
-  //               chatMeta.lastmessage
-  //             );
-  //             const conv = current[idx];
-  //             current[idx] = {
-  //               ...conv,
-  //               lastMessage: decryptedText ?? conv.lastMessage,
-  //               lastMessageType:
-  //                 chatMeta.lastmessageType ?? conv.lastMessageType,
-  //               lastMessageAt: chatMeta.lastmessageAt
-  //                 ? new Date(Number((meta as any).lastmessageAt))
-  //                 : conv.lastMessageAt,
-  //               unreadCount: Number(chatMeta.unreadCount || 0),
-  //               isArchived: chatMeta.isArchived,
-  //               updatedAt: chatMeta.lastmessageAt
-  //                 ? new Date(Number(chatMeta.lastmessageAt))
-  //                 : conv.updatedAt,
-  //             };
-  //           } else {
-  //             console.warn(
-  //               'New room detected in userchats but not present locally:',
-  //               roomId
-  //             );
-  //             const type: IConversation['type'] = chatMeta.type || 'private';
-  //             try {
-  //               let newConv: IConversation | null = null;
-  //               if (type === 'private') {
-  //                 newConv = await this.fetchPrivateConvDetails(
-  //                   roomId,
-  //                   chatMeta
-  //                 );
-  //               } else if (type === 'group' || type === 'community') {
-  //                 newConv = await this.fetchGroupConDetails(roomId, chatMeta);
-  //               } else {
-  //                 newConv = {
-  //                   roomId,
-  //                   type: 'private',
-  //                   title: roomId,
-  //                   lastMessage: chatMeta.lastmessage,
-  //                   lastMessageAt: chatMeta.lastmessageAt
-  //                     ? new Date(Number(chatMeta.lastmessageAt))
-  //                     : undefined,
-  //                   unreadCount: Number(chatMeta.unreadCount) || 0,
-  //                 } as IConversation;
-  //               }
-
-  //               if (newConv) {
-  //                 current.push(newConv);
-  //                 try {
-  //                   await this.sqliteService.createConversation({ ...newConv });
-  //                 } catch (e) {
-  //                   console.warn(
-  //                     'sqlite createConversation failed for new room',
-  //                     roomId,
-  //                     e
-  //                   );
-  //                 }
-  //               }
-  //             } catch (e) {
-  //               console.error(
-  //                 'Failed to fetch details for new room',
-  //                 roomId,
-  //                 e
-  //               );
-  //             }
-  //           }
-  //         } catch (e) {
-  //           console.error('onUserChatsChange inner error for', roomId, e);
-  //         }
-  //       }
-  //       this.syncReceipt(current.filter(c => (c.unreadCount || 0)>0).map(c=>({roomId : c.roomId, unreadCount: c.unreadCount as number})))
-  //       this._conversations$.next(current);
-  //     };
-
-  //     const unsubscribe = rtdbOnValue(userChatsRef, onUserChatsChange);
-  //     this._userChatsListener = () => {
-  //       try {
-  //         unsubscribe();
-  //       } catch {}
-  //     };
-  //   } catch (error) {
-  //     console.error('syncConversationWithServer error:', error);
-  //   } finally {
-  //     this._isSyncing$.next(false);
-  //   }
-  // }
 
   async syncConversationWithServer(): Promise<void> {
     try {

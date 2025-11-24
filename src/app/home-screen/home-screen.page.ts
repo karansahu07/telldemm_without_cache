@@ -27,6 +27,7 @@ import { ContactSyncService } from '../services/contact-sync.service';
 import { NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { Device, DeviceInfo } from '@capacitor/device';
+import Cropper from 'cropperjs';
 
 // Firebase modular imports
 import {
@@ -1885,21 +1886,6 @@ receiver_name = '';
     this.router.navigate(['/contact-screen']);
   }
 
-  // async openCamera() {
-  //   try {
-  //     const image = await Camera.getPhoto({
-  //       source: CameraSource.Camera,
-  //       quality: 90,
-  //       resultType: CameraResultType.Uri,
-  //     });
-  //     this.capturedImage = image.webPath!;
-  //     console.log({image})
-  //     console.log("captured image", this.capturedImage)
-  //   } catch (error) {
-  //     console.error('Camera error:', error);
-  //   }
-  // }
-
   async openCamera() {
   try {
     const image = await Camera.getPhoto({
@@ -1929,6 +1915,8 @@ receiver_name = '';
       fileSize: blob.size,
       previewUrl: previewUrl,
     };
+
+    console.log("this.selectedAttachment", this.selectedAttachment)
 
     this.showPreviewModal = true;
 
