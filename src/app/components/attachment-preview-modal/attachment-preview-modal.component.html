@@ -103,7 +103,7 @@
   <div class="view-content">
     <ng-container *ngIf="attachment?.type === 'image'">
       <img
-        [src]="attachment.cdnUrl"
+        [src]="attachment.url"
         alt="Preview"
         (click)="toggleUI()"
         style="max-width: 100%; border-radius: 10px"
@@ -117,7 +117,7 @@
         style="width: 100%; border-radius: 10px"
       >
         <source
-          [src]="attachment.cdnUrl"
+          [src]="attachment.url"
           [type]="attachment.mimeType || 'video/mp4'"
         />
       </video>
@@ -126,7 +126,7 @@
     <ng-container *ngIf="attachment?.type === 'audio'">
       <audio controls style="width: 100%">
         <source
-          [src]="attachment.cdnUrl"
+          [src]="attachment.url"
           [type]="attachment.mimeType || 'audio/mpeg'"
         />
       </audio>
@@ -136,7 +136,7 @@
       <ion-icon name="document-outline" size="large"></ion-icon>
       <p>{{ attachment.fileName }}</p>
       <a
-        [href]="attachment.cdnUrl"
+        [href]="attachment.url"
         [download]="attachment.fileName"
         target="_blank"
         rel="noopener"

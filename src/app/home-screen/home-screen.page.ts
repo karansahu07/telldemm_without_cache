@@ -987,20 +987,21 @@ receiver_name = '';
 
   /** Exit ONE selected group (with confirm) */
   private async confirmAndExitSingleSelectedGroup(): Promise<void> {
-    const sel = this.selectedChats.filter((c) => c.group && !c.isCommunity);
+    const sel = this.selectedChats.filter((c) => c.type == 'group');
+    console.log({sel})
     const chat = sel[0];
     if (!chat) return;
 
     const alert = await this.alertCtrl.create({
       header: 'Exit Group',
-      message: `Are you sure you want to exit "${chat.group_name || chat.name
+      message: `Are you sure you want to exit "${chat.title
         }"?`,
       buttons: [
         { text: 'Cancel', role: 'cancel' },
         {
           text: 'Exit',
           handler: async () => {
-            await this.exitGroup(chat.receiver_Id);
+            await this.exitGroup(chat.roomId);
             // remove row from UI
             this.chatList = this.chatList.filter(
               (c) =>
@@ -1092,11 +1093,11 @@ receiver_name = '';
     const userId = this.senderUserId || this.authService.authData?.userId || '';
     if (!groupId || !userId) throw new Error('Missing groupId/userId');
 
-    const db = getDatabase();
+    // const db = getDatabase();
 
     // 🔹 Read my member record
     const memberPath = `groups/${groupId}/members/${userId}`;
-    const memberSnap = await get(rtdbRef(db, memberPath));
+    const memberSnap = await get(rtdbRef(this.db, memberPath));
     if (!memberSnap.exists()) {
       // already not a member
       return;
@@ -1114,18 +1115,18 @@ receiver_name = '';
     };
 
     await Promise.all([
-      set(rtdbRef(db, pastMemberPath), updatedMember),
+      set(rtdbRef(this.db, pastMemberPath), updatedMember),
       (async () => {
         try {
-          await update(rtdbRef(db, memberPath), { status: 'inactive' });
+          await update(rtdbRef(this.db, memberPath), { status: 'inactive' });
         } catch { }
-        await remove(rtdbRef(db, memberPath));
+        await remove(rtdbRef(this.db, memberPath));
       })(),
     ]);
 
     // 🔹 If I was admin, check if any admins remain
     if (wasAdmin) {
-      const membersSnap = await get(rtdbRef(db, `groups/${groupId}/members`));
+      const membersSnap = await get(rtdbRef(this.db, `groups/${groupId}/members`));
       if (membersSnap.exists()) {
         const members = membersSnap.val() || {};
         const remainingIds: string[] = Object.keys(members).filter(
@@ -1147,7 +1148,7 @@ receiver_name = '';
             const newAdminId = pool[Math.floor(Math.random() * pool.length)];
 
             await update(
-              rtdbRef(db, `groups/${groupId}/members/${newAdminId}`),
+              rtdbRef(this.db, `groups/${groupId}/members/${newAdminId}`),
               { role: 'admin' }
             );
             //console.log(`Assigned new admin: ${newAdminId}`);

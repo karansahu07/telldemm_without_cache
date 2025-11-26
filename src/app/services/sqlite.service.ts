@@ -863,6 +863,20 @@ export class SqliteService {
       ]);
     });
   }
+  
+  updateAttachment(msgId: string, updates: Partial<IAttachment>) {
+  return this.withOpState('updateAttachment', async () => {
+    const fields = Object.keys(updates);
+    if (fields.length === 0) return;
+
+    const setClause = fields.map(field => `${field} = ?`).join(', ');
+    const values = fields.map(field => (updates as any)[field]);
+
+    const query = `UPDATE attachments SET ${setClause} WHERE msgId = ?`;
+
+    await this.db.run(query, [...values, msgId]);
+  });
+}
 
   async getAttachment(msgId : string): Promise<IAttachment | null>{
      return this.withOpState(

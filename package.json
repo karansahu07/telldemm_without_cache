@@ -57,6 +57,7 @@
     "cropperjs": "^2.1.0",
     "crypto-js": "^4.2.0",
     "firebase": "^9.23.0",
+    "hammerjs": "^2.0.8",
     "ionicons": "^7.0.0",
     "jeep-sqlite": "^2.8.0",
     "lodash": "^4.17.21",

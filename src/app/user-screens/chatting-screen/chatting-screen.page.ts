@@ -2416,48 +2416,48 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
       const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
       (msg as any).time = `${formattedHours}:${formattedMinutes} ${ampm}`;
 
-      if (msg.attachment) {
-        const currentUserId = this.authService.authData?.userId;
-        const receiverId = msg.receiver_id;
+      // if (msg.attachment) {
+      //   const currentUserId = this.authService.authData?.userId;
+      //   const receiverId = msg.receiver_id;
 
-        if (receiverId === currentUserId) {
-          (async () => {
-            try {
-              const apiResponse = await firstValueFrom(
-                this.service.getDownloadUrl(
-                  (msg.attachment as any).mediaId as string
-                )
-              );
+      //   if (receiverId === currentUserId) {
+      //     (async () => {
+      //       try {
+      //         const apiResponse = await firstValueFrom(
+      //           this.service.getDownloadUrl(
+      //             (msg.attachment as any).mediaId as string
+      //           )
+      //         );
 
-              if (apiResponse.status && apiResponse.downloadUrl) {
-                const response = await fetch(apiResponse.downloadUrl);
-                const blob = await response.blob();
-                const extension =
-                  (msg.attachment as any).fileName?.split('.').pop() || 'dat';
-                const filename = `${
-                  (msg.attachment as any).mediaId
-                }.${extension}`;
-                const file_Path = await this.FileService.saveFileToReceived(
-                  filename,
-                  blob
-                );
-                // await this.sqliteService.saveAttachment(
-                //   this.roomId,
-                //   (msg.attachment as any).type,
-                //   file_Path,
-                //   (msg.attachment as any).mediaId as string
-                // );
-              }
-            } catch (error) {
-              console.error('Error handling received attachment:', error);
-            }
-          })();
-        }
+      //         if (apiResponse.status && apiResponse.downloadUrl) {
+      //           const response = await fetch(apiResponse.downloadUrl);
+      //           const blob = await response.blob();
+      //           const extension =
+      //             (msg.attachment as any).fileName?.split('.').pop() || 'dat';
+      //           const filename = `${
+      //             (msg.attachment as any).mediaId
+      //           }.${extension}`;
+      //           const file_Path = await this.FileService.saveFileToReceived(
+      //             filename,
+      //             blob
+      //           );
+      //           // await this.sqliteService.saveAttachment(
+      //           //   this.roomId,
+      //           //   (msg.attachment as any).type,
+      //           //   file_Path,
+      //           //   (msg.attachment as any).mediaId as string
+      //           // );
+      //         }
+      //       } catch (error) {
+      //         console.error('Error handling received attachment:', error);
+      //       }
+      //     })();
+      //   }
 
-        // (msg.attachment as any).previewUrl = await this.sqliteService.getAttachmentPreview(
-        //   (msg.attachment as any).mediaId as string
-        // );
-      }
+      //   // (msg.attachment as any).previewUrl = await this.sqliteService.getAttachmentPreview(
+      //   //   (msg.attachment as any).mediaId as string
+      //   // );
+      // }
 
       const isToday =
         timestamp.getDate() === today.getDate() &&
@@ -2949,40 +2949,48 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   async openAttachmentModal(msg: any) {
     if (!msg.attachment) return;
 
-    let attachmentUrl = '';
+    // let attachmentUrl = '';
 
     try {
-      const localUrl = await this.FileService.getFilePreview(
-        `${msg.sender_id === this.senderId ? 'sent' : 'received'}/${
-          msg.attachment.fileName
-        }`
-      );
+      // const localUrl = await this.FileService.getFilePreview(
+      //   `${msg.sender_id === this.senderId ? 'sent' : 'received'}/${
+      //     msg.attachment.fileName
+      //   }`
+      // );
+      let localUrl = msg.attachment.localUrl;
 
-      if (localUrl) {
-        attachmentUrl = localUrl;
-      } else {
-        const downloadResponse = await firstValueFrom(
-          this.service.getDownloadUrl(msg.attachment.mediaId)
-        );
+      if (!localUrl) {
+        // attachmentUrl = localUrl;
+      // } 
+      // else {
+        // const downloadResponse = await firstValueFrom(
+        //   this.service.getDownloadUrl(msg.attachment.mediaId)
+        // );
 
-        if (downloadResponse?.status && downloadResponse.downloadUrl) {
-          attachmentUrl = downloadResponse.downloadUrl;
+        // if (downloadResponse?.status && downloadResponse.downloadUrl) {
+          // attachmentUrl = downloadResponse.downloadUrl;
 
-          if (msg.sender_id !== this.senderId) {
-            this.downloadAndSaveLocally(
-              downloadResponse.downloadUrl,
+          if (!msg.isMe) {
+           const relativePath = await this.downloadAndSaveLocally(
+              msg.attachment.cdnUrl,
               msg.attachment.fileName
             );
+            localUrl = await this.FileService.getFilePreview(relativePath as string)
+            // attachmentUrl = localUrl;
+            this.sqliteService.updateAttachment(msg.msgId, {localUrl})
           }
-        }
+        // }
       }
+      // if(!attachmentUrl){
+      //   attachmentUrl = msg.attachment.cdnUrl;
+      // }
 
       const modal = await this.modalCtrl.create({
         component: AttachmentPreviewModalComponent,
         componentProps: {
           attachment: {
             ...msg.attachment,
-            url: attachmentUrl,
+            url: localUrl || msg.attachment.cdnUrl,
           },
           message: msg,
         },
@@ -3010,9 +3018,10 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     try {
       const response = await fetch(url);
       const blob = await response.blob();
-      await this.FileService.saveFileToReceived(fileName, blob);
+      return await this.FileService.saveFileToReceived(fileName, blob);
     } catch (error) {
       console.warn('Failed to save file locally:', error);
+      throw error;
     }
   }
 

@@ -16,6 +16,7 @@ import { App } from '@capacitor/app';
 import { AuthService } from '../auth/auth.service';
 import { PluginListenerHandle } from '@capacitor/core';
 import { ApiService } from './api/api.service';
+import { FirebaseChatService } from './firebase-chat.service';
 
 @Injectable({
   providedIn: 'root',
@@ -28,7 +29,8 @@ export class FcmService {
     private platform: Platform,
     private toastController: ToastController,
     private authService: AuthService,
-    private service: ApiService
+    private service: ApiService,
+    private firebaseChatService : FirebaseChatService
   ) {}
 
   // Helper to actively request a fresh token and return it (one-time listener)
@@ -258,12 +260,14 @@ export class FcmService {
   //    }
   //  }
 
-  private handleNotificationTap(data: any) {
+ private async handleNotificationTap(data: any) {
     console.log('🎯 Final Tap Data Received:', data);
 
     const receiverId = data?.receiverId;
+    const roomId = data?.roomId;
 
     if (receiverId) {
+      this.firebaseChatService.openChat({roomId})
       this.router.navigate(['/chatting-screen'], {
         queryParams: { receiverId },
         // state: { fromNotification: true }

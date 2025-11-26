@@ -2,8 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { IonicModule } from '@ionic/angular';
-import { getDatabase, ref, get } from 'firebase/database';
+import { IonicModule, NavController } from '@ionic/angular';
+import { FirebaseChatService } from 'src/app/services/firebase-chat.service';
 
 @Component({
   selector: 'app-view-past-members',
@@ -15,13 +15,17 @@ import { getDatabase, ref, get } from 'firebase/database';
 export class ViewPastMembersPage implements OnInit {
   groupId: string = '';
   pastMembers: any[] = [];
+  isLoading: boolean = false;
 
-  constructor(private route: ActivatedRoute) {}
+  constructor(
+    private route: ActivatedRoute,
+    private firebaseChatService: FirebaseChatService,
+    private navCtrl : NavController
+  ) {}
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
       this.groupId = params['groupId'];
-      //console.log("pastmembers",this.groupId);
       if (this.groupId) {
         this.loadPastMembers();
       }
@@ -29,27 +33,17 @@ export class ViewPastMembersPage implements OnInit {
   }
 
   async loadPastMembers() {
-  const db = getDatabase();
-  const pastRef = ref(db, `groups/${this.groupId}/pastmembers`);
-
-  try {
-    const snapshot = await get(pastRef);
-    if (snapshot.exists()) {
-      const data = snapshot.val();
-      this.pastMembers = Object.keys(data).map((user_id) => {
-        //console.log("pastmembers",this.pastMembers);
-        return {
-          user_id,
-          ...data[user_id]
-        };
-      });
-    } else {
+    try {
+      this.isLoading = true;
+      this.pastMembers = await this.firebaseChatService.getPastMembers(this.groupId);
+    } catch (error) {
+      console.error('Error loading past members:', error);
       this.pastMembers = [];
+    } finally {
+      this.isLoading = false;
     }
-  } catch (error) {
-    console.error('Error loading past members:', error);
-    this.pastMembers = [];
   }
-}
-
+  goBack(){
+    this.navCtrl.back();
+  }
 }
