@@ -236,6 +236,21 @@
     </ion-item>
   </ion-list>
 
+  <div *ngIf="showNewChatPrompt" class="no-chats-container">
+  <ion-icon name="chatbubbles-outline"></ion-icon>
+  <h2>No chats Yet</h2>
+  <p>start new chat click on start button</p>
+  <!-- <h2>{{ 'home.noChats.title' | translate }}</h2>
+  <p>{{ 'home.noChats.subtitle' | translate }}</p> -->
+  <ion-button (click)="goToContact()" expand="block">
+    <ion-icon slot="start" name="person-add-outline"></ion-icon>
+    Start Button
+  </ion-button>
+    <!-- <ion-icon slot="start" name="person-add-outline"></ion-icon>
+    {{ 'home.noChats.startButton' | translate }}
+  </ion-button> -->
+</div>
+
   <!-- Meta rows: Locked & Archived -->
   <ion-list
     *ngIf="!isLoading && (lockedCount > 0 || archievedCount > 0)"
