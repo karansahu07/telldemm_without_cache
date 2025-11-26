@@ -1,12 +1,13 @@
 import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule, PopoverController, ToastController } from '@ionic/angular';
+import { IonicModule, ModalController, PopoverController, ToastController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { MenuPopoverComponent } from '../../components/menu-popover/menu-popover.component';
 import { register } from 'swiper/element/bundle';
 import { FooterTabsComponent } from 'src/app/components/footer-tabs/footer-tabs.component';
 import { Channel, ChannelService } from 'src/app/pages/channels/services/channel';
 import { AuthService } from 'src/app/auth/auth.service';
+import { AddChannelModalComponent } from 'src/app/pages/channels/modals/add-channel-modal/add-channel-modal.component';
 
 register();
 
@@ -36,7 +37,8 @@ export class StatusScreenPage implements OnInit {
     private router: Router,
     private channelService: ChannelService,
     private toastCtrl: ToastController,
-    private authService:AuthService
+    private authService:AuthService,
+    private modalCtrl: ModalController
   ) {}
 
   ngOnInit() {
@@ -198,7 +200,7 @@ toggleFollow(channel: Channel) {
 
   // --- Navigation & UI ---
   openChat(channel: Channel) {
-    this.router.navigate(['/chatting-screen'], { queryParams: { channelId: channel.channel_id } });
+    //this.router.navigate(['/chatting-screen'], { queryParams: { channelId: channel.channel_id } });
   }
 
   goToChannels() {
@@ -222,4 +224,14 @@ toggleFollow(channel: Channel) {
   get totalUnreadUpdates(): number {
     return 0; // Update if you have real unread logic
   }
+
+  async openAddChannelModal() {
+      const modal = await this.modalCtrl.create({
+        component: AddChannelModalComponent
+      });
+      await modal.present();
+  
+      const { data } = await modal.onDidDismiss();
+      if (data) this.loadUserChannels(this.userId); // only reload if created
+    }
 }
