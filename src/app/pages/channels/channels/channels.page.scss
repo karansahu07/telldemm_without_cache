@@ -96,3 +96,23 @@
     ion-label h3.channel-name { font-size: 0.95rem; }
   }
 }
+
+.follow-btn {
+  transition: all 0.2s ease;
+  font-weight: 600;
+}
+
+.follow-btn:active {
+  transform: scale(0.94);
+}
+
+.follow-btn[disabled] {
+  opacity: 0.6;
+}
+
+.owner-badge {
+  font-size: 10px;
+  padding: 4px 8px;
+  margin-left: 8px;
+  border-radius: 12px;
+}

@@ -39,6 +39,16 @@ export class ChannelsPage implements OnInit {
   categories: Category[] = [];
   regions: Region[] = [];
 
+  // ADD THESE PROPERTIES at the top with others
+  userId: number = 52; // ← Replace with real auth user ID later
+  loadingChannelId: string | null = null; // for button loading state
+  private followedChannelIds = new Set<string>(); // source of truth
+
+  // ADD THIS METHOD – detects if user owns the channel
+  isOwner(channel: UIChannel): boolean {
+    return channel._meta?.created_by === this.userId;
+  }
+
   // for category paging (main page)
   private loadedCategoryIds = new Set<number | 'uncategorized'>();
 
@@ -78,8 +88,25 @@ export class ChannelsPage implements OnInit {
   ) { }
 
   async ngOnInit() {
-    await this.loadMetadata(); // ensure categories & regions are loaded before channels
+    await this.loadMetadata();
+    // ← ADD THIS: Load your followed channels so we know what you're following
+    await this.loadMyFollowedChannels();
     await this.loadChannels();
+  }
+
+  private async loadMyFollowedChannels() {
+    try {
+      const res = await firstValueFrom(
+        this.channelService.getUserChannels(this.userId, { role: 'all' })
+      );
+      if (res?.status && Array.isArray(res.channels)) {
+        this.followedChannelIds = new Set(
+          res.channels.map((ch: any) => `c${ch.channel_id}`)
+        );
+      }
+    } catch (err) {
+      console.warn('Could not load followed channels for sync', err);
+    }
   }
 
   /**
@@ -126,24 +153,48 @@ export class ChannelsPage implements OnInit {
       const res = await firstValueFrom(this.channelService.listChannels(params));
       const backendChannels = Array.isArray(res.channels) ? res.channels : [];
 
-      const mapped: UIChannel[] = backendChannels.map((c: any) => {
-        const rawFollowers = (c as any).follower_count ?? (c as any).followers ?? 0; // default to 0, not 20000
-        const followersNum = Number(rawFollowers) || 0;
+      // const mapped: UIChannel[] = backendChannels.map((c: any) => {
+      //   const rawFollowers = (c as any).follower_count ?? (c as any).followers ?? 0; // default to 0, not 20000
+      //   const followersNum = Number(rawFollowers) || 0;
 
-        return {
-          id: `c${c.channel_id}`,
-          name: c.channel_name,
-          followers: followersNum,
-          followersFormatted: this.formatFollowers(followersNum),
-          avatar: c.channel_dp || null,
-          verified: !!c.is_verified,
-          // following: !!c.is_following ?? false,
-          following: Boolean(c.is_following),
+      //   return {
+      //     id: `c${c.channel_id}`,
+      //     name: c.channel_name,
+      //     followers: followersNum,
+      //     followersFormatted: this.formatFollowers(followersNum),
+      //     avatar: c.channel_dp || null,
+      //     verified: !!c.is_verified,
+      //     // following: !!c.is_following ?? false,
+      //     following: Boolean(c.is_following),
 
-          _meta: c
-        } as UIChannel;
-      });
+      //     _meta: c
+      //   } as UIChannel;
+      // });
+      const mapped: UIChannel[] = backendChannels
+        .filter((c: any) => {
+          const channelId = `c${c.channel_id}`;
+          const isOwned = c.created_by === this.userId;
+          const isFollowed = this.followedChannelIds.has(channelId);
 
+          // HIDE if owned OR followed
+          return !isOwned && !isFollowed;
+        })
+        .map((c: any) => {
+          const rawFollowers = (c as any).follower_count ?? 0;
+          const followersNum = Number(rawFollowers) || 0;
+          const channelId = `c${c.channel_id}`;
+
+          return {
+            id: channelId,
+            name: c.channel_name,
+            followers: followersNum,
+            followersFormatted: this.formatFollowers(followersNum),
+            avatar: c.channel_dp || null,
+            verified: !!c.is_verified,
+            following: false, // always false here — we filtered them out
+            _meta: c
+          } as UIChannel;
+        });
       this.allChannels = mapped;
 
       // build categories for main page (first 4 each)
@@ -247,23 +298,127 @@ export class ChannelsPage implements OnInit {
   }
 
   /** Optimistic follow/unfollow with API fallback */
+  // async toggleFollow(channel: UIChannel) {
+  //   const prev = channel.following;
+  //   channel.following = !prev; // optimistic
+
+  //   try {
+  //     // attempt backend call if available. Implement setFollow(channelId, follow) in ChannelService
+  //     if (this.channelService.setFollow) {
+  //       await firstValueFrom(this.channelService.setFollow(channel._meta.channel_id, channel.following));
+  //     }
+  //     await this.presentToast(channel.following ? 'Following' : 'Unfollowed', 900);
+  //   } catch (err) {
+  //     channel.following = prev; // revert
+  //     console.error('Follow toggle failed', err);
+  //     await this.presentToast('Could not update follow. Try again.');
+  //   }
+  // }
+
+  // REPLACE YOUR toggleFollow() with this PERFECT version
   async toggleFollow(channel: UIChannel) {
-    const prev = channel.following;
-    channel.following = !prev; // optimistic
+    if (this.loadingChannelId === channel.id) return;
+
+    const wasFollowing = channel.following;
+    const channelId = channel._meta.channel_id;
+
+    // ───── OPTIMISTIC UI (Instant, no blink) ─────
+    channel.following = !wasFollowing;
+    channel.followers += wasFollowing ? -1 : 1;
+    channel.followersFormatted = this.formatFollowers(channel.followers);
+
+    if (wasFollowing) {
+      this.followedChannelIds.delete(channel.id);
+    } else {
+      this.followedChannelIds.add(channel.id);
+    }
+
+    // Update same channel in ALL places (main list + full view)
+    this.updateChannelInAllLists(channel.id, {
+      following: !wasFollowing,
+      followers: channel.followers,
+      followersFormatted: channel.followersFormatted
+    });
+
+    this.loadingChannelId = channel.id;
+
+    // Haptics (only on device)
+    try {
+      const { Haptics, ImpactStyle } = await import('@capacitor/haptics');
+      Haptics.impact({ style: ImpactStyle.Light });
+    } catch (e) { /* web = no haptics */ }
 
     try {
-      // attempt backend call if available. Implement setFollow(channelId, follow) in ChannelService
-      if (this.channelService.setFollow) {
-        await firstValueFrom(this.channelService.setFollow(channel._meta.channel_id, channel.following));
-      }
-      await this.presentToast(channel.following ? 'Following' : 'Unfollowed', 900);
+      await firstValueFrom(
+        this.channelService.setFollow(channelId, !wasFollowing)
+      );
+      // Success → do nothing! Already updated
+      this.presentToast(!wasFollowing ? 'Now following' : 'Unfollowed', 800);
     } catch (err) {
-      channel.following = prev; // revert
-      console.error('Follow toggle failed', err);
-      await this.presentToast('Could not update follow. Try again.');
+      // ───── REVERT ON FAILURE (smooth) ─────
+      channel.following = wasFollowing;
+      channel.followers += wasFollowing ? 1 : -1;
+      channel.followersFormatted = this.formatFollowers(channel.followers);
+
+      if (wasFollowing) {
+        this.followedChannelIds.add(channel.id);
+      } else {
+        this.followedChannelIds.delete(channel.id);
+      }
+
+      if (!wasFollowing) {
+        // User just followed → remove from ALL explore lists
+        this.removeChannelFromExploreViews(channel.id);
+      }
+
+      this.updateChannelInAllLists(channel.id, {
+        following: wasFollowing,
+        followers: channel.followers,
+        followersFormatted: channel.followersFormatted
+      });
+
+      this.presentToast('Failed. Try again.');
+    } finally {
+      this.loadingChannelId = null;
     }
   }
 
+  private removeChannelFromExploreViews(channelId: string) {
+  // Remove from main grouped categories
+  this.allGroupedCategories.forEach(group => {
+    group.channels = group.channels.filter(ch => ch.id !== channelId);
+  });
+  this.pagedGroupedCategories.forEach(group => {
+    group.channels = group.channels.filter(ch => ch.id !== channelId);
+  });
+
+  // Remove from full category view
+  this.categoryChannels = this.categoryChannels.filter(ch => ch.id !== channelId);
+}
+  // ADD THIS HELPER – updates channel in all lists (main + full view)
+  private updateChannelInAllLists(channelId: string, updates: Partial<UIChannel>) {
+    const id = `c${channelId}`;
+
+    // Update in main allChannels
+    const inMain = this.allChannels.find(c => c.id === id);
+    if (inMain) Object.assign(inMain, updates);
+
+    // Update in grouped categories
+    for (const group of this.allGroupedCategories) {
+      const ch = group.channels.find(c => c.id === id);
+      if (ch) Object.assign(ch, updates);
+    }
+
+    // Update in paged view
+    for (const group of this.pagedGroupedCategories) {
+      const ch = group.channels.find(c => c.id === id);
+      if (ch) Object.assign(ch, updates);
+    }
+
+    // Update in full category view
+    const inFull = this.categoryChannels.find(c => c.id === id);
+    if (inFull) Object.assign(inFull, updates);
+  }
   async openAddChannelModal() {
     const modal = await this.modalCtrl.create({
       component: AddChannelModalComponent
@@ -358,23 +513,55 @@ export class ChannelsPage implements OnInit {
       const res = await firstValueFrom(this.channelService.listChannels(params));
       const backendChannels = Array.isArray(res.channels) ? res.channels : [];
 
-      let filtered = backendChannels;
-      if (this.activeCategoryId === 'uncategorized') {
-        filtered = backendChannels.filter((c: any) => !c.category_name);
-      }
+      // let filtered = backendChannels;
+      // if (this.activeCategoryId === 'uncategorized') {
+      //   filtered = backendChannels.filter((c: any) => !c.category_name);
+      // }
+
+      let filtered = backendChannels.filter((c: any) => {
+        const channelId = `c${c.channel_id}`;
+        const isOwned = c.created_by === this.userId;
+        const isFollowed = this.followedChannelIds.has(channelId);
+
+        // Apply category filter (uncategorized)
+        const matchesCategory = this.activeCategoryId === 'uncategorized'
+          ? !c.category_name
+          : true;
+
+        return matchesCategory && !isOwned && !isFollowed;
+      });
+
+      // const mapped: UIChannel[] = filtered.map((c: any) => {
+      //   const rawFollowers = (c as any).follower_count ?? (c as any).followers ?? 0;
+      //   const followersNum = Number(rawFollowers) || 0;
+      //   return {
+      //     id: `c${c.channel_id}`,
+      //     name: c.channel_name,
+      //     followers: followersNum,
+      //     followersFormatted: this.formatFollowers(followersNum),
+      //     avatar: c.channel_dp || null,
+      //     verified: !!c.is_verified,
+      //     // following: !!c.is_following ?? false,
+      //     following: Boolean(c.is_following),
+      //     _meta: c
+      //   };
+      // });
 
       const mapped: UIChannel[] = filtered.map((c: any) => {
-        const rawFollowers = (c as any).follower_count ?? (c as any).followers ?? 0;
+        const rawFollowers = (c as any).follower_count ?? 0;
         const followersNum = Number(rawFollowers) || 0;
+        const channelId = `c${c.channel_id}`;
+
+        const isFollowing = this.followedChannelIds.has(channelId);
+
         return {
-          id: `c${c.channel_id}`,
+          id: channelId,
           name: c.channel_name,
           followers: followersNum,
           followersFormatted: this.formatFollowers(followersNum),
           avatar: c.channel_dp || null,
           verified: !!c.is_verified,
-          // following: !!c.is_following ?? false,
-          following: Boolean(c.is_following),
+          following: isFollowing, // ← THIS IS THE FIX
           _meta: c
         };
       });

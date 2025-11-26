@@ -12,14 +12,15 @@
     </ion-buttons>
   </ion-toolbar>
   <!-- show active region filter badge -->
-<div class="active-filter-row" *ngIf="selectedRegionName" style="padding:8px 12px;">
-  <ion-chip>
-    <ion-label>Region: {{ selectedRegionName }}</ion-label>
-    <ion-icon name="close-circle" slot="end" (click)="clearRegionFilter()"></ion-icon>
-  </ion-chip>
-  <!-- optional small text -->
-  <span style="margin-left:8px;color:var(--ion-color-medium);font-size:13px;">Showing channels for selected region</span>
-</div>
+  <div class="active-filter-row" *ngIf="selectedRegionName" style="padding:8px 12px;">
+    <ion-chip>
+      <ion-label>Region: {{ selectedRegionName }}</ion-label>
+      <ion-icon name="close-circle" slot="end" (click)="clearRegionFilter()"></ion-icon>
+    </ion-chip>
+    <!-- optional small text -->
+    <span style="margin-left:8px;color:var(--ion-color-medium);font-size:13px;">Showing channels for selected
+      region</span>
+  </div>
 
 </ion-header>
 
@@ -54,7 +55,9 @@
     <ng-container *ngFor="let group of pagedGroupedCategories">
       <ng-container *ngIf="selectedCategoryId === 'all' || selectedCategoryId === group.id">
         <ion-item lines="none" class="section-title">
-          <ion-label><h2>{{ group.name }}</h2></ion-label>
+          <ion-label>
+            <h2>{{ group.name }}</h2>
+          </ion-label>
           <ion-button fill="clear" slot="end" (click)="openCategoryFullView(group.id, group.name)">See all</ion-button>
         </ion-item>
 
@@ -71,10 +74,21 @@
               <p class="followers">{{ ch.followers }} followers</p>
             </ion-label>
 
-            <ion-button class="follow-btn" fill="solid" [color]="ch.following ? 'medium' : 'primary'"
+            <!-- <ion-button class="follow-btn" fill="solid" [color]="ch.following ? 'medium' : 'primary'"
               shape="round" size="small" (click)="toggleFollow(ch)">
               {{ ch.following ? 'Following' : 'Follow' }}
+            </ion-button> -->
+            <ion-button class="follow-btn" fill="solid" [color]="ch.following ? 'medium' : 'primary'" shape="round"
+              size="small" (click)="toggleFollow(ch)" [disabled]="loadingChannelId === ch.id">
+
+              <ion-spinner name="crescent" *ngIf="loadingChannelId === ch.id"></ion-spinner>
+              <span *ngIf="loadingChannelId !== ch.id">
+                {{ ch.following ? 'Following' : 'Follow' }}
+              </span>
             </ion-button>
+
+            <!-- Add Owner Badge -->
+            <ion-badge *ngIf="isOwner(ch)" color="warning" slot="end" class="owner-badge">Owner</ion-badge>
           </ion-item>
         </ion-list>
       </ng-container>
@@ -82,7 +96,8 @@
 
     <!-- infinite scroll for next 10 categories -->
     <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreCategories($event)" [disabled]="!hasMoreCategories">
-      <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more categories..."></ion-infinite-scroll-content>
+      <ion-infinite-scroll-content loadingSpinner="bubbles"
+        loadingText="Loading more categories..."></ion-infinite-scroll-content>
     </ion-infinite-scroll>
   </ng-container>
 
@@ -94,7 +109,9 @@
           <ion-icon name="arrow-back-outline"></ion-icon>
         </ion-button>
       </ion-buttons>
-      <ion-label><h2>{{ activeCategoryName }}</h2></ion-label>
+      <ion-label>
+        <h2>{{ activeCategoryName }}</h2>
+      </ion-label>
       <ion-button fill="clear" slot="end" (click)="openRegionFilter()">Filter</ion-button>
     </ion-item>
 
@@ -103,20 +120,24 @@
         <ion-avatar slot="start"><img [src]="ch.avatar || placeholderAvatar" alt="channel" /></ion-avatar>
         <ion-label>
           <h3>{{ ch.name }}</h3>
-          <p class="followers">{{ ch.followersFormatted  }} followers</p>
+          <!-- <p class="followers">{{ ch.followersFormatted }} followers</p> -->
+           <p class="followers">{{ ch.followers | number }} followers</p>
         </ion-label>
         <ion-button fill="clear" (click)="toggleFollow(ch)">{{ ch.following ? 'Following' : 'Follow' }}</ion-button>
       </ion-item>
     </ion-list>
 
     <!-- infinite scroll to load next 10 channels for active category -->
-    <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreCategoryChannels($event)" [disabled]="!hasMoreCategoryChannels">
-      <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more channels..."></ion-infinite-scroll-content>
+    <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreCategoryChannels($event)"
+      [disabled]="!hasMoreCategoryChannels">
+      <ion-infinite-scroll-content loadingSpinner="bubbles"
+        loadingText="Loading more channels..."></ion-infinite-scroll-content>
     </ion-infinite-scroll>
   </ng-container>
 
   <!-- empty state -->
-  <div *ngIf="!isLoading && !categoryFullViewActive && (!pagedGroupedCategories || pagedGroupedCategories.length === 0)" class="empty-state">
+  <div *ngIf="!isLoading && !categoryFullViewActive && (!pagedGroupedCategories || pagedGroupedCategories.length === 0)"
+    class="empty-state">
     <p>No channels found.</p>
     <ion-button (click)="loadChannels()" fill="outline">Retry</ion-button>
   </div>
