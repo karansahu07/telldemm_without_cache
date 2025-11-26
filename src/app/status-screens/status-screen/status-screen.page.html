@@ -6,12 +6,6 @@
       </ion-title>
 
       <ion-buttons slot="end" class="header-icons">
-        <!-- <ion-button fill="clear">
-          <img src="assets/images/qr-code.svg" class="header-img" />
-        </ion-button> -->
-        <!-- <ion-button fill="clear">
-          <img src="assets/images/camera.svg" class="header-img" />
-        </ion-button> -->
         <ion-button (click)="presentPopover($event)">
           <img src="assets/images/dots (1).svg" class="header-img" />
         </ion-button>
@@ -68,12 +62,16 @@
           <p class="followers">{{ (ch.followers_count ?? 0) + ' followers' }}</p>
         </ion-label>
 
+        
         <div slot="end" class="chat-meta">
-          <ion-button fill="clear" size="small" (click)="onFollowClick($event, ch)">
-            <ion-icon slot="start" name="checkmark-done-outline"></ion-icon>
-            <span>Following</span>
+          <!-- My Channels -->
+          <ion-button fill="clear" size="small" (click)="onFollowClick($event, ch)"
+            [disabled]="loadingChannelId === ch.channel_id">
+            <ion-icon name="checkmark-done-outline"></ion-icon> Following
           </ion-button>
         </div>
+
+        <!-- <p class="followers">{{ (ch.followers_count ?? 0) | number }} followers</p> -->
       </ion-item>
 
       <ion-item *ngIf="myChannels.length === 0">
@@ -105,11 +103,17 @@
           </ion-label>
 
           <div slot="end" class="chat-meta">
-            <button type="button" (click)="onFollowClick($event, ch)" [attr.aria-pressed]="isFollowing(ch)">
+            <!-- Find channels to follow -->
+            <ion-button fill="clear" size="small" color="primary" (click)="onFollowClick($event, ch)"
+              [disabled]="loadingChannelId === ch.channel_id">
               <span *ngIf="!isFollowing(ch)">Follow Now</span>
-              <span *ngIf="isFollowing(ch)">Following</span>
-            </button>
+              <span *ngIf="isFollowing(ch)" class="following-text">
+                <ion-icon name="checkmark-done-outline"></ion-icon> Following
+              </span>
+            </ion-button>
           </div>
+
+          <!-- <p class="followers">{{ (ch.followers_count ?? 0) | number }} followers</p> -->
         </ion-item>
 
         <ion-item *ngIf="publicChannels.length === 0">

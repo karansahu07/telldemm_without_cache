@@ -9,7 +9,7 @@ import { AlertController, IonicModule, ToastController } from '@ionic/angular';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 const STORAGE_KEY = 'settings.chats';
-const TRANSLATION_CONSENT_KEY = 'translation.consent';
+// const TRANSLATION_CONSENT_KEY = 'translation.consent';
 
 type FontSize = 'small' | 'medium' | 'large';
 
@@ -45,6 +45,9 @@ export class ChatsPage implements OnInit {
     private alertCtrl: AlertController, // ✅ NEW: For consent dialog
     private translate: TranslateService
   ) {}
+
+  // consent storage key
+  readonly TRANSLATION_CONSENT_KEY = 'translationConsent'; // values: 'granted' | 'denied'
 
   ngOnInit(): void {
     this.loadSettings();
@@ -127,7 +130,7 @@ export class ChatsPage implements OnInit {
     if (!newValue) {
       // Turning OFF: No consent needed, just disable and remove consent key
       this.translationEnabled = false;
-      localStorage.removeItem(TRANSLATION_CONSENT_KEY);
+      localStorage.removeItem(this.TRANSLATION_CONSENT_KEY);
       localStorage.removeItem("translationConsent");
 
 
@@ -137,7 +140,7 @@ export class ChatsPage implements OnInit {
     }
 
     // Turning ON: Check consent
-    const hasConsent = localStorage.getItem(TRANSLATION_CONSENT_KEY) === 'true';
+    const hasConsent = localStorage.getItem(this.TRANSLATION_CONSENT_KEY) === 'granted';
    
     if (!hasConsent) {
       const userConsent = await this.showTranslationConsentDialog();
@@ -148,7 +151,7 @@ export class ChatsPage implements OnInit {
         return;
       }
       // User accepted: Save consent
-      localStorage.setItem(TRANSLATION_CONSENT_KEY, 'true');
+      // localStorage.setItem(this.TRANSLATION_CONSENT_KEY, 'true');
     }
 
     // Enable translation
@@ -163,24 +166,40 @@ export class ChatsPage implements OnInit {
   async showTranslationConsentDialog(): Promise<boolean> {
     return new Promise(async (resolve) => {
       const alert = await this.alertCtrl.create({
-        header: 'Enable Translation',
-        message: 'By enabling translation, you consent to sending chat messages to our secure translation service for processing. Your messages are not stored or shared with third parties, and translation occurs on-device where possible.',
+        header: 'Translation requires sending message text to an external service',
+    message: `To provide message translations we send the message text to a third-party translation service.
+             We do not collect personal account details. Only the message text is sent.
+             If you agree, translations will be fetched and cached locally. You can revoke this permission anytime.`,
         backdropDismiss: false,
         buttons: [
           {
             text: 'Decline',
             role: 'cancel',
             cssClass: 'alert-button-cancel',
+            // handler: () => {
+            //   resolve(false);
+            // }
             handler: () => {
+              try {
+                localStorage.setItem(this.TRANSLATION_CONSENT_KEY, 'denied');
+              } catch {}
+              // this.showToast('Translation declined', 'medium');
               resolve(false);
             }
           },
           {
             text: 'Accept',
             cssClass: 'alert-button-confirm',
+            // handler: () => {
+            //   resolve(true);
+            // }
             handler: () => {
+              try {
+                localStorage.setItem(this.TRANSLATION_CONSENT_KEY, 'granted');
+              } catch {}
+              // this.showToast('Translation allowed', 'success');
               resolve(true);
-            }
+            },
           }
         ]
       });
@@ -204,7 +223,7 @@ export class ChatsPage implements OnInit {
           text: 'Reset',
           cssClass: 'alert-button-danger',
           handler: () => {
-            localStorage.removeItem(TRANSLATION_CONSENT_KEY);
+            localStorage.removeItem(this.TRANSLATION_CONSENT_KEY);
             this.translationEnabled = false;
             this.saveSettings();
             this.showToast('Translation consent reset');

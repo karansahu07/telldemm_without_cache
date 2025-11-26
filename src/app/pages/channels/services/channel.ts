@@ -116,28 +116,55 @@ export class ChannelService {
   /* ---------- Normalizer helpers ---------- */
 
   // Normalize a single channel object from backend to our Channel interface
+  // private normalizeChannel(raw: any): Channel {
+  //   if (!raw) return raw;
+  //   return {
+  //     channel_id: Number(raw.channel_id ?? raw.id),
+  //     channel_name: raw.channel_name ?? raw.name ?? '',
+  //     description: raw.description ?? null,
+  //     created_by: Number(raw.created_by ?? raw.creatorId ?? 0),
+  //     channel_dp: raw.channel_dp ?? raw.dp ?? null,
+  //     is_public: raw.is_public ?? 1,
+  //     max_members: raw.max_members ?? null,
+  //     firebase_channel_id: raw.firebase_channel_id ?? null,
+  //     category_id: raw.category_id ?? raw.categoryId ?? null,
+  //     category_name: raw.category_name ?? raw.categoryName ?? null,
+  //     region_id: raw.region_id ?? raw.regionId ?? null,
+  //     region_name: raw.region_name ?? raw.regionName ?? null,
+  //     created_at: raw.created_at ?? raw.createdAt ?? null,
+  //     followers_count: raw.followers_count ?? raw.follower_count ?? null,
+  //     is_verified: raw.is_verified ?? raw.verified ?? null,
+  //     role_id: raw.role_id ?? null,
+  //     is_following: raw.is_following ?? (raw.role_id ? true : false)
+  //   };
+  // }
+
   private normalizeChannel(raw: any): Channel {
-    if (!raw) return raw;
-    return {
-      channel_id: Number(raw.channel_id ?? raw.id),
-      channel_name: raw.channel_name ?? raw.name ?? '',
-      description: raw.description ?? null,
-      created_by: Number(raw.created_by ?? raw.creatorId ?? 0),
-      channel_dp: raw.channel_dp ?? raw.dp ?? null,
-      is_public: raw.is_public ?? 1,
-      max_members: raw.max_members ?? null,
-      firebase_channel_id: raw.firebase_channel_id ?? null,
-      category_id: raw.category_id ?? raw.categoryId ?? null,
-      category_name: raw.category_name ?? raw.categoryName ?? null,
-      region_id: raw.region_id ?? raw.regionId ?? null,
-      region_name: raw.region_name ?? raw.regionName ?? null,
-      created_at: raw.created_at ?? raw.createdAt ?? null,
-      followers_count: raw.followers_count ?? raw.follower_count ?? null,
-      is_verified: raw.is_verified ?? raw.verified ?? null,
-      role_id: raw.role_id ?? null,
-      is_following: raw.is_following ?? (raw.role_id ? true : false)
-    };
-  }
+  if (!raw) return raw as any;
+
+  return {
+    channel_id: Number(raw.channel_id ?? raw.id),
+    channel_name: raw.channel_name ?? '',
+    description: raw.description ?? null,
+    created_by: Number(raw.created_by ?? 0),
+    channel_dp: raw.channel_dp ?? null,
+    is_public: raw.is_public ?? 1,
+    max_members: raw.max_members ?? null,
+    firebase_channel_id: raw.firebase_channel_id ?? null,
+    category_id: raw.category_id ?? null,
+    category_name: raw.category_name ?? null,
+    region_id: raw.region_id ?? null,
+    region_name: raw.region_name ?? null,
+    created_at: raw.created_at ?? null,
+
+    // CORRECT FIELD NAME FROM YOUR API
+    followers_count: raw.follower_count ?? 0,
+
+    is_verified: raw.is_verified ?? null,
+    role_id: raw.role_id ?? null,
+    is_following: null // Not used — we use myChannels list
+  };
+}
 
   private normalizeListResponse(res: ApiResponse & { channels?: any[] }) {
     if (!res) return res;
@@ -264,7 +291,7 @@ export class ChannelService {
     const body: any = { follow: follow ? 1 : 0 };
     if (userId) body.user_id = String(userId);
     // else body.user_id = "76"; 
-    else body.user_id = this.authService.authData?.userId || '';; 
+    else body.user_id = this.authService.authData?.userId || '';
 
 
     const u = this.url(`${channelId}/follow`);

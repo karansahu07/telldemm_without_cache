@@ -1,6 +1,19 @@
 ion-content {
   --background: var(--ion-background-color);
 }
+.rotate {
+  transform: rotate(90deg);
+  transition: transform 0.2s ease;
+}
+
+.follow-btn {
+  --color: #3880ff;
+  font-weight: 600;
+}
+.following-text {
+  color: #8e8e93;
+  font-size: 14px;
+}
 
 /* layout */
 .telldemm {
@@ -346,3 +359,4 @@ swiper-container {
   height: 34px;
   width: 34px;
 }
+
