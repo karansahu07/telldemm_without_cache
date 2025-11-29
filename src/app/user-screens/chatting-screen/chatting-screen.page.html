@@ -269,7 +269,6 @@
   <!-- Pinned Message Banner (Alternative/Mobile View) -->
   <!-- <div class="fordark"><img src="/assets/images/chat_bg.jpg" alt="" /></div> -->
   <div
-    style="--chat-bg-image: url('/assets/images/chat_bg.jpg')"
     class="chat-background"
   ></div>
 
@@ -314,8 +313,8 @@
         <div
           class="msg-row"
           [ngClass]="{
-       'align-end': msg.sender_id === senderId,
-       'align-start': msg.sender_id !== senderId,
+       'align-end': msg.sender === senderId,
+       'align-start': msg.sender !== senderId,
        'selected': isSelected(msg),
        'pinned-message-highlight': pinnedMessage && pinnedMessage.messageId === msg.message_id
      }"
@@ -348,7 +347,7 @@
 
             <!-- Group Sender Name -->
             <span
-              *ngIf="chatType === 'group' && msg.sender_id !== senderId"
+              *ngIf="chatType === 'group' && msg.sender !== senderId"
               style="font-size: 12px; color: #6c6c6c; margin-left: 5px"
             >
               {{ msg.sender_name }}
@@ -373,7 +372,7 @@
                       class="reply-icon"
                     ></ion-icon>
                     <span class="replied-sender">
-                      {{ repliedMsg.isMe ? 'You' : repliedMsg.sender }}
+                      {{ repliedMsg.isMe ? 'You' : currentConv?.title }}
                     </span>
                   </div>
                   <div class="replied-content">
@@ -395,7 +394,8 @@
             <!-- Normal Message -->
             <ng-container *ngIf="!msg.isDeleted">
               <!-- If no attachment and has text -->
-              <ng-container *ngIf="!msg.attachment && msg.text">
+              <!-- <ng-container *ngIf="!msg.attachment && msg.text"> -->
+                <ng-container *ngIf="msg.text && (!msg.attachment || isEmptyObject(msg.attachment))">
                 <!-- SIMPLE TRANSLATION BAR (only toggle button, if translations exist) -->
                 <div
                   class="translation-bar"
@@ -448,8 +448,8 @@
                 </ion-text>
               </ng-container>
 
-              <!-- Attachments (keep existing attachment markup unchanged) -->
-              <ng-container *ngIf="msg.attachment">
+              <!-- <ng-container *ngIf="msg.attachment"> -->
+                <ng-container *ngIf="msg.attachment && !isEmptyObject(msg.attachment)">
                 <!-- existing attachment markup — keep as before -->
                 <!--getPreviewUrl(msg) -->
                 <img

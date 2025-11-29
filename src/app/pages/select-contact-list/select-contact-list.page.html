@@ -42,7 +42,7 @@
 
 <ion-footer>
   <ion-toolbar>
-    <ion-button expand="block" [disabled]="selectedUsers.length === 0" class="add-btn">
+    <ion-button expand="block" [disabled]="selectedUsers.length === 0" class="add-btn" (click)="sendAttachment()">
       Send ({{ selectedUsers.length }})
     </ion-button>
   </ion-toolbar>

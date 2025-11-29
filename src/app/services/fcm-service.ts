@@ -270,7 +270,7 @@ export class FcmService {
       this.firebaseChatService.openChat({roomId})
       this.router.navigate(['/chatting-screen'], {
         queryParams: { receiverId },
-        // state: { fromNotification: true }
+        state: { fromNotification: 'true' }
       });
 
       localStorage.setItem('fromNotification', 'true');

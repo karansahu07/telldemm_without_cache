@@ -74,34 +74,69 @@ export class ImageCropperModalComponent implements OnInit, OnDestroy {
     }
   }
   
-  private initializeCropArea() {
-    if (!this.imageElement) return;
+  // private initializeCropArea() {
+  //   if (!this.imageElement) return;
     
-    const rect = this.imageElement.getBoundingClientRect();
-    const containerRect = this.imageContainer!.getBoundingClientRect();
+  //   const rect = this.imageElement.getBoundingClientRect();
+  //   const containerRect = this.imageContainer!.getBoundingClientRect();
     
-    // Calculate initial crop size based on image size and aspect ratio
-    const maxSize = Math.min(rect.width, rect.height) * 0.7;
-    let cropWidth = maxSize;
-    let cropHeight = maxSize;
+  //   // Calculate initial crop size based on image size and aspect ratio
+  //   const maxSize = Math.min(rect.width, rect.height) * 0.7;
+  //   let cropWidth = maxSize;
+  //   let cropHeight = maxSize;
     
-    // Adjust for aspect ratio
-    if (this.aspectRatio !== 1) {
-      if (this.aspectRatio > 1) {
-        cropHeight = cropWidth / this.aspectRatio;
-      } else {
-        cropWidth = cropHeight * this.aspectRatio;
-      }
-    }
+  //   // Adjust for aspect ratio
+  //   if (this.aspectRatio !== 1) {
+  //     if (this.aspectRatio > 1) {
+  //       cropHeight = cropWidth / this.aspectRatio;
+  //     } else {
+  //       cropWidth = cropHeight * this.aspectRatio;
+  //     }
+  //   }
     
-    // Center the crop area
-    this.cropArea = {
-      x: (rect.width - cropWidth) / 2,
-      y: (rect.height - cropHeight) / 2,
-      width: cropWidth,
-      height: cropHeight
-    };
+  //   // Center the crop area
+  //   this.cropArea = {
+  //     x: (rect.width - cropWidth) / 2,
+  //     y: (rect.height - cropHeight) / 2,
+  //     width: cropWidth,
+  //     height: cropHeight
+  //   };
+  // }
+
+initializeCropArea() {
+  const img = this.imageElement!;
+  const imgWidth = img.clientWidth;
+  const imgHeight = img.clientHeight;
+
+  // Aspect ratio (w/h)
+  const ratio = this.aspectRatio; // e.g., 1, 16/9 etc.
+
+  let cropWidth, cropHeight;
+
+  // Fit the crop area to the maximum possible inside image while respecting ratio
+  if (imgWidth / imgHeight > ratio) {
+    // Image is wider → height is the limiting factor
+    cropHeight = imgHeight;
+    cropWidth = cropHeight * ratio;
+  } else {
+    // Image is taller → width is the limiting factor
+    cropWidth = imgWidth;
+    cropHeight = cropWidth / ratio;
   }
+
+  // Center the crop area
+  const cropX = (imgWidth - cropWidth) / 2;
+  const cropY = (imgHeight - cropHeight) / 2;
+
+  // Apply
+  this.cropArea = {
+    x: cropX,
+    y: cropY,
+    width: cropWidth,
+    height: cropHeight
+  };
+}
+
   
   startDrag(event: MouseEvent | TouchEvent) {
     event.preventDefault();

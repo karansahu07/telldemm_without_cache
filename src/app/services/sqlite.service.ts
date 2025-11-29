@@ -98,7 +98,7 @@ export interface IMessage {
       label: string;
       text: string;
     };
-  };
+  } | null;
 
   localUrl?: string;
   cdnUrl?: string;
@@ -814,6 +814,7 @@ export class SqliteService {
   // }
 
   async saveMessage(message: IMessage) {
+    console.log("this is from savemessage sqlite",message)
     return this.withOpState('saveMessage', async () => {
       const sql = `
       INSERT INTO messages 

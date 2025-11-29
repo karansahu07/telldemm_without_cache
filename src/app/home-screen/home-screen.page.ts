@@ -2088,6 +2088,8 @@ receiver_name = '';
       const fileName = `camera_cropped_${timestamp}.${format}`;
       const mimeType = `image/${format === 'jpg' ? 'jpeg' : format}`;
 
+      const previewUrl = URL.createObjectURL(originalBlob);
+
       // Set cropped image as selected attachment
       this.selectedAttachment = {
         type: 'image',
@@ -2095,10 +2097,11 @@ receiver_name = '';
         fileName: fileName,
         mimeType: mimeType,
         fileSize: data.originalBlob.size,
-        previewUrl: data.croppedImage, // Use cropped data URL for preview
+        previewUrl: previewUrl, // Use cropped data URL for preview
       };
 
       console.log('Cropped attachment:', this.selectedAttachment);
+      this.firebaseChatService.setSelectedAttachment(this.selectedAttachment);
 
       // Show preview modal
       this.showPreviewModal = true;

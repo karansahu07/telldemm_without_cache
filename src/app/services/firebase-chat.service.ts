@@ -91,6 +91,7 @@ export class FirebaseChatService {
   private senderId: string | null = null;
   private forwardMessages: any[] = [];
   private _selectedMessageInfo: any = null;
+  private _selectedAttachment: any = null;
   private _conversations$ = new BehaviorSubject<IConversation[]>([]);
   private _platformUsers$ = new BehaviorSubject<Partial<IUser>[]>([]);
   platformUsers$ = this._platformUsers$.asObservable();
@@ -1400,8 +1401,8 @@ export class FirebaseChatService {
     } else {
       titleToShow =
         localUser?.username ??
-        profileResp?.name ??
         profileResp?.phone_number ??
+        profileResp?.name ??
         localUser?.phoneNumber ??
         'Unknown';
     }
@@ -2615,6 +2616,7 @@ export class FirebaseChatService {
 
   async sendMessage(msg: Partial<IMessage & { attachment?: any }>) {
   try {
+    // console.log("this is called from firebase chat service sendmessage received msg from chatting screen",)
     const { attachment, translations, ...message } = msg || {};
     const { localUrl, ...restAttachment } = attachment || { localUrl: undefined };
 
@@ -2634,6 +2636,8 @@ export class FirebaseChatService {
         delivered: { status: false, deliveredTo: [] },
       },
     };
+
+    console.log({messageToSave})
 
     const meta: Partial<IChatMeta> = {
       type: this.currentChat?.type || 'private',
@@ -2714,7 +2718,7 @@ export class FirebaseChatService {
         cdnUrl,
       });
     }
-
+    console.log(messageToSave, "This is checking..............")
     this.sqliteService.saveMessage({
       ...messageToSave,
       isMe: true,
@@ -5553,6 +5557,129 @@ async getPastMembers(groupId: string): Promise<Array<{
     }
   }
 
+  async sendMessageDirectly(
+  msg: Partial<IMessage & { attachment?: any }>,
+  receiverId: string
+): Promise<void> {
+  try {
+    console.log("this message is called",msg.attachment);
+    const { attachment, translations, ...message } = msg || {};
+    const { localUrl, ...restAttachment } = attachment || { localUrl: null };
+
+    const roomId = this.getRoomIdFor1To1(this.senderId as string, receiverId);
+    const members = [this.senderId, receiverId];
+
+    // Encrypt text
+    const encryptedText = await this.encryptionService.encrypt(msg.text as string);
+
+    const messageToSave: Partial<IMessage> = {
+      ...message,
+      status: 'sent',
+      roomId,
+      text: msg.text,
+      translations: translations || null,
+      receipts: {
+        read: { status: false, readBy: [] },
+        delivered: { status: false, deliveredTo: [] },
+      },
+    };
+
+    // Prepare chat meta
+    const meta: Partial<IChatMeta> = {
+      type: 'private',
+      lastmessageAt: message.timestamp as string,
+      lastmessageType: attachment ? restAttachment.type : 'text',
+      lastmessage: encryptedText || '',
+    };
+
+    // Update userchats for both sender and receiver
+    for (const member of members) {
+      const ref = rtdbRef(this.db, `userchats/${member}/${roomId}`);
+      const idxSnap = await rtdbGet(ref);
+      
+      if (!idxSnap.exists()) {
+        await rtdbSet(ref, {
+          ...meta,
+          isArchived: false,
+          isPinned: false,
+          isLocked: false,
+          unreadCount: member === this.senderId ? 0 : 1,
+        });
+      } else {
+        await rtdbUpdate(ref, {
+          ...meta,
+          ...(member !== this.senderId && {
+            unreadCount: (idxSnap.val().unreadCount || 0) + 1,
+          }),
+        });
+      }
+    }
+
+    let cdnUrl = '';
+    let previewUrl: string | null = null;
+
+    const hasAttachment = !!attachment && Object.keys(restAttachment || {}).length > 0;
+
+    if (hasAttachment) {
+      if (restAttachment.mediaId) {
+        const res: any = await firstValueFrom(
+          this.apiService.getDownloadUrl(restAttachment.mediaId)
+        );
+        cdnUrl = res?.status ? res.downloadUrl : '';
+      }
+      
+      console.log("yes local url exist before" , localUrl)
+      if (localUrl) {
+        // Save to sent folder
+        console.log("yes local url exist after")
+        // previewUrl = await this.fileSystemService.saveFileToSent(
+        //   restAttachment.fileName,
+        //   attachment.blob
+        // );
+        previewUrl = await this.fileSystemService.getFilePreview(localUrl);
+      }
+    }
+    console.log({previewUrl})
+    
+    // const localUrl = await this.FileService.getFilePreview(relativePath as string)
+
+    // Save to RTDB
+    const messagesRef = ref(this.db, `chats/${roomId}/${message.msgId}`);
+    await rtdbSet(messagesRef, {
+      ...messageToSave,
+      ...(hasAttachment ? { attachment: { ...restAttachment, cdnUrl } } : {}),
+      text: encryptedText,
+      ...(translations ? { translations } : {}),
+    });
+
+    // Mark as delivered if receiver online
+    const isReceiverOnline = !!this.membersPresence.get(receiverId)?.isOnline;
+    if (isReceiverOnline) {
+      this.markAsDelivered(message.msgId as string, receiverId, roomId);
+    }
+
+    // Save to SQLite (sender side)
+    if (hasAttachment) {
+      await this.sqliteService.saveAttachment({
+        ...restAttachment,
+        localUrl: previewUrl ||localUrl,
+        cdnUrl,
+      });
+    }
+    
+    // await this.sqliteService.saveMessage({
+    //   ...messageToSave,
+    //   isMe: true,
+    // } as IMessage);
+
+    console.log('✅ Message sent directly to', receiverId);
+
+  } catch (error) {
+    console.error('❌ Error in sendMessageDirectly:', error);
+    throw error;
+  }
+}
+
   // =====================
   // ====== STATE ========
   // Forward message storage and selected message info used by UI
@@ -5569,6 +5696,16 @@ async getPastMembers(groupId: string): Promise<Array<{
     this.forwardMessages = [];
   }
 
+  setSelectedAttachment(msg: any) {
+    this._selectedAttachment = msg;
+    console.log("set selected attachment", this._selectedAttachment)
+  }
+  getSelectedAttachment() {
+   return this._selectedAttachment;
+  }
+  clearSelectedAttachment() {
+  this._selectedAttachment = null;
+}
   setSelectedMessageInfo(msg: any) {
     this._selectedMessageInfo = msg;
   }

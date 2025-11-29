@@ -3,10 +3,13 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { IonicModule, NavController, ToastController } from '@ionic/angular';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from 'src/app/auth/auth.service';
 import { ApiService } from 'src/app/services/api/api.service';
 import { ContactSyncService } from 'src/app/services/contact-sync.service';
+import { FileSystemService } from 'src/app/services/file-system.service';
 import { FirebaseChatService } from 'src/app/services/firebase-chat.service';
+import { IMessage } from 'src/app/services/sqlite.service';
 
 @Component({
   selector: 'app-select-contact-list',
@@ -21,6 +24,7 @@ export class SelectContactListPage implements OnInit {
   filteredContacts: any[] = [];
   isLoading = false;
   groupId: string = '';
+  selectedAttachment: any;
 
   constructor(
     private navCtrl: NavController,
@@ -29,12 +33,15 @@ export class SelectContactListPage implements OnInit {
     private toastCtrl: ToastController,
     private authService: AuthService,
     private service : ApiService,
-    private firebaseChatService : FirebaseChatService
+    private firebaseChatService : FirebaseChatService,
+    private FileService : FileSystemService
   ) {}
 
   ngOnInit() {
     this.loadDeviceMatchedContacts();
     this.groupId = this.route.snapshot.queryParamMap.get('groupId') || '';
+    this.selectedAttachment = this.firebaseChatService.getSelectedAttachment();
+    console.log("this .selectedAttachment", this.selectedAttachment);
   }
 
   async showToast(message: string, color: 'success' | 'danger' = 'success') {
@@ -103,90 +110,284 @@ async loadDeviceMatchedContacts(): Promise<void> {
     );
   }
 
-// async addSelectedMembers() {
-//   if (!this.groupId) {
-//     this.showToast('Group ID not found', 'danger');
+//   async sendAttachment() {
+//   // ✅ Step 1: Validate attachment exists
+//   if (!this.selectedAttachment) {
+//     await this.showToast('No attachment selected', 'danger');
 //     return;
 //   }
 
-//   // collect selected user ids (normalize whether it's user_id or user_id)
-//   const selected = this.selectedUsers;
-//   if (!selected || selected.length === 0) {
-//     this.showToast('No members selected', 'danger');
+//   // ✅ Step 2: Validate at least one user is selected
+//   const selectedUsers = this.allUsers.filter(user => user.selected);
+  
+//   if (selectedUsers.length === 0) {
+//     await this.showToast('Please select at least one contact', 'danger');
 //     return;
 //   }
 
-//   // Normalize user ids to strings (firebase user ids)
-//   const userIds: string[] = selected
-//     .map((u: any) => u.user_id ?? u.userId ?? u.userId) // try common keys
-//     .filter(Boolean)
-//     .map((id: any) => String(id));
-
-//   if (userIds.length === 0) {
-//     this.showToast('No valid user ids found', 'danger');
-//     return;
-//   }
-
+//   // ✅ Step 3: Show loading toast
 //   this.isLoading = true;
+//   const loadingToast = await this.toastCtrl.create({
+//     message: `Sending to ${selectedUsers.length} contact(s)...`,
+//     duration: 0,
+//     position: 'bottom'
+//   });
+//   await loadingToast.present();
+
 //   try {
-//     // 1) Update Firebase members via the shared service function
-//     await this.firebaseChatService.addMembersToGroup(this.groupId, userIds);
+//     const currentUserId = this.authService.authData?.userId || '';
+//     const currentUserName = this.authService.authData?.name || 'You';
 
-//     // 2) Read backendGroupId from Firebase (if you still want to sync to backend)
-//     const db = getDatabase();
-//     const backendGroupIdSnap = await get(ref(db, `groups/${this.groupId}/backendGroupId`));
-//     const backendGroupId = backendGroupIdSnap.val();
+//     // ✅ Step 4: Upload attachment to S3 once (reuse for all users)
+//     const mediaId = await this.uploadAttachmentToS3(this.selectedAttachment);
+//     console.log("this.selectedAttachment",this.selectedAttachment)
 
-//     if (!backendGroupId) {
-//       // still OK: show success but warn backend sync didn't happen
-//       this.showToast('Members added in Firebase (backend id missing)', 'success');
-//       this.navCtrl.back();
-//       return;
-//     }
-
-//     // 3) Map userIds to numeric user IDs expected by your API if possible.
-//     //    Try to find matching platform user info from firebaseChatService.currentUsers
-//     const platformUsers = this.firebaseChatService.currentUsers || [];
-
-//     // Build an array of numeric ids (or fallback to Number(userId))
-//     const backendCalls = userIds.map((uid) => {
-//       // try to find the matching user object
-//       const found = platformUsers.find(
-//         (p: any) => String(p.userId) === String(uid) || String(p.user_id) === String(uid)
+//     const res = await firstValueFrom(
+//         this.service.getDownloadUrl(mediaId)
 //       );
-//       const numericUserId = Number(found?.userId ?? found?.userId ?? uid);
-//       const userIdForApi = Number.isFinite(numericUserId) ? numericUserId : Number(uid);
+//       const cdnUrl = res.status ? res.downloadUrl : '';
 
-//       // call backend api
-//       return new Promise<void>((resolve, reject) => {
-//         this.service
-//           .addGroupMember(Number(backendGroupId), Number(userIdForApi), 2)
-//           .subscribe({
-//             next: () => resolve(),
-//             error: (err) => {
-//               console.error('Failed to sync member to backend', uid, err);
-//               // still resolve so single failure doesn't block everyone
-//               // but show toast for this failure afterwards
-//               resolve();
-//             },
-//           });
-//       });
+      
+
+//     // ✅ Step 5: Prepare attachment object
+//     const attachmentPayload = {
+//       type: this.selectedAttachment.type,
+//       mediaId: mediaId,
+//       fileName: this.selectedAttachment.fileName,
+//       mimeType: this.selectedAttachment.mimeType,
+//       fileSize: this.selectedAttachment.fileSize,
+//       caption: this.selectedAttachment.caption || '',
+//       cdnUrl: cdnUrl,
+//     };
+
+//     // ✅ Step 6: Send to each selected user using Firebase service
+//     const sendPromises = selectedUsers.map(async (user) => {
+//       const receiverId = user.user_id;
+      
+//       const message: Partial<IMessage & { attachment?: any }> = {
+//         sender: currentUserId,
+//         sender_name: currentUserName,
+//         receiver_id: receiverId,
+//         text: attachmentPayload.caption || '',
+//         timestamp: Date.now(),
+//         msgId: this.generateUUID(),
+//         replyToMsgId: '',
+//         isEdit: false,
+//         isPinned: false,
+//         type: 'image',
+//         reactions: [],
+//         attachment: {
+//           ...attachmentPayload,
+//           msgId: this.generateUUID()
+//         }
+//       };
+
+//       console.log("message of attachment",message)
+//       // Send via Firebase Chat Service
+//       return this.firebaseChatService.sendMessageDirectly(message, receiverId);
 //     });
 
-//     // wait for all backend sync promises to finish
-//     await Promise.all(backendCalls);
+//     // ✅ Step 7: Wait for all messages to be sent
+//     await Promise.all(sendPromises);
 
-//     this.showToast('Members added successfully 🎉', 'success');
+//     // ✅ Step 8: Dismiss loading toast
+//     await loadingToast.dismiss();
+
+//     // ✅ Step 9: Show success message
+//     await this.showToast(
+//       `Attachment sent to ${selectedUsers.length} contact(s)`,
+//       'success'
+//     );
+
+//     // ✅ Step 10: Clear selection and navigate back
+//     this.selectedAttachment = null;
+//     this.firebaseChatService.clearSelectedAttachment();
 //     this.navCtrl.back();
-//   } catch (err) {
-//     console.error('Error adding members', err);
-//     this.showToast('Error adding members', 'danger');
+
+//   } catch (error) {
+//     console.error('❌ Error sending attachment:', error);
+    
+//     await loadingToast.dismiss();
+    
+//     await this.showToast(
+//       'Failed to send attachment. Please try again.',
+//       'danger'
+//     );
 //   } finally {
 //     this.isLoading = false;
 //   }
 // }
 
+async sendAttachment() {
+  // ✅ Step 1: Validate attachment exists
+  if (!this.selectedAttachment) {
+    await this.showToast('No attachment selected', 'danger');
+    return;
+  }
 
+  // ✅ Step 2: Validate at least one user is selected
+  const selectedUsers = this.allUsers.filter(user => user.selected);
+  
+  if (selectedUsers.length === 0) {
+    await this.showToast('Please select at least one contact', 'danger');
+    return;
+  }
+
+  // ✅ Step 3: Show loading toast
+  this.isLoading = true;
+  const loadingToast = await this.toastCtrl.create({
+    message: `Sending to ${selectedUsers.length} contact(s)...`,
+    duration: 0,
+    position: 'bottom'
+  });
+  await loadingToast.present();
+
+  try {
+    const currentUserId = this.authService.authData?.userId || '';
+    const currentUserName = this.authService.authData?.name || 'You';
+
+    // ✅ Step 4: Upload attachment to S3 once (reuse for all users)
+    const mediaId = await this.uploadAttachmentToS3(this.selectedAttachment);
+    console.log("this.selectedAttachment", this.selectedAttachment);
+
+    const res = await firstValueFrom(
+      this.service.getDownloadUrl(mediaId)
+    );
+    const cdnUrl = res.status ? res.downloadUrl : '';
+
+    // ✅ Step 4.5: Save file locally into "sent" folder (same as sendMessage)
+    const localUrl = await this.FileService.saveFileToSent(
+      this.selectedAttachment.fileName,
+      this.selectedAttachment.blob
+    );
+    console.log({localUrl})
+
+    // ✅ Step 5: Prepare attachment object (with localUrl added)
+    const attachmentPayload = {
+      type: this.selectedAttachment.type,
+      mediaId: mediaId,
+      fileName: this.selectedAttachment.fileName,
+      mimeType: this.selectedAttachment.mimeType,
+      fileSize: this.selectedAttachment.fileSize,
+      caption: this.selectedAttachment.caption || '',
+      cdnUrl: cdnUrl,
+      localUrl: localUrl,  // ✅ Local file path added
+    };
+
+    // ✅ Step 6: Send to each selected user using Firebase service
+    const sendPromises = selectedUsers.map(async (user) => {
+      const receiverId = user.user_id;
+      
+      const message: Partial<IMessage & { attachment?: any }> = {
+        sender: currentUserId,
+        sender_name: currentUserName,
+        receiver_id: receiverId,
+        text: attachmentPayload.caption || '',
+        timestamp: Date.now(),
+        msgId: this.generateUUID(),
+        replyToMsgId: '',
+        isEdit: false,
+        isPinned: false,
+        type: 'image',
+        reactions: [],
+        attachment: {
+          ...attachmentPayload,
+          msgId: this.generateUUID()
+        }
+      };
+
+      console.log("message of attachment", message);
+      // Send via Firebase Chat Service
+      return this.firebaseChatService.sendMessageDirectly(message, receiverId);
+    });
+
+    // ✅ Step 7: Wait for all messages to be sent
+    await Promise.all(sendPromises);
+
+    // ✅ Step 8: Dismiss loading toast
+    await loadingToast.dismiss();
+
+    // ✅ Step 9: Show success message
+    await this.showToast(
+      `Attachment sent to ${selectedUsers.length} contact(s)`,
+      'success'
+    );
+
+    // ✅ Step 10: Clear selection and navigate back
+    this.selectedAttachment = null;
+    this.firebaseChatService.clearSelectedAttachment();
+    this.navCtrl.back();
+
+  } catch (error) {
+    console.error('❌ Error sending attachment:', error);
+    
+    await loadingToast.dismiss();
+    
+    await this.showToast(
+      'Failed to send attachment. Please try again.',
+      'danger'
+    );
+  } finally {
+    this.isLoading = false;
+  }
+}
+
+// ✅ Helper: Upload to S3
+private async uploadAttachmentToS3(attachment: any): Promise<string> {
+  try {
+    const currentUserId = parseInt(this.authService.authData?.userId || '0');
+
+    const uploadResponse: any = await firstValueFrom(
+      this.service.getUploadUrl(
+        currentUserId,
+        attachment.type,
+        attachment.fileSize,
+        attachment.mimeType,
+        {
+          caption: attachment.caption || '',
+          fileName: attachment.fileName
+        }
+      )
+    );
+
+    if (!uploadResponse?.status || !uploadResponse.upload_url) {
+      throw new Error('Failed to get upload URL');
+    }
+
+    const file = this.blobToFile(
+      attachment.blob,
+      attachment.fileName,
+      attachment.mimeType
+    );
+
+    await firstValueFrom(
+      this.service.uploadToS3(uploadResponse.upload_url, file)
+    );
+
+    return uploadResponse.media_id;
+
+  } catch (error) {
+    console.error('❌ S3 upload error:', error);
+    throw error;
+  }
+}
+
+// ✅ Helper: Convert Blob to File
+private blobToFile(blob: Blob, fileName: string, mimeType?: string): File {
+  return new File([blob], fileName, {
+    type: mimeType || blob.type,
+    lastModified: Date.now()
+  });
+}
+
+// ✅ Helper: Generate UUID
+private generateUUID(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
 
   checkboxChanged(user: any) {
     user.selected = !user.selected;

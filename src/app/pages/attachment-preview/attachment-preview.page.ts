@@ -1,37 +1,3 @@
-// import { CommonModule } from '@angular/common';
-// import { Component } from '@angular/core';
-// import { IonicModule, NavController } from '@ionic/angular';
-// // import { FooterTabsComponent } from 'src/app/components/footer-tabs/footer-tabs.component';
-
-// @Component({
-//   selector: 'app-attachment-preview',
-//   templateUrl: './attachment-preview.page.html',
-//   styleUrls: ['./attachment-preview.page.scss'],
-//   standalone: true,
-//   imports: [IonicModule, CommonModule],
-// })
-// export class AttachmentPreviewPage {
-//   imageData: string = '';
-
-//   constructor(private navCtrl: NavController) {
-//   if (history.state.imageData) {
-//     this.imageData = history.state.imageData;
-//   }
-// }
-
-
-//   send() {
-//     // Pass image back to chat screen via storage or navigation state
-//     history.pushState({ imageToSend: this.imageData }, '');
-//     this.navCtrl.navigateBack('/chatting-screen');
-//   }
-
-//   cancel() {
-//     this.navCtrl.navigateBack('/chatting-screen');
-//   }
-// }
-
-
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { IonicModule, NavController } from '@ionic/angular';

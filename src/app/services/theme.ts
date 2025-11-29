@@ -1,23 +1,3 @@
-// import { Injectable } from '@angular/core';
-
-// @Injectable({
-//   providedIn: 'root'
-// })
-// export class Theme {
-  
-// }
-
-
-// import { Injectable } from '@angular/core';
-
-// @Injectable({
-//   providedIn: 'root'
-// })
-// export class Theme {
-  
-// }
-
-// src/app/services/theme.service.ts
 import { Injectable } from '@angular/core';
 
 const THEME_KEY = 'settings.chatTheme';

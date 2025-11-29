@@ -330,6 +330,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     this.senderId = this.authService.authData?.userId || '';
     this.sender_phone = this.authService.authData?.phone_number || '';
     this.sender_name = this.authService.authData?.name || '';
+    // console.log("sender name is", this.sender_name)
 
     const nameFromQuery =
       this.route.snapshot.queryParamMap.get('receiver_name');
@@ -2743,6 +2744,8 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   // }
 
   async sendMessage() {
+    console.log("this send message function is called")
+    this.sender_name = this.authService.authData?.name || '';
     if (this.isSending) return;
     this.isSending = true;
 
@@ -2789,8 +2792,10 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
       };
 
       // Handle attachment if present
+      console.log("this is called and upload to S3 before", this.selectedAttachment)
       if (this.selectedAttachment) {
         try {
+          console.log("this is called and upload to S3 after")
           const mediaId = await this.uploadAttachmentToS3(
             this.selectedAttachment
           );
@@ -2881,6 +2886,10 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
       : null;
   }
 
+    isEmptyObject(obj: any): boolean {
+  return obj && Object.keys(obj).length === 0;
+}
+
   // formatLastSeen(ts: string | null) {
   //   if (!ts) return '';
   //   const d = new Date(ts); // make sure server returns parseable ISO or 'YYYY-MM-DD hh:mm:ss'
@@ -2947,9 +2956,11 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async openAttachmentModal(msg: any) {
-    if (!msg.attachment) return;
+    // console.log("this is from open attachment modal", msg)
+    if (!msg.attachment.type) return;
 
     // let attachmentUrl = '';
+    // console.log("this msg is show in preview modal", msg);
 
     try {
       // const localUrl = await this.FileService.getFilePreview(
@@ -2999,6 +3010,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
 
       await modal.present();
       const { data } = await modal.onDidDismiss();
+      console.log({data})
 
       if (data && data.action === 'reply') {
         this.setReplyToMessage(data.message);
@@ -3333,6 +3345,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
         fileSize: blob.size,
         previewUrl: previewUrl,
       };
+      console.log("this selected attachment", this.selectedAttachment);
 
       // Show preview modal (same as pickAttachment)
       this.showPreviewModal = true;
@@ -3544,7 +3557,9 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
 
   translationApiBase =
     // 'https://script.google.com/macros/s/AKfycbyxnbC6LBpbtdMw2rLVqCRvqbHkT97CPQo9Ta9by1QpCMBH25BE6edivkNj5_dYp1qj/exec';
-    'https://script.google.com/macros/s/AKfycbxpr7MVGsJNzDTZoBWa_IuTd8z5C9ZDfM3iENhuqBN01hgKiU2fF-Hc3DZ1c0u9KzHZ/exec';
+    // 'https://script.google.com/macros/s/AKfycbxpr7MVGsJNzDTZoBWa_IuTd8z5C9ZDfM3iENhuqBN01hgKiU2fF-Hc3DZ1c0u9KzHZ/exec';
+    'https://script.google.com/macros/s/AKfycbz069QioIcP8CO2ly7j29cyQPQjzQKywYcrDicxqG35_bQ3Ch_fcuVORsMAdAWu5-uh/exec';
+    
   languageMap: Record<string, string> = {
     'ar-EG': 'Arabic (Egypt)',
     'ar-SA': 'Arabic (Saudi Arabia)',
@@ -3792,8 +3807,10 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
    * Check if message has multiple translations (more than just original)
    */
   hasMultipleTranslations(msg: any): boolean {
+    // console.log("this hasMultipleTranslations is called");
     if (!msg?.translations) return false;
     const arr = this.getAllTranslationsArray(msg);
+    // console.log("hasMultipleTranslations", arr)
     return arr.length > 1;
   }
 
@@ -4624,14 +4641,18 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
         };
       }
     }
+    const msgId = uuidv4();
+    const timestamp = Date.now();
 
     // ✅ Build final message
     const localMessage: Partial<IMessage & { attachment?: any }> = {
       sender: this.senderId,
+      sender_name : this.sender_name,
       text: visibleTextForSender,
+      receiver_id : this.receiverId,
       translations: translationsPayload,
-      timestamp: now,
-      msgId: uuidv4(),
+      timestamp,
+      msgId,
       replyToMsgId: this.replyTo?.message.msgId || '',
       isEdit: false,
       isPinned: false,
@@ -4639,7 +4660,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
       reactions: [],
     };
 
-    console.log('✅ Local Message:', localMessage);
+    console.log('✅ Local Message:djkfsllllllllllllllllllllllll', localMessage);
 
     // Send message
     await this.chatService.sendMessage(localMessage);
