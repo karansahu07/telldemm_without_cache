@@ -39,56 +39,57 @@
       "title": "ਐਪ ਜਾਣਕਾਰੀ",
       "description": "ਵਰਜ਼ਨ, ਕਾਨੂੰਨੀ ਅਤੇ ਤਕਨੀਕੀ ਵੇਰਵੇ।"
     }
-  },"common": {
+  },
+  "common": {
     "ok": "ਠੀਕ ਹੈ",
     "cancel": "ਰੱਦ ਕਰੋ",
     "logout": "ਲਾੱਗ ਆਉਟ"
   },
   "settingsPage": {
     "title": "DemmDesk (ਸੈਟਿੰਗਜ਼)",
-    "account": { 
-      "title": "MyTell (ਖਾਤਾ)", 
-      "description": "TellShield (ਗੋਪਨੀਯਤਾ), ਸੁਰੱਖਿਆ, ਨੰਬਰ ਬਦਲੋ" 
+    "account": {
+      "title": "MyTell (ਖਾਤਾ)",
+      "description": "TellShield (ਗੋਪਨੀਯਤਾ), ਸੁਰੱਖਿਆ, ਨੰਬਰ ਬਦਲੋ"
     },
-    "privacy": { 
-      "title": "TellShield (ਗੋਪਨੀਯਤਾ)", 
-      "description": "ਆਪਣੀਆਂ TellShield (ਗੋਪਨੀਯਤਾ) ਸੈਟਿੰਗਾਂ ਨੂੰ ਕੰਟਰੋਲ ਕਰੋ" 
+    "privacy": {
+      "title": "TellShield (ਗੋਪਨੀਯਤਾ)",
+      "description": "ਆਪਣੀਆਂ TellShield (ਗੋਪਨੀਯਤਾ) ਸੈਟਿੰਗਾਂ ਨੂੰ ਕੰਟਰੋਲ ਕਰੋ"
     },
-    "avatar": { 
-      "title": "TellFace (ਪ੍ਰੋਫਾਈਲ ਤਸਵੀਰ)", 
-      "description": "ਆਪਣੀ TellFace (ਪ੍ਰੋਫਾਈਲ ਤਸਵੀਰ) ਬਦਲੋ" 
+    "avatar": {
+      "title": "TellFace (ਪ੍ਰੋਫਾਈਲ ਤਸਵੀਰ)",
+      "description": "ਆਪਣੀ TellFace (ਪ੍ਰੋਫਾਈਲ ਤਸਵੀਰ) ਬਦਲੋ"
     },
-    "chats": { 
-      "title": "Tells (ਚੈਟਸ)", 
-      "description": "ਥੀਮ, ਵਾਲਪੇਪਰ, SafeDemm (ਬੈਕਅਪ)" 
+    "chats": {
+      "title": "Tells (ਚੈਟਸ)",
+      "description": "ਥੀਮ, ਵਾਲਪੇਪਰ, SafeDemm (ਬੈਕਅਪ)"
     },
-    "accessibility": { 
-      "title": "Accessibility ( ਪਹੁੰਚਯੋਗਤਾ)", 
-      "description": "ਲਿਖਤ ਦਾ ਅਕਾਰ ਅਤੇ ਵਿਖਾਪਣ ਵਿਕਲਪ ਸਮਾਯੋਜ਼ਨ ਕਰੋ" 
+    "accessibility": {
+      "title": "Accessibility ( ਪਹੁੰਚਯੋਗਤਾ)",
+      "description": "ਲਿਖਤ ਦਾ ਅਕਾਰ ਅਤੇ ਵਿਖਾਪਣ ਵਿਕਲਪ ਸਮਾਯੋਜ਼ਨ ਕਰੋ"
     },
-    "notifications": { 
-      "title": "TellAlerts (ਸੂਚਨਾਵਾਂ)", 
-      "description": "Tell (ਸੰਦੇਸ਼), DemmRoom (ਗਰੁੱਪ) ਅਤੇ Connect (ਕਾਲ) ਅਲਰਟ ਪ੍ਰਬੰਧਨ ਕਰੋ" 
+    "notifications": {
+      "title": "TellAlerts (ਸੂਚਨਾਵਾਂ)",
+      "description": "Tell (ਸੰਦੇਸ਼), DemmRoom (ਗਰੁੱਪ) ਅਤੇ Connect (ਕਾਲ) ਅਲਰਟ ਪ੍ਰਬੰਧਨ ਕਰੋ"
     },
-    "storage": { 
-      "title": "SafeDemm (ਸਟੋਰੇਜ ਅਤੇ ਡੇਟਾ)", 
-      "description": "ਸਟੋਰੇਜ ਅਤੇ ਨੈੱਟਵਰਕ ਵਰਤੋਂ ਪ੍ਰਬੰਧਨ ਕਰੋ" 
+    "storage": {
+      "title": "SafeDemm (ਸਟੋਰੇਜ ਅਤੇ ਡੇਟਾ)",
+      "description": "ਸਟੋਰੇਜ ਅਤੇ ਨੈੱਟਵਰਕ ਵਰਤੋਂ ਪ੍ਰਬੰਧਨ ਕਰੋ"
     },
-    "appLanguage": { 
-      "title": "App Language (ਐਪ ਭਾਸ਼ਾ)", 
-      "description": "TellDemm ਐਪ ਦੀ ਭਾਸ਼ਾ ਚੁਣੋ" 
+    "appLanguage": {
+      "title": "App Language (ਐਪ ਭਾਸ਼ਾ)",
+      "description": "TellDemm ਐਪ ਦੀ ਭਾਸ਼ਾ ਚੁਣੋ"
     },
-    "help": { 
-      "title": "DemmHelp (ਸਹਾਇਤਾ)", 
-      "description": "ਹੈਲਪ ਸੈਂਟਰ, ਸੰਪਰਕ ਕਰੋ, ਐਪ ਜਾਣਕਾਰੀ" 
+    "help": {
+      "title": "DemmHelp (ਸਹਾਇਤਾ)",
+      "description": "ਹੈਲਪ ਸੈਂਟਰ, ਸੰਪਰਕ ਕਰੋ, ਐਪ ਜਾਣਕਾਰੀ"
     },
-    "updates": { 
-      "title": "DemmUpdate (ਐਪ ਅੱਪਡੇਟ)", 
-      "description": "ਅੱਪਡੇਟ ਜਾਂਚੋ ਅਤੇ ਆਟੋ-ਅੱਪਡੇਟ ਸਮਰਥ ਕਰੋ" 
+    "updates": {
+      "title": "DemmUpdate (ਐਪ ਅੱਪਡੇਟ)",
+      "description": "ਅੱਪਡੇਟ ਜਾਂਚੋ ਅਤੇ ਆਟੋ-ਅੱਪਡੇਟ ਸਮਰਥ ਕਰੋ"
     },
-    "invite": { 
-      "title": "SpreadDemm (ਮਿੱਤਰ ਨੂੰ ਆਮੰਤ੍ਰਿਤ ਕਰੋ)", 
-      "description": "TellDemm ਐਪ ਨੂੰ ਆਪਣੇ DemmList (ਸੰਪਰਕਾਂ) ਨਾਲ ਸਾਂਝਾ ਕਰੋ" 
+    "invite": {
+      "title": "SpreadDemm (ਮਿੱਤਰ ਨੂੰ ਆਮੰਤ੍ਰਿਤ ਕਰੋ)",
+      "description": "TellDemm ਐਪ ਨੂੰ ਆਪਣੇ DemmList (ਸੰਪਰਕਾਂ) ਨਾਲ ਸਾਂਝਾ ਕਰੋ"
     },
     "logout": {
       "title": "Log Out (ਲੌਗ ਆਊਟ)",
@@ -125,7 +126,8 @@
       "updateAvailable": "ਅੱਪਡੇਟ ਉਪਲਬਧ: {{version}}",
       "error": "ਅੱਪਡੇਟਸ ਦੀ ਜਾਂਚ ਨਹੀਂ ਹੋ ਸਕੀ। ਬਾਅਦ ਵਿੱਚ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"
     }
-  }, "accountPage": {
+  },
+  "accountPage": {
     "title": "ਖਾਤਾ",
     "securityNotifications": "ਸੁਰੱਖਿਆ ਸੂਚਨਾਵਾਂ",
     "passkeys": "ਪਾਸਕੀ",
@@ -142,34 +144,35 @@
       "cancel": "ਰੱਦ ਕਰੋ",
       "log": "ਖਾਤਾ ਮਿਟਾਉਣ ਵਾਲਾ ਮੋਡਲ ਖੋਲ੍ਹਿਆ ਗਿਆ"
     }
-  },"accessibility": {
-  "title": "ਪਹੁੰਚ ਯੋਗਤਾ",
-  "groups": {
-    "displayMotion": "ਡਿਸਪਲੇਅ ਅਤੇ ਹਿਲਚਲ",
-    "interaction": "ਇੰਟਰੈਕਸ਼ਨ"
   },
-  "increaseContrast": {
-    "title": "ਕਾਂਟ੍ਰਾਸਟ ਵਧਾਓ",
-    "desc": "ਹਲਕੇ ਮੋਡ ਵਿੱਚ ਪੜ੍ਹਨਯੋਗਤਾ ਸੁਧਾਰਨ ਲਈ ਮੁੱਖ ਰੰਗਾਂ ਨੂੰ ਗੂੜ੍ਹਾ ਕਰੋ।"
+  "accessibility": {
+    "title": "ਪਹੁੰਚ ਯੋਗਤਾ",
+    "groups": {
+      "displayMotion": "ਡਿਸਪਲੇਅ ਅਤੇ ਹਿਲਚਲ",
+      "interaction": "ਇੰਟਰੈਕਸ਼ਨ"
+    },
+    "increaseContrast": {
+      "title": "ਕਾਂਟ੍ਰਾਸਟ ਵਧਾਓ",
+      "desc": "ਹਲਕੇ ਮੋਡ ਵਿੱਚ ਪੜ੍ਹਨਯੋਗਤਾ ਸੁਧਾਰਨ ਲਈ ਮੁੱਖ ਰੰਗਾਂ ਨੂੰ ਗੂੜ੍ਹਾ ਕਰੋ।"
+    },
+    "reduceMotion": {
+      "title": "ਹਿਲਚਲ ਘਟਾਓ",
+      "desc": "ਐਨੀਮੇਟਡ ਸਟਿਕਰ, GIF ਅਤੇ ਟ੍ਰਾਂਜ਼ੀਸ਼ਨ ਘਟਾਓ।"
+    },
+    "largeText": {
+      "title": "ਵੱਡਾ ਟੈਕਸਟ",
+      "desc": "ਆਸਾਨ ਪੜ੍ਹਨ ਲਈ ਸਿਸਟਮ ਫੌਂਟ ਆਕਾਰ ਵਧਾਓ।"
+    },
+    "simpleAnimations": {
+      "title": "ਸਰਲ ਐਨੀਮੇਸ਼ਨ",
+      "desc": "ਸੌਖੀ ਇੰਟਰੈਕਸ਼ਨ ਲਈ ਜਟਿਲ ਐਨੀਮੇਸ਼ਨ ਘਟਾਓ।"
+    },
+    "grayscale": {
+      "title": "ਗ੍ਰੇਸਕੇਲ ਮੋਡ",
+      "desc": "ਦ੍ਰਿਸ਼ਟੀਕੋਣ ਥਕਾਵਟ ਘਟਾਉਣ ਲਈ ਸਾਰੇ ਰੰਗਾਂ ਨੂੰ ਸਲੇਟੀ ਰੰਗ ਵਿੱਚ ਬਦਲੋ।"
+    }
   },
-  "reduceMotion": {
-    "title": "ਹਿਲਚਲ ਘਟਾਓ",
-    "desc": "ਐਨੀਮੇਟਡ ਸਟਿਕਰ, GIF ਅਤੇ ਟ੍ਰਾਂਜ਼ੀਸ਼ਨ ਘਟਾਓ।"
-  },
-  "largeText": {
-    "title": "ਵੱਡਾ ਟੈਕਸਟ",
-    "desc": "ਆਸਾਨ ਪੜ੍ਹਨ ਲਈ ਸਿਸਟਮ ਫੌਂਟ ਆਕਾਰ ਵਧਾਓ।"
-  },
-  "simpleAnimations": {
-    "title": "ਸਰਲ ਐਨੀਮੇਸ਼ਨ",
-    "desc": "ਸੌਖੀ ਇੰਟਰੈਕਸ਼ਨ ਲਈ ਜਟਿਲ ਐਨੀਮੇਸ਼ਨ ਘਟਾਓ।"
-  },
-  "grayscale": {
-    "title": "ਗ੍ਰੇਸਕੇਲ ਮੋਡ",
-    "desc": "ਦ੍ਰਿਸ਼ਟੀਕੋਣ ਥਕਾਵਟ ਘਟਾਉਣ ਲਈ ਸਾਰੇ ਰੰਗਾਂ ਨੂੰ ਸਲੇਟੀ ਰੰਗ ਵਿੱਚ ਬਦਲੋ।"
-  }
-}
-, "privacyPage": {
+  "privacyPage": {
     "title": "ਪਰਾਈਵੇਸੀ",
     "groups": {
       "whoCanSee": "ਮੇਰੀ ਜਾਣਕਾਰੀ ਕੌਣ ਦੇਖ ਸਕਦਾ ਹੈ",
@@ -200,7 +203,8 @@
       "contacts": "ਮੇਰੇ ਸੰਪਰਕ",
       "nobody": "ਕੋਈ ਨਹੀਂ"
     }
-  },"avatarPage": {
+  },
+  "avatarPage": {
     "title": "ਆਪਣਾ ਅਵਤਾਰ ਬਣਾਓ",
     "previewAlt": "ਅਵਤਾਰ ਪ੍ਰੀਵਿਊ",
     "sections": {
@@ -233,7 +237,8 @@
       "saved": "ਅਵਤਾਰ ਚੋਣਾਂ ਸਥਾਨਕ ਤੌਰ 'ਤੇ ਸੇਵ ਕੀਤੀਆਂ ਗਈਆਂ ਹਨ।",
       "downloadError": "ਡਾਊਨਲੋਡ ਅਸਫਲ ਹੋਇਆ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"
     }
-  },"notifications": {
+  },
+  "notifications": {
     "title": "ਨੋਟੀਫਿਕੇਸ਼ਨ",
     "highPriority": {
       "title": "ਉੱਚ ਤਰਜੀਹ ਵਾਲੀਆਂ ਨੋਟੀਫਿਕੇਸ਼ਨ ਵਰਤੋ",
@@ -251,7 +256,8 @@
       "title": "ਕਾਲ ਨੋਟੀਫਿਕੇਸ਼ਨ",
       "desc": "ਰਿੰਗਟੋਨ ਅਤੇ ਵਾਈਬ੍ਰੇਸ਼ਨ ਸੈਟਿੰਗਜ਼"
     }
-  },"storage": {
+  },
+  "storage": {
     "title": "ਸਟੋਰੇਜ ਅਤੇ ਡੇਟਾ",
     "totalUsedHuman": "{{used}} MB ਵਿੱਚੋਂ {{total}} MB",
     "cards": {
@@ -292,7 +298,8 @@
       "cleared": "{{mb}} MB ਕੈਸ਼ ਸਾਫ ਕੀਤਾ ਗਿਆ",
       "statsReset": "ਨੈੱਟਵਰਕ ਅੰਕੜੇ ਰੀਸੈੱਟ ਕੀਤੇ ਗਏ"
     }
-  },"chats": {
+  },
+  "chats": {
     "title": "ਚੈਟ",
     "sections": {
       "appearance": "ਦਿੱਖ",
@@ -363,7 +370,8 @@
         "done": "ਬੈਕਅਪ ਮੁਕੰਮਲ ਹੋਇਆ"
       }
     }
-  },"profilePage": {
+  },
+  "profilePage": {
     "title": "ਪ੍ਰੋਫਾਈਲ",
     "imageAlt": "ਪ੍ਰੋਫਾਈਲ ਚਿੱਤਰ",
     "buttons": {
@@ -381,7 +389,8 @@
       "source": {
         "header": "ਚਿੱਤਰ ਸਰੋਤ ਚੁਣੋ",
         "camera": "ਕੈਮਰਾ",
-        "gallery": "ਗੈਲਰੀ"
+        "gallery": "ਗੈਲਰੀ",
+        "cancel": "ਰੱਦ ਕਰੋ"
       }
     },
     "loading": {
@@ -402,7 +411,8 @@
       "updated": "ਪ੍ਰੋਫਾਈਲ ਚਿੱਤਰ ਸਫਲਤਾਪੂਰਵਕ ਅਪਡੇਟ ਹੋ ਗਿਆ!",
       "updateFailed": "ਪ੍ਰੋਫਾਈਲ ਚਿੱਤਰ ਅਪਡੇਟ ਕਰਨ ਵਿੱਚ ਅਸਫਲ"
     }
-  },"footerTabs": {
+  },
+  "footerTabs": {
     "chat": "Tells (ਚੈਟ)",
     "updates": "Echoes (ਅੱਪਡੇਟਸ)",
     "communities": "DemmCircles (ਕਮਿਊਨਿਟੀਜ਼)",
@@ -420,8 +430,9 @@
       "add": "ਆਪਣਾ ਇੰਸਟਾਗ੍ਰਾਮ ਜੋੜੋ"
     },
     "actions": {
-      "add": "ਜੋੜੋ",
-      "edit": "ਸੰਪਾਦਿਤ ਕਰੋ"
+      "add": "ਸ਼ਾਮਲ ਕਰੋ",
+      "edit": "ਸੰਪਾਦਨ ਕਰੋ",
+      "cancel": "ਰੱਦ ਕਰੋ"
     },
     "privacy": {
       "note": "ਕੌਣ ਤੁਹਾਡੇ ਲਿੰਕ ਵੇਖ ਸਕਦਾ ਹੈ ਇਹ ਪ੍ਰਬੰਧਿਤ ਕਰਨ ਲਈ ਜਾਓ",
@@ -448,12 +459,24 @@
       "saved": "ਇੰਸਟਾਗ੍ਰਾਮ ਸਫਲਤਾਪੂਰਵਕ ਸੰਭਾਲਿਆ ਗਿਆ!",
       "saveFailed": "ਇੰਸਟਾਗ੍ਰਾਮ ਲਿੰਕ ਅੱਪਡੇਟ ਕਰਨ ਵਿੱਚ ਅਸਫਲ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"
     }
-  },"home": {
-    "search": { "placeholder": "ਪੁੱਛੋ ਜਾਂ ਖੋਜੋ" },
-    "filters": { "all": "ਸਭ", "read": "ਪੜ੍ਹਿਆ", "unread": "ਅਪੜ੍ਹਿਆ", "groups": "DemmRoom (ਗਰੁੱਪ)" },
-    "groupCreator": { "placeholder": "DemmRoom ਨਾਮ ਦਾਖਲ ਕਰੋ" },
+  },
+  "home": {
+    "search": {
+      "placeholder": "ਪੁੱਛੋ ਜਾਂ ਖੋਜੋ"
+    },
+    "filters": {
+      "all": "ਸਭ",
+      "read": "ਪੜ੍ਹਿਆ",
+      "unread": "ਅਪੜ੍ਹਿਆ",
+      "groups": "DemmRoom (ਗਰੁੱਪ)"
+    },
+    "groupCreator": {
+      "placeholder": "DemmRoom ਨਾਮ ਦਾਖਲ ਕਰੋ"
+    },
     "typing": "ਲਿਖ ਰਿਹਾ ਹੈ...",
-    "time": { "yesterday": "ਕਲ" },
+    "time": {
+      "yesterday": "ਕਲ"
+    },
     "preview": {
       "deleted": "ਇਹ ਸੁਨੇਹਾ ਮਿਟਾ ਦਿੱਤਾ ਗਿਆ ਸੀ",
       "encrypted": "[ਐਨਕ੍ਰਿਪਟ ਕੀਤਾ]",
@@ -481,8 +504,11 @@
       "header": "ਲੌਗ ਆਊਟ",
       "message": "ਸੈਸ਼ਨ ਸਮਾਂ ਸਿਰਫ/ਸਮਾਪਤ।"
     },
-    "alt": { "profile": "ਪ੍ਰੋਫਾਈਲ" }
-  },"menu": {
+    "alt": {
+      "profile": "ਪ੍ਰੋਫਾਈਲ"
+    }
+  },
+  "menu": {
     "newGroup": "ਨਵਾਂ ਗਰੁੱਪ",
     "newCommunity": "ਨਵੀਂ ਕਮਿਊਨਿਟੀ",
     "newBroadcast": "ਨਵਾਂ ਪ੍ਰਸਾਰਣ (WIP)",
@@ -492,7 +518,8 @@
     "createChannels": "ਚੈਨਲ ਬਣਾਓ (WIP)",
     "statusPrivacy": "ਸਟੇਟਸ ਪਰਾਈਵੇਸੀ (WIP)",
     "clearCallLogs": "ਕਾਲ ਲਾਗਸ ਸਾਫ ਕਰੋ (WIP)"
-  },"userabout": {
+  },
+  "userabout": {
     "members": "ਮੈਂਬਰ",
     "group": "ਗਰੁੱਪ",
     "groups": "ਗਰੁੱਪਸ",
@@ -578,7 +605,8 @@
         "cta": "ਰਿਪੋਰਟ"
       }
     }
-  }, "invite": {
+  },
+  "invite": {
     "header": "ਦੋਸਤ ਨੂੰ ਸੱਦਾ ਦਿਓ",
     "actions": {
       "search": "ਸੰਪਰਕ ਖੋਜੋ",
@@ -611,31 +639,32 @@
     "errors": {
       "shareFailed": "ਸ਼ੇਅਰ ਸ਼ੀਟ ਨਹੀਂ ਖੁੱਲ ਸਕੀ।"
     }
-  },"community": {
-     "manageGroups": {
-    "title": "ਗਰੁੱਪ ਪ੍ਰਬੰਧਿਤ ਕਰੋ",
-    "groups": "ਗਰੁੱਪ",
-    "createNew": "ਨਵਾਂ ਗਰੁੱਪ ਬਣਾਓ",
-    "addExisting": "ਮੌਜੂਦਾ ਗਰੁੱਪ ਸ਼ਾਮਲ ਕਰੋ",
-    "info": "ਮੈਂਬਰ ਮੌਜੂਦਾ ਗਰੁੱਪ ਐਡਮਿਨ ਮਨਜ਼ੂਰੀ ਲਈ ਸੁਝਾ ਸਕਦੇ ਹਨ ਅਤੇ ਸਿੱਧੇ ਨਵੇਂ ਗਰੁੱਪ ਸ਼ਾਮਲ ਕਰ ਸਕਦੇ ਹਨ। ਵੇਖੋ",
-    "settingsLink": "ਕਮਿਊਨਿਟੀ ਸੈਟਿੰਗਾਂ",
-    "listHeader": "ਇਸ ਕਮਿਊਨਿਟੀ ਦੇ ਗਰੁੱਪ",
-    "loading": "ਗਰੁੱਪ ਲੋਡ ਹੋ ਰਹੇ ਹਨ...",
-    "empty": "ਇਸ ਕਮਿਊਨਿਟੀ ਲਈ ਕੋਈ ਗਰੁੱਪ ਨਹੀਂ ਮਿਲੇ",
-    "members": "ਮੈਂਬਰ",
-    "unnamedGroup": "ਬਿਨਾਂ ਨਾਮ ਦਾ ਗਰੁੱਪ",
-    "remove": {
-      "header": "ਕਮਿਊਨਿਟੀ ਤੋਂ ਗਰੁੱਪ ਹਟਾਓ",
-      "message": "ਕੀ ਤੁਸੀਂ ਇਸ ਗਰੁੱਪ ਨੂੰ ਕਮਿਊਨਿਟੀ ਤੋਂ ਹਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ? ਗਰੁੱਪ ਰਹੇਗਾ ਪਰ ਹੁਣ ਕਮਿਊਨਿਟੀ ਦਾ ਹਿੱਸਾ ਨਹੀਂ ਹੋਵੇਗਾ।",
-      "alsoRemoveMembers": "ਇਸ ਗਰੁੱਪ ਦੇ ਮੈਂਬਰਾਂ ਨੂੰ ਵੀ ਕਮਿਊਨਿਟੀ ਅਤੇ ਗਰੁੱਪ ਤੋਂ ਹਟਾਓ",
-      "cta": "ਹਟਾਓ",
-      "aria": "ਕਮਿਊਨਿਟੀ ਤੋਂ ਗਰੁੱਪ ਹਟਾਓ"
-    },
-    "toasts": {
-      "removed": "ਗਰੁੱਪ ਕਮਿਊਨਿਟੀ ਤੋਂ ਹਟਾਇਆ ਗਿਆ ਅਤੇ ਮੈਂਬਰ ਅੱਪਡੇਟ ਹੋਏ",
-      "removeFailed": "ਗਰੁੱਪ ਹਟਾਉਣ ਵਿੱਚ ਅਸਫਲ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"
-    }
   },
+  "community": {
+    "manageGroups": {
+      "title": "ਗਰੁੱਪ ਪ੍ਰਬੰਧਿਤ ਕਰੋ",
+      "groups": "ਗਰੁੱਪ",
+      "createNew": "ਨਵਾਂ ਗਰੁੱਪ ਬਣਾਓ",
+      "addExisting": "ਮੌਜੂਦਾ ਗਰੁੱਪ ਸ਼ਾਮਲ ਕਰੋ",
+      "info": "ਮੈਂਬਰ ਮੌਜੂਦਾ ਗਰੁੱਪ ਐਡਮਿਨ ਮਨਜ਼ੂਰੀ ਲਈ ਸੁਝਾ ਸਕਦੇ ਹਨ ਅਤੇ ਸਿੱਧੇ ਨਵੇਂ ਗਰੁੱਪ ਸ਼ਾਮਲ ਕਰ ਸਕਦੇ ਹਨ। ਵੇਖੋ",
+      "settingsLink": "ਕਮਿਊਨਿਟੀ ਸੈਟਿੰਗਾਂ",
+      "listHeader": "ਇਸ ਕਮਿਊਨਿਟੀ ਦੇ ਗਰੁੱਪ",
+      "loading": "ਗਰੁੱਪ ਲੋਡ ਹੋ ਰਹੇ ਹਨ...",
+      "empty": "ਇਸ ਕਮਿਊਨਿਟੀ ਲਈ ਕੋਈ ਗਰੁੱਪ ਨਹੀਂ ਮਿਲੇ",
+      "members": "ਮੈਂਬਰ",
+      "unnamedGroup": "ਬਿਨਾਂ ਨਾਮ ਦਾ ਗਰੁੱਪ",
+      "remove": {
+        "header": "ਕਮਿਊਨਿਟੀ ਤੋਂ ਗਰੁੱਪ ਹਟਾਓ",
+        "message": "ਕੀ ਤੁਸੀਂ ਇਸ ਗਰੁੱਪ ਨੂੰ ਕਮਿਊਨਿਟੀ ਤੋਂ ਹਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ? ਗਰੁੱਪ ਰਹੇਗਾ ਪਰ ਹੁਣ ਕਮਿਊਨਿਟੀ ਦਾ ਹਿੱਸਾ ਨਹੀਂ ਹੋਵੇਗਾ।",
+        "alsoRemoveMembers": "ਇਸ ਗਰੁੱਪ ਦੇ ਮੈਂਬਰਾਂ ਨੂੰ ਵੀ ਕਮਿਊਨਿਟੀ ਅਤੇ ਗਰੁੱਪ ਤੋਂ ਹਟਾਓ",
+        "cta": "ਹਟਾਓ",
+        "aria": "ਕਮਿਊਨਿਟੀ ਤੋਂ ਗਰੁੱਪ ਹਟਾਓ"
+      },
+      "toasts": {
+        "removed": "ਗਰੁੱਪ ਕਮਿਊਨਿਟੀ ਤੋਂ ਹਟਾਇਆ ਗਿਆ ਅਤੇ ਮੈਂਬਰ ਅੱਪਡੇਟ ਹੋਏ",
+        "removeFailed": "ਗਰੁੱਪ ਹਟਾਉਣ ਵਿੱਚ ਅਸਫਲ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"
+      }
+    },
     "title": "ਕਮਿਊਨਿਟੀਆਂ",
     "actions": {
       "qr": "QR ਕਾਰਵਾਈਆਂ ਖੋਲ੍ਹੋ",
@@ -645,10 +674,10 @@
     "unnamedCommunity": "ਬਿਨਾਂ ਨਾਮ ਵਾਲੀ ਕਮਿਊਨਿਟੀ",
     "viewAll": "ਸਭ ਵੇਖੋ",
     "groupType": {
-    "normal": "सामान्य गट",
-    "announcement": "जाहिरात गट",
-    "general": "जनरल गट"
-  },
+      "normal": "सामान्य गट",
+      "announcement": "जाहिरात गट",
+      "general": "जनरल गट"
+    },
     "newGroup": {
       "header": "ਨਵਾਂ ਸਮੂਹ",
       "placeholder": "ਸਮੂਹ ਦਾ ਨਾਮ",
@@ -657,7 +686,8 @@
     "toasts": {
       "groupCreated": "ਸਮੂਹ ਬਣਾਇਆ ਗਿਆ"
     }
-  },"community_menu_component": {
+  },
+  "community_menu_component": {
     "info": "ਕਮਿਊਨਿਟੀ ਜਾਣਕਾਰੀ",
     "invite": "ਮੈਂਬਰਾਂ ਨੂੰ ਸੱਦੋ",
     "settings": "ਕਮਿਊਨਿਟੀ ਸੈਟਿੰਗਾਂ"
@@ -671,7 +701,8 @@
     "communityLabel": "ਕਮਿਊਨਿਟੀ:",
     "joinNote": "ਜੁੜਦੇ ਹੀ ਤੁਸੀਂ ਤੁਰੰਤ ਮੈਂਬਰ ਬਣ ਜਾਵੋਗੇ।",
     "joinCta": "ਗਰੁੱਪ ਵਿੱਚ ਸ਼ਾਮਲ ਹੋਵੋ"
-  }, "add_existing_groups_page": {
+  },
+  "add_existing_groups_page": {
     "header": "ਮੌਜੂਦਾ ਗਰੁੱਪ ਸ਼ਾਮਲ ਕਰੋ",
     "actions": {
       "search": "ਗਰੁੱਪ ਲੱਭੋ",

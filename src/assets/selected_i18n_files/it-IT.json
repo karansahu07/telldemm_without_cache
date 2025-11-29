@@ -39,56 +39,57 @@
       "title": "Info app",
       "description": "Versione, dettagli legali e tecnici."
     }
-  },"common": {
+  },
+  "common": {
     "ok": "OK",
     "cancel": "Annulla",
     "logout": "Disconnetti"
   },
   "settingsPage": {
     "title": "DemmDesk (Impostazioni)",
-    "account": { 
-      "title": "MyTell (Account)", 
-      "description": "TellShield (Privacy), sicurezza, cambia numero" 
+    "account": {
+      "title": "MyTell (Account)",
+      "description": "TellShield (Privacy), sicurezza, cambia numero"
     },
-    "privacy": { 
-      "title": "TellShield (Privacy)", 
-      "description": "Controlla le tue impostazioni TellShield (Privacy)" 
+    "privacy": {
+      "title": "TellShield (Privacy)",
+      "description": "Controlla le tue impostazioni TellShield (Privacy)"
     },
-    "avatar": { 
-      "title": "TellFace (Foto del profilo)", 
-      "description": "Cambia la tua TellFace (Foto del profilo)" 
+    "avatar": {
+      "title": "TellFace (Foto del profilo)",
+      "description": "Cambia la tua TellFace (Foto del profilo)"
     },
-    "chats": { 
-      "title": "Tells (Chat)", 
-      "description": "Tema, sfondo, SafeDemm (Backup)" 
+    "chats": {
+      "title": "Tells (Chat)",
+      "description": "Tema, sfondo, SafeDemm (Backup)"
     },
-    "accessibility": { 
-      "title": "Accessibility (Accessibilità)", 
-      "description": "Regola dimensione testo e opzioni di visualizzazione" 
+    "accessibility": {
+      "title": "Accessibility (Accessibilità)",
+      "description": "Regola dimensione testo e opzioni di visualizzazione"
     },
-    "notifications": { 
-      "title": "TellAlerts (Notifiche)", 
-      "description": "Gestisci avvisi Tell (Messaggi), DemmRoom (Gruppo) e Connect (Chiamate)" 
+    "notifications": {
+      "title": "TellAlerts (Notifiche)",
+      "description": "Gestisci avvisi Tell (Messaggi), DemmRoom (Gruppo) e Connect (Chiamate)"
     },
-    "storage": { 
-      "title": "SafeDemm (Archiviazione e dati)", 
-      "description": "Gestisci archiviazione e uso rete" 
+    "storage": {
+      "title": "SafeDemm (Archiviazione e dati)",
+      "description": "Gestisci archiviazione e uso rete"
     },
-    "appLanguage": { 
-      "title": "App Language (Lingua app)", 
-      "description": "Scegli la lingua dell'app TellDemm" 
+    "appLanguage": {
+      "title": "App Language (Lingua app)",
+      "description": "Scegli la lingua dell'app TellDemm"
     },
-    "help": { 
-      "title": "DemmHelp (Aiuto)", 
-      "description": "Centro assistenza, contattaci, Info app" 
+    "help": {
+      "title": "DemmHelp (Aiuto)",
+      "description": "Centro assistenza, contattaci, Info app"
     },
-    "updates": { 
-      "title": "DemmUpdate (Aggiornamenti app)", 
-      "description": "Controlla aggiornamenti e abilita auto-aggiornamento" 
+    "updates": {
+      "title": "DemmUpdate (Aggiornamenti app)",
+      "description": "Controlla aggiornamenti e abilita auto-aggiornamento"
     },
-    "invite": { 
-      "title": "SpreadDemm (Invita un amico)", 
-      "description": "Condividi l'app TellDemm con la tua DemmList (Contatti)" 
+    "invite": {
+      "title": "SpreadDemm (Invita un amico)",
+      "description": "Condividi l'app TellDemm con la tua DemmList (Contatti)"
     },
     "logout": {
       "title": "Log Out (Disconnetti)",
@@ -125,7 +126,8 @@
       "updateAvailable": "Aggiornamento disponibile: {{version}}",
       "error": "Impossibile verificare gli aggiornamenti. Riprova più tardi."
     }
-  },"accountPage": {
+  },
+  "accountPage": {
     "title": "Account",
     "securityNotifications": "Notifiche di sicurezza",
     "passkeys": "Passkey",
@@ -142,34 +144,35 @@
       "cancel": "Annulla",
       "log": "Finestra di eliminazione account aperta"
     }
-  }, "accessibility": {
-  "title": "Accessibilità",
-  "groups": {
-    "displayMotion": "Schermo e movimento",
-    "interaction": "Interazione"
   },
-  "increaseContrast": {
-    "title": "Aumenta il contrasto",
-    "desc": "Scurisci i colori principali per migliorare la leggibilità in modalità chiara."
+  "accessibility": {
+    "title": "Accessibilità",
+    "groups": {
+      "displayMotion": "Schermo e movimento",
+      "interaction": "Interazione"
+    },
+    "increaseContrast": {
+      "title": "Aumenta il contrasto",
+      "desc": "Scurisci i colori principali per migliorare la leggibilità in modalità chiara."
+    },
+    "reduceMotion": {
+      "title": "Riduci i movimenti",
+      "desc": "Riduci adesivi animati, GIF e transizioni."
+    },
+    "largeText": {
+      "title": "Testo grande",
+      "desc": "Aumenta la dimensione del carattere di sistema per una lettura più agevole."
+    },
+    "simpleAnimations": {
+      "title": "Animazioni semplificate",
+      "desc": "Riduci le animazioni complesse per un’interazione più fluida."
+    },
+    "grayscale": {
+      "title": "Modalità in scala di grigi",
+      "desc": "Converti tutti i colori dell’interfaccia in tonalità di grigio per ridurre l’affaticamento visivo."
+    }
   },
-  "reduceMotion": {
-    "title": "Riduci i movimenti",
-    "desc": "Riduci adesivi animati, GIF e transizioni."
-  },
-  "largeText": {
-    "title": "Testo grande",
-    "desc": "Aumenta la dimensione del carattere di sistema per una lettura più agevole."
-  },
-  "simpleAnimations": {
-    "title": "Animazioni semplificate",
-    "desc": "Riduci le animazioni complesse per un’interazione più fluida."
-  },
-  "grayscale": {
-    "title": "Modalità in scala di grigi",
-    "desc": "Converti tutti i colori dell’interfaccia in tonalità di grigio per ridurre l’affaticamento visivo."
-  }
-}
-,"privacyPage": {
+  "privacyPage": {
     "title": "Privacy",
     "groups": {
       "whoCanSee": "Chi può vedere le mie info",
@@ -200,7 +203,8 @@
       "contacts": "I miei contatti",
       "nobody": "Nessuno"
     }
-  },"avatarPage": {
+  },
+  "avatarPage": {
     "title": "Crea il tuo Avatar",
     "previewAlt": "Anteprima avatar",
     "sections": {
@@ -233,7 +237,8 @@
       "saved": "Le scelte dell'avatar sono state salvate localmente.",
       "downloadError": "Download non riuscito. Riprova."
     }
-  },"notifications": {
+  },
+  "notifications": {
     "title": "Notifiche",
     "highPriority": {
       "title": "Usa notifiche ad alta priorità",
@@ -251,7 +256,8 @@
       "title": "Notifiche chiamate",
       "desc": "Impostazioni di suonerie e vibrazione"
     }
-  }, "storage": {
+  },
+  "storage": {
     "title": "Archiviazione e dati",
     "totalUsedHuman": "{{used}} MB di {{total}} MB",
     "cards": {
@@ -292,7 +298,8 @@
       "cleared": "Cancellati {{mb}} MB di cache",
       "statsReset": "Statistiche di rete reimpostate"
     }
-  },"chats": {
+  },
+  "chats": {
     "title": "Chat",
     "sections": {
       "appearance": "Aspetto",
@@ -363,7 +370,8 @@
         "done": "Backup completato"
       }
     }
-  },"profilePage": {
+  },
+  "profilePage": {
     "title": "Profilo",
     "imageAlt": "Immagine del profilo",
     "buttons": {
@@ -381,7 +389,8 @@
       "source": {
         "header": "Seleziona origine immagine",
         "camera": "Fotocamera",
-        "gallery": "Galleria"
+        "gallery": "Galleria",
+        "cancel": "Annulla"
       }
     },
     "loading": {
@@ -402,7 +411,8 @@
       "updated": "Immagine profilo aggiornata con successo!",
       "updateFailed": "Impossibile aggiornare l’immagine del profilo"
     }
-  },"footerTabs": {
+  },
+  "footerTabs": {
     "chat": "Tells (Chat)",
     "updates": "Echoes (Aggiornamenti)",
     "communities": "DemmCircles (Comunità)",
@@ -411,7 +421,8 @@
       "unreadChats": "{{count}} Tells non letti",
       "unreadUpdates": "{{count}} Echoes"
     }
-  },"socialLinks": {
+  },
+  "socialLinks": {
     "title": "Link",
     "intro": "Aggiungere link al tuo profilo aiuta i contatti a visitare facilmente gli altri tuoi profili.",
     "instagram": {
@@ -420,7 +431,8 @@
     },
     "actions": {
       "add": "Aggiungi",
-      "edit": "Modifica"
+      "edit": "Modifica",
+      "cancel": "Annulla"
     },
     "privacy": {
       "note": "Per gestire chi può vedere i tuoi link, vai a",
@@ -447,12 +459,24 @@
       "saved": "Instagram salvato con successo!",
       "saveFailed": "Impossibile aggiornare il link Instagram. Riprova."
     }
-  }, "home": {
-    "search": { "placeholder": "Chiedi o Cerca" },
-    "filters": { "all": "TUTTI", "read": "Letto", "unread": "Non letto", "groups": "DemmRoom (Gruppi)" },
-    "groupCreator": { "placeholder": "Inserisci Nome DemmRoom" },
+  },
+  "home": {
+    "search": {
+      "placeholder": "Chiedi o Cerca"
+    },
+    "filters": {
+      "all": "TUTTI",
+      "read": "Letto",
+      "unread": "Non letto",
+      "groups": "DemmRoom (Gruppi)"
+    },
+    "groupCreator": {
+      "placeholder": "Inserisci Nome DemmRoom"
+    },
     "typing": "sta digitando...",
-    "time": { "yesterday": "Ieri" },
+    "time": {
+      "yesterday": "Ieri"
+    },
     "preview": {
       "deleted": "Questo messaggio è stato eliminato",
       "encrypted": "[Crittografato]",
@@ -480,8 +504,11 @@
       "header": "Disconnetti",
       "message": "Sessione scaduta/scaduta."
     },
-    "alt": { "profile": "Profilo" }
-  },"menu": {
+    "alt": {
+      "profile": "Profilo"
+    }
+  },
+  "menu": {
     "newGroup": "Nuovo gruppo",
     "newCommunity": "Nuova community",
     "newBroadcast": "Nuova trasmissione (WIP)",
@@ -491,7 +518,8 @@
     "createChannels": "Crea canali (WIP)",
     "statusPrivacy": "Privacy stato (WIP)",
     "clearCallLogs": "Cancella registro chiamate (WIP)"
-  },"userabout": {
+  },
+  "userabout": {
     "members": "Membri",
     "group": "Gruppo",
     "groups": "Gruppi",
@@ -577,7 +605,8 @@
         "cta": "Segnala"
       }
     }
-  }, "invite": {
+  },
+  "invite": {
     "header": "Invita un amico",
     "actions": {
       "search": "Cerca contatti",
@@ -610,31 +639,32 @@
     "errors": {
       "shareFailed": "Impossibile aprire il foglio di condivisione."
     }
-  },"community": {
-     "manageGroups": {
-    "title": "Gestisci gruppi",
-    "groups": "gruppi",
-    "createNew": "Crea nuovo gruppo",
-    "addExisting": "Aggiungi gruppi esistenti",
-    "info": "I membri possono suggerire gruppi esistenti per l’approvazione dell’admin e aggiungere nuovi gruppi direttamente. Visualizza in",
-    "settingsLink": "Impostazioni della community",
-    "listHeader": "Gruppi in questa community",
-    "loading": "Caricamento gruppi...",
-    "empty": "Nessun gruppo trovato per questa community",
-    "members": "membri",
-    "unnamedGroup": "Gruppo senza nome",
-    "remove": {
-      "header": "Rimuovi gruppo dalla community",
-      "message": "Vuoi rimuovere questo gruppo dalla community? Il gruppo rimarrà ma non farà più parte della community.",
-      "alsoRemoveMembers": "Rimuovi anche i membri di questo gruppo dalla community e dal gruppo",
-      "cta": "Rimuovi",
-      "aria": "Rimuovi gruppo dalla community"
-    },
-    "toasts": {
-      "removed": "Gruppo rimosso dalla community e membri aggiornati",
-      "removeFailed": "Impossibile rimuovere il gruppo. Riprova."
-    }
   },
+  "community": {
+    "manageGroups": {
+      "title": "Gestisci gruppi",
+      "groups": "gruppi",
+      "createNew": "Crea nuovo gruppo",
+      "addExisting": "Aggiungi gruppi esistenti",
+      "info": "I membri possono suggerire gruppi esistenti per l’approvazione dell’admin e aggiungere nuovi gruppi direttamente. Visualizza in",
+      "settingsLink": "Impostazioni della community",
+      "listHeader": "Gruppi in questa community",
+      "loading": "Caricamento gruppi...",
+      "empty": "Nessun gruppo trovato per questa community",
+      "members": "membri",
+      "unnamedGroup": "Gruppo senza nome",
+      "remove": {
+        "header": "Rimuovi gruppo dalla community",
+        "message": "Vuoi rimuovere questo gruppo dalla community? Il gruppo rimarrà ma non farà più parte della community.",
+        "alsoRemoveMembers": "Rimuovi anche i membri di questo gruppo dalla community e dal gruppo",
+        "cta": "Rimuovi",
+        "aria": "Rimuovi gruppo dalla community"
+      },
+      "toasts": {
+        "removed": "Gruppo rimosso dalla community e membri aggiornati",
+        "removeFailed": "Impossibile rimuovere il gruppo. Riprova."
+      }
+    },
     "title": "Comunità",
     "actions": {
       "qr": "Apri azioni QR",
@@ -644,10 +674,10 @@
     "unnamedCommunity": "Comunità senza nome",
     "viewAll": "Vedi tutto",
     "groupType": {
-    "normal": "Gruppo normale",
-    "announcement": "Gruppo annunci",
-    "general": "Gruppo generale"
-  },
+      "normal": "Gruppo normale",
+      "announcement": "Gruppo annunci",
+      "general": "Gruppo generale"
+    },
     "newGroup": {
       "header": "Nuovo gruppo",
       "placeholder": "Nome del gruppo",
@@ -656,7 +686,8 @@
     "toasts": {
       "groupCreated": "Gruppo creato"
     }
-  },"community_menu_component": {
+  },
+  "community_menu_component": {
     "info": "Info comunità",
     "invite": "Invita membri",
     "settings": "Impostazioni comunità"
@@ -670,7 +701,8 @@
     "communityLabel": "Comunità:",
     "joinNote": "Unendoti diventi subito un membro.",
     "joinCta": "Unisciti al gruppo"
-  },"add_existing_groups_page": {
+  },
+  "add_existing_groups_page": {
     "header": "Aggiungi gruppi esistenti",
     "actions": {
       "search": "Cerca gruppi",

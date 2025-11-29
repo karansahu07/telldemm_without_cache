@@ -20,7 +20,8 @@
       "invalid": "Please enter a valid email address.",
       "maxlength": "Email is too long (maximum 254 characters)."
     }
-  },"helpPage": {
+  },
+  "helpPage": {
     "title": "Help",
     "helpCenter": {
       "title": "Help Centre",
@@ -46,49 +47,49 @@
   },
   "settingsPage": {
     "title": "DemmDesk (Settings)",
-    "account": { 
-      "title": "MyTell (Account)", 
-      "description": "TellShield, security, change number" 
+    "account": {
+      "title": "MyTell (Account)",
+      "description": "TellShield, security, change number"
     },
-    "privacy": { 
-      "title": "TellShield (Privacy)", 
-      "description": "Control your TellShield settings" 
+    "privacy": {
+      "title": "TellShield (Privacy)",
+      "description": "Control your TellShield settings"
     },
-    "avatar": { 
-      "title": "TellFace (Avatar)", 
-      "description": "Change your TellFace" 
+    "avatar": {
+      "title": "TellFace (Avatar)",
+      "description": "Change your TellFace"
     },
-    "chats": { 
-      "title": "Tells (Chats)", 
-      "description": "Theme, wallpaper, SafeDemm" 
+    "chats": {
+      "title": "Tells (Chats)",
+      "description": "Theme, wallpaper, SafeDemm"
     },
-    "accessibility": { 
-      "title": "Accessibility", 
-      "description": "Adjust text size and display options" 
+    "accessibility": {
+      "title": "Accessibility",
+      "description": "Adjust text size and display options"
     },
-    "notifications": { 
-      "title": "TellAlerts (Notifications)", 
-      "description": "Manage Tell, DemmRoom and Connect alerts" 
+    "notifications": {
+      "title": "TellAlerts (Notifications)",
+      "description": "Manage Tell, DemmRoom and Connect alerts"
     },
-    "storage": { 
-      "title": "SafeDemm (Storage & Data)", 
-      "description": "Manage storage and network usage" 
+    "storage": {
+      "title": "SafeDemm (Storage & Data)",
+      "description": "Manage storage and network usage"
     },
-    "appLanguage": { 
-      "title": "App Language", 
-      "description": "Choose TellDemm app language" 
+    "appLanguage": {
+      "title": "App Language",
+      "description": "Choose TellDemm app language"
     },
-    "help": { 
-      "title": "DemmHelp (Help)", 
-      "description": "Help Centre, contact us, App Info" 
+    "help": {
+      "title": "DemmHelp (Help)",
+      "description": "Help Centre, contact us, App Info"
     },
-    "updates": { 
-      "title": "DemmUpdate (App Updates)", 
-      "description": "Check for updates and enable auto-update" 
+    "updates": {
+      "title": "DemmUpdate (App Updates)",
+      "description": "Check for updates and enable auto-update"
     },
-    "invite": { 
-      "title": "SpreadDemm (Invite a Friend)", 
-      "description": "Share TellDemm app with your DemmList" 
+    "invite": {
+      "title": "SpreadDemm (Invite a Friend)",
+      "description": "Share TellDemm app with your DemmList"
     },
     "logout": {
       "title": "Log Out",
@@ -102,7 +103,6 @@
     },
     "defaultStatus": "Available"
   },
-  
   "appUpdates": {
     "title": "App Updates",
     "version": "Version",
@@ -144,34 +144,35 @@
       "cancel": "Cancel",
       "log": "Delete account modal opened"
     }
-  },"accessibility": {
-  "title": "Accessibility",
-  "groups": {
-    "displayMotion": "Display & motion",
-    "interaction": "Interaction"
   },
-  "increaseContrast": {
-    "title": "Increase contrast",
-    "desc": "Darken key colours to improve readability in light mode."
+  "accessibility": {
+    "title": "Accessibility",
+    "groups": {
+      "displayMotion": "Display & motion",
+      "interaction": "Interaction"
+    },
+    "increaseContrast": {
+      "title": "Increase contrast",
+      "desc": "Darken key colours to improve readability in light mode."
+    },
+    "reduceMotion": {
+      "title": "Reduce motion",
+      "desc": "Minimise animated stickers, GIFs and transitions."
+    },
+    "largeText": {
+      "title": "Large text",
+      "desc": "Increase system font scale for easier reading."
+    },
+    "simpleAnimations": {
+      "title": "Simplified animations",
+      "desc": "Reduce complex animations for easier interaction."
+    },
+    "grayscale": {
+      "title": "Grayscale mode",
+      "desc": "Convert all interface colours to shades of grey to reduce visual strain."
+    }
   },
-  "reduceMotion": {
-    "title": "Reduce motion",
-    "desc": "Minimise animated stickers, GIFs and transitions."
-  },
-  "largeText": {
-    "title": "Large text",
-    "desc": "Increase system font scale for easier reading."
-  },
-  "simpleAnimations": {
-    "title": "Simplified animations",
-    "desc": "Reduce complex animations for easier interaction."
-  },
-  "grayscale": {
-    "title": "Grayscale mode",
-    "desc": "Convert all interface colours to shades of grey to reduce visual strain."
-  }
-}
-,"privacyPage": {
+  "privacyPage": {
     "title": "Privacy",
     "groups": {
       "whoCanSee": "Who can see my info",
@@ -202,7 +203,8 @@
       "contacts": "My Contacts",
       "nobody": "Nobody"
     }
-  },"avatarPage": {
+  },
+  "avatarPage": {
     "title": "Create your Avatar",
     "previewAlt": "Avatar preview",
     "sections": {
@@ -235,7 +237,8 @@
       "saved": "Avatar choices saved locally.",
       "downloadError": "Download failed. Please try again."
     }
-  }, "notifications": {
+  },
+  "notifications": {
     "title": "Notifications",
     "highPriority": {
       "title": "Use high priority notifications",
@@ -253,7 +256,8 @@
       "title": "Call notifications",
       "desc": "Ringtones and vibration settings"
     }
-  },"storage": {
+  },
+  "storage": {
     "title": "Storage & Data",
     "totalUsedHuman": "{{used}} MB of {{total}} MB",
     "cards": {
@@ -294,7 +298,8 @@
       "cleared": "Cleared {{mb}} MB cache",
       "statsReset": "Network statistics reset"
     }
-  },"chats": {
+  },
+  "chats": {
     "title": "Chats",
     "sections": {
       "appearance": "Appearance",
@@ -365,7 +370,8 @@
         "done": "Backup completed"
       }
     }
-  }, "profilePage": {
+  },
+  "profilePage": {
     "title": "Profile",
     "imageAlt": "Profile Image",
     "buttons": {
@@ -383,7 +389,8 @@
       "source": {
         "header": "Select Image Source",
         "camera": "Camera",
-        "gallery": "Gallery"
+        "gallery": "Gallery",
+        "cancel": "Cancel"
       }
     },
     "loading": {
@@ -404,7 +411,8 @@
       "updated": "Profile picture updated successfully!",
       "updateFailed": "Failed to update profile picture"
     }
-  },"footerTabs": {
+  },
+  "footerTabs": {
     "chat": "Tells (Chat)",
     "updates": "Echoes (Updates)",
     "communities": "DemmCircles (Communities)",
@@ -413,7 +421,8 @@
       "unreadChats": "{{count}} unread Tells",
       "unreadUpdates": "{{count}} Echoes"
     }
-  }, "socialLinks": {
+  },
+  "socialLinks": {
     "title": "Links",
     "intro": "Adding links to your profile helps your contacts easily visit your other profiles.",
     "instagram": {
@@ -422,7 +431,8 @@
     },
     "actions": {
       "add": "Add",
-      "edit": "Edit"
+      "edit": "Edit",
+      "cancel": "Cancel"
     },
     "privacy": {
       "note": "To manage who can see your links, go to",
@@ -449,12 +459,24 @@
       "saved": "Instagram saved successfully!",
       "saveFailed": "Failed to update Instagram link. Try again."
     }
-  }, "home": {
-    "search": { "placeholder": "Ask or Search" },
-    "filters": { "all": "ALL", "read": "Read", "unread": "Unread", "groups": "DemmRooms (Groups)" },
-    "groupCreator": { "placeholder": "Enter DemmRoom (Group) Name" },
+  },
+  "home": {
+    "search": {
+      "placeholder": "Ask or Search"
+    },
+    "filters": {
+      "all": "ALL",
+      "read": "Read",
+      "unread": "Unread",
+      "groups": "DemmRooms (Groups)"
+    },
+    "groupCreator": {
+      "placeholder": "Enter DemmRoom (Group) Name"
+    },
     "typing": "typing...",
-    "time": { "yesterday": "Yesterday" },
+    "time": {
+      "yesterday": "Yesterday"
+    },
     "preview": {
       "deleted": "This message was deleted",
       "encrypted": "[Encrypted]",
@@ -482,8 +504,11 @@
       "header": "Logout",
       "message": "Session timed out/expired."
     },
-    "alt": { "profile": "Profile" }
-  },"menu": {
+    "alt": {
+      "profile": "Profile"
+    }
+  },
+  "menu": {
     "newGroup": "New group",
     "newCommunity": "New Community",
     "newBroadcast": "New broadcast (WIP)",
@@ -493,7 +518,8 @@
     "createChannels": "Create channels (WIP)",
     "statusPrivacy": "Status Privacy (WIP)",
     "clearCallLogs": "Clear call logs (WIP)"
-  },"userabout": {
+  },
+  "userabout": {
     "members": "Members",
     "group": "Group",
     "groups": "Groups",
@@ -579,7 +605,8 @@
         "cta": "Report"
       }
     }
-  },"invite": {
+  },
+  "invite": {
     "header": "Invite a Friend",
     "actions": {
       "search": "Search contacts",
@@ -612,31 +639,32 @@
     "errors": {
       "shareFailed": "Could not open share sheet."
     }
-  }, "community": {
-    "manageGroups": {
-    "title": "Manage groups",
-    "groups": "groups",
-    "createNew": "Create new group",
-    "addExisting": "Add existing groups",
-    "info": "Members can suggest existing groups for admin approval and add new groups directly. View in",
-    "settingsLink": "Community settings",
-    "listHeader": "Groups in this community",
-    "loading": "Loading groups...",
-    "empty": "No groups found for this community",
-    "members": "members",
-    "unnamedGroup": "Unnamed group",
-    "remove": {
-      "header": "Remove group from community",
-      "message": "Do you want to remove this group from the community? The group will remain but will no longer belong to the community.",
-      "alsoRemoveMembers": "Also remove members of this group from the community and from the group",
-      "cta": "Remove",
-      "aria": "Remove group from community"
-    },
-    "toasts": {
-      "removed": "Group removed from community and members updated",
-      "removeFailed": "Failed to remove group. Try again."
-    }
   },
+  "community": {
+    "manageGroups": {
+      "title": "Manage groups",
+      "groups": "groups",
+      "createNew": "Create new group",
+      "addExisting": "Add existing groups",
+      "info": "Members can suggest existing groups for admin approval and add new groups directly. View in",
+      "settingsLink": "Community settings",
+      "listHeader": "Groups in this community",
+      "loading": "Loading groups...",
+      "empty": "No groups found for this community",
+      "members": "members",
+      "unnamedGroup": "Unnamed group",
+      "remove": {
+        "header": "Remove group from community",
+        "message": "Do you want to remove this group from the community? The group will remain but will no longer belong to the community.",
+        "alsoRemoveMembers": "Also remove members of this group from the community and from the group",
+        "cta": "Remove",
+        "aria": "Remove group from community"
+      },
+      "toasts": {
+        "removed": "Group removed from community and members updated",
+        "removeFailed": "Failed to remove group. Try again."
+      }
+    },
     "title": "Communities",
     "actions": {
       "qr": "Open QR actions",
@@ -646,10 +674,10 @@
     "unnamedCommunity": "Unnamed Community",
     "viewAll": "View all",
     "groupType": {
-    "normal": "Normal Group",
-    "announcement": "Announcement Group",
-    "general": "General Group"
-  },
+      "normal": "Normal Group",
+      "announcement": "Announcement Group",
+      "general": "General Group"
+    },
     "newGroup": {
       "header": "New Group",
       "placeholder": "Group Name",
@@ -658,7 +686,8 @@
     "toasts": {
       "groupCreated": "Group created"
     }
-  }, "community_menu_component": {
+  },
+  "community_menu_component": {
     "info": "Community info",
     "invite": "Invite members",
     "settings": "Community settings"
@@ -672,7 +701,8 @@
     "communityLabel": "Community:",
     "joinNote": "By joining you become a member immediately.",
     "joinCta": "Join Group"
-  },"add_existing_groups_page": {
+  },
+  "add_existing_groups_page": {
     "header": "Add existing groups",
     "actions": {
       "search": "Search groups",

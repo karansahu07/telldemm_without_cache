@@ -39,56 +39,57 @@
       "title": "アプリ情報",
       "description": "バージョン、法的および技術的な詳細。"
     }
-  },"common": {
+  },
+  "common": {
     "ok": "OK",
     "cancel": "キャンセル",
     "logout": "ログアウト"
   },
   "settingsPage": {
     "title": "DemmDesk (設定)",
-    "account": { 
-      "title": "MyTell (アカウント)", 
-      "description": "TellShield (プライバシー)、セキュリティ、番号変更" 
+    "account": {
+      "title": "MyTell (アカウント)",
+      "description": "TellShield (プライバシー)、セキュリティ、番号変更"
     },
-    "privacy": { 
-      "title": "TellShield (プライバシー)", 
-      "description": "TellShield (プライバシー) 設定を制御する" 
+    "privacy": {
+      "title": "TellShield (プライバシー)",
+      "description": "TellShield (プライバシー) 設定を制御する"
     },
-    "avatar": { 
-      "title": "TellFace (プロフィール写真)", 
-      "description": "TellFace (プロフィール写真) を変更する" 
+    "avatar": {
+      "title": "TellFace (プロフィール写真)",
+      "description": "TellFace (プロフィール写真) を変更する"
     },
-    "chats": { 
-      "title": "Tells (チャット)", 
-      "description": "テーマ、壁紙、SafeDemm (バックアップ)" 
+    "chats": {
+      "title": "Tells (チャット)",
+      "description": "テーマ、壁紙、SafeDemm (バックアップ)"
     },
-    "accessibility": { 
-      "title": "Accessibility (アクセシビリティ)", 
-      "description": "テキストサイズと表示オプションを調整する" 
+    "accessibility": {
+      "title": "Accessibility (アクセシビリティ)",
+      "description": "テキストサイズと表示オプションを調整する"
     },
-    "notifications": { 
-      "title": "TellAlerts (通知)", 
-      "description": "Tell (メッセージ)、DemmRoom (グループ)、Connect (通話) のアラートを管理する" 
+    "notifications": {
+      "title": "TellAlerts (通知)",
+      "description": "Tell (メッセージ)、DemmRoom (グループ)、Connect (通話) のアラートを管理する"
     },
-    "storage": { 
-      "title": "SafeDemm (ストレージとデータ)", 
-      "description": "ストレージとネットワーク使用量を管理する" 
+    "storage": {
+      "title": "SafeDemm (ストレージとデータ)",
+      "description": "ストレージとネットワーク使用量を管理する"
     },
-    "appLanguage": { 
-      "title": "App Language (アプリ言語)", 
-      "description": "TellDemm アプリの言語を選択する" 
+    "appLanguage": {
+      "title": "App Language (アプリ言語)",
+      "description": "TellDemm アプリの言語を選択する"
     },
-    "help": { 
-      "title": "DemmHelp (ヘルプ)", 
-      "description": "ヘルプセンター、お問い合わせ、アプリ情報" 
+    "help": {
+      "title": "DemmHelp (ヘルプ)",
+      "description": "ヘルプセンター、お問い合わせ、アプリ情報"
     },
-    "updates": { 
-      "title": "DemmUpdate (アプリ更新)", 
-      "description": "更新を確認し、オートアップデートを有効にする" 
+    "updates": {
+      "title": "DemmUpdate (アプリ更新)",
+      "description": "更新を確認し、オートアップデートを有効にする"
     },
-    "invite": { 
-      "title": "SpreadDemm (友達を招待)", 
-      "description": "TellDemm アプリを DemmList (連絡先) と共有する" 
+    "invite": {
+      "title": "SpreadDemm (友達を招待)",
+      "description": "TellDemm アプリを DemmList (連絡先) と共有する"
     },
     "logout": {
       "title": "Log Out (ログアウト)",
@@ -125,7 +126,8 @@
       "updateAvailable": "アップデートあり: {{version}}",
       "error": "更新を確認できませんでした。後でもう一度お試しください。"
     }
-  },"accountPage": {
+  },
+  "accountPage": {
     "title": "アカウント",
     "securityNotifications": "セキュリティ通知",
     "passkeys": "パスキー",
@@ -142,34 +144,35 @@
       "cancel": "キャンセル",
       "log": "アカウント削除モーダルが開きました"
     }
-  },"accessibility": {
-  "title": "アクセシビリティ",
-  "groups": {
-    "displayMotion": "表示と動き",
-    "interaction": "操作"
   },
-  "increaseContrast": {
-    "title": "コントラストを強調",
-    "desc": "ライトモードでの読みやすさを向上させるために、主要な色を濃くします。"
+  "accessibility": {
+    "title": "アクセシビリティ",
+    "groups": {
+      "displayMotion": "表示と動き",
+      "interaction": "操作"
+    },
+    "increaseContrast": {
+      "title": "コントラストを強調",
+      "desc": "ライトモードでの読みやすさを向上させるために、主要な色を濃くします。"
+    },
+    "reduceMotion": {
+      "title": "動きを減らす",
+      "desc": "アニメーションステッカー、GIF、トランジションを最小限にします。"
+    },
+    "largeText": {
+      "title": "大きな文字",
+      "desc": "読みやすくするためにシステムフォントサイズを大きくします。"
+    },
+    "simpleAnimations": {
+      "title": "簡易アニメーション",
+      "desc": "操作しやすくするために複雑なアニメーションを減らします。"
+    },
+    "grayscale": {
+      "title": "グレースケールモード",
+      "desc": "目の疲れを軽減するため、すべてのインターフェイスの色をグレーに変換します。"
+    }
   },
-  "reduceMotion": {
-    "title": "動きを減らす",
-    "desc": "アニメーションステッカー、GIF、トランジションを最小限にします。"
-  },
-  "largeText": {
-    "title": "大きな文字",
-    "desc": "読みやすくするためにシステムフォントサイズを大きくします。"
-  },
-  "simpleAnimations": {
-    "title": "簡易アニメーション",
-    "desc": "操作しやすくするために複雑なアニメーションを減らします。"
-  },
-  "grayscale": {
-    "title": "グレースケールモード",
-    "desc": "目の疲れを軽減するため、すべてのインターフェイスの色をグレーに変換します。"
-  }
-}
-, "privacyPage": {
+  "privacyPage": {
     "title": "プライバシー",
     "groups": {
       "whoCanSee": "誰が自分の情報を見られるか",
@@ -200,7 +203,8 @@
       "contacts": "自分の連絡先",
       "nobody": "誰も"
     }
-  },"avatarPage": {
+  },
+  "avatarPage": {
     "title": "アバターを作成",
     "previewAlt": "アバターのプレビュー",
     "sections": {
@@ -233,7 +237,8 @@
       "saved": "アバターの選択がローカルに保存されました。",
       "downloadError": "ダウンロードに失敗しました。もう一度お試しください。"
     }
-  }, "notifications": {
+  },
+  "notifications": {
     "title": "通知",
     "highPriority": {
       "title": "高優先度通知を使用",
@@ -251,7 +256,8 @@
       "title": "通話通知",
       "desc": "着信音とバイブレーションの設定"
     }
-  },"storage": {
+  },
+  "storage": {
     "title": "ストレージとデータ",
     "totalUsedHuman": "{{used}} MB / {{total}} MB",
     "cards": {
@@ -292,7 +298,8 @@
       "cleared": "{{mb}} MB のキャッシュをクリアしました",
       "statsReset": "ネットワーク統計がリセットされました"
     }
-  },"chats": {
+  },
+  "chats": {
     "title": "チャット",
     "sections": {
       "appearance": "外観",
@@ -363,7 +370,8 @@
         "done": "バックアップ完了"
       }
     }
-  },"profilePage": {
+  },
+  "profilePage": {
     "title": "プロフィール",
     "imageAlt": "プロフィール画像",
     "buttons": {
@@ -381,7 +389,8 @@
       "source": {
         "header": "画像ソースを選択",
         "camera": "カメラ",
-        "gallery": "ギャラリー"
+        "gallery": "ギャラリー",
+        "cancel": "キャンセル"
       }
     },
     "loading": {
@@ -402,7 +411,8 @@
       "updated": "プロフィール画像が正常に更新されました！",
       "updateFailed": "プロフィール画像の更新に失敗しました"
     }
-  },"footerTabs": {
+  },
+  "footerTabs": {
     "chat": "Tells (チャット)",
     "updates": "Echoes (更新)",
     "communities": "DemmCircles (コミュニティ)",
@@ -411,7 +421,8 @@
       "unreadChats": "{{count}} 未読 Tells",
       "unreadUpdates": "{{count}} Echoes"
     }
-  },"socialLinks": {
+  },
+  "socialLinks": {
     "title": "リンク",
     "intro": "プロフィールにリンクを追加すると、連絡先が他のプロフィールに簡単にアクセスできます。",
     "instagram": {
@@ -420,7 +431,8 @@
     },
     "actions": {
       "add": "追加",
-      "edit": "編集"
+      "edit": "編集",
+      "cancel": "キャンセル"
     },
     "privacy": {
       "note": "リンクの公開範囲を管理するには、",
@@ -447,12 +459,24 @@
       "saved": "Instagram を保存しました！",
       "saveFailed": "Instagram リンクの更新に失敗しました。もう一度お試しください。"
     }
-  }, "home": {
-    "search": { "placeholder": "質問または検索" },
-    "filters": { "all": "すべて", "read": "既読", "unread": "未読", "groups": "DemmRoom (グループ)" },
-    "groupCreator": { "placeholder": "DemmRoom名を入力" },
+  },
+  "home": {
+    "search": {
+      "placeholder": "質問または検索"
+    },
+    "filters": {
+      "all": "すべて",
+      "read": "既読",
+      "unread": "未読",
+      "groups": "DemmRoom (グループ)"
+    },
+    "groupCreator": {
+      "placeholder": "DemmRoom名を入力"
+    },
     "typing": "入力中...",
-    "time": { "yesterday": "昨日" },
+    "time": {
+      "yesterday": "昨日"
+    },
     "preview": {
       "deleted": "このメッセージは削除されました",
       "encrypted": "[暗号化済み]",
@@ -480,8 +504,11 @@
       "header": "ログアウト",
       "message": "セッションがタイムアウト/期限切れです。"
     },
-    "alt": { "profile": "プロフィール" }
-  },"menu": {
+    "alt": {
+      "profile": "プロフィール"
+    }
+  },
+  "menu": {
     "newGroup": "新しいグループ",
     "newCommunity": "新しいコミュニティ",
     "newBroadcast": "新しいブロードキャスト (WIP)",
@@ -491,7 +518,8 @@
     "createChannels": "チャンネルを作成 (WIP)",
     "statusPrivacy": "ステータスのプライバシー (WIP)",
     "clearCallLogs": "通話履歴を消去 (WIP)"
-  },"userabout": {
+  },
+  "userabout": {
     "members": "メンバー",
     "group": "グループ",
     "groups": "グループ",
@@ -577,7 +605,8 @@
         "cta": "報告"
       }
     }
-  },"invite": {
+  },
+  "invite": {
     "header": "友達を招待",
     "actions": {
       "search": "連絡先を検索",
@@ -610,31 +639,32 @@
     "errors": {
       "shareFailed": "共有シートを開けませんでした。"
     }
-  },"community": {
-    "manageGroups": {
-    "title": "グループを管理",
-    "groups": "グループ",
-    "createNew": "新しいグループを作成",
-    "addExisting": "既存のグループを追加",
-    "info": "メンバーは既存のグループを管理者承認用に提案でき、新しいグループを直接追加できます。表示:",
-    "settingsLink": "コミュニティ設定",
-    "listHeader": "このコミュニティのグループ",
-    "loading": "グループを読み込み中...",
-    "empty": "このコミュニティにはグループが見つかりません",
-    "members": "メンバー",
-    "unnamedGroup": "名前のないグループ",
-    "remove": {
-      "header": "コミュニティからグループを削除",
-      "message": "このグループをコミュニティから削除しますか？ グループは残りますが、コミュニティには属しません。",
-      "alsoRemoveMembers": "このグループのメンバーもコミュニティとグループから削除する",
-      "cta": "削除",
-      "aria": "コミュニティからグループを削除"
-    },
-    "toasts": {
-      "removed": "グループがコミュニティから削除され、メンバーが更新されました",
-      "removeFailed": "グループの削除に失敗しました。もう一度お試しください。"
-    }
   },
+  "community": {
+    "manageGroups": {
+      "title": "グループを管理",
+      "groups": "グループ",
+      "createNew": "新しいグループを作成",
+      "addExisting": "既存のグループを追加",
+      "info": "メンバーは既存のグループを管理者承認用に提案でき、新しいグループを直接追加できます。表示:",
+      "settingsLink": "コミュニティ設定",
+      "listHeader": "このコミュニティのグループ",
+      "loading": "グループを読み込み中...",
+      "empty": "このコミュニティにはグループが見つかりません",
+      "members": "メンバー",
+      "unnamedGroup": "名前のないグループ",
+      "remove": {
+        "header": "コミュニティからグループを削除",
+        "message": "このグループをコミュニティから削除しますか？ グループは残りますが、コミュニティには属しません。",
+        "alsoRemoveMembers": "このグループのメンバーもコミュニティとグループから削除する",
+        "cta": "削除",
+        "aria": "コミュニティからグループを削除"
+      },
+      "toasts": {
+        "removed": "グループがコミュニティから削除され、メンバーが更新されました",
+        "removeFailed": "グループの削除に失敗しました。もう一度お試しください。"
+      }
+    },
     "title": "コミュニティ",
     "actions": {
       "qr": "QRアクションを開く",
@@ -643,11 +673,11 @@
     "newCommunity": "新しいコミュニティ",
     "unnamedCommunity": "名前のないコミュニティ",
     "viewAll": "すべて表示",
-   "groupType": {
-    "normal": "通常グループ",
-    "announcement": "お知らせグループ",
-    "general": "一般グループ"
-  },
+    "groupType": {
+      "normal": "通常グループ",
+      "announcement": "お知らせグループ",
+      "general": "一般グループ"
+    },
     "newGroup": {
       "header": "新しいグループ",
       "placeholder": "グループ名",
@@ -656,7 +686,8 @@
     "toasts": {
       "groupCreated": "グループが作成されました"
     }
-  },"community_menu_component": {
+  },
+  "community_menu_component": {
     "info": "コミュニティ情報",
     "invite": "メンバーを招待",
     "settings": "コミュニティ設定"
@@ -670,7 +701,8 @@
     "communityLabel": "コミュニティ:",
     "joinNote": "参加するとすぐにメンバーになります。",
     "joinCta": "グループに参加"
-  },"add_existing_groups_page": {
+  },
+  "add_existing_groups_page": {
     "header": "既存のグループを追加",
     "actions": {
       "search": "グループを検索",

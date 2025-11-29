@@ -45,51 +45,51 @@
     "cancel": "إلغاء",
     "logout": "تسجيل الخروج"
   },
- "settingsPage": {
+  "settingsPage": {
     "title": "DemmDesk (إعدادات)",
-    "account": { 
-      "title": "MyTell (حسابي)", 
-      "description": "TellShield (الخصوصية)، الأمان، تغيير الرقم" 
+    "account": {
+      "title": "MyTell (حسابي)",
+      "description": "TellShield (الخصوصية)، الأمان، تغيير الرقم"
     },
-    "privacy": { 
-      "title": "TellShield (الخصوصية)", 
-      "description": "السيطرة على إعدادات TellShield (الخصوصية) الخاصة بك" 
+    "privacy": {
+      "title": "TellShield (الخصوصية)",
+      "description": "السيطرة على إعدادات TellShield (الخصوصية) الخاصة بك"
     },
-    "avatar": { 
-      "title": "TellFace (صورة الملف الشخصي)", 
-      "description": "غيّر TellFace (صورة الملف الشخصي) الخاصة بك" 
+    "avatar": {
+      "title": "TellFace (صورة الملف الشخصي)",
+      "description": "غيّر TellFace (صورة الملف الشخصي) الخاصة بك"
     },
-    "chats": { 
-      "title": "Tells (محادثات)", 
-      "description": "الثيم، خلفية الشاشة، SafeDemm (النسخ الاحتياطي)" 
+    "chats": {
+      "title": "Tells (محادثات)",
+      "description": "الثيم، خلفية الشاشة، SafeDemm (النسخ الاحتياطي)"
     },
-    "accessibility": { 
-      "title": "Accessibility (إمكانية الوصول)", 
-      "description": "ضبط حجم النص وخيارات العرض" 
+    "accessibility": {
+      "title": "Accessibility (إمكانية الوصول)",
+      "description": "ضبط حجم النص وخيارات العرض"
     },
-    "notifications": { 
-      "title": "TellAlerts (إشعارات)", 
-      "description": "إدارة إشعارات Tell (الرسائل)، DemmRoom (المحادثات الجماعية) و Connect (المكالمات)" 
+    "notifications": {
+      "title": "TellAlerts (إشعارات)",
+      "description": "إدارة إشعارات Tell (الرسائل)، DemmRoom (المحادثات الجماعية) و Connect (المكالمات)"
     },
-    "storage": { 
-      "title": "SafeDemm (التخزين والبيانات)", 
-      "description": "إدارة التخزين واستخدام الشبكة" 
+    "storage": {
+      "title": "SafeDemm (التخزين والبيانات)",
+      "description": "إدارة التخزين واستخدام الشبكة"
     },
-    "appLanguage": { 
-      "title": "App Language (لغة التطبيق)", 
-      "description": "اختر لغة تطبيق TellDemm" 
+    "appLanguage": {
+      "title": "App Language (لغة التطبيق)",
+      "description": "اختر لغة تطبيق TellDemm"
     },
-    "help": { 
-      "title": "DemmHelp (المساعدة)", 
-      "description": "مركز المساعدة، اتصل بنا، معلومات التطبيق" 
+    "help": {
+      "title": "DemmHelp (المساعدة)",
+      "description": "مركز المساعدة، اتصل بنا، معلومات التطبيق"
     },
-    "updates": { 
-      "title": "DemmUpdate (تحديثات التطبيق)", 
-      "description": "تحقق من التحديثات وفعّل التحديث التلقائي" 
+    "updates": {
+      "title": "DemmUpdate (تحديثات التطبيق)",
+      "description": "تحقق من التحديثات وفعّل التحديث التلقائي"
     },
-    "invite": { 
-      "title": "SpreadDemm (دعوة صديق)", 
-      "description": "شارك تطبيق TellDemm مع قائمة DemmList (جهات الاتصال) الخاصة بك" 
+    "invite": {
+      "title": "SpreadDemm (دعوة صديق)",
+      "description": "شارك تطبيق TellDemm مع قائمة DemmList (جهات الاتصال) الخاصة بك"
     },
     "logout": {
       "title": "Log Out (تسجيل الخروج)",
@@ -144,34 +144,35 @@
       "cancel": "إلغاء",
       "log": "تم فتح نافذة حذف الحساب"
     }
-  },"accessibility": {
-  "title": "إمكانية الوصول",
-  "groups": {
-    "displayMotion": "العرض والحركة",
-    "interaction": "التفاعل"
   },
-  "increaseContrast": {
-    "title": "زيادة التباين",
-    "desc": "تغميق الألوان الأساسية لتحسين القراءة في الوضع الفاتح."
+  "accessibility": {
+    "title": "إمكانية الوصول",
+    "groups": {
+      "displayMotion": "العرض والحركة",
+      "interaction": "التفاعل"
+    },
+    "increaseContrast": {
+      "title": "زيادة التباين",
+      "desc": "تغميق الألوان الأساسية لتحسين القراءة في الوضع الفاتح."
+    },
+    "reduceMotion": {
+      "title": "تقليل الحركة",
+      "desc": "تقليل الملصقات المتحركة وملفات GIF والانتقالات قدر الإمكان."
+    },
+    "largeText": {
+      "title": "نص كبير",
+      "desc": "زيادة حجم الخط في النظام لتسهيل القراءة."
+    },
+    "simpleAnimations": {
+      "title": "الرسوم المتحركة المبسطة",
+      "desc": "تقليل الرسوم المتحركة المعقدة لتسهيل التفاعل."
+    },
+    "grayscale": {
+      "title": "وضع التدرج الرمادي",
+      "desc": "تحويل جميع ألوان الواجهة إلى ظلال رمادية لتقليل إجهاد العين."
+    }
   },
-  "reduceMotion": {
-    "title": "تقليل الحركة",
-    "desc": "تقليل الملصقات المتحركة وملفات GIF والانتقالات قدر الإمكان."
-  },
-  "largeText": {
-    "title": "نص كبير",
-    "desc": "زيادة حجم الخط في النظام لتسهيل القراءة."
-  },
-  "simpleAnimations": {
-    "title": "الرسوم المتحركة المبسطة",
-    "desc": "تقليل الرسوم المتحركة المعقدة لتسهيل التفاعل."
-  },
-  "grayscale": {
-    "title": "وضع التدرج الرمادي",
-    "desc": "تحويل جميع ألوان الواجهة إلى ظلال رمادية لتقليل إجهاد العين."
-  }
-}
-,"privacyPage": {
+  "privacyPage": {
     "title": "الخصوصية",
     "groups": {
       "whoCanSee": "من يمكنه رؤية معلوماتي",
@@ -202,7 +203,8 @@
       "contacts": "جهات الاتصال الخاصة بي",
       "nobody": "لا أحد"
     }
-  },"avatarPage": {
+  },
+  "avatarPage": {
     "title": "إنشاء الأفاتار الخاص بك",
     "previewAlt": "معاينة الأفاتار",
     "sections": {
@@ -235,7 +237,8 @@
       "saved": "تم حفظ خيارات الأفاتار محليًا.",
       "downloadError": "فشل التنزيل. حاول مرة أخرى."
     }
-  },"notifications": {
+  },
+  "notifications": {
     "title": "الإشعارات",
     "highPriority": {
       "title": "استخدام إشعارات أولوية عالية",
@@ -253,7 +256,8 @@
       "title": "إشعارات المكالمات",
       "desc": "إعدادات النغمات والاهتزاز"
     }
-  }, "storage": {
+  },
+  "storage": {
     "title": "التخزين والبيانات",
     "totalUsedHuman": "{{used}} ميجابايت من {{total}} ميجابايت",
     "cards": {
@@ -294,7 +298,8 @@
       "cleared": "تم مسح {{mb}} ميجابايت من التخزين المؤقت",
       "statsReset": "تمت إعادة تعيين إحصائيات الشبكة"
     }
-  },"chats": {
+  },
+  "chats": {
     "title": "الدردشات",
     "sections": {
       "appearance": "المظهر",
@@ -365,7 +370,8 @@
         "done": "اكتمل النسخ الاحتياطي"
       }
     }
-  },"profilePage": {
+  },
+  "profilePage": {
     "title": "الملف الشخصي",
     "imageAlt": "صورة الملف الشخصي",
     "buttons": {
@@ -383,7 +389,8 @@
       "source": {
         "header": "اختر مصدر الصورة",
         "camera": "الكاميرا",
-        "gallery": "المعرض"
+        "gallery": "المعرض",
+        "cancel": "إلغاء"
       }
     },
     "loading": {
@@ -405,7 +412,7 @@
       "updateFailed": "فشل في تحديث صورة الملف الشخصي"
     }
   },
-"footerTabs": {
+  "footerTabs": {
     "chat": "Tells (محادثات)",
     "updates": "Echoes (تحديثات)",
     "communities": "DemmCircles (مجتمعات)",
@@ -414,7 +421,8 @@
       "unreadChats": "{{count}} Tells غير مقروءة",
       "unreadUpdates": "{{count}} Echoes"
     }
-  },"socialLinks": {
+  },
+  "socialLinks": {
     "title": "الروابط",
     "intro": "إضافة روابط إلى ملفك الشخصي يساعد جهات الاتصال على زيارة ملفاتك الأخرى بسهولة.",
     "instagram": {
@@ -423,7 +431,8 @@
     },
     "actions": {
       "add": "إضافة",
-      "edit": "تعديل"
+      "edit": "تعديل",
+      "cancel": "إلغاء"
     },
     "privacy": {
       "note": "لإدارة من يمكنه رؤية روابطك، انتقل إلى",
@@ -450,12 +459,24 @@
       "saved": "تم حفظ إنستجرام بنجاح!",
       "saveFailed": "فشل في تحديث رابط إنستجرام. حاول مرة أخرى."
     }
-  },"home": {
-    "search": { "placeholder": "اسأل  أو ابحث" },
-    "filters": { "all": "الكل", "read": "مقروء", "unread": "غير مقروء", "groups": "المجموعات" },
-    "groupCreator": { "placeholder": "أدخل اسم المجموعة" },
+  },
+  "home": {
+    "search": {
+      "placeholder": "اسأل  أو ابحث"
+    },
+    "filters": {
+      "all": "الكل",
+      "read": "مقروء",
+      "unread": "غير مقروء",
+      "groups": "المجموعات"
+    },
+    "groupCreator": {
+      "placeholder": "أدخل اسم المجموعة"
+    },
     "typing": "يكتب...",
-    "time": { "yesterday": "أمس" },
+    "time": {
+      "yesterday": "أمس"
+    },
     "preview": {
       "deleted": "تم حذف هذه الرسالة",
       "encrypted": "[مشفرة]",
@@ -483,8 +504,11 @@
       "header": "تسجيل الخروج",
       "message": "انتهت/انتهت صلاحية الجلسة."
     },
-    "alt": { "profile": "الملف الشخصي" }
-  },"menu": {
+    "alt": {
+      "profile": "الملف الشخصي"
+    }
+  },
+  "menu": {
     "newGroup": "مجموعة جديدة",
     "newCommunity": "مجتمع جديد",
     "newBroadcast": "بث جديد (WIP)",
@@ -494,7 +518,8 @@
     "createChannels": "إنشاء قنوات (WIP)",
     "statusPrivacy": "خصوصية الحالة (WIP)",
     "clearCallLogs": "مسح سجلات المكالمات (WIP)"
-  },"userabout": {
+  },
+  "userabout": {
     "members": "الأعضاء",
     "group": "مجموعة",
     "groups": "المجموعات",
@@ -580,7 +605,8 @@
         "cta": "إبلاغ"
       }
     }
-  },"invite": {
+  },
+  "invite": {
     "header": "ادعُ صديقًا",
     "actions": {
       "search": "ابحث في جهات الاتصال",
@@ -613,31 +639,32 @@
     "errors": {
       "shareFailed": "تعذّر فتح نافذة المشاركة."
     }
-  }, "community": {
-    "manageGroups": {
-    "title": "إدارة المجموعات",
-    "groups": "المجموعات",
-    "createNew": "إنشاء مجموعة جديدة",
-    "addExisting": "إضافة مجموعات موجودة",
-    "info": "يمكن للأعضاء اقتراح مجموعات موجودة للحصول على موافقة الأدمن وإضافة مجموعات جديدة مباشرة. عرض في",
-    "settingsLink": "إعدادات المجتمع",
-    "listHeader": "المجموعات في هذا المجتمع",
-    "loading": "جارٍ تحميل المجموعات...",
-    "empty": "لم يتم العثور على مجموعات لهذا المجتمع",
-    "members": "الأعضاء",
-    "unnamedGroup": "مجموعة بدون اسم",
-    "remove": {
-      "header": "إزالة المجموعة من المجتمع",
-      "message": "هل تريد إزالة هذه المجموعة من المجتمع؟ ستبقى المجموعة ولكنها لن تنتمي بعد الآن إلى المجتمع.",
-      "alsoRemoveMembers": "إزالة أعضاء هذه المجموعة أيضًا من المجتمع ومن المجموعة",
-      "cta": "إزالة",
-      "aria": "إزالة المجموعة من المجتمع"
-    },
-    "toasts": {
-      "removed": "تمت إزالة المجموعة من المجتمع وتحديث الأعضاء",
-      "removeFailed": "فشل في إزالة المجموعة. حاول مرة أخرى."
-    }
   },
+  "community": {
+    "manageGroups": {
+      "title": "إدارة المجموعات",
+      "groups": "المجموعات",
+      "createNew": "إنشاء مجموعة جديدة",
+      "addExisting": "إضافة مجموعات موجودة",
+      "info": "يمكن للأعضاء اقتراح مجموعات موجودة للحصول على موافقة الأدمن وإضافة مجموعات جديدة مباشرة. عرض في",
+      "settingsLink": "إعدادات المجتمع",
+      "listHeader": "المجموعات في هذا المجتمع",
+      "loading": "جارٍ تحميل المجموعات...",
+      "empty": "لم يتم العثور على مجموعات لهذا المجتمع",
+      "members": "الأعضاء",
+      "unnamedGroup": "مجموعة بدون اسم",
+      "remove": {
+        "header": "إزالة المجموعة من المجتمع",
+        "message": "هل تريد إزالة هذه المجموعة من المجتمع؟ ستبقى المجموعة ولكنها لن تنتمي بعد الآن إلى المجتمع.",
+        "alsoRemoveMembers": "إزالة أعضاء هذه المجموعة أيضًا من المجتمع ومن المجموعة",
+        "cta": "إزالة",
+        "aria": "إزالة المجموعة من المجتمع"
+      },
+      "toasts": {
+        "removed": "تمت إزالة المجموعة من المجتمع وتحديث الأعضاء",
+        "removeFailed": "فشل في إزالة المجموعة. حاول مرة أخرى."
+      }
+    },
     "title": "المجتمعات",
     "actions": {
       "qr": "فتح إجراءات QR",
@@ -646,11 +673,11 @@
     "newCommunity": "مجتمع جديد",
     "unnamedCommunity": "مجتمع بدون اسم",
     "viewAll": "عرض الكل",
-     "groupType": {
-    "normal": "مجموعة عادية",
-    "announcement": "مجموعة إعلانات",
-    "general": "مجموعة عامة"
-  },
+    "groupType": {
+      "normal": "مجموعة عادية",
+      "announcement": "مجموعة إعلانات",
+      "general": "مجموعة عامة"
+    },
     "newGroup": {
       "header": "مجموعة جديدة",
       "placeholder": "اسم المجموعة",
@@ -659,7 +686,8 @@
     "toasts": {
       "groupCreated": "تم إنشاء المجموعة"
     }
-  },"community_menu_component": {
+  },
+  "community_menu_component": {
     "info": "معلومات المجتمع",
     "invite": "دعوة الأعضاء",
     "settings": "إعدادات المجتمع"
@@ -673,7 +701,8 @@
     "communityLabel": "المجتمع:",
     "joinNote": "بانضمامك تصبح عضوًا فورًا.",
     "joinCta": "انضم إلى المجموعة"
-  }, "add_existing_groups_page": {
+  },
+  "add_existing_groups_page": {
     "header": "إضافة مجموعات موجودة",
     "actions": {
       "search": "ابحث عن المجموعات",

@@ -39,56 +39,57 @@
       "title": "ایپ معلومات",
       "description": "ورژن، قانونی اور تکنیکی تفصیلات۔"
     }
-  },"common": {
+  },
+  "common": {
     "ok": "ٹھیک ہے",
     "cancel": "منسوخ کریں",
     "logout": "لاگ آؤٹ"
   },
   "settingsPage": {
     "title": "DemmDesk (ترتیبات)",
-    "account": { 
-      "title": "MyTell (اکاؤنٹ)", 
-      "description": "TellShield (رازداری), تحفظ, نمبر تبدیل کریں" 
+    "account": {
+      "title": "MyTell (اکاؤنٹ)",
+      "description": "TellShield (رازداری), تحفظ, نمبر تبدیل کریں"
     },
-    "privacy": { 
-      "title": "TellShield (رازداری)", 
-      "description": "اپنی TellShield (رازداری) ترتیبات کو کنٹرول کریں" 
+    "privacy": {
+      "title": "TellShield (رازداری)",
+      "description": "اپنی TellShield (رازداری) ترتیبات کو کنٹرول کریں"
     },
-    "avatar": { 
-      "title": "TellFace (پروفائل تصویر)", 
-      "description": "اپنی TellFace (پروفائل تصویر) تبدیل کریں" 
+    "avatar": {
+      "title": "TellFace (پروفائل تصویر)",
+      "description": "اپنی TellFace (پروفائل تصویر) تبدیل کریں"
     },
-    "chats": { 
-      "title": "Tells (چیٹس)", 
-      "description": "تھیم، وال پیپر، SafeDemm (بیک اپ)" 
+    "chats": {
+      "title": "Tells (چیٹس)",
+      "description": "تھیم، وال پیپر، SafeDemm (بیک اپ)"
     },
-    "accessibility": { 
-      "title": "Accessibility (رسائی)", 
-      "description": "متن کا سائز اور ڈسپلے آپشنز ایڈجسٹ کریں" 
+    "accessibility": {
+      "title": "Accessibility (رسائی)",
+      "description": "متن کا سائز اور ڈسپلے آپشنز ایڈجسٹ کریں"
     },
-    "notifications": { 
-      "title": "TellAlerts (نوٹیفکیشنز)", 
-      "description": "Tell (پیغامات)، DemmRoom (گروپ) اور Connect (کالز) الرٹس کا انتظام کریں" 
+    "notifications": {
+      "title": "TellAlerts (نوٹیفکیشنز)",
+      "description": "Tell (پیغامات)، DemmRoom (گروپ) اور Connect (کالز) الرٹس کا انتظام کریں"
     },
-    "storage": { 
-      "title": "SafeDemm (اسٹوریج اور ڈیٹا)", 
-      "description": "اسٹوریج اور نیٹ ورک استعمال کا انتظام کریں" 
+    "storage": {
+      "title": "SafeDemm (اسٹوریج اور ڈیٹا)",
+      "description": "اسٹوریج اور نیٹ ورک استعمال کا انتظام کریں"
     },
-    "appLanguage": { 
-      "title": "App Language (ایپ زبان)", 
-      "description": "TellDemm ایپ کی زبان منتخب کریں" 
+    "appLanguage": {
+      "title": "App Language (ایپ زبان)",
+      "description": "TellDemm ایپ کی زبان منتخب کریں"
     },
-    "help": { 
-      "title": "DemmHelp (مدد)", 
-      "description": "ہیلپ سینٹر، رابطہ کریں، ایپ انفو" 
+    "help": {
+      "title": "DemmHelp (مدد)",
+      "description": "ہیلپ سینٹر، رابطہ کریں، ایپ انفو"
     },
-    "updates": { 
-      "title": "DemmUpdate (ایپ اپ ڈیٹ)", 
-      "description": "اپ ڈیٹ چیک کریں اور آٹو-اپ ڈیٹ فعال کریں" 
+    "updates": {
+      "title": "DemmUpdate (ایپ اپ ڈیٹ)",
+      "description": "اپ ڈیٹ چیک کریں اور آٹو-اپ ڈیٹ فعال کریں"
     },
-    "invite": { 
-      "title": "SpreadDemm (دوست کو مدعو کریں)", 
-      "description": "TellDemm ایپ کو اپنے DemmList (رابطوں) کے ساتھ شیئر کریں" 
+    "invite": {
+      "title": "SpreadDemm (دوست کو مدعو کریں)",
+      "description": "TellDemm ایپ کو اپنے DemmList (رابطوں) کے ساتھ شیئر کریں"
     },
     "logout": {
       "title": "Log Out (لاگ آؤٹ)",
@@ -101,7 +102,8 @@
       "successMessage": "آپ کامیابی سے لاگ آؤٹ ہو گئے ہیں۔"
     },
     "defaultStatus": "دستیاب"
-  },"accountPage": {
+  },
+  "accountPage": {
     "title": "اکاؤنٹ",
     "securityNotifications": "سیکیورٹی اطلاعات",
     "passkeys": "پاس کیز",
@@ -118,34 +120,35 @@
       "cancel": "منسوخ کریں",
       "log": "اکاؤنٹ حذف کرنے کی ونڈو کھولی گئی"
     }
-  },"accessibility": {
-  "title": "رسائی کی سہولت",
-  "groups": {
-    "displayMotion": "ڈسپلے اور حرکت",
-    "interaction": "تفاعل"
   },
-  "increaseContrast": {
-    "title": "تضاد بڑھائیں",
-    "desc": "ہلکے موڈ میں پڑھنے کی صلاحیت بہتر بنانے کے لیے اہم رنگوں کو گہرا کریں۔"
+  "accessibility": {
+    "title": "رسائی کی سہولت",
+    "groups": {
+      "displayMotion": "ڈسپلے اور حرکت",
+      "interaction": "تفاعل"
+    },
+    "increaseContrast": {
+      "title": "تضاد بڑھائیں",
+      "desc": "ہلکے موڈ میں پڑھنے کی صلاحیت بہتر بنانے کے لیے اہم رنگوں کو گہرا کریں۔"
+    },
+    "reduceMotion": {
+      "title": "حرکت کم کریں",
+      "desc": "اینیمیٹڈ اسٹیکرز، GIFs اور ٹرانزیشن کو کم سے کم کریں۔"
+    },
+    "largeText": {
+      "title": "بڑا متن",
+      "desc": "آسان پڑھنے کے لیے سسٹم فونٹ سائز بڑھائیں۔"
+    },
+    "simpleAnimations": {
+      "title": "سادہ حرکتیں",
+      "desc": "آسان تعامل کے لیے پیچیدہ حرکتیں کم کریں۔"
+    },
+    "grayscale": {
+      "title": "گرے اسکیل موڈ",
+      "desc": "آنکھوں کی تھکن کم کرنے کے لیے تمام رنگوں کو سرمئی شیڈز میں تبدیل کریں۔"
+    }
   },
-  "reduceMotion": {
-    "title": "حرکت کم کریں",
-    "desc": "اینیمیٹڈ اسٹیکرز، GIFs اور ٹرانزیشن کو کم سے کم کریں۔"
-  },
-  "largeText": {
-    "title": "بڑا متن",
-    "desc": "آسان پڑھنے کے لیے سسٹم فونٹ سائز بڑھائیں۔"
-  },
-  "simpleAnimations": {
-    "title": "سادہ حرکتیں",
-    "desc": "آسان تعامل کے لیے پیچیدہ حرکتیں کم کریں۔"
-  },
-  "grayscale": {
-    "title": "گرے اسکیل موڈ",
-    "desc": "آنکھوں کی تھکن کم کرنے کے لیے تمام رنگوں کو سرمئی شیڈز میں تبدیل کریں۔"
-  }
-}
-,"privacyPage": {
+  "privacyPage": {
     "title": "رازداری",
     "groups": {
       "whoCanSee": "میری معلومات کون دیکھ سکتا ہے",
@@ -176,7 +179,8 @@
       "contacts": "میرے روابط",
       "nobody": "کوئی نہیں"
     }
-  },"avatarPage": {
+  },
+  "avatarPage": {
     "title": "اپنا اوتار بنائیں",
     "previewAlt": "اوتار کا پیش منظر",
     "sections": {
@@ -209,7 +213,8 @@
       "saved": "اوتار کی ترتیبات مقامی طور پر محفوظ کر لی گئی ہیں۔",
       "downloadError": "ڈاؤن لوڈ ناکام ہوگیا۔ دوبارہ کوشش کریں۔"
     }
-  },"notifications": {
+  },
+  "notifications": {
     "title": "اطلاعات",
     "highPriority": {
       "title": "ہائی پرائیورٹی اطلاعات استعمال کریں",
@@ -227,7 +232,8 @@
       "title": "کال کی اطلاعات",
       "desc": "رنگ ٹون اور وائبریشن کی ترتیبات"
     }
-  },"storage": {
+  },
+  "storage": {
     "title": "اسٹوریج اور ڈیٹا",
     "totalUsedHuman": "{{used}} MB میں سے {{total}} MB",
     "cards": {
@@ -268,7 +274,8 @@
       "cleared": "{{mb}} MB کیش صاف کر دیا گیا",
       "statsReset": "نیٹ ورک کے اعدادوشمار ری سیٹ کر دیے گئے"
     }
-  },"chats": {
+  },
+  "chats": {
     "title": "چیٹس",
     "sections": {
       "appearance": "ظاہری شکل",
@@ -339,7 +346,8 @@
         "done": "بیک اپ مکمل ہوا"
       }
     }
-  },"profilePage": {
+  },
+  "profilePage": {
     "title": "پروفائل",
     "imageAlt": "پروفائل تصویر",
     "buttons": {
@@ -357,7 +365,8 @@
       "source": {
         "header": "تصویر کا ماخذ منتخب کریں",
         "camera": "کیمرا",
-        "gallery": "گیلری"
+        "gallery": "گیلری",
+        "cancel": "منسوخ کریں"
       }
     },
     "loading": {
@@ -378,7 +387,8 @@
       "updated": "پروفائل تصویر کامیابی کے ساتھ اپ ڈیٹ ہوگئی!",
       "updateFailed": "پروفائل تصویر اپ ڈیٹ کرنے میں ناکام"
     }
-  },"footerTabs": {
+  },
+  "footerTabs": {
     "chat": "Tells (چیٹس)",
     "updates": "Echoes (اپ ڈیٹس)",
     "communities": "DemmCircles (برادریاں)",
@@ -387,7 +397,8 @@
       "unreadChats": "{{count}} نہ پڑھے Tells",
       "unreadUpdates": "{{count}} Echoes"
     }
-  },"socialLinks": {
+  },
+  "socialLinks": {
     "title": "لنکس",
     "intro": "اپنی پروفائل میں لنکس شامل کرنے سے آپ کے روابط آپ کی دیگر پروفائلز تک آسانی سے پہنچ سکتے ہیں۔",
     "instagram": {
@@ -396,7 +407,8 @@
     },
     "actions": {
       "add": "شامل کریں",
-      "edit": "ترمیم کریں"
+      "edit": "ترمیم کریں",
+      "cancel": "منسوخ کریں"
     },
     "privacy": {
       "note": "یہ منظم کرنے کے لیے کہ کون آپ کے لنکس دیکھ سکتا ہے، جائیں",
@@ -423,12 +435,24 @@
       "saved": "انسٹاگرام کامیابی سے محفوظ ہوگیا!",
       "saveFailed": "انسٹاگرام لنک اپ ڈیٹ کرنے میں ناکام۔ دوبارہ کوشش کریں۔"
     }
-  },"home": {
-    "search": { "placeholder": "پوچھیں یا تلاش کریں" },
-    "filters": { "all": "سب", "read": "پڑھا", "unread": "نہ پڑھا", "groups": "DemmRoom (گروپس)" },
-    "groupCreator": { "placeholder": "DemmRoom نام درج کریں" },
+  },
+  "home": {
+    "search": {
+      "placeholder": "پوچھیں یا تلاش کریں"
+    },
+    "filters": {
+      "all": "سب",
+      "read": "پڑھا",
+      "unread": "نہ پڑھا",
+      "groups": "DemmRoom (گروپس)"
+    },
+    "groupCreator": {
+      "placeholder": "DemmRoom نام درج کریں"
+    },
     "typing": "ٹائپ کر رہا ہے...",
-    "time": { "yesterday": "کل" },
+    "time": {
+      "yesterday": "کل"
+    },
     "preview": {
       "deleted": "یہ پیغام حذف کر دیا گیا تھا",
       "encrypted": "[انکرپٹڈ]",
@@ -456,8 +480,11 @@
       "header": "لاگ آؤٹ",
       "message": "سیشن ٹائم آؤٹ/ختم۔"
     },
-    "alt": { "profile": "پروفائل" }
-  },"menu": {
+    "alt": {
+      "profile": "پروفائل"
+    }
+  },
+  "menu": {
     "newGroup": "Yeni grup",
     "newCommunity": "Yeni topluluk",
     "newBroadcast": "Yeni yayın (WIP)",
@@ -467,7 +494,8 @@
     "createChannels": "Kanal oluştur (WIP)",
     "statusPrivacy": "Durum gizliliği (WIP)",
     "clearCallLogs": "Çağrı kayıtlarını temizle (WIP)"
-  },"userabout": {
+  },
+  "userabout": {
     "members": "ممبرز",
     "group": "گروپ",
     "groups": "گروپس",
@@ -553,7 +581,8 @@
         "cta": "رپورٹ"
       }
     }
-  },"invite": {
+  },
+  "invite": {
     "header": "دوست کو مدعو کریں",
     "actions": {
       "search": "رابطے تلاش کریں",
@@ -586,31 +615,32 @@
     "errors": {
       "shareFailed": "شیئر شیٹ نہیں کھل سکی۔"
     }
-  },"community": {
-    "manageGroups": {
-    "title": "گروپس کا انتظام کریں",
-    "groups": "گروپس",
-    "createNew": "نیا گروپ بنائیں",
-    "addExisting": "موجودہ گروپس شامل کریں",
-    "info": "ممبران موجودہ گروپس کو ایڈمن کی منظوری کے لیے تجویز کر سکتے ہیں اور براہِ راست نئے گروپس شامل کر سکتے ہیں۔ دیکھیں:",
-    "settingsLink": "کمیونٹی سیٹنگز",
-    "listHeader": "اس کمیونٹی کے گروپس",
-    "loading": "گروپس لوڈ ہو رہے ہیں...",
-    "empty": "اس کمیونٹی کے لیے کوئی گروپ نہیں ملا",
-    "members": "ممبران",
-    "unnamedGroup": "بے نام گروپ",
-    "remove": {
-      "header": "کمیونٹی سے گروپ ہٹائیں",
-      "message": "کیا آپ اس گروپ کو کمیونٹی سے ہٹانا چاہتے ہیں؟ گروپ موجود رہے گا لیکن اب کمیونٹی کا حصہ نہیں ہوگا۔",
-      "alsoRemoveMembers": "اس گروپ کے ممبران کو بھی کمیونٹی اور گروپ سے ہٹا دیں",
-      "cta": "ہٹائیں",
-      "aria": "کمیونٹی سے گروپ ہٹائیں"
-    },
-    "toasts": {
-      "removed": "گروپ کمیونٹی سے ہٹا دیا گیا اور ممبران کو اپ ڈیٹ کر دیا گیا",
-      "removeFailed": "گروپ ہٹانے میں ناکام۔ دوبارہ کوشش کریں۔"
-    }
   },
+  "community": {
+    "manageGroups": {
+      "title": "گروپس کا انتظام کریں",
+      "groups": "گروپس",
+      "createNew": "نیا گروپ بنائیں",
+      "addExisting": "موجودہ گروپس شامل کریں",
+      "info": "ممبران موجودہ گروپس کو ایڈمن کی منظوری کے لیے تجویز کر سکتے ہیں اور براہِ راست نئے گروپس شامل کر سکتے ہیں۔ دیکھیں:",
+      "settingsLink": "کمیونٹی سیٹنگز",
+      "listHeader": "اس کمیونٹی کے گروپس",
+      "loading": "گروپس لوڈ ہو رہے ہیں...",
+      "empty": "اس کمیونٹی کے لیے کوئی گروپ نہیں ملا",
+      "members": "ممبران",
+      "unnamedGroup": "بے نام گروپ",
+      "remove": {
+        "header": "کمیونٹی سے گروپ ہٹائیں",
+        "message": "کیا آپ اس گروپ کو کمیونٹی سے ہٹانا چاہتے ہیں؟ گروپ موجود رہے گا لیکن اب کمیونٹی کا حصہ نہیں ہوگا۔",
+        "alsoRemoveMembers": "اس گروپ کے ممبران کو بھی کمیونٹی اور گروپ سے ہٹا دیں",
+        "cta": "ہٹائیں",
+        "aria": "کمیونٹی سے گروپ ہٹائیں"
+      },
+      "toasts": {
+        "removed": "گروپ کمیونٹی سے ہٹا دیا گیا اور ممبران کو اپ ڈیٹ کر دیا گیا",
+        "removeFailed": "گروپ ہٹانے میں ناکام۔ دوبارہ کوشش کریں۔"
+      }
+    },
     "title": "کمیونٹیز",
     "actions": {
       "qr": "QR ایکشنز کھولیں",
@@ -620,10 +650,10 @@
     "unnamedCommunity": "بے نام کمیونٹی",
     "viewAll": "سب دیکھیں",
     "groupType": {
-    "normal": "عام گروپ",
-    "announcement": "اعلانیہ گروپ",
-    "general": "جنرل گروپ"
-  },
+      "normal": "عام گروپ",
+      "announcement": "اعلانیہ گروپ",
+      "general": "جنرل گروپ"
+    },
     "newGroup": {
       "header": "نیا گروپ",
       "placeholder": "گروپ کا نام",
@@ -632,7 +662,8 @@
     "toasts": {
       "groupCreated": "گروپ بنایا گیا"
     }
-  },"community_menu_component": {
+  },
+  "community_menu_component": {
     "info": "کمیونٹی معلومات",
     "invite": "ممبران کو مدعو کریں",
     "settings": "کمیونٹی سیٹنگز"
@@ -646,7 +677,8 @@
     "communityLabel": "کمیونٹی:",
     "joinNote": "شامل ہوتے ہی آپ فوراً ممبر بن جائیں گے۔",
     "joinCta": "گروپ میں شامل ہوں"
-  }, "add_existing_groups_page": {
+  },
+  "add_existing_groups_page": {
     "header": "موجودہ گروپس شامل کریں",
     "actions": {
       "search": "گروپس تلاش کریں",

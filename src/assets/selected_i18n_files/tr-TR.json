@@ -39,56 +39,57 @@
       "title": "Uygulama Bilgileri",
       "description": "Sürüm, yasal ve teknik bilgiler."
     }
-  },"common": {
+  },
+  "common": {
     "ok": "Tamam",
     "cancel": "İptal",
     "logout": "Çıkış yap"
   },
- "settingsPage": {
+  "settingsPage": {
     "title": "DemmDesk (Ayarlar)",
-    "account": { 
-      "title": "MyTell (Hesap)", 
-      "description": "TellShield (Gizlilik), güvenlik, numara değiştir" 
+    "account": {
+      "title": "MyTell (Hesap)",
+      "description": "TellShield (Gizlilik), güvenlik, numara değiştir"
     },
-    "privacy": { 
-      "title": "TellShield (Gizlilik)", 
-      "description": "TellShield (Gizlilik) ayarlarınızı kontrol edin" 
+    "privacy": {
+      "title": "TellShield (Gizlilik)",
+      "description": "TellShield (Gizlilik) ayarlarınızı kontrol edin"
     },
-    "avatar": { 
-      "title": "TellFace (Profil resmi)", 
-      "description": "TellFace (Profil resminizi) değiştirin" 
+    "avatar": {
+      "title": "TellFace (Profil resmi)",
+      "description": "TellFace (Profil resminizi) değiştirin"
     },
-    "chats": { 
-      "title": "Tells (Sohbetler)", 
-      "description": "Tema, duvar kağıdı, SafeDemm (Yedekleme)" 
+    "chats": {
+      "title": "Tells (Sohbetler)",
+      "description": "Tema, duvar kağıdı, SafeDemm (Yedekleme)"
     },
-    "accessibility": { 
-      "title": "Accessibility (Erişilebilirlik)", 
-      "description": "Metin boyutu ve ekran seçeneklerini ayarlayın" 
+    "accessibility": {
+      "title": "Accessibility (Erişilebilirlik)",
+      "description": "Metin boyutu ve ekran seçeneklerini ayarlayın"
     },
-    "notifications": { 
-      "title": "TellAlerts (Bildirimler)", 
-      "description": "Tell (Mesajlar), DemmRoom (Grup) ve Connect (Aramalar) uyarılarını yönetin" 
+    "notifications": {
+      "title": "TellAlerts (Bildirimler)",
+      "description": "Tell (Mesajlar), DemmRoom (Grup) ve Connect (Aramalar) uyarılarını yönetin"
     },
-    "storage": { 
-      "title": "SafeDemm (Depolama ve veri)", 
-      "description": "Depolama ve ağ kullanımını yönetin" 
+    "storage": {
+      "title": "SafeDemm (Depolama ve veri)",
+      "description": "Depolama ve ağ kullanımını yönetin"
     },
-    "appLanguage": { 
-      "title": "App Language (Uygulama dili)", 
-      "description": "TellDemm uygulama dilini seçin" 
+    "appLanguage": {
+      "title": "App Language (Uygulama dili)",
+      "description": "TellDemm uygulama dilini seçin"
     },
-    "help": { 
-      "title": "DemmHelp (Yardım)", 
-      "description": "Yardım merkezi, bize ulaşın, Uygulama bilgileri" 
+    "help": {
+      "title": "DemmHelp (Yardım)",
+      "description": "Yardım merkezi, bize ulaşın, Uygulama bilgileri"
     },
-    "updates": { 
-      "title": "DemmUpdate (Uygulama güncellemeleri)", 
-      "description": "Güncellemeleri kontrol edin ve otomatik güncellemeyi etkinleştirin" 
+    "updates": {
+      "title": "DemmUpdate (Uygulama güncellemeleri)",
+      "description": "Güncellemeleri kontrol edin ve otomatik güncellemeyi etkinleştirin"
     },
-    "invite": { 
-      "title": "SpreadDemm (Arkadaş davet et)", 
-      "description": "TellDemm uygulamasını DemmList (Kişiler) ile paylaşın" 
+    "invite": {
+      "title": "SpreadDemm (Arkadaş davet et)",
+      "description": "TellDemm uygulamasını DemmList (Kişiler) ile paylaşın"
     },
     "logout": {
       "title": "Log Out (Çıkış yap)",
@@ -101,7 +102,8 @@
       "successMessage": "Başarıyla çıkış yaptınız."
     },
     "defaultStatus": "Mevcut"
-  },"accountPage": {
+  },
+  "accountPage": {
     "title": "Hesap",
     "securityNotifications": "Güvenlik bildirimleri",
     "passkeys": "Geçiş anahtarları",
@@ -118,34 +120,35 @@
       "cancel": "İptal",
       "log": "Hesap silme penceresi açıldı"
     }
-  },"accessibility": {
-  "title": "Erişilebilirlik",
-  "groups": {
-    "displayMotion": "Ekran ve hareket",
-    "interaction": "Etkileşim"
   },
-  "increaseContrast": {
-    "title": "Karşıtlığı artır",
-    "desc": "Açık modda okunabilirliği artırmak için ana renkleri koyulaştırın."
+  "accessibility": {
+    "title": "Erişilebilirlik",
+    "groups": {
+      "displayMotion": "Ekran ve hareket",
+      "interaction": "Etkileşim"
+    },
+    "increaseContrast": {
+      "title": "Karşıtlığı artır",
+      "desc": "Açık modda okunabilirliği artırmak için ana renkleri koyulaştırın."
+    },
+    "reduceMotion": {
+      "title": "Hareketi azalt",
+      "desc": "Animasyonlu çıkartmaları, GIF’leri ve geçişleri en aza indirin."
+    },
+    "largeText": {
+      "title": "Büyük metin",
+      "desc": "Okumayı kolaylaştırmak için sistem yazı tipi boyutunu artırın."
+    },
+    "simpleAnimations": {
+      "title": "Basitleştirilmiş animasyonlar",
+      "desc": "Daha kolay etkileşim için karmaşık animasyonları azaltın."
+    },
+    "grayscale": {
+      "title": "Gri tonlama modu",
+      "desc": "Göz yorgunluğunu azaltmak için tüm arayüz renklerini gri tonlarına dönüştürün."
+    }
   },
-  "reduceMotion": {
-    "title": "Hareketi azalt",
-    "desc": "Animasyonlu çıkartmaları, GIF’leri ve geçişleri en aza indirin."
-  },
-  "largeText": {
-    "title": "Büyük metin",
-    "desc": "Okumayı kolaylaştırmak için sistem yazı tipi boyutunu artırın."
-  },
-  "simpleAnimations": {
-    "title": "Basitleştirilmiş animasyonlar",
-    "desc": "Daha kolay etkileşim için karmaşık animasyonları azaltın."
-  },
-  "grayscale": {
-    "title": "Gri tonlama modu",
-    "desc": "Göz yorgunluğunu azaltmak için tüm arayüz renklerini gri tonlarına dönüştürün."
-  }
-}
-,"privacyPage": {
+  "privacyPage": {
     "title": "Gizlilik",
     "groups": {
       "whoCanSee": "Bilgilerimi kim görebilir",
@@ -176,7 +179,8 @@
       "contacts": "Kişilerim",
       "nobody": "Hiç kimse"
     }
-  },"avatarPage": {
+  },
+  "avatarPage": {
     "title": "Avatarını Oluştur",
     "previewAlt": "Avatar önizlemesi",
     "sections": {
@@ -210,7 +214,7 @@
       "downloadError": "İndirme başarısız. Lütfen tekrar deneyin."
     }
   },
-   "notifications": {
+  "notifications": {
     "title": "Bildirimler",
     "highPriority": {
       "title": "Yüksek öncelikli bildirimleri kullan",
@@ -228,7 +232,8 @@
       "title": "Arama bildirimleri",
       "desc": "Zil sesleri ve titreşim ayarları"
     }
-  },"storage": {
+  },
+  "storage": {
     "title": "Depolama ve Veri",
     "totalUsedHuman": "{{used}} MB / {{total}} MB",
     "cards": {
@@ -269,7 +274,8 @@
       "cleared": "{{mb}} MB önbellek temizlendi",
       "statsReset": "Ağ istatistikleri sıfırlandı"
     }
-  },"chats": {
+  },
+  "chats": {
     "title": "Sohbetler",
     "sections": {
       "appearance": "Görünüm",
@@ -340,7 +346,8 @@
         "done": "Yedekleme tamamlandı"
       }
     }
-  },"profilePage": {
+  },
+  "profilePage": {
     "title": "Profil",
     "imageAlt": "Profil resmi",
     "buttons": {
@@ -358,7 +365,8 @@
       "source": {
         "header": "Resim kaynağını seç",
         "camera": "Kamera",
-        "gallery": "Galeri"
+        "gallery": "Galeri",
+        "cancel": "İptal"
       }
     },
     "loading": {
@@ -379,7 +387,8 @@
       "updated": "Profil resmi başarıyla güncellendi!",
       "updateFailed": "Profil resmi güncellenemedi"
     }
-  },"footerTabs": {
+  },
+  "footerTabs": {
     "chat": "Tells (Sohbetler)",
     "updates": "Echoes (Güncellemeler)",
     "communities": "DemmCircles (Topluluklar)",
@@ -388,7 +397,8 @@
       "unreadChats": "{{count}} okunmamış Tells",
       "unreadUpdates": "{{count}} Echoes"
     }
-  },"socialLinks": {
+  },
+  "socialLinks": {
     "title": "Bağlantılar",
     "intro": "Profilinize bağlantılar eklemek, kişilerin diğer profillerinizi kolayca ziyaret etmesine yardımcı olur.",
     "instagram": {
@@ -397,7 +407,8 @@
     },
     "actions": {
       "add": "Ekle",
-      "edit": "Düzenle"
+      "edit": "Düzenle",
+      "cancel": "İptal"
     },
     "privacy": {
       "note": "Bağlantılarınızı kimin görebileceğini yönetmek için gidin",
@@ -424,12 +435,24 @@
       "saved": "Instagram başarıyla kaydedildi!",
       "saveFailed": "Instagram bağlantısı güncellenemedi. Tekrar deneyin."
     }
-  },"home": {
-    "search": { "placeholder": "Sor veya Ara" },
-    "filters": { "all": "TÜM", "read": "Okundu", "unread": "Okunmadı", "groups": "DemmRoom (Gruplar)" },
-    "groupCreator": { "placeholder": "DemmRoom Adını Girin" },
+  },
+  "home": {
+    "search": {
+      "placeholder": "Sor veya Ara"
+    },
+    "filters": {
+      "all": "TÜM",
+      "read": "Okundu",
+      "unread": "Okunmadı",
+      "groups": "DemmRoom (Gruplar)"
+    },
+    "groupCreator": {
+      "placeholder": "DemmRoom Adını Girin"
+    },
     "typing": "yazıyor...",
-    "time": { "yesterday": "Dün" },
+    "time": {
+      "yesterday": "Dün"
+    },
     "preview": {
       "deleted": "Bu mesaj silindi",
       "encrypted": "[Şifrelenmiş]",
@@ -457,8 +480,11 @@
       "header": "Çıkış Yap",
       "message": "Oturum süresi doldu/bitti."
     },
-    "alt": { "profile": "Profil" }
-  },"menu": {
+    "alt": {
+      "profile": "Profil"
+    }
+  },
+  "menu": {
     "newGroup": "Yeni grup",
     "newCommunity": "Yeni topluluk",
     "newBroadcast": "Yeni yayın (WIP)",
@@ -468,7 +494,8 @@
     "createChannels": "Kanal oluştur (WIP)",
     "statusPrivacy": "Durum gizliliği (WIP)",
     "clearCallLogs": "Çağrı kayıtlarını temizle (WIP)"
-  },"userabout": {
+  },
+  "userabout": {
     "members": "Üyeler",
     "group": "Grup",
     "groups": "Gruplar",
@@ -554,7 +581,8 @@
         "cta": "Şikayet et"
       }
     }
-  },"invite": {
+  },
+  "invite": {
     "header": "Bir arkadaş davet et",
     "actions": {
       "search": "Kişileri ara",
@@ -587,31 +615,32 @@
     "errors": {
       "shareFailed": "Paylaşım sayfası açılamadı."
     }
-  },"community": {
-    "manageGroups": {
-    "title": "Grupları yönet",
-    "groups": "gruplar",
-    "createNew": "Yeni grup oluştur",
-    "addExisting": "Mevcut grupları ekle",
-    "info": "Üyeler mevcut grupları yönetici onayı için önerebilir ve yeni grupları doğrudan ekleyebilir. Görüntüle:",
-    "settingsLink": "Topluluk ayarları",
-    "listHeader": "Bu topluluktaki gruplar",
-    "loading": "Gruplar yükleniyor...",
-    "empty": "Bu topluluk için grup bulunamadı",
-    "members": "üyeler",
-    "unnamedGroup": "Adsız grup",
-    "remove": {
-      "header": "Grubu topluluktan kaldır",
-      "message": "Bu grubu topluluktan kaldırmak istiyor musunuz? Grup kalacak ancak artık topluluğa ait olmayacak.",
-      "alsoRemoveMembers": "Bu grubun üyelerini de topluluktan ve gruptan kaldır",
-      "cta": "Kaldır",
-      "aria": "Grubu topluluktan kaldır"
-    },
-    "toasts": {
-      "removed": "Grup topluluktan kaldırıldı ve üyeler güncellendi",
-      "removeFailed": "Grup kaldırılamadı. Tekrar deneyin."
-    }
   },
+  "community": {
+    "manageGroups": {
+      "title": "Grupları yönet",
+      "groups": "gruplar",
+      "createNew": "Yeni grup oluştur",
+      "addExisting": "Mevcut grupları ekle",
+      "info": "Üyeler mevcut grupları yönetici onayı için önerebilir ve yeni grupları doğrudan ekleyebilir. Görüntüle:",
+      "settingsLink": "Topluluk ayarları",
+      "listHeader": "Bu topluluktaki gruplar",
+      "loading": "Gruplar yükleniyor...",
+      "empty": "Bu topluluk için grup bulunamadı",
+      "members": "üyeler",
+      "unnamedGroup": "Adsız grup",
+      "remove": {
+        "header": "Grubu topluluktan kaldır",
+        "message": "Bu grubu topluluktan kaldırmak istiyor musunuz? Grup kalacak ancak artık topluluğa ait olmayacak.",
+        "alsoRemoveMembers": "Bu grubun üyelerini de topluluktan ve gruptan kaldır",
+        "cta": "Kaldır",
+        "aria": "Grubu topluluktan kaldır"
+      },
+      "toasts": {
+        "removed": "Grup topluluktan kaldırıldı ve üyeler güncellendi",
+        "removeFailed": "Grup kaldırılamadı. Tekrar deneyin."
+      }
+    },
     "title": "Topluluklar",
     "actions": {
       "qr": "QR işlemlerini aç",
@@ -620,11 +649,11 @@
     "newCommunity": "Yeni topluluk",
     "unnamedCommunity": "Adsız Topluluk",
     "viewAll": "Hepsini gör",
-   "groupType": {
-    "normal": "Normal Grup",
-    "announcement": "Duyuru Grubu",
-    "general": "Genel Grup"
-  },
+    "groupType": {
+      "normal": "Normal Grup",
+      "announcement": "Duyuru Grubu",
+      "general": "Genel Grup"
+    },
     "newGroup": {
       "header": "Yeni Grup",
       "placeholder": "Grup Adı",
@@ -633,7 +662,8 @@
     "toasts": {
       "groupCreated": "Grup oluşturuldu"
     }
-  },"community_menu_component": {
+  },
+  "community_menu_component": {
     "info": "Topluluk bilgisi",
     "invite": "Üye davet et",
     "settings": "Topluluk ayarları"
@@ -647,7 +677,8 @@
     "communityLabel": "Topluluk:",
     "joinNote": "Katıldığınızda hemen üye olursunuz.",
     "joinCta": "Gruba Katıl"
-  },  "add_existing_groups_page": {
+  },
+  "add_existing_groups_page": {
     "header": "Mevcut grupları ekle",
     "actions": {
       "search": "Grupları ara",

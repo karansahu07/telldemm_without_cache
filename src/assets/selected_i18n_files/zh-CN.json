@@ -39,56 +39,57 @@
       "title": "应用信息",
       "description": "版本、法律和技术细节。"
     }
-  },"common": {
+  },
+  "common": {
     "ok": "确定",
     "cancel": "取消",
     "logout": "退出登录"
   },
   "settingsPage": {
     "title": "DemmDesk (设置)",
-    "account": { 
-      "title": "MyTell (账户)", 
-      "description": "TellShield (隐私)、安全、更改号码" 
+    "account": {
+      "title": "MyTell (账户)",
+      "description": "TellShield (隐私)、安全、更改号码"
     },
-    "privacy": { 
-      "title": "TellShield (隐私)", 
-      "description": "控制您的 TellShield (隐私) 设置" 
+    "privacy": {
+      "title": "TellShield (隐私)",
+      "description": "控制您的 TellShield (隐私) 设置"
     },
-    "avatar": { 
-      "title": "TellFace (个人资料图片)", 
-      "description": "更改您的 TellFace (个人资料图片)" 
+    "avatar": {
+      "title": "TellFace (个人资料图片)",
+      "description": "更改您的 TellFace (个人资料图片)"
     },
-    "chats": { 
-      "title": "Tells (聊天)", 
-      "description": "主题、壁纸、SafeDemm (备份)" 
+    "chats": {
+      "title": "Tells (聊天)",
+      "description": "主题、壁纸、SafeDemm (备份)"
     },
-    "accessibility": { 
-      "title": "Accessibility (辅助功能)", 
-      "description": "调整文字大小和显示选项" 
+    "accessibility": {
+      "title": "Accessibility (辅助功能)",
+      "description": "调整文字大小和显示选项"
     },
-    "notifications": { 
-      "title": "TellAlerts (通知)", 
-      "description": "管理 Tell (消息)、DemmRoom (群组) 和 Connect (通话) 提醒" 
+    "notifications": {
+      "title": "TellAlerts (通知)",
+      "description": "管理 Tell (消息)、DemmRoom (群组) 和 Connect (通话) 提醒"
     },
-    "storage": { 
-      "title": "SafeDemm (存储和数据)", 
-      "description": "管理存储和网络使用" 
+    "storage": {
+      "title": "SafeDemm (存储和数据)",
+      "description": "管理存储和网络使用"
     },
-    "appLanguage": { 
-      "title": "App Language (应用语言)", 
-      "description": "选择 TellDemm 应用语言" 
+    "appLanguage": {
+      "title": "App Language (应用语言)",
+      "description": "选择 TellDemm 应用语言"
     },
-    "help": { 
-      "title": "DemmHelp (帮助)", 
-      "description": "帮助中心、联系我们、应用信息" 
+    "help": {
+      "title": "DemmHelp (帮助)",
+      "description": "帮助中心、联系我们、应用信息"
     },
-    "updates": { 
-      "title": "DemmUpdate (应用更新)", 
-      "description": "检查更新并启用自动更新" 
+    "updates": {
+      "title": "DemmUpdate (应用更新)",
+      "description": "检查更新并启用自动更新"
     },
-    "invite": { 
-      "title": "SpreadDemm (邀请朋友)", 
-      "description": "与您的 DemmList (联系人) 分享 TellDemm 应用" 
+    "invite": {
+      "title": "SpreadDemm (邀请朋友)",
+      "description": "与您的 DemmList (联系人) 分享 TellDemm 应用"
     },
     "logout": {
       "title": "Log Out (注销)",
@@ -143,34 +144,35 @@
       "cancel": "取消",
       "log": "删除账户弹窗已打开"
     }
-  },"accessibility": {
-  "title": "辅助功能",
-  "groups": {
-    "displayMotion": "显示与动画",
-    "interaction": "交互"
   },
-  "increaseContrast": {
-    "title": "提高对比度",
-    "desc": "在浅色模式下加深主要颜色以改善可读性。"
+  "accessibility": {
+    "title": "辅助功能",
+    "groups": {
+      "displayMotion": "显示与动画",
+      "interaction": "交互"
+    },
+    "increaseContrast": {
+      "title": "提高对比度",
+      "desc": "在浅色模式下加深主要颜色以改善可读性。"
+    },
+    "reduceMotion": {
+      "title": "减少动画",
+      "desc": "尽量减少动态贴纸、GIF 和过渡效果。"
+    },
+    "largeText": {
+      "title": "大字体",
+      "desc": "增大系统字体以便更轻松阅读。"
+    },
+    "simpleAnimations": {
+      "title": "简化动画",
+      "desc": "减少复杂动画以便更容易操作。"
+    },
+    "grayscale": {
+      "title": "灰度模式",
+      "desc": "将界面颜色转换为灰色调以减轻视觉疲劳。"
+    }
   },
-  "reduceMotion": {
-    "title": "减少动画",
-    "desc": "尽量减少动态贴纸、GIF 和过渡效果。"
-  },
-  "largeText": {
-    "title": "大字体",
-    "desc": "增大系统字体以便更轻松阅读。"
-  },
-  "simpleAnimations": {
-    "title": "简化动画",
-    "desc": "减少复杂动画以便更容易操作。"
-  },
-  "grayscale": {
-    "title": "灰度模式",
-    "desc": "将界面颜色转换为灰色调以减轻视觉疲劳。"
-  }
-}
-,"privacyPage": {
+  "privacyPage": {
     "title": "隐私",
     "groups": {
       "whoCanSee": "谁可以查看我的信息",
@@ -201,7 +203,8 @@
       "contacts": "我的联系人",
       "nobody": "无人"
     }
-  },"avatarPage": {
+  },
+  "avatarPage": {
     "title": "创建你的头像",
     "previewAlt": "头像预览",
     "sections": {
@@ -234,7 +237,8 @@
       "saved": "头像选项已本地保存。",
       "downloadError": "下载失败，请重试。"
     }
-  },"notifications": {
+  },
+  "notifications": {
     "title": "通知",
     "highPriority": {
       "title": "使用高优先级通知",
@@ -252,7 +256,8 @@
       "title": "通话通知",
       "desc": "铃声和振动设置"
     }
-  },"storage": {
+  },
+  "storage": {
     "title": "存储与数据",
     "totalUsedHuman": "{{used}} MB / {{total}} MB",
     "cards": {
@@ -293,7 +298,8 @@
       "cleared": "已清除 {{mb}} MB 缓存",
       "statsReset": "网络统计已重置"
     }
-  },"chats": {
+  },
+  "chats": {
     "title": "聊天",
     "sections": {
       "appearance": "外观",
@@ -364,7 +370,8 @@
         "done": "备份完成"
       }
     }
-  }, "profilePage": {
+  },
+  "profilePage": {
     "title": "个人资料",
     "imageAlt": "头像",
     "buttons": {
@@ -382,7 +389,8 @@
       "source": {
         "header": "选择图片来源",
         "camera": "相机",
-        "gallery": "图库"
+        "gallery": "图库",
+        "cancel": "取消"
       }
     },
     "loading": {
@@ -403,7 +411,8 @@
       "updated": "头像更新成功！",
       "updateFailed": "更新头像失败"
     }
-  },"footerTabs": {
+  },
+  "footerTabs": {
     "chat": "Tells (聊天)",
     "updates": "Echoes (更新)",
     "communities": "DemmCircles (社区)",
@@ -412,7 +421,8 @@
       "unreadChats": "{{count}} 未读 Tells",
       "unreadUpdates": "{{count}} Echoes"
     }
-  }, "socialLinks": {
+  },
+  "socialLinks": {
     "title": "链接",
     "intro": "在个人资料中添加链接可帮助联系人轻松访问您的其他资料。",
     "instagram": {
@@ -421,7 +431,8 @@
     },
     "actions": {
       "add": "添加",
-      "edit": "编辑"
+      "edit": "编辑",
+      "cancel": "取消"
     },
     "privacy": {
       "note": "要管理谁可以查看您的链接，请前往",
@@ -448,12 +459,24 @@
       "saved": "Instagram 保存成功！",
       "saveFailed": "更新 Instagram 链接失败，请重试。"
     }
-  },"home": {
-    "search": { "placeholder": "询问或搜索" },
-    "filters": { "all": "全部", "read": "已读", "unread": "未读", "groups": "DemmRoom (群组)" },
-    "groupCreator": { "placeholder": "输入 DemmRoom 名称" },
+  },
+  "home": {
+    "search": {
+      "placeholder": "询问或搜索"
+    },
+    "filters": {
+      "all": "全部",
+      "read": "已读",
+      "unread": "未读",
+      "groups": "DemmRoom (群组)"
+    },
+    "groupCreator": {
+      "placeholder": "输入 DemmRoom 名称"
+    },
     "typing": "正在输入...",
-    "time": { "yesterday": "昨天" },
+    "time": {
+      "yesterday": "昨天"
+    },
     "preview": {
       "deleted": "此消息已被删除",
       "encrypted": "[已加密]",
@@ -481,8 +504,11 @@
       "header": "登出",
       "message": "会话超时/过期。"
     },
-    "alt": { "profile": "个人资料" }
-  },"menu": {
+    "alt": {
+      "profile": "个人资料"
+    }
+  },
+  "menu": {
     "newGroup": "新建群组",
     "newCommunity": "新建社区",
     "newBroadcast": "新建广播 (WIP)",
@@ -492,8 +518,8 @@
     "createChannels": "创建频道 (WIP)",
     "statusPrivacy": "状态隐私 (WIP)",
     "clearCallLogs": "清除通话记录 (WIP)"
-  }
-,"userabout": {
+  },
+  "userabout": {
     "members": "成员",
     "group": "群组",
     "groups": "群组",
@@ -579,7 +605,8 @@
         "cta": "举报"
       }
     }
-  },"invite": {
+  },
+  "invite": {
     "header": "邀请好友",
     "actions": {
       "search": "搜索联系人",
@@ -612,31 +639,32 @@
     "errors": {
       "shareFailed": "无法打开分享界面。"
     }
-  },"community": {
-    "manageGroups": {
-    "title": "管理群组",
-    "groups": "群组",
-    "createNew": "创建新群组",
-    "addExisting": "添加现有群组",
-    "info": "成员可以建议现有群组供管理员批准，并可直接添加新群组。查看于",
-    "settingsLink": "社区设置",
-    "listHeader": "此社区中的群组",
-    "loading": "正在加载群组...",
-    "empty": "未找到该社区的群组",
-    "members": "成员",
-    "unnamedGroup": "未命名群组",
-    "remove": {
-      "header": "从社区移除群组",
-      "message": "您要将此群组从社区中移除吗？群组将保留，但不再属于该社区。",
-      "alsoRemoveMembers": "同时将该群组的成员从社区和群组中移除",
-      "cta": "移除",
-      "aria": "从社区移除群组"
-    },
-    "toasts": {
-      "removed": "群组已从社区移除，成员已更新",
-      "removeFailed": "无法移除群组。请重试。"
-    }
   },
+  "community": {
+    "manageGroups": {
+      "title": "管理群组",
+      "groups": "群组",
+      "createNew": "创建新群组",
+      "addExisting": "添加现有群组",
+      "info": "成员可以建议现有群组供管理员批准，并可直接添加新群组。查看于",
+      "settingsLink": "社区设置",
+      "listHeader": "此社区中的群组",
+      "loading": "正在加载群组...",
+      "empty": "未找到该社区的群组",
+      "members": "成员",
+      "unnamedGroup": "未命名群组",
+      "remove": {
+        "header": "从社区移除群组",
+        "message": "您要将此群组从社区中移除吗？群组将保留，但不再属于该社区。",
+        "alsoRemoveMembers": "同时将该群组的成员从社区和群组中移除",
+        "cta": "移除",
+        "aria": "从社区移除群组"
+      },
+      "toasts": {
+        "removed": "群组已从社区移除，成员已更新",
+        "removeFailed": "无法移除群组。请重试。"
+      }
+    },
     "title": "社区",
     "actions": {
       "qr": "打开二维码操作",
@@ -646,10 +674,10 @@
     "unnamedCommunity": "未命名社区",
     "viewAll": "查看全部",
     "groupType": {
-    "normal": "普通群组",
-    "announcement": "公告群组",
-    "general": "综合群组"
-  },
+      "normal": "普通群组",
+      "announcement": "公告群组",
+      "general": "综合群组"
+    },
     "newGroup": {
       "header": "新建群组",
       "placeholder": "群组名称",
@@ -658,7 +686,8 @@
     "toasts": {
       "groupCreated": "群组已创建"
     }
-  }, "community_menu_component": {
+  },
+  "community_menu_component": {
     "info": "社区信息",
     "invite": "邀请成员",
     "settings": "社区设置"
@@ -672,7 +701,8 @@
     "communityLabel": "社区：",
     "joinNote": "加入后您将立即成为成员。",
     "joinCta": "加入群组"
-  }, "add_existing_groups_page": {
+  },
+  "add_existing_groups_page": {
     "header": "添加现有群组",
     "actions": {
       "search": "搜索群组",

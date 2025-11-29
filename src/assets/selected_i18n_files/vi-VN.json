@@ -39,56 +39,57 @@
       "title": "Thông tin ứng dụng",
       "description": "Phiên bản, thông tin pháp lý và kỹ thuật."
     }
-  },"common": {
+  },
+  "common": {
     "ok": "OK",
     "cancel": "Hủy",
     "logout": "Đăng xuất"
   },
- "settingsPage": {
+  "settingsPage": {
     "title": "DemmDesk (Cài đặt)",
-    "account": { 
-      "title": "MyTell (Tài khoản)", 
-      "description": "TellShield (Quyền riêng tư), bảo mật, thay đổi số" 
+    "account": {
+      "title": "MyTell (Tài khoản)",
+      "description": "TellShield (Quyền riêng tư), bảo mật, thay đổi số"
     },
-    "privacy": { 
-      "title": "TellShield (Quyền riêng tư)", 
-      "description": "Kiểm soát cài đặt TellShield (Quyền riêng tư) của bạn" 
+    "privacy": {
+      "title": "TellShield (Quyền riêng tư)",
+      "description": "Kiểm soát cài đặt TellShield (Quyền riêng tư) của bạn"
     },
-    "avatar": { 
-      "title": "TellFace (Ảnh đại diện)", 
-      "description": "Thay đổi TellFace (Ảnh đại diện) của bạn" 
+    "avatar": {
+      "title": "TellFace (Ảnh đại diện)",
+      "description": "Thay đổi TellFace (Ảnh đại diện) của bạn"
     },
-    "chats": { 
-      "title": "Tells (Trò chuyện)", 
-      "description": "Chủ đề, hình nền, SafeDemm (Sao lưu)" 
+    "chats": {
+      "title": "Tells (Trò chuyện)",
+      "description": "Chủ đề, hình nền, SafeDemm (Sao lưu)"
     },
-    "accessibility": { 
-      "title": "Accessibility (Trợ năng)", 
-      "description": "Điều chỉnh kích thước văn bản và tùy chọn hiển thị" 
+    "accessibility": {
+      "title": "Accessibility (Trợ năng)",
+      "description": "Điều chỉnh kích thước văn bản và tùy chọn hiển thị"
     },
-    "notifications": { 
-      "title": "TellAlerts (Thông báo)", 
-      "description": "Quản lý cảnh báo Tell (Tin nhắn), DemmRoom (Nhóm) và Connect (Cuộc gọi)" 
+    "notifications": {
+      "title": "TellAlerts (Thông báo)",
+      "description": "Quản lý cảnh báo Tell (Tin nhắn), DemmRoom (Nhóm) và Connect (Cuộc gọi)"
     },
-    "storage": { 
-      "title": "SafeDemm (Lưu trữ và dữ liệu)", 
-      "description": "Quản lý lưu trữ và sử dụng mạng" 
+    "storage": {
+      "title": "SafeDemm (Lưu trữ và dữ liệu)",
+      "description": "Quản lý lưu trữ và sử dụng mạng"
     },
-    "appLanguage": { 
-      "title": "App Language (Ngôn ngữ ứng dụng)", 
-      "description": "Chọn ngôn ngữ ứng dụng TellDemm" 
+    "appLanguage": {
+      "title": "App Language (Ngôn ngữ ứng dụng)",
+      "description": "Chọn ngôn ngữ ứng dụng TellDemm"
     },
-    "help": { 
-      "title": "DemmHelp (Trợ giúp)", 
-      "description": "Trung tâm trợ giúp, liên hệ chúng tôi, Thông tin ứng dụng" 
+    "help": {
+      "title": "DemmHelp (Trợ giúp)",
+      "description": "Trung tâm trợ giúp, liên hệ chúng tôi, Thông tin ứng dụng"
     },
-    "updates": { 
-      "title": "DemmUpdate (Cập nhật ứng dụng)", 
-      "description": "Kiểm tra cập nhật và bật tự động cập nhật" 
+    "updates": {
+      "title": "DemmUpdate (Cập nhật ứng dụng)",
+      "description": "Kiểm tra cập nhật và bật tự động cập nhật"
     },
-    "invite": { 
-      "title": "SpreadDemm (Mời bạn bè)", 
-      "description": "Chia sẻ ứng dụng TellDemm với DemmList (Danh bạ) của bạn" 
+    "invite": {
+      "title": "SpreadDemm (Mời bạn bè)",
+      "description": "Chia sẻ ứng dụng TellDemm với DemmList (Danh bạ) của bạn"
     },
     "logout": {
       "title": "Log Out (Đăng xuất)",
@@ -101,7 +102,8 @@
       "successMessage": "Bạn đã đăng xuất thành công."
     },
     "defaultStatus": "Có sẵn"
-  },"accountPage": {
+  },
+  "accountPage": {
     "title": "Tài khoản",
     "securityNotifications": "Thông báo bảo mật",
     "passkeys": "Khóa truy cập",
@@ -118,34 +120,35 @@
       "cancel": "Hủy",
       "log": "Đã mở hộp thoại xóa tài khoản"
     }
-  },"accessibility": {
-  "title": "Trợ năng",
-  "groups": {
-    "displayMotion": "Hiển thị và chuyển động",
-    "interaction": "Tương tác"
   },
-  "increaseContrast": {
-    "title": "Tăng độ tương phản",
-    "desc": "Làm đậm các màu chính để cải thiện khả năng đọc ở chế độ sáng."
+  "accessibility": {
+    "title": "Trợ năng",
+    "groups": {
+      "displayMotion": "Hiển thị và chuyển động",
+      "interaction": "Tương tác"
+    },
+    "increaseContrast": {
+      "title": "Tăng độ tương phản",
+      "desc": "Làm đậm các màu chính để cải thiện khả năng đọc ở chế độ sáng."
+    },
+    "reduceMotion": {
+      "title": "Giảm chuyển động",
+      "desc": "Giảm thiểu nhãn dán động, GIF và hiệu ứng chuyển cảnh."
+    },
+    "largeText": {
+      "title": "Chữ lớn",
+      "desc": "Tăng kích thước phông chữ hệ thống để dễ đọc hơn."
+    },
+    "simpleAnimations": {
+      "title": "Hoạt ảnh đơn giản",
+      "desc": "Giảm hoạt ảnh phức tạp để tương tác dễ dàng hơn."
+    },
+    "grayscale": {
+      "title": "Chế độ thang xám",
+      "desc": "Chuyển tất cả màu giao diện sang tông xám để giảm mỏi mắt."
+    }
   },
-  "reduceMotion": {
-    "title": "Giảm chuyển động",
-    "desc": "Giảm thiểu nhãn dán động, GIF và hiệu ứng chuyển cảnh."
-  },
-  "largeText": {
-    "title": "Chữ lớn",
-    "desc": "Tăng kích thước phông chữ hệ thống để dễ đọc hơn."
-  },
-  "simpleAnimations": {
-    "title": "Hoạt ảnh đơn giản",
-    "desc": "Giảm hoạt ảnh phức tạp để tương tác dễ dàng hơn."
-  },
-  "grayscale": {
-    "title": "Chế độ thang xám",
-    "desc": "Chuyển tất cả màu giao diện sang tông xám để giảm mỏi mắt."
-  }
-}
-,"privacyPage": {
+  "privacyPage": {
     "title": "Quyền riêng tư",
     "groups": {
       "whoCanSee": "Ai có thể xem thông tin của tôi",
@@ -176,7 +179,8 @@
       "contacts": "Danh bạ của tôi",
       "nobody": "Không ai"
     }
-  },"avatarPage": {
+  },
+  "avatarPage": {
     "title": "Tạo Avatar của bạn",
     "previewAlt": "Xem trước Avatar",
     "sections": {
@@ -209,7 +213,8 @@
       "saved": "Các lựa chọn Avatar đã được lưu cục bộ.",
       "downloadError": "Tải xuống thất bại. Vui lòng thử lại."
     }
-  },"notifications": {
+  },
+  "notifications": {
     "title": "Thông báo",
     "highPriority": {
       "title": "Sử dụng thông báo ưu tiên cao",
@@ -227,7 +232,8 @@
       "title": "Thông báo cuộc gọi",
       "desc": "Cài đặt nhạc chuông và rung"
     }
-  },"storage": {
+  },
+  "storage": {
     "title": "Bộ nhớ & Dữ liệu",
     "totalUsedHuman": "{{used}} MB / {{total}} MB",
     "cards": {
@@ -268,7 +274,8 @@
       "cleared": "Đã xóa {{mb}} MB bộ nhớ đệm",
       "statsReset": "Đã đặt lại thống kê mạng"
     }
-  },"chats": {
+  },
+  "chats": {
     "title": "Trò chuyện",
     "sections": {
       "appearance": "Giao diện",
@@ -339,7 +346,8 @@
         "done": "Sao lưu hoàn tất"
       }
     }
-  }, "profilePage": {
+  },
+  "profilePage": {
     "title": "Hồ sơ",
     "imageAlt": "Ảnh hồ sơ",
     "buttons": {
@@ -357,7 +365,8 @@
       "source": {
         "header": "Chọn nguồn ảnh",
         "camera": "Máy ảnh",
-        "gallery": "Thư viện"
+        "gallery": "Thư viện",
+        "cancel": "Hủy"
       }
     },
     "loading": {
@@ -378,7 +387,8 @@
       "updated": "Ảnh hồ sơ đã được cập nhật thành công!",
       "updateFailed": "Không thể cập nhật ảnh hồ sơ"
     }
-  },"footerTabs": {
+  },
+  "footerTabs": {
     "chat": "Tells (Trò chuyện)",
     "updates": "Echoes (Cập nhật)",
     "communities": "DemmCircles (Cộng đồng)",
@@ -387,7 +397,8 @@
       "unreadChats": "{{count}} Tells chưa đọc",
       "unreadUpdates": "{{count}} Echoes"
     }
-  },"socialLinks": {
+  },
+  "socialLinks": {
     "title": "Liên kết",
     "intro": "Thêm liên kết vào hồ sơ của bạn giúp liên hệ dễ dàng truy cập các hồ sơ khác của bạn.",
     "instagram": {
@@ -396,7 +407,8 @@
     },
     "actions": {
       "add": "Thêm",
-      "edit": "Chỉnh sửa"
+      "edit": "Chỉnh sửa",
+      "cancel": "Hủy"
     },
     "privacy": {
       "note": "Để quản lý ai có thể xem các liên kết của bạn, hãy vào",
@@ -423,12 +435,24 @@
       "saved": "Đã lưu Instagram thành công!",
       "saveFailed": "Không thể cập nhật liên kết Instagram. Vui lòng thử lại."
     }
-  },"home": {
-    "search": { "placeholder": "Hỏi hoặc Tìm kiếm" },
-    "filters": { "all": "TẤT CẢ", "read": "Đã đọc", "unread": "Chưa đọc", "groups": "DemmRoom (Nhóm)" },
-    "groupCreator": { "placeholder": "Nhập Tên DemmRoom" },
+  },
+  "home": {
+    "search": {
+      "placeholder": "Hỏi hoặc Tìm kiếm"
+    },
+    "filters": {
+      "all": "TẤT CẢ",
+      "read": "Đã đọc",
+      "unread": "Chưa đọc",
+      "groups": "DemmRoom (Nhóm)"
+    },
+    "groupCreator": {
+      "placeholder": "Nhập Tên DemmRoom"
+    },
     "typing": "đang gõ...",
-    "time": { "yesterday": "Hôm qua" },
+    "time": {
+      "yesterday": "Hôm qua"
+    },
     "preview": {
       "deleted": "Tin nhắn này đã bị xóa",
       "encrypted": "[Mã hóa]",
@@ -456,8 +480,11 @@
       "header": "Đăng xuất",
       "message": "Phiên hết hạn/hết hạn."
     },
-    "alt": { "profile": "Hồ sơ" }
-  }, "menu": {
+    "alt": {
+      "profile": "Hồ sơ"
+    }
+  },
+  "menu": {
     "newGroup": "Nhóm mới",
     "newCommunity": "Cộng đồng mới",
     "newBroadcast": "Phát sóng mới (WIP)",
@@ -467,7 +494,8 @@
     "createChannels": "Tạo kênh (WIP)",
     "statusPrivacy": "Quyền riêng tư trạng thái (WIP)",
     "clearCallLogs": "Xóa nhật ký cuộc gọi (WIP)"
-  },"userabout": {
+  },
+  "userabout": {
     "members": "Thành viên",
     "group": "Nhóm",
     "groups": "Các nhóm",
@@ -553,7 +581,8 @@
         "cta": "Báo cáo"
       }
     }
-  },"invite": {
+  },
+  "invite": {
     "header": "Mời bạn bè",
     "actions": {
       "search": "Tìm kiếm liên hệ",
@@ -586,31 +615,32 @@
     "errors": {
       "shareFailed": "Không thể mở bảng chia sẻ."
     }
-  },"community": {
-     "manageGroups": {
-    "title": "Quản lý nhóm",
-    "groups": "nhóm",
-    "createNew": "Tạo nhóm mới",
-    "addExisting": "Thêm nhóm hiện có",
-    "info": "Thành viên có thể đề xuất nhóm hiện có để quản trị viên phê duyệt và thêm nhóm mới trực tiếp. Xem trong",
-    "settingsLink": "Cài đặt cộng đồng",
-    "listHeader": "Nhóm trong cộng đồng này",
-    "loading": "Đang tải nhóm...",
-    "empty": "Không tìm thấy nhóm nào cho cộng đồng này",
-    "members": "thành viên",
-    "unnamedGroup": "Nhóm chưa đặt tên",
-    "remove": {
-      "header": "Xóa nhóm khỏi cộng đồng",
-      "message": "Bạn có muốn xóa nhóm này khỏi cộng đồng không? Nhóm vẫn tồn tại nhưng sẽ không còn thuộc về cộng đồng.",
-      "alsoRemoveMembers": "Cũng xóa các thành viên của nhóm này khỏi cộng đồng và nhóm",
-      "cta": "Xóa",
-      "aria": "Xóa nhóm khỏi cộng đồng"
-    },
-    "toasts": {
-      "removed": "Nhóm đã được xóa khỏi cộng đồng và thành viên đã được cập nhật",
-      "removeFailed": "Không thể xóa nhóm. Vui lòng thử lại."
-    }
   },
+  "community": {
+    "manageGroups": {
+      "title": "Quản lý nhóm",
+      "groups": "nhóm",
+      "createNew": "Tạo nhóm mới",
+      "addExisting": "Thêm nhóm hiện có",
+      "info": "Thành viên có thể đề xuất nhóm hiện có để quản trị viên phê duyệt và thêm nhóm mới trực tiếp. Xem trong",
+      "settingsLink": "Cài đặt cộng đồng",
+      "listHeader": "Nhóm trong cộng đồng này",
+      "loading": "Đang tải nhóm...",
+      "empty": "Không tìm thấy nhóm nào cho cộng đồng này",
+      "members": "thành viên",
+      "unnamedGroup": "Nhóm chưa đặt tên",
+      "remove": {
+        "header": "Xóa nhóm khỏi cộng đồng",
+        "message": "Bạn có muốn xóa nhóm này khỏi cộng đồng không? Nhóm vẫn tồn tại nhưng sẽ không còn thuộc về cộng đồng.",
+        "alsoRemoveMembers": "Cũng xóa các thành viên của nhóm này khỏi cộng đồng và nhóm",
+        "cta": "Xóa",
+        "aria": "Xóa nhóm khỏi cộng đồng"
+      },
+      "toasts": {
+        "removed": "Nhóm đã được xóa khỏi cộng đồng và thành viên đã được cập nhật",
+        "removeFailed": "Không thể xóa nhóm. Vui lòng thử lại."
+      }
+    },
     "title": "Cộng đồng",
     "actions": {
       "qr": "Mở hành động QR",
@@ -620,10 +650,10 @@
     "unnamedCommunity": "Cộng đồng chưa đặt tên",
     "viewAll": "Xem tất cả",
     "groupType": {
-    "normal": "Nhóm thường",
-    "announcement": "Nhóm thông báo",
-    "general": "Nhóm chung"
-  },
+      "normal": "Nhóm thường",
+      "announcement": "Nhóm thông báo",
+      "general": "Nhóm chung"
+    },
     "newGroup": {
       "header": "Nhóm mới",
       "placeholder": "Tên nhóm",
@@ -632,7 +662,8 @@
     "toasts": {
       "groupCreated": "Đã tạo nhóm"
     }
-  },"community_menu_component": {
+  },
+  "community_menu_component": {
     "info": "Thông tin cộng đồng",
     "invite": "Mời thành viên",
     "settings": "Cài đặt cộng đồng"
@@ -646,7 +677,8 @@
     "communityLabel": "Cộng đồng:",
     "joinNote": "Khi tham gia, bạn sẽ trở thành thành viên ngay lập tức.",
     "joinCta": "Tham gia nhóm"
-  }, "add_existing_groups_page": {
+  },
+  "add_existing_groups_page": {
     "header": "Thêm nhóm hiện có",
     "actions": {
       "search": "Tìm kiếm nhóm",

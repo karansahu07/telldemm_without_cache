@@ -39,56 +39,57 @@
       "title": "ข้อมูลแอป",
       "description": "เวอร์ชัน ข้อมูลทางกฎหมายและด้านเทคนิค"
     }
-  },"common": {
+  },
+  "common": {
     "ok": "ตกลง",
     "cancel": "ยกเลิก",
     "logout": "ออกจากระบบ"
   },
- "settingsPage": {
+  "settingsPage": {
     "title": "DemmDesk (การตั้งค่า)",
-    "account": { 
-      "title": "MyTell (บัญชี)", 
-      "description": "TellShield (ความเป็นส่วนตัว), ความปลอดภัย, เปลี่ยนหมายเลข" 
+    "account": {
+      "title": "MyTell (บัญชี)",
+      "description": "TellShield (ความเป็นส่วนตัว), ความปลอดภัย, เปลี่ยนหมายเลข"
     },
-    "privacy": { 
-      "title": "TellShield (ความเป็นส่วนตัว)", 
-      "description": "ควบคุมการตั้งค่า TellShield (ความเป็นส่วนตัว) ของคุณ" 
+    "privacy": {
+      "title": "TellShield (ความเป็นส่วนตัว)",
+      "description": "ควบคุมการตั้งค่า TellShield (ความเป็นส่วนตัว) ของคุณ"
     },
-    "avatar": { 
-      "title": "TellFace (รูปภาพโปรไฟล์)", 
-      "description": "เปลี่ยน TellFace (รูปภาพโปรไฟล์) ของคุณ" 
+    "avatar": {
+      "title": "TellFace (รูปภาพโปรไฟล์)",
+      "description": "เปลี่ยน TellFace (รูปภาพโปรไฟล์) ของคุณ"
     },
-    "chats": { 
-      "title": "Tells (แชท)", 
-      "description": "ธีม, วอลเปเปอร์, SafeDemm (สำรองข้อมูล)" 
+    "chats": {
+      "title": "Tells (แชท)",
+      "description": "ธีม, วอลเปเปอร์, SafeDemm (สำรองข้อมูล)"
     },
-    "accessibility": { 
-      "title": "Accessibility (การเข้าถึง)", 
-      "description": "ปรับขนาดข้อความและตัวเลือกการแสดงผล" 
+    "accessibility": {
+      "title": "Accessibility (การเข้าถึง)",
+      "description": "ปรับขนาดข้อความและตัวเลือกการแสดงผล"
     },
-    "notifications": { 
-      "title": "TellAlerts (การแจ้งเตือน)", 
-      "description": "จัดการการแจ้งเตือน Tell (ข้อความ), DemmRoom (กลุ่ม) และ Connect (การโทร)" 
+    "notifications": {
+      "title": "TellAlerts (การแจ้งเตือน)",
+      "description": "จัดการการแจ้งเตือน Tell (ข้อความ), DemmRoom (กลุ่ม) และ Connect (การโทร)"
     },
-    "storage": { 
-      "title": "SafeDemm (ที่เก็บข้อมูลและข้อมูล)", 
-      "description": "จัดการที่เก็บข้อมูลและการใช้งานเครือข่าย" 
+    "storage": {
+      "title": "SafeDemm (ที่เก็บข้อมูลและข้อมูล)",
+      "description": "จัดการที่เก็บข้อมูลและการใช้งานเครือข่าย"
     },
-    "appLanguage": { 
-      "title": "App Language (ภาษาแอป)", 
-      "description": "เลือกภาษาของแอป TellDemm" 
+    "appLanguage": {
+      "title": "App Language (ภาษาแอป)",
+      "description": "เลือกภาษาของแอป TellDemm"
     },
-    "help": { 
-      "title": "DemmHelp (ความช่วยเหลือ)", 
-      "description": "ศูนย์ช่วยเหลือ, ติดต่อเรา, ข้อมูลแอป" 
+    "help": {
+      "title": "DemmHelp (ความช่วยเหลือ)",
+      "description": "ศูนย์ช่วยเหลือ, ติดต่อเรา, ข้อมูลแอป"
     },
-    "updates": { 
-      "title": "DemmUpdate (การอัปเดตแอป)", 
-      "description": "ตรวจสอบการอัปเดตและเปิดใช้งานการอัปเดตอัตโนมัติ" 
+    "updates": {
+      "title": "DemmUpdate (การอัปเดตแอป)",
+      "description": "ตรวจสอบการอัปเดตและเปิดใช้งานการอัปเดตอัตโนมัติ"
     },
-    "invite": { 
-      "title": "SpreadDemm (เชิญเพื่อน)", 
-      "description": "แชร์แอป TellDemm กับ DemmList (ผู้ติดต่อ) ของคุณ" 
+    "invite": {
+      "title": "SpreadDemm (เชิญเพื่อน)",
+      "description": "แชร์แอป TellDemm กับ DemmList (ผู้ติดต่อ) ของคุณ"
     },
     "logout": {
       "title": "Log Out (ออกจากระบบ)",
@@ -125,7 +126,8 @@
       "updateAvailable": "มีอัปเดต: {{version}}",
       "error": "ไม่สามารถตรวจสอบการอัปเดตได้ โปรดลองอีกครั้งภายหลัง"
     }
-  },"accountPage": {
+  },
+  "accountPage": {
     "title": "บัญชี",
     "securityNotifications": "การแจ้งเตือนด้านความปลอดภัย",
     "passkeys": "รหัสผ่านกุญแจ",
@@ -142,34 +144,35 @@
       "cancel": "ยกเลิก",
       "log": "เปิดหน้าต่างลบบัญชี"
     }
-  },"accessibility": {
-  "title": "การช่วยการเข้าถึง",
-  "groups": {
-    "displayMotion": "การแสดงผลและการเคลื่อนไหว",
-    "interaction": "การโต้ตอบ"
   },
-  "increaseContrast": {
-    "title": "เพิ่มความคมชัด",
-    "desc": "ทำให้สีหลักเข้มขึ้นเพื่อปรับปรุงการอ่านในโหมดสว่าง."
+  "accessibility": {
+    "title": "การช่วยการเข้าถึง",
+    "groups": {
+      "displayMotion": "การแสดงผลและการเคลื่อนไหว",
+      "interaction": "การโต้ตอบ"
+    },
+    "increaseContrast": {
+      "title": "เพิ่มความคมชัด",
+      "desc": "ทำให้สีหลักเข้มขึ้นเพื่อปรับปรุงการอ่านในโหมดสว่าง."
+    },
+    "reduceMotion": {
+      "title": "ลดการเคลื่อนไหว",
+      "desc": "ลดสติกเกอร์เคลื่อนไหว, GIF และการเปลี่ยนภาพให้น้อยที่สุด."
+    },
+    "largeText": {
+      "title": "ข้อความขนาดใหญ่",
+      "desc": "เพิ่มขนาดแบบอักษรของระบบเพื่อให้อ่านได้ง่ายขึ้น."
+    },
+    "simpleAnimations": {
+      "title": "แอนิเมชันแบบง่าย",
+      "desc": "ลดแอนิเมชันที่ซับซ้อนเพื่อให้โต้ตอบได้ง่ายขึ้น."
+    },
+    "grayscale": {
+      "title": "โหมดระดับสีเทา",
+      "desc": "แปลงสีทั้งหมดในอินเทอร์เฟซเป็นโทนสีเทาเพื่อลดความเมื่อยล้าทางสายตา."
+    }
   },
-  "reduceMotion": {
-    "title": "ลดการเคลื่อนไหว",
-    "desc": "ลดสติกเกอร์เคลื่อนไหว, GIF และการเปลี่ยนภาพให้น้อยที่สุด."
-  },
-  "largeText": {
-    "title": "ข้อความขนาดใหญ่",
-    "desc": "เพิ่มขนาดแบบอักษรของระบบเพื่อให้อ่านได้ง่ายขึ้น."
-  },
-  "simpleAnimations": {
-    "title": "แอนิเมชันแบบง่าย",
-    "desc": "ลดแอนิเมชันที่ซับซ้อนเพื่อให้โต้ตอบได้ง่ายขึ้น."
-  },
-  "grayscale": {
-    "title": "โหมดระดับสีเทา",
-    "desc": "แปลงสีทั้งหมดในอินเทอร์เฟซเป็นโทนสีเทาเพื่อลดความเมื่อยล้าทางสายตา."
-  }
-}
-,"privacyPage": {
+  "privacyPage": {
     "title": "ความเป็นส่วนตัว",
     "groups": {
       "whoCanSee": "ใครสามารถดูข้อมูลของฉันได้",
@@ -200,7 +203,8 @@
       "contacts": "ผู้ติดต่อของฉัน",
       "nobody": "ไม่มีใคร"
     }
-  },"avatarPage": {
+  },
+  "avatarPage": {
     "title": "สร้างอวาตาร์ของคุณ",
     "previewAlt": "ดูตัวอย่างอวาตาร์",
     "sections": {
@@ -233,7 +237,8 @@
       "saved": "บันทึกตัวเลือกอวาตาร์ไว้ในเครื่องแล้ว",
       "downloadError": "การดาวน์โหลดล้มเหลว โปรดลองอีกครั้ง"
     }
-  },"notifications": {
+  },
+  "notifications": {
     "title": "การแจ้งเตือน",
     "highPriority": {
       "title": "ใช้การแจ้งเตือนลำดับความสำคัญสูง",
@@ -251,7 +256,8 @@
       "title": "การแจ้งเตือนการโทร",
       "desc": "การตั้งค่าเสียงเรียกเข้าและการสั่น"
     }
-  },"storage": {
+  },
+  "storage": {
     "title": "ที่เก็บข้อมูลและข้อมูล",
     "totalUsedHuman": "{{used}} MB / {{total}} MB",
     "cards": {
@@ -292,7 +298,8 @@
       "cleared": "ล้างแคชแล้ว {{mb}} MB",
       "statsReset": "รีเซ็ตสถิติการใช้งานเครือข่ายแล้ว"
     }
-  }, "chats": {
+  },
+  "chats": {
     "title": "แชท",
     "sections": {
       "appearance": "ลักษณะ",
@@ -363,7 +370,8 @@
         "done": "การสำรองข้อมูลเสร็จสิ้น"
       }
     }
-  },"profilePage": {
+  },
+  "profilePage": {
     "title": "โปรไฟล์",
     "imageAlt": "รูปโปรไฟล์",
     "buttons": {
@@ -381,7 +389,8 @@
       "source": {
         "header": "เลือกแหล่งที่มาของรูปภาพ",
         "camera": "กล้อง",
-        "gallery": "แกลเลอรี"
+        "gallery": "แกลเลอรี",
+        "cancel": "ยกเลิก"
       }
     },
     "loading": {
@@ -402,7 +411,8 @@
       "updated": "อัปเดตรูปโปรไฟล์เรียบร้อยแล้ว!",
       "updateFailed": "ไม่สามารถอัปเดตรูปโปรไฟล์ได้"
     }
-  },"footerTabs": {
+  },
+  "footerTabs": {
     "chat": "Tells (แชท)",
     "updates": "Echoes (อัปเดต)",
     "communities": "DemmCircles (ชุมชน)",
@@ -411,7 +421,8 @@
       "unreadChats": "{{count}} Tells ที่ยังไม่อ่าน",
       "unreadUpdates": "{{count}} Echoes"
     }
-  },"socialLinks": {
+  },
+  "socialLinks": {
     "title": "ลิงก์",
     "intro": "การเพิ่มลิงก์ในโปรไฟล์ของคุณช่วยให้ผู้ติดต่อเข้าถึงโปรไฟล์อื่น ๆ ของคุณได้ง่ายขึ้น",
     "instagram": {
@@ -420,7 +431,8 @@
     },
     "actions": {
       "add": "เพิ่ม",
-      "edit": "แก้ไข"
+      "edit": "แก้ไข",
+      "cancel": "ยกเลิก"
     },
     "privacy": {
       "note": "หากต้องการจัดการว่าใครสามารถดูได้ ให้ไปที่",
@@ -447,12 +459,24 @@
       "saved": "บันทึก Instagram สำเร็จ!",
       "saveFailed": "ไม่สามารถอัปเดตลิงก์ Instagram ได้ โปรดลองอีกครั้ง"
     }
-  },"home": {
-    "search": { "placeholder": "ถามหรือค้นหา" },
-    "filters": { "all": "ทั้งหมด", "read": "อ่านแล้ว", "unread": "ยังไม่อ่าน", "groups": "DemmRoom (กลุ่ม)" },
-    "groupCreator": { "placeholder": "ป้อนชื่อ DemmRoom" },
+  },
+  "home": {
+    "search": {
+      "placeholder": "ถามหรือค้นหา"
+    },
+    "filters": {
+      "all": "ทั้งหมด",
+      "read": "อ่านแล้ว",
+      "unread": "ยังไม่อ่าน",
+      "groups": "DemmRoom (กลุ่ม)"
+    },
+    "groupCreator": {
+      "placeholder": "ป้อนชื่อ DemmRoom"
+    },
     "typing": "กำลังพิมพ์...",
-    "time": { "yesterday": "เมื่อวาน" },
+    "time": {
+      "yesterday": "เมื่อวาน"
+    },
     "preview": {
       "deleted": "ข้อความนี้ถูกลบแล้ว",
       "encrypted": "[เข้ารหัส]",
@@ -480,8 +504,11 @@
       "header": "ออกจากระบบ",
       "message": "เซสชันหมดอายุ/หมดเวลา"
     },
-    "alt": { "profile": "โปรไฟล์" }
-  },"menu": {
+    "alt": {
+      "profile": "โปรไฟล์"
+    }
+  },
+  "menu": {
     "newGroup": "สร้างกลุ่มใหม่",
     "newCommunity": "สร้างชุมชนใหม่",
     "newBroadcast": "ออกอากาศใหม่ (WIP)",
@@ -491,7 +518,8 @@
     "createChannels": "สร้างช่อง (WIP)",
     "statusPrivacy": "ความเป็นส่วนตัวของสถานะ (WIP)",
     "clearCallLogs": "ล้างประวัติการโทร (WIP)"
-  },"userabout": {
+  },
+  "userabout": {
     "members": "สมาชิก",
     "group": "กลุ่ม",
     "groups": "กลุ่ม",
@@ -577,7 +605,8 @@
         "cta": "รายงาน"
       }
     }
-  },"invite": {
+  },
+  "invite": {
     "header": "เชิญเพื่อน",
     "actions": {
       "search": "ค้นหาผู้ติดต่อ",
@@ -610,31 +639,32 @@
     "errors": {
       "shareFailed": "ไม่สามารถเปิดแผ่นการแชร์ได้"
     }
-  },"community": {
-     "manageGroups": {
-    "title": "จัดการกลุ่ม",
-    "groups": "กลุ่ม",
-    "createNew": "สร้างกลุ่มใหม่",
-    "addExisting": "เพิ่มกลุ่มที่มีอยู่",
-    "info": "สมาชิกสามารถเสนอแนะกลุ่มที่มีอยู่เพื่อให้ผู้ดูแลอนุมัติและเพิ่มกลุ่มใหม่ได้โดยตรง ดูที่",
-    "settingsLink": "การตั้งค่าชุมชน",
-    "listHeader": "กลุ่มในชุมชนนี้",
-    "loading": "กำลังโหลดกลุ่ม...",
-    "empty": "ไม่พบกลุ่มสำหรับชุมชนนี้",
-    "members": "สมาชิก",
-    "unnamedGroup": "กลุ่มไม่มีชื่อ",
-    "remove": {
-      "header": "นำกลุ่มออกจากชุมชน",
-      "message": "คุณต้องการนำกลุ่มนี้ออกจากชุมชนหรือไม่? กลุ่มจะยังคงอยู่ แต่จะไม่เป็นส่วนหนึ่งของชุมชนอีกต่อไป",
-      "alsoRemoveMembers": "ลบสมาชิกของกลุ่มนี้ออกจากชุมชนและกลุ่มด้วย",
-      "cta": "ลบ",
-      "aria": "นำกลุ่มออกจากชุมชน"
-    },
-    "toasts": {
-      "removed": "กลุ่มถูกนำออกจากชุมชนและอัปเดตสมาชิกแล้ว",
-      "removeFailed": "ไม่สามารถนำกลุ่มออกได้ โปรดลองอีกครั้ง"
-    }
   },
+  "community": {
+    "manageGroups": {
+      "title": "จัดการกลุ่ม",
+      "groups": "กลุ่ม",
+      "createNew": "สร้างกลุ่มใหม่",
+      "addExisting": "เพิ่มกลุ่มที่มีอยู่",
+      "info": "สมาชิกสามารถเสนอแนะกลุ่มที่มีอยู่เพื่อให้ผู้ดูแลอนุมัติและเพิ่มกลุ่มใหม่ได้โดยตรง ดูที่",
+      "settingsLink": "การตั้งค่าชุมชน",
+      "listHeader": "กลุ่มในชุมชนนี้",
+      "loading": "กำลังโหลดกลุ่ม...",
+      "empty": "ไม่พบกลุ่มสำหรับชุมชนนี้",
+      "members": "สมาชิก",
+      "unnamedGroup": "กลุ่มไม่มีชื่อ",
+      "remove": {
+        "header": "นำกลุ่มออกจากชุมชน",
+        "message": "คุณต้องการนำกลุ่มนี้ออกจากชุมชนหรือไม่? กลุ่มจะยังคงอยู่ แต่จะไม่เป็นส่วนหนึ่งของชุมชนอีกต่อไป",
+        "alsoRemoveMembers": "ลบสมาชิกของกลุ่มนี้ออกจากชุมชนและกลุ่มด้วย",
+        "cta": "ลบ",
+        "aria": "นำกลุ่มออกจากชุมชน"
+      },
+      "toasts": {
+        "removed": "กลุ่มถูกนำออกจากชุมชนและอัปเดตสมาชิกแล้ว",
+        "removeFailed": "ไม่สามารถนำกลุ่มออกได้ โปรดลองอีกครั้ง"
+      }
+    },
     "title": "ชุมชน",
     "actions": {
       "qr": "เปิดการทำงาน QR",
@@ -643,11 +673,11 @@
     "newCommunity": "ชุมชนใหม่",
     "unnamedCommunity": "ชุมชนไม่มีชื่อ",
     "viewAll": "ดูทั้งหมด",
-     "groupType": {
-    "normal": "กลุ่มปกติ",
-    "announcement": "กลุ่มประกาศ",
-    "general": "กลุ่มทั่วไป"
-  },
+    "groupType": {
+      "normal": "กลุ่มปกติ",
+      "announcement": "กลุ่มประกาศ",
+      "general": "กลุ่มทั่วไป"
+    },
     "newGroup": {
       "header": "กลุ่มใหม่",
       "placeholder": "ชื่อกลุ่ม",
@@ -656,7 +686,8 @@
     "toasts": {
       "groupCreated": "สร้างกลุ่มแล้ว"
     }
-  },"community_menu_component": {
+  },
+  "community_menu_component": {
     "info": "ข้อมูลชุมชน",
     "invite": "เชิญสมาชิก",
     "settings": "การตั้งค่าชุมชน"
@@ -670,7 +701,8 @@
     "communityLabel": "ชุมชน:",
     "joinNote": "เมื่อเข้าร่วมคุณจะกลายเป็นสมาชิกทันที",
     "joinCta": "เข้าร่วมกลุ่ม"
-  },"add_existing_groups_page": {
+  },
+  "add_existing_groups_page": {
     "header": "เพิ่มกลุ่มที่มีอยู่",
     "actions": {
       "search": "ค้นหากลุ่ม",

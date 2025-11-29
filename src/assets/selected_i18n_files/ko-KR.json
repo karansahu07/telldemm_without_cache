@@ -39,56 +39,57 @@
       "title": "앱 정보",
       "description": "버전, 법적 및 기술적 세부사항."
     }
-  },"common": {
+  },
+  "common": {
     "ok": "확인",
     "cancel": "취소",
     "logout": "로그아웃"
   },
   "settingsPage": {
     "title": "DemmDesk (설정)",
-    "account": { 
-      "title": "MyTell (계정)", 
-      "description": "TellShield (개인정보 보호), 보안, 번호 변경" 
+    "account": {
+      "title": "MyTell (계정)",
+      "description": "TellShield (개인정보 보호), 보안, 번호 변경"
     },
-    "privacy": { 
-      "title": "TellShield (개인정보 보호)", 
-      "description": "TellShield (개인정보 보호) 설정을 제어하세요" 
+    "privacy": {
+      "title": "TellShield (개인정보 보호)",
+      "description": "TellShield (개인정보 보호) 설정을 제어하세요"
     },
-    "avatar": { 
-      "title": "TellFace (프로필 사진)", 
-      "description": "TellFace (프로필 사진) 변경" 
+    "avatar": {
+      "title": "TellFace (프로필 사진)",
+      "description": "TellFace (프로필 사진) 변경"
     },
-    "chats": { 
-      "title": "Tells (채팅)", 
-      "description": "테마, 배경화면, SafeDemm (백업)" 
+    "chats": {
+      "title": "Tells (채팅)",
+      "description": "테마, 배경화면, SafeDemm (백업)"
     },
-    "accessibility": { 
-      "title": "Accessibility (접근성)", 
-      "description": "텍스트 크기 및 표시 옵션 조정" 
+    "accessibility": {
+      "title": "Accessibility (접근성)",
+      "description": "텍스트 크기 및 표시 옵션 조정"
     },
-    "notifications": { 
-      "title": "TellAlerts (알림)", 
-      "description": "Tell (메시지), DemmRoom (그룹), Connect (통화) 알림 관리" 
+    "notifications": {
+      "title": "TellAlerts (알림)",
+      "description": "Tell (메시지), DemmRoom (그룹), Connect (통화) 알림 관리"
     },
-    "storage": { 
-      "title": "SafeDemm (저장소 및 데이터)", 
-      "description": "저장소 및 네트워크 사용량 관리" 
+    "storage": {
+      "title": "SafeDemm (저장소 및 데이터)",
+      "description": "저장소 및 네트워크 사용량 관리"
     },
-    "appLanguage": { 
-      "title": "App Language (앱 언어)", 
-      "description": "TellDemm 앱 언어 선택" 
+    "appLanguage": {
+      "title": "App Language (앱 언어)",
+      "description": "TellDemm 앱 언어 선택"
     },
-    "help": { 
-      "title": "DemmHelp (도움말)", 
-      "description": "도움말 센터, 문의하기, 앱 정보" 
+    "help": {
+      "title": "DemmHelp (도움말)",
+      "description": "도움말 센터, 문의하기, 앱 정보"
     },
-    "updates": { 
-      "title": "DemmUpdate (앱 업데이트)", 
-      "description": "업데이트 확인 및 자동 업데이트 활성화" 
+    "updates": {
+      "title": "DemmUpdate (앱 업데이트)",
+      "description": "업데이트 확인 및 자동 업데이트 활성화"
     },
-    "invite": { 
-      "title": "SpreadDemm (친구 초대)", 
-      "description": "TellDemm 앱을 DemmList (연락처)와 공유하세요" 
+    "invite": {
+      "title": "SpreadDemm (친구 초대)",
+      "description": "TellDemm 앱을 DemmList (연락처)와 공유하세요"
     },
     "logout": {
       "title": "Log Out (로그아웃)",
@@ -125,7 +126,8 @@
       "updateAvailable": "업데이트 가능: {{version}}",
       "error": "업데이트를 확인할 수 없습니다. 나중에 다시 시도하세요."
     }
-  }, "accountPage": {
+  },
+  "accountPage": {
     "title": "계정",
     "securityNotifications": "보안 알림",
     "passkeys": "패스키",
@@ -142,34 +144,35 @@
       "cancel": "취소",
       "log": "계정 삭제 모달 열림"
     }
-  },"accessibility": {
-  "title": "접근성",
-  "groups": {
-    "displayMotion": "화면 및 동작",
-    "interaction": "상호작용"
   },
-  "increaseContrast": {
-    "title": "대비 향상",
-    "desc": "라이트 모드에서 가독성을 높이기 위해 주요 색상을 어둡게 합니다."
+  "accessibility": {
+    "title": "접근성",
+    "groups": {
+      "displayMotion": "화면 및 동작",
+      "interaction": "상호작용"
+    },
+    "increaseContrast": {
+      "title": "대비 향상",
+      "desc": "라이트 모드에서 가독성을 높이기 위해 주요 색상을 어둡게 합니다."
+    },
+    "reduceMotion": {
+      "title": "동작 줄이기",
+      "desc": "애니메이션 스티커, GIF 및 전환 효과를 최소화합니다."
+    },
+    "largeText": {
+      "title": "큰 텍스트",
+      "desc": "읽기 쉽게 시스템 글꼴 크기를 늘립니다."
+    },
+    "simpleAnimations": {
+      "title": "단순화된 애니메이션",
+      "desc": "복잡한 애니메이션을 줄여 상호작용을 쉽게 합니다."
+    },
+    "grayscale": {
+      "title": "그레이스케일 모드",
+      "desc": "시각적 피로를 줄이기 위해 모든 색상을 회색조로 변환합니다."
+    }
   },
-  "reduceMotion": {
-    "title": "동작 줄이기",
-    "desc": "애니메이션 스티커, GIF 및 전환 효과를 최소화합니다."
-  },
-  "largeText": {
-    "title": "큰 텍스트",
-    "desc": "읽기 쉽게 시스템 글꼴 크기를 늘립니다."
-  },
-  "simpleAnimations": {
-    "title": "단순화된 애니메이션",
-    "desc": "복잡한 애니메이션을 줄여 상호작용을 쉽게 합니다."
-  },
-  "grayscale": {
-    "title": "그레이스케일 모드",
-    "desc": "시각적 피로를 줄이기 위해 모든 색상을 회색조로 변환합니다."
-  }
-}
-,"privacyPage": {
+  "privacyPage": {
     "title": "개인정보",
     "groups": {
       "whoCanSee": "내 정보를 볼 수 있는 사람",
@@ -200,7 +203,8 @@
       "contacts": "내 연락처",
       "nobody": "없음"
     }
-  },"avatarPage": {
+  },
+  "avatarPage": {
     "title": "아바타 만들기",
     "previewAlt": "아바타 미리보기",
     "sections": {
@@ -233,7 +237,8 @@
       "saved": "아바타 선택 항목이 로컬에 저장되었습니다.",
       "downloadError": "다운로드 실패. 다시 시도하세요."
     }
-  },"notifications": {
+  },
+  "notifications": {
     "title": "알림",
     "highPriority": {
       "title": "높은 우선순위 알림 사용",
@@ -251,7 +256,8 @@
       "title": "통화 알림",
       "desc": "벨소리 및 진동 설정"
     }
-  },"storage": {
+  },
+  "storage": {
     "title": "스토리지 및 데이터",
     "totalUsedHuman": "{{used}} MB / {{total}} MB",
     "cards": {
@@ -292,7 +298,8 @@
       "cleared": "{{mb}} MB 캐시 삭제됨",
       "statsReset": "네트워크 통계가 초기화됨"
     }
-  }, "chats": {
+  },
+  "chats": {
     "title": "채팅",
     "sections": {
       "appearance": "모양",
@@ -363,7 +370,8 @@
         "done": "백업 완료"
       }
     }
-  },"profilePage": {
+  },
+  "profilePage": {
     "title": "프로필",
     "imageAlt": "프로필 이미지",
     "buttons": {
@@ -381,7 +389,8 @@
       "source": {
         "header": "이미지 소스 선택",
         "camera": "카메라",
-        "gallery": "갤러리"
+        "gallery": "갤러리",
+        "cancel": "취소"
       }
     },
     "loading": {
@@ -402,7 +411,8 @@
       "updated": "프로필 이미지가 성공적으로 업데이트되었습니다!",
       "updateFailed": "프로필 이미지 업데이트 실패"
     }
-  },"footerTabs": {
+  },
+  "footerTabs": {
     "chat": "Tells (채팅)",
     "updates": "Echoes (업데이트)",
     "communities": "DemmCircles (커뮤니티)",
@@ -411,7 +421,8 @@
       "unreadChats": "{{count}} 읽지 않은 Tells",
       "unreadUpdates": "{{count}} Echoes"
     }
-  },"socialLinks": {
+  },
+  "socialLinks": {
     "title": "링크",
     "intro": "프로필에 링크를 추가하면 연락처가 다른 프로필로 쉽게 이동할 수 있습니다.",
     "instagram": {
@@ -420,7 +431,8 @@
     },
     "actions": {
       "add": "추가",
-      "edit": "편집"
+      "edit": "편집",
+      "cancel": "취소"
     },
     "privacy": {
       "note": "누가 내 링크를 볼 수 있는지 관리하려면",
@@ -447,12 +459,24 @@
       "saved": "인스타그램이 성공적으로 저장되었습니다!",
       "saveFailed": "인스타그램 링크를 업데이트하지 못했습니다. 다시 시도하세요."
     }
-  },"home": {
-    "search": { "placeholder": "질문하거나 검색" },
-    "filters": { "all": "전체", "read": "읽음", "unread": "읽지 않음", "groups": "DemmRoom (그룹)" },
-    "groupCreator": { "placeholder": "DemmRoom 이름 입력" },
+  },
+  "home": {
+    "search": {
+      "placeholder": "질문하거나 검색"
+    },
+    "filters": {
+      "all": "전체",
+      "read": "읽음",
+      "unread": "읽지 않음",
+      "groups": "DemmRoom (그룹)"
+    },
+    "groupCreator": {
+      "placeholder": "DemmRoom 이름 입력"
+    },
     "typing": "입력 중...",
-    "time": { "yesterday": "어제" },
+    "time": {
+      "yesterday": "어제"
+    },
     "preview": {
       "deleted": "이 메시지가 삭제되었습니다",
       "encrypted": "[암호화됨]",
@@ -480,8 +504,11 @@
       "header": "로그아웃",
       "message": "세션이 만료됨/만료됨."
     },
-    "alt": { "profile": "프로필" }
-  },"menu": {
+    "alt": {
+      "profile": "프로필"
+    }
+  },
+  "menu": {
     "newGroup": "새 그룹",
     "newCommunity": "새 커뮤니티",
     "newBroadcast": "새 방송 (WIP)",
@@ -491,7 +518,8 @@
     "createChannels": "채널 만들기 (WIP)",
     "statusPrivacy": "상태 공개 설정 (WIP)",
     "clearCallLogs": "통화 기록 지우기 (WIP)"
-  },"userabout": {
+  },
+  "userabout": {
     "members": "회원",
     "group": "그룹",
     "groups": "그룹",
@@ -577,7 +605,8 @@
         "cta": "신고"
       }
     }
-  },"invite": {
+  },
+  "invite": {
     "header": "친구 초대",
     "actions": {
       "search": "연락처 검색",
@@ -610,31 +639,32 @@
     "errors": {
       "shareFailed": "공유 시트를 열 수 없습니다."
     }
-  },"community": {
-     "manageGroups": {
-    "title": "그룹 관리",
-    "groups": "그룹",
-    "createNew": "새 그룹 만들기",
-    "addExisting": "기존 그룹 추가",
-    "info": "회원은 기존 그룹을 관리자 승인을 위해 제안하거나 새 그룹을 직접 추가할 수 있습니다. 보기:",
-    "settingsLink": "커뮤니티 설정",
-    "listHeader": "이 커뮤니티의 그룹",
-    "loading": "그룹 불러오는 중...",
-    "empty": "이 커뮤니티에 그룹이 없습니다",
-    "members": "회원",
-    "unnamedGroup": "이름 없는 그룹",
-    "remove": {
-      "header": "커뮤니티에서 그룹 제거",
-      "message": "이 그룹을 커뮤니티에서 제거하시겠습니까? 그룹은 유지되지만 커뮤니티에 속하지 않습니다.",
-      "alsoRemoveMembers": "이 그룹의 구성원도 커뮤니티와 그룹에서 제거",
-      "cta": "제거",
-      "aria": "커뮤니티에서 그룹 제거"
-    },
-    "toasts": {
-      "removed": "그룹이 커뮤니티에서 제거되었고 멤버가 업데이트되었습니다",
-      "removeFailed": "그룹 제거에 실패했습니다. 다시 시도하세요."
-    }
   },
+  "community": {
+    "manageGroups": {
+      "title": "그룹 관리",
+      "groups": "그룹",
+      "createNew": "새 그룹 만들기",
+      "addExisting": "기존 그룹 추가",
+      "info": "회원은 기존 그룹을 관리자 승인을 위해 제안하거나 새 그룹을 직접 추가할 수 있습니다. 보기:",
+      "settingsLink": "커뮤니티 설정",
+      "listHeader": "이 커뮤니티의 그룹",
+      "loading": "그룹 불러오는 중...",
+      "empty": "이 커뮤니티에 그룹이 없습니다",
+      "members": "회원",
+      "unnamedGroup": "이름 없는 그룹",
+      "remove": {
+        "header": "커뮤니티에서 그룹 제거",
+        "message": "이 그룹을 커뮤니티에서 제거하시겠습니까? 그룹은 유지되지만 커뮤니티에 속하지 않습니다.",
+        "alsoRemoveMembers": "이 그룹의 구성원도 커뮤니티와 그룹에서 제거",
+        "cta": "제거",
+        "aria": "커뮤니티에서 그룹 제거"
+      },
+      "toasts": {
+        "removed": "그룹이 커뮤니티에서 제거되었고 멤버가 업데이트되었습니다",
+        "removeFailed": "그룹 제거에 실패했습니다. 다시 시도하세요."
+      }
+    },
     "title": "커뮤니티",
     "actions": {
       "qr": "QR 작업 열기",
@@ -644,10 +674,10 @@
     "unnamedCommunity": "이름 없는 커뮤니티",
     "viewAll": "모두 보기",
     "groupType": {
-    "normal": "일반 그룹",
-    "announcement": "공지 그룹",
-    "general": "공용 그룹"
-  },
+      "normal": "일반 그룹",
+      "announcement": "공지 그룹",
+      "general": "공용 그룹"
+    },
     "newGroup": {
       "header": "새 그룹",
       "placeholder": "그룹 이름",
@@ -656,7 +686,8 @@
     "toasts": {
       "groupCreated": "그룹이 생성되었습니다"
     }
-  },"community_menu_component": {
+  },
+  "community_menu_component": {
     "info": "커뮤니티 정보",
     "invite": "회원 초대",
     "settings": "커뮤니티 설정"
@@ -670,7 +701,8 @@
     "communityLabel": "커뮤니티:",
     "joinNote": "참여하면 즉시 멤버가 됩니다.",
     "joinCta": "그룹 참여"
-  },"add_existing_groups_page": {
+  },
+  "add_existing_groups_page": {
     "header": "기존 그룹 추가",
     "actions": {
       "search": "그룹 검색",

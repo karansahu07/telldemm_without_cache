@@ -39,56 +39,57 @@
       "title": "ऐप जानकारी",
       "description": "संस्करण, कानूनी और तकनीकी विवरण।"
     }
-  },"common": {
+  },
+  "common": {
     "ok": "ठीक है",
     "cancel": "रद्द करें",
     "logout": "लॉग आउट"
   },
- "settingsPage": {
+  "settingsPage": {
     "title": "DemmDesk (सेटिंग्स)",
-    "account": { 
-      "title": "MyTell (खाता)", 
-      "description": "TellShield (गोपनीयता), सुरक्षा, नंबर बदलें" 
+    "account": {
+      "title": "MyTell (खाता)",
+      "description": "TellShield (गोपनीयता), सुरक्षा, नंबर बदलें"
     },
-    "privacy": { 
-      "title": "TellShield (गोपनीयता)", 
-      "description": "अपनी TellShield (गोपनीयता) सेटिंग्स नियंत्रित करें" 
+    "privacy": {
+      "title": "TellShield (गोपनीयता)",
+      "description": "अपनी TellShield (गोपनीयता) सेटिंग्स नियंत्रित करें"
     },
-    "avatar": { 
-      "title": "TellFace (प्रोफ़ाइल चित्र)", 
-      "description": "अपना TellFace (प्रोफ़ाइल चित्र) बदलें" 
+    "avatar": {
+      "title": "TellFace (प्रोफ़ाइल चित्र)",
+      "description": "अपना TellFace (प्रोफ़ाइल चित्र) बदलें"
     },
-    "chats": { 
-      "title": "Tells (चैट्स)", 
-      "description": "थीम, वॉलपेपर, SafeDemm (बैकअप)" 
+    "chats": {
+      "title": "Tells (चैट्स)",
+      "description": "थीम, वॉलपेपर, SafeDemm (बैकअप)"
     },
-    "accessibility": { 
-      "title": "Accessibility (सुलभता)", 
-      "description": "पाठ का आकार और प्रदर्शन विकल्प समायोजित करें" 
+    "accessibility": {
+      "title": "Accessibility (सुलभता)",
+      "description": "पाठ का आकार और प्रदर्शन विकल्प समायोजित करें"
     },
-    "notifications": { 
-      "title": "TellAlerts (सूचनाएँ)", 
-      "description": "Tell (संदेश), DemmRoom (समूह) और Connect (कॉल) अलर्ट प्रबंधित करें" 
+    "notifications": {
+      "title": "TellAlerts (सूचनाएँ)",
+      "description": "Tell (संदेश), DemmRoom (समूह) और Connect (कॉल) अलर्ट प्रबंधित करें"
     },
-    "storage": { 
-      "title": "SafeDemm (स्टोरेज और डेटा)", 
-      "description": "स्टोरेज और नेटवर्क उपयोग प्रबंधित करें" 
+    "storage": {
+      "title": "SafeDemm (स्टोरेज और डेटा)",
+      "description": "स्टोरेज और नेटवर्क उपयोग प्रबंधित करें"
     },
-    "appLanguage": { 
-      "title": "App Language (ऐप भाषा)", 
-      "description": "TellDemm ऐप की भाषा चुनें" 
+    "appLanguage": {
+      "title": "App Language (ऐप भाषा)",
+      "description": "TellDemm ऐप की भाषा चुनें"
     },
-    "help": { 
-      "title": "DemmHelp (सहायता)", 
-      "description": "Help Centre, संपर्क करें, App Info (ऐप जानकारी)" 
+    "help": {
+      "title": "DemmHelp (सहायता)",
+      "description": "Help Centre, संपर्क करें, App Info (ऐप जानकारी)"
     },
-    "updates": { 
-      "title": "DemmUpdate (ऐप अपडेट)", 
-      "description": "अपडेट जांचें और ऑटो-अपडेट सक्षम करें" 
+    "updates": {
+      "title": "DemmUpdate (ऐप अपडेट)",
+      "description": "अपडेट जांचें और ऑटो-अपडेट सक्षम करें"
     },
-    "invite": { 
-      "title": "SpreadDemm (मित्र को आमंत्रित करें)", 
-      "description": "TellDemm ऐप अपने DemmList (संपर्कों) के साथ साझा करें" 
+    "invite": {
+      "title": "SpreadDemm (मित्र को आमंत्रित करें)",
+      "description": "TellDemm ऐप अपने DemmList (संपर्कों) के साथ साझा करें"
     },
     "logout": {
       "title": "Log Out (लॉग आउट)",
@@ -101,8 +102,7 @@
       "successMessage": "आप सफलतापूर्वक लॉग आउट हो गए हैं।"
     },
     "defaultStatus": "उपलब्ध"
-  }
-,
+  },
   "appUpdates": {
     "title": "ऐप अपडेट्स",
     "version": "संस्करण",
@@ -126,7 +126,8 @@
       "updateAvailable": "अपडेट उपलब्ध: {{version}}",
       "error": "अपडेट की जांच नहीं हो सकी। कृपया बाद में पुनः प्रयास करें।"
     }
-  },"accountPage": {
+  },
+  "accountPage": {
     "title": "खाता",
     "securityNotifications": "सुरक्षा सूचनाएँ",
     "passkeys": "पासकी",
@@ -143,33 +144,35 @@
       "cancel": "रद्द करें",
       "log": "खाता हटाने का मोडल खोला गया"
     }
-  },"accessibility": {
-  "title": "विनियोग्यता",
-  "groups": {
-    "displayMotion": "डिस्प्ले एवं गति",
-    "interaction": "इंटरैक्शन"
   },
-  "increaseContrast": {
-    "title": "विपरीतता बढ़ाएँ",
-    "desc": "हल्के मोड में पठनीयता सुधारने के लिए मुख्य रंगों को गहरा करें।"
+  "accessibility": {
+    "title": "विनियोग्यता",
+    "groups": {
+      "displayMotion": "डिस्प्ले एवं गति",
+      "interaction": "इंटरैक्शन"
+    },
+    "increaseContrast": {
+      "title": "विपरीतता बढ़ाएँ",
+      "desc": "हल्के मोड में पठनीयता सुधारने के लिए मुख्य रंगों को गहरा करें।"
+    },
+    "reduceMotion": {
+      "title": "गति कम करें",
+      "desc": "एनिमेटेड स्टिकर्स, GIFs और ट्रांज़िशन को न्यूनतम करें।"
+    },
+    "largeText": {
+      "title": "बड़ी टेक्स्ट",
+      "desc": "पाठ को आसान पढ़ने के लिए सिस्टम फ़ॉन्ट स्केल बढ़ाएँ।"
+    },
+    "simpleAnimations": {
+      "title": "सरल एनीमेशन",
+      "desc": "आसान इंटरैक्शन के लिए जटिल एनीमेशन को कम करें।"
+    },
+    "grayscale": {
+      "title": "धूसर स्तर (ग्रेस्केल) मोड",
+      "desc": "दृश्य थकान को कम करने के लिए सभी इंटरफ़ेस रंगों को ग्रे के शेड्स में बदलें।"
+    }
   },
-  "reduceMotion": {
-    "title": "गति कम करें",
-    "desc": "एनिमेटेड स्टिकर्स, GIFs और ट्रांज़िशन को न्यूनतम करें।"
-  },
-  "largeText": {
-    "title": "बड़ी टेक्स्ट",
-    "desc": "पाठ को आसान पढ़ने के लिए सिस्टम फ़ॉन्ट स्केल बढ़ाएँ।"
-  },
-  "simpleAnimations": {
-    "title": "सरल एनीमेशन",
-    "desc": "आसान इंटरैक्शन के लिए जटिल एनीमेशन को कम करें।"
-  },
-  "grayscale": {
-    "title": "धूसर स्तर (ग्रेस्केल) मोड",
-    "desc": "दृश्य थकान को कम करने के लिए सभी इंटरफ़ेस रंगों को ग्रे के शेड्स में बदलें।"
-  }
-},"privacyPage": {
+  "privacyPage": {
     "title": "गोपनीयता",
     "groups": {
       "whoCanSee": "मेरी जानकारी कौन देख सकता है",
@@ -200,7 +203,8 @@
       "contacts": "मेरे संपर्क",
       "nobody": "कोई नहीं"
     }
-  },"avatarPage": {
+  },
+  "avatarPage": {
     "title": "अपना अवतार बनाएं",
     "previewAlt": "अवतार पूर्वावलोकन",
     "sections": {
@@ -233,7 +237,8 @@
       "saved": "अवतार विकल्प स्थानीय रूप से सहेजे गए।",
       "downloadError": "डाउनलोड विफल हुआ। कृपया पुनः प्रयास करें।"
     }
-  },"notifications": {
+  },
+  "notifications": {
     "title": "सूचनाएँ",
     "highPriority": {
       "title": "हाई प्रायोरिटी सूचनाएँ उपयोग करें",
@@ -251,7 +256,8 @@
       "title": "कॉल सूचनाएँ",
       "desc": "रिंगटोन और वाइब्रेशन सेटिंग्स"
     }
-  },"storage": {
+  },
+  "storage": {
     "title": "स्टोरेज और डेटा",
     "totalUsedHuman": "{{used}} MB में से {{total}} MB",
     "cards": {
@@ -292,7 +298,8 @@
       "cleared": "{{mb}} MB कैश साफ़ किया गया",
       "statsReset": "नेटवर्क आँकड़े रीसेट किए गए"
     }
-  },"chats": {
+  },
+  "chats": {
     "title": "चैट",
     "sections": {
       "appearance": "रूप",
@@ -363,7 +370,8 @@
         "done": "बैकअप पूरा हुआ"
       }
     }
-  },"profilePage": {
+  },
+  "profilePage": {
     "title": "प्रोफ़ाइल",
     "imageAlt": "प्रोफ़ाइल चित्र",
     "buttons": {
@@ -381,7 +389,8 @@
       "source": {
         "header": "छवि स्रोत चुनें",
         "camera": "कैमरा",
-        "gallery": "गैलरी"
+        "gallery": "गैलरी",
+         "cancel": "रद्द करें"
       }
     },
     "loading": {
@@ -402,7 +411,8 @@
       "updated": "प्रोफ़ाइल चित्र सफलतापूर्वक अपडेट हुआ!",
       "updateFailed": "प्रोफ़ाइल चित्र अपडेट करने में विफल"
     }
-  },"footerTabs": {
+  },
+  "footerTabs": {
     "chat": "Tells (चैट)",
     "updates": "Echoes (अपडेट्स)",
     "communities": "DemmCircles (समुदाय)",
@@ -411,7 +421,8 @@
       "unreadChats": "{{count}} अपठित Tells",
       "unreadUpdates": "{{count}} Echoes"
     }
-  },"socialLinks": {
+  },
+  "socialLinks": {
     "title": "लिंक्स",
     "intro": "प्रोफ़ाइल में लिंक जोड़ने से आपके संपर्क आपके अन्य प्रोफ़ाइल आसानी से देख सकते हैं।",
     "instagram": {
@@ -420,7 +431,8 @@
     },
     "actions": {
       "add": "जोड़ें",
-      "edit": "संपादित करें"
+      "edit": "संपादित करें",
+      "cancel": "रद्द करें"
     },
     "privacy": {
       "note": "कौन आपके लिंक देख सकता है यह प्रबंधित करने के लिए जाएँ",
@@ -447,12 +459,24 @@
       "saved": "इंस्टाग्राम सफलतापूर्वक सहेजा गया!",
       "saveFailed": "इंस्टाग्राम लिंक अपडेट करने में विफल। फिर से प्रयास करें।"
     }
-  },"home": {
-    "search": { "placeholder": "पूछें या खोजें" },
-    "filters": { "all": "सभी", "read": "पढ़ा", "unread": "अपढ़", "groups": "DemmRoom (समूह)" },
-    "groupCreator": { "placeholder": "DemmRoom नाम दर्ज करें" },
+  },
+  "home": {
+    "search": {
+      "placeholder": "पूछें या खोजें"
+    },
+    "filters": {
+      "all": "सभी",
+      "read": "पढ़ा",
+      "unread": "अपढ़",
+      "groups": "DemmRoom (समूह)"
+    },
+    "groupCreator": {
+      "placeholder": "DemmRoom नाम दर्ज करें"
+    },
     "typing": "टाइप कर रहे हैं...",
-    "time": { "yesterday": "कल" },
+    "time": {
+      "yesterday": "कल"
+    },
     "preview": {
       "deleted": "यह संदेश हटा दिया गया था",
       "encrypted": "[एन्क्रिप्टेड]",
@@ -480,8 +504,11 @@
       "header": "लॉग आउट",
       "message": "सत्र समय समाप्त/समाप्त।"
     },
-    "alt": { "profile": "प्रोफ़ाइल" }
-  },"menu": {
+    "alt": {
+      "profile": "प्रोफ़ाइल"
+    }
+  },
+  "menu": {
     "newGroup": "नया समूह",
     "newCommunity": "नया समुदाय",
     "newBroadcast": "नया प्रसारण (WIP)",
@@ -491,7 +518,8 @@
     "createChannels": "चैनल बनाएं (WIP)",
     "statusPrivacy": "स्टेटस गोपनीयता (WIP)",
     "clearCallLogs": "कॉल लॉग्स साफ करें (WIP)"
-  },"userabout": {
+  },
+  "userabout": {
     "members": "सदस्य",
     "group": "समूह",
     "groups": "समूह",
@@ -577,7 +605,8 @@
         "cta": "रिपोर्ट"
       }
     }
-  },"invite": {
+  },
+  "invite": {
     "header": "मित्र को आमंत्रित करें",
     "actions": {
       "search": "संपर्क खोजें",
@@ -610,31 +639,32 @@
     "errors": {
       "shareFailed": "शेयर शीट नहीं खोली जा सकी।"
     }
-  },"community": {
-    "manageGroups": {
-    "title": "समूह प्रबंधित करें",
-    "groups": "समूह",
-    "createNew": "नया समूह बनाएँ",
-    "addExisting": "मौजूदा समूह जोड़ें",
-    "info": "सदस्य एडमिन की मंजूरी के लिए मौजूदा समूह सुझा सकते हैं और सीधे नए समूह जोड़ सकते हैं। देखें",
-    "settingsLink": "समुदाय सेटिंग्स",
-    "listHeader": "इस समुदाय के समूह",
-    "loading": "समूह लोड हो रहे हैं...",
-    "empty": "इस समुदाय के लिए कोई समूह नहीं मिला",
-    "members": "सदस्य",
-    "unnamedGroup": "बेनाम समूह",
-    "remove": {
-      "header": "समुदाय से समूह हटाएँ",
-      "message": "क्या आप इस समूह को समुदाय से हटाना चाहते हैं? समूह रहेगा लेकिन अब समुदाय का हिस्सा नहीं होगा।",
-      "alsoRemoveMembers": "इस समूह के सदस्यों को भी समुदाय और समूह से हटाएँ",
-      "cta": "हटाएँ",
-      "aria": "समुदाय से समूह हटाएँ"
-    },
-    "toasts": {
-      "removed": "समूह समुदाय से हटा दिया गया और सदस्य अपडेट हुए",
-      "removeFailed": "समूह हटाने में विफल। फिर से प्रयास करें।"
-    }
   },
+  "community": {
+    "manageGroups": {
+      "title": "समूह प्रबंधित करें",
+      "groups": "समूह",
+      "createNew": "नया समूह बनाएँ",
+      "addExisting": "मौजूदा समूह जोड़ें",
+      "info": "सदस्य एडमिन की मंजूरी के लिए मौजूदा समूह सुझा सकते हैं और सीधे नए समूह जोड़ सकते हैं। देखें",
+      "settingsLink": "समुदाय सेटिंग्स",
+      "listHeader": "इस समुदाय के समूह",
+      "loading": "समूह लोड हो रहे हैं...",
+      "empty": "इस समुदाय के लिए कोई समूह नहीं मिला",
+      "members": "सदस्य",
+      "unnamedGroup": "बेनाम समूह",
+      "remove": {
+        "header": "समुदाय से समूह हटाएँ",
+        "message": "क्या आप इस समूह को समुदाय से हटाना चाहते हैं? समूह रहेगा लेकिन अब समुदाय का हिस्सा नहीं होगा।",
+        "alsoRemoveMembers": "इस समूह के सदस्यों को भी समुदाय और समूह से हटाएँ",
+        "cta": "हटाएँ",
+        "aria": "समुदाय से समूह हटाएँ"
+      },
+      "toasts": {
+        "removed": "समूह समुदाय से हटा दिया गया और सदस्य अपडेट हुए",
+        "removeFailed": "समूह हटाने में विफल। फिर से प्रयास करें।"
+      }
+    },
     "title": "समुदाय",
     "actions": {
       "qr": "QR क्रियाएँ खोलें",
@@ -643,11 +673,11 @@
     "newCommunity": "नया समुदाय",
     "unnamedCommunity": "बेनाम समुदाय",
     "viewAll": "सभी देखें",
-     "groupType": {
-    "normal": "सामान्य समूह",
-    "announcement": "घोषणा समूह",
-    "general": "जनरल समूह"
-  },
+    "groupType": {
+      "normal": "सामान्य समूह",
+      "announcement": "घोषणा समूह",
+      "general": "जनरल समूह"
+    },
     "newGroup": {
       "header": "नया समूह",
       "placeholder": "समूह का नाम",
@@ -656,7 +686,8 @@
     "toasts": {
       "groupCreated": "समूह बनाया गया"
     }
-  },"community_menu_component": {
+  },
+  "community_menu_component": {
     "info": "समुदाय जानकारी",
     "invite": "सदस्यों को आमंत्रित करें",
     "settings": "समुदाय सेटिंग्स"
@@ -670,7 +701,8 @@
     "communityLabel": "समुदाय:",
     "joinNote": "जुड़ते ही आप तुरंत सदस्य बन जाएंगे।",
     "joinCta": "समूह से जुड़ें"
-  },"add_existing_groups_page": {
+  },
+  "add_existing_groups_page": {
     "header": "मौजूदा समूह जोड़ें",
     "actions": {
       "search": "समूह खोजें",

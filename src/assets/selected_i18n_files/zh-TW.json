@@ -45,51 +45,51 @@
     "cancel": "取消",
     "logout": "登出"
   },
- "settingsPage": {
+  "settingsPage": {
     "title": "DemmDesk (設定)",
-    "account": { 
-      "title": "MyTell (帳戶)", 
-      "description": "TellShield (隱私)、安全性、更換號碼" 
+    "account": {
+      "title": "MyTell (帳戶)",
+      "description": "TellShield (隱私)、安全性、更換號碼"
     },
-    "privacy": { 
-      "title": "TellShield (隱私)", 
-      "description": "控制您的 TellShield (隱私) 設定" 
+    "privacy": {
+      "title": "TellShield (隱私)",
+      "description": "控制您的 TellShield (隱私) 設定"
     },
-    "avatar": { 
-      "title": "TellFace (個人資料圖片)", 
-      "description": "變更您的 TellFace (個人資料圖片)" 
+    "avatar": {
+      "title": "TellFace (個人資料圖片)",
+      "description": "變更您的 TellFace (個人資料圖片)"
     },
-    "chats": { 
-      "title": "Tells (聊天記錄)", 
-      "description": "主題、壁紙、SafeDemm (備份)" 
+    "chats": {
+      "title": "Tells (聊天記錄)",
+      "description": "主題、壁紙、SafeDemm (備份)"
     },
-    "accessibility": { 
-      "title": "Accessibility (協助工具)", 
-      "description": "調整文字大小與顯示選項" 
+    "accessibility": {
+      "title": "Accessibility (協助工具)",
+      "description": "調整文字大小與顯示選項"
     },
-    "notifications": { 
-      "title": "TellAlerts (通知)", 
-      "description": "管理 Tell (訊息)、DemmRoom (群組) 與 Connect (通話) 提醒" 
+    "notifications": {
+      "title": "TellAlerts (通知)",
+      "description": "管理 Tell (訊息)、DemmRoom (群組) 與 Connect (通話) 提醒"
     },
-    "storage": { 
-      "title": "SafeDemm (儲存空間與資料)", 
-      "description": "管理儲存空間與網路使用量" 
+    "storage": {
+      "title": "SafeDemm (儲存空間與資料)",
+      "description": "管理儲存空間與網路使用量"
     },
-    "appLanguage": { 
-      "title": "App Language (應用程式語言)", 
-      "description": "選擇 TellDemm 應用程式語言" 
+    "appLanguage": {
+      "title": "App Language (應用程式語言)",
+      "description": "選擇 TellDemm 應用程式語言"
     },
-    "help": { 
-      "title": "DemmHelp (說明)", 
-      "description": "說明中心、聯絡我們、應用程式資訊" 
+    "help": {
+      "title": "DemmHelp (說明)",
+      "description": "說明中心、聯絡我們、應用程式資訊"
     },
-    "updates": { 
-      "title": "DemmUpdate (應用程式更新)", 
-      "description": "檢查更新並啟用自動更新" 
+    "updates": {
+      "title": "DemmUpdate (應用程式更新)",
+      "description": "檢查更新並啟用自動更新"
     },
-    "invite": { 
-      "title": "SpreadDemm (邀請朋友)", 
-      "description": "與您的 DemmList (聯絡人) 分享 TellDemm 應用程式" 
+    "invite": {
+      "title": "SpreadDemm (邀請朋友)",
+      "description": "與您的 DemmList (聯絡人) 分享 TellDemm 應用程式"
     },
     "logout": {
       "title": "Log Out (登出)",
@@ -144,34 +144,35 @@
       "cancel": "取消",
       "log": "刪除帳號視窗已開啟"
     }
-  },"accessibility": {
-  "title": "輔助功能",
-  "groups": {
-    "displayMotion": "顯示與動作",
-    "interaction": "互動"
   },
-  "increaseContrast": {
-    "title": "提高對比",
-    "desc": "在亮色模式下加深主要顏色以改善可讀性。"
+  "accessibility": {
+    "title": "輔助功能",
+    "groups": {
+      "displayMotion": "顯示與動作",
+      "interaction": "互動"
+    },
+    "increaseContrast": {
+      "title": "提高對比",
+      "desc": "在亮色模式下加深主要顏色以改善可讀性。"
+    },
+    "reduceMotion": {
+      "title": "減少動作",
+      "desc": "盡量減少動態貼圖、GIF 與轉場效果。"
+    },
+    "largeText": {
+      "title": "大字體",
+      "desc": "放大系統字體大小以便更容易閱讀。"
+    },
+    "simpleAnimations": {
+      "title": "簡化動畫",
+      "desc": "減少複雜動畫以提升互動體驗。"
+    },
+    "grayscale": {
+      "title": "灰階模式",
+      "desc": "將所有介面顏色轉換為灰階以減輕視覺疲勞。"
+    }
   },
-  "reduceMotion": {
-    "title": "減少動作",
-    "desc": "盡量減少動態貼圖、GIF 與轉場效果。"
-  },
-  "largeText": {
-    "title": "大字體",
-    "desc": "放大系統字體大小以便更容易閱讀。"
-  },
-  "simpleAnimations": {
-    "title": "簡化動畫",
-    "desc": "減少複雜動畫以提升互動體驗。"
-  },
-  "grayscale": {
-    "title": "灰階模式",
-    "desc": "將所有介面顏色轉換為灰階以減輕視覺疲勞。"
-  }
-}
-,"privacyPage": {
+  "privacyPage": {
     "title": "隱私",
     "groups": {
       "whoCanSee": "誰可以查看我的資訊",
@@ -202,7 +203,8 @@
       "contacts": "我的聯絡人",
       "nobody": "無人"
     }
-  },"avatarPage": {
+  },
+  "avatarPage": {
     "title": "建立你的頭像",
     "previewAlt": "頭像預覽",
     "sections": {
@@ -235,7 +237,8 @@
       "saved": "頭像選項已儲存在本機。",
       "downloadError": "下載失敗。請再試一次。"
     }
-  },"notifications": {
+  },
+  "notifications": {
     "title": "通知",
     "highPriority": {
       "title": "使用高優先順序通知",
@@ -253,7 +256,8 @@
       "title": "通話通知",
       "desc": "鈴聲與震動設定"
     }
-  },"storage": {
+  },
+  "storage": {
     "title": "儲存空間與資料",
     "totalUsedHuman": "{{used}} MB / {{total}} MB",
     "cards": {
@@ -294,7 +298,8 @@
       "cleared": "已清除 {{mb}} MB 快取",
       "statsReset": "網路統計已重設"
     }
-  },"chats": {
+  },
+  "chats": {
     "title": "聊天",
     "sections": {
       "appearance": "外觀",
@@ -365,7 +370,8 @@
         "done": "備份完成"
       }
     }
-  },"profilePage": {
+  },
+  "profilePage": {
     "title": "個人資料",
     "imageAlt": "個人頭像",
     "buttons": {
@@ -383,7 +389,8 @@
       "source": {
         "header": "選擇圖片來源",
         "camera": "相機",
-        "gallery": "相簿"
+        "gallery": "相簿",
+        "cancel": "取消"
       }
     },
     "loading": {
@@ -404,7 +411,8 @@
       "updated": "個人頭像更新成功！",
       "updateFailed": "更新個人頭像失敗"
     }
-  },"footerTabs": {
+  },
+  "footerTabs": {
     "chat": "Tells (聊天)",
     "updates": "Echoes (更新)",
     "communities": "DemmCircles (社群)",
@@ -413,7 +421,8 @@
       "unreadChats": "{{count}} 未讀 Tells",
       "unreadUpdates": "{{count}} Echoes"
     }
-  },"socialLinks": {
+  },
+  "socialLinks": {
     "title": "連結",
     "intro": "在個人資料中新增連結可讓聯絡人輕鬆造訪您的其他帳號。",
     "instagram": {
@@ -422,7 +431,8 @@
     },
     "actions": {
       "add": "新增",
-      "edit": "編輯"
+      "edit": "編輯",
+      "cancel": "取消"
     },
     "privacy": {
       "note": "若要管理誰可以看到您的連結，請前往",
@@ -449,12 +459,24 @@
       "saved": "Instagram 已成功儲存！",
       "saveFailed": "無法更新 Instagram 連結，請再試一次。"
     }
-  },"home": {
-    "search": { "placeholder": "詢問或搜尋" },
-    "filters": { "all": "全部", "read": "已讀", "unread": "未讀", "groups": "DemmRoom (群組)" },
-    "groupCreator": { "placeholder": "輸入 DemmRoom 名稱" },
+  },
+  "home": {
+    "search": {
+      "placeholder": "詢問或搜尋"
+    },
+    "filters": {
+      "all": "全部",
+      "read": "已讀",
+      "unread": "未讀",
+      "groups": "DemmRoom (群組)"
+    },
+    "groupCreator": {
+      "placeholder": "輸入 DemmRoom 名稱"
+    },
     "typing": "正在輸入...",
-    "time": { "yesterday": "昨天" },
+    "time": {
+      "yesterday": "昨天"
+    },
     "preview": {
       "deleted": "此訊息已被刪除",
       "encrypted": "[已加密]",
@@ -482,8 +504,11 @@
       "header": "登出",
       "message": "工作階段逾時/過期。"
     },
-    "alt": { "profile": "個人資料" }
-  },"menu": {
+    "alt": {
+      "profile": "個人資料"
+    }
+  },
+  "menu": {
     "newGroup": "新增群組",
     "newCommunity": "新增社群",
     "newBroadcast": "新增廣播 (WIP)",
@@ -493,7 +518,8 @@
     "createChannels": "建立頻道 (WIP)",
     "statusPrivacy": "狀態隱私 (WIP)",
     "clearCallLogs": "清除通話紀錄 (WIP)"
-  },"userabout": {
+  },
+  "userabout": {
     "members": "成員",
     "group": "群組",
     "groups": "群組",
@@ -579,7 +605,8 @@
         "cta": "檢舉"
       }
     }
-  },"invite": {
+  },
+  "invite": {
     "header": "邀請好友",
     "actions": {
       "search": "搜尋聯絡人",
@@ -612,31 +639,32 @@
     "errors": {
       "shareFailed": "無法開啟分享頁面。"
     }
-  },"community": {
-     "manageGroups": {
-    "title": "管理群組",
-    "groups": "群組",
-    "createNew": "建立新群組",
-    "addExisting": "新增現有群組",
-    "info": "成員可以建議現有群組以供管理員批准，並可直接新增新群組。查看於",
-    "settingsLink": "社群設定",
-    "listHeader": "此社群中的群組",
-    "loading": "正在載入群組...",
-    "empty": "未找到此社群的群組",
-    "members": "成員",
-    "unnamedGroup": "未命名群組",
-    "remove": {
-      "header": "從社群中移除群組",
-      "message": "要從社群中移除此群組嗎？群組將保留，但不再屬於此社群。",
-      "alsoRemoveMembers": "同時將此群組的成員從社群和群組中移除",
-      "cta": "移除",
-      "aria": "從社群中移除群組"
-    },
-    "toasts": {
-      "removed": "群組已從社群中移除並更新成員",
-      "removeFailed": "移除群組失敗。請再試一次。"
-    }
   },
+  "community": {
+    "manageGroups": {
+      "title": "管理群組",
+      "groups": "群組",
+      "createNew": "建立新群組",
+      "addExisting": "新增現有群組",
+      "info": "成員可以建議現有群組以供管理員批准，並可直接新增新群組。查看於",
+      "settingsLink": "社群設定",
+      "listHeader": "此社群中的群組",
+      "loading": "正在載入群組...",
+      "empty": "未找到此社群的群組",
+      "members": "成員",
+      "unnamedGroup": "未命名群組",
+      "remove": {
+        "header": "從社群中移除群組",
+        "message": "要從社群中移除此群組嗎？群組將保留，但不再屬於此社群。",
+        "alsoRemoveMembers": "同時將此群組的成員從社群和群組中移除",
+        "cta": "移除",
+        "aria": "從社群中移除群組"
+      },
+      "toasts": {
+        "removed": "群組已從社群中移除並更新成員",
+        "removeFailed": "移除群組失敗。請再試一次。"
+      }
+    },
     "title": "社群",
     "actions": {
       "qr": "開啟 QR 操作",
@@ -646,10 +674,10 @@
     "unnamedCommunity": "未命名社群",
     "viewAll": "查看全部",
     "groupType": {
-    "normal": "普通群組",
-    "announcement": "公告群組",
-    "general": "一般群組"
-  },
+      "normal": "普通群組",
+      "announcement": "公告群組",
+      "general": "一般群組"
+    },
     "newGroup": {
       "header": "新群組",
       "placeholder": "群組名稱",
@@ -658,7 +686,8 @@
     "toasts": {
       "groupCreated": "群組已建立"
     }
-  },"community_menu_component": {
+  },
+  "community_menu_component": {
     "info": "社群資訊",
     "invite": "邀請成員",
     "settings": "社群設定"
@@ -672,7 +701,8 @@
     "communityLabel": "社群：",
     "joinNote": "加入後您將立即成為成員。",
     "joinCta": "加入群組"
-  },"add_existing_groups_page": {
+  },
+  "add_existing_groups_page": {
     "header": "新增現有群組",
     "actions": {
       "search": "搜尋群組",
@@ -691,5 +721,4 @@
       "selectAtLeastOne": "請至少選擇一個群組"
     }
   }
-
 }

@@ -40,56 +40,56 @@
       "description": "সংস্করণ, আইনী এবং প্রযুক্তিগত বিবরণ।"
     }
   },
-   "common": {
+  "common": {
     "ok": "ঠিক আছে",
     "cancel": "বাতিল",
     "logout": "লগ আউট"
   },
- "settingsPage": {
+  "settingsPage": {
     "title": "DemmDesk (সেটিংস)",
-    "account": { 
-      "title": "MyTell (অ্যাকাউন্ট)", 
-      "description": "TellShield (গোপনীয়তা), নিরাপত্তা, নম্বর পরিবর্তন করুন" 
+    "account": {
+      "title": "MyTell (অ্যাকাউন্ট)",
+      "description": "TellShield (গোপনীয়তা), নিরাপত্তা, নম্বর পরিবর্তন করুন"
     },
-    "privacy": { 
-      "title": "TellShield (গোপনীয়তা)", 
-      "description": "আপনার TellShield (গোপনীয়তা) সেটিংস নিয়ন্ত্রণ করুন" 
+    "privacy": {
+      "title": "TellShield (গোপনীয়তা)",
+      "description": "আপনার TellShield (গোপনীয়তা) সেটিংস নিয়ন্ত্রণ করুন"
     },
-    "avatar": { 
-      "title": "TellFace (প্রোফাইল ছবি)", 
-      "description": "আপনার TellFace (প্রোফাইল ছবি) পরিবর্তন করুন" 
+    "avatar": {
+      "title": "TellFace (প্রোফাইল ছবি)",
+      "description": "আপনার TellFace (প্রোফাইল ছবি) পরিবর্তন করুন"
     },
-    "chats": { 
-      "title": "Tells (চ্যাটস)", 
-      "description": "থিম, ওয়ালপেপার, SafeDemm (ব্যাকআপ)" 
+    "chats": {
+      "title": "Tells (চ্যাটস)",
+      "description": "থিম, ওয়ালপেপার, SafeDemm (ব্যাকআপ)"
     },
-    "accessibility": { 
-      "title": "Accessibility (সুবিধাবিধি)", 
-      "description": "পাঠের আকার এবং প্রদর্শন বিকল্প সামঞ্জস্য করুন" 
+    "accessibility": {
+      "title": "Accessibility (সুবিধাবিধি)",
+      "description": "পাঠের আকার এবং প্রদর্শন বিকল্প সামঞ্জস্য করুন"
     },
-    "notifications": { 
-      "title": "TellAlerts (বিজ্ঞপ্তি)", 
-      "description": "Tell (বার্তা), DemmRoom (গ্রুপ) এবং Connect (কল) সতর্কতা পরিচালনা করুন" 
+    "notifications": {
+      "title": "TellAlerts (বিজ্ঞপ্তি)",
+      "description": "Tell (বার্তা), DemmRoom (গ্রুপ) এবং Connect (কল) সতর্কতা পরিচালনা করুন"
     },
-    "storage": { 
-      "title": "SafeDemm (স্টোরেজ এবং ডেটা)", 
-      "description": "স্টোরেজ এবং নেটওয়ার্ক ব্যবহার পরিচালনা করুন" 
+    "storage": {
+      "title": "SafeDemm (স্টোরেজ এবং ডেটা)",
+      "description": "স্টোরেজ এবং নেটওয়ার্ক ব্যবহার পরিচালনা করুন"
     },
-    "appLanguage": { 
-      "title": "App Language (অ্যাপ ভাষা)", 
-      "description": "TellDemm অ্যাপের ভাষা চয়ন করুন" 
+    "appLanguage": {
+      "title": "App Language (অ্যাপ ভাষা)",
+      "description": "TellDemm অ্যাপের ভাষা চয়ন করুন"
     },
-    "help": { 
-      "title": "DemmHelp (সহায়তা)", 
-      "description": "হেল্প সেন্টার, যোগাযোগ করুন, অ্যাপ তথ্য" 
+    "help": {
+      "title": "DemmHelp (সহায়তা)",
+      "description": "হেল্প সেন্টার, যোগাযোগ করুন, অ্যাপ তথ্য"
     },
-    "updates": { 
-      "title": "DemmUpdate (অ্যাপ আপডেট)", 
-      "description": "আপডেট চেক করুন এবং অটো-আপডেট সক্ষম করুন" 
+    "updates": {
+      "title": "DemmUpdate (অ্যাপ আপডেট)",
+      "description": "আপডেট চেক করুন এবং অটো-আপডেট সক্ষম করুন"
     },
-    "invite": { 
-      "title": "SpreadDemm (বন্ধুকে আমন্ত্রণ করুন)", 
-      "description": "TellDemm অ্যাপটি আপনার DemmList (যোগাযোগ) এর সাথে শেয়ার করুন" 
+    "invite": {
+      "title": "SpreadDemm (বন্ধুকে আমন্ত্রণ করুন)",
+      "description": "TellDemm অ্যাপটি আপনার DemmList (যোগাযোগ) এর সাথে শেয়ার করুন"
     },
     "logout": {
       "title": "Log Out (লগ আউট)",
@@ -144,34 +144,35 @@
       "cancel": "বাতিল",
       "log": "অ্যাকাউন্ট মুছার মডাল খোলা হয়েছে"
     }
-  },"accessibility": {
-  "title": "অ্যাক্সেসিবিলিটি",
-  "groups": {
-    "displayMotion": "প্রদর্শন ও গতি",
-    "interaction": "ইন্টারঅ্যাকশন"
   },
-  "increaseContrast": {
-    "title": "কনট্রাস্ট বৃদ্ধি করুন",
-    "desc": "হালকা মোডে পাঠযোগ্যতা উন্নত করতে প্রধান রঙগুলো গাঢ় করুন।"
+  "accessibility": {
+    "title": "অ্যাক্সেসিবিলিটি",
+    "groups": {
+      "displayMotion": "প্রদর্শন ও গতি",
+      "interaction": "ইন্টারঅ্যাকশন"
+    },
+    "increaseContrast": {
+      "title": "কনট্রাস্ট বৃদ্ধি করুন",
+      "desc": "হালকা মোডে পাঠযোগ্যতা উন্নত করতে প্রধান রঙগুলো গাঢ় করুন।"
+    },
+    "reduceMotion": {
+      "title": "গতি কমান",
+      "desc": "অ্যানিমেটেড স্টিকার, GIF এবং ট্রানজিশন কমিয়ে দিন।"
+    },
+    "largeText": {
+      "title": "বড় টেক্সট",
+      "desc": "সহজে পড়ার জন্য সিস্টেম ফন্ট স্কেল বাড়ান।"
+    },
+    "simpleAnimations": {
+      "title": "সহজ অ্যানিমেশন",
+      "desc": "সহজ ব্যবহারের জন্য জটিল অ্যানিমেশন হ্রাস করুন।"
+    },
+    "grayscale": {
+      "title": "গ্রেস্কেল মোড",
+      "desc": "চোখের চাপ কমাতে সমস্ত রঙকে ধূসর শেডে রূপান্তর করুন।"
+    }
   },
-  "reduceMotion": {
-    "title": "গতি কমান",
-    "desc": "অ্যানিমেটেড স্টিকার, GIF এবং ট্রানজিশন কমিয়ে দিন।"
-  },
-  "largeText": {
-    "title": "বড় টেক্সট",
-    "desc": "সহজে পড়ার জন্য সিস্টেম ফন্ট স্কেল বাড়ান।"
-  },
-  "simpleAnimations": {
-    "title": "সহজ অ্যানিমেশন",
-    "desc": "সহজ ব্যবহারের জন্য জটিল অ্যানিমেশন হ্রাস করুন।"
-  },
-  "grayscale": {
-    "title": "গ্রেস্কেল মোড",
-    "desc": "চোখের চাপ কমাতে সমস্ত রঙকে ধূসর শেডে রূপান্তর করুন।"
-  }
-}
-,"privacyPage": {
+  "privacyPage": {
     "title": "গোপনীয়তা",
     "groups": {
       "whoCanSee": "কে আমার তথ্য দেখতে পাবে",
@@ -202,7 +203,8 @@
       "contacts": "আমার কনট্যাক্টস",
       "nobody": "কেউ নয়"
     }
-  },"avatarPage": {
+  },
+  "avatarPage": {
     "title": "আপনার অ্যাভাটার তৈরি করুন",
     "previewAlt": "অ্যাভাটার প্রিভিউ",
     "sections": {
@@ -235,7 +237,8 @@
       "saved": "অ্যাভাটার অপশনগুলি লোকালভাবে সংরক্ষণ করা হয়েছে।",
       "downloadError": "ডাউনলোড ব্যর্থ হয়েছে। আবার চেষ্টা করুন।"
     }
-  },"notifications": {
+  },
+  "notifications": {
     "title": "নোটিফিকেশন",
     "highPriority": {
       "title": "হাই প্রায়োরিটি নোটিফিকেশন ব্যবহার করুন",
@@ -253,7 +256,8 @@
       "title": "কল নোটিফিকেশন",
       "desc": "রিংটোন ও ভাইব্রেশন সেটিংস"
     }
-  },"storage": {
+  },
+  "storage": {
     "title": "স্টোরেজ ও ডেটা",
     "totalUsedHuman": "{{used}} MB এর মধ্যে {{total}} MB",
     "cards": {
@@ -294,7 +298,8 @@
       "cleared": "{{mb}} MB ক্যাশ পরিষ্কার হয়েছে",
       "statsReset": "নেটওয়ার্ক পরিসংখ্যান রিসেট হয়েছে"
     }
-  },"chats": {
+  },
+  "chats": {
     "title": "চ্যাট",
     "sections": {
       "appearance": "চেহারা",
@@ -365,7 +370,8 @@
         "done": "ব্যাকআপ সম্পন্ন হয়েছে"
       }
     }
-  },"profilePage": {
+  },
+  "profilePage": {
     "title": "প্রোফাইল",
     "imageAlt": "প্রোফাইল ছবি",
     "buttons": {
@@ -383,7 +389,8 @@
       "source": {
         "header": "ছবির উৎস নির্বাচন করুন",
         "camera": "ক্যামেরা",
-        "gallery": "গ্যালারি"
+        "gallery": "গ্যালারি",
+        "cancel": "বাতিল"
       }
     },
     "loading": {
@@ -404,7 +411,8 @@
       "updated": "প্রোফাইল ছবি সফলভাবে আপডেট হয়েছে!",
       "updateFailed": "প্রোফাইল ছবি আপডেট ব্যর্থ হয়েছে"
     }
-  },"footerTabs": {
+  },
+  "footerTabs": {
     "chat": "Tells (চ্যাট)",
     "updates": "Echoes (আপডেটস)",
     "communities": "DemmCircles (কমিউনিটিস)",
@@ -413,7 +421,8 @@
       "unreadChats": "{{count}} অপঠিত Tells",
       "unreadUpdates": "{{count}} Echoes"
     }
-  }, "socialLinks": {
+  },
+  "socialLinks": {
     "title": "লিঙ্কসমূহ",
     "intro": "আপনার প্রোফাইলে লিঙ্ক যুক্ত করলে আপনার পরিচিতরা সহজেই আপনার অন্য প্রোফাইলগুলো দেখতে পারবেন।",
     "instagram": {
@@ -422,7 +431,8 @@
     },
     "actions": {
       "add": "যোগ করুন",
-      "edit": "সম্পাদনা"
+      "edit": "সম্পাদনা",
+      "cancel": "বাতিল"
     },
     "privacy": {
       "note": "কারা আপনার লিঙ্কগুলো দেখতে পাবে তা নিয়ন্ত্রণ করতে যান",
@@ -449,12 +459,24 @@
       "saved": "ইনস্টাগ্রাম সফলভাবে সংরক্ষিত হয়েছে!",
       "saveFailed": "ইনস্টাগ্রাম লিঙ্ক আপডেট করতে ব্যর্থ। আবার চেষ্টা করুন।"
     }
-  },"home": {
-    "search": { "placeholder": "প্রশ্ন করুন বা অনুসন্ধান করুন" },
-    "filters": { "all": "সব", "read": "পড়া", "unread": "অপঠিত", "groups": "DemmRoom (গ্রুপ)" },
-    "groupCreator": { "placeholder": "DemmRoom নাম লিখুন" },
+  },
+  "home": {
+    "search": {
+      "placeholder": "প্রশ্ন করুন বা অনুসন্ধান করুন"
+    },
+    "filters": {
+      "all": "সব",
+      "read": "পড়া",
+      "unread": "অপঠিত",
+      "groups": "DemmRoom (গ্রুপ)"
+    },
+    "groupCreator": {
+      "placeholder": "DemmRoom নাম লিখুন"
+    },
     "typing": "টাইপিং করছে...",
-    "time": { "yesterday": "গতকাল" },
+    "time": {
+      "yesterday": "গতকাল"
+    },
     "preview": {
       "deleted": "এই বার্তাটি মুছে ফেলা হয়েছে",
       "encrypted": "[এনক্রিপ্টেড]",
@@ -482,8 +504,11 @@
       "header": "লগ আউট",
       "message": "সেশন টাইম আউট/মেয়াদ শেষ।"
     },
-    "alt": { "profile": "প্রোফাইল" }
-  },"menu": {
+    "alt": {
+      "profile": "প্রোফাইল"
+    }
+  },
+  "menu": {
     "newGroup": "নতুন গ্রুপ",
     "newCommunity": "নতুন কমিউনিটি",
     "newBroadcast": "নতুন সম্প্রচার (WIP)",
@@ -493,7 +518,8 @@
     "createChannels": "চ্যানেল তৈরি করুন (WIP)",
     "statusPrivacy": "স্ট্যাটাস প্রাইভেসি (WIP)",
     "clearCallLogs": "কল লগ মুছুন (WIP)"
-  },"userabout": {
+  },
+  "userabout": {
     "members": "সদস্য",
     "group": "গ্রুপ",
     "groups": "গ্রুপসমূহ",
@@ -579,7 +605,8 @@
         "cta": "রিপোর্ট"
       }
     }
-  },"invite": {
+  },
+  "invite": {
     "header": "একজন বন্ধুকে আমন্ত্রণ করুন",
     "actions": {
       "search": "কন্টাক্টস খুঁজুন",
@@ -612,31 +639,32 @@
     "errors": {
       "shareFailed": "শেয়ার শীট খোলা যায়নি।"
     }
-  },"community": {
-     "manageGroups": {
-    "title": "গ্রুপ পরিচালনা করুন",
-    "groups": "গ্রুপ",
-    "createNew": "নতুন গ্রুপ তৈরি করুন",
-    "addExisting": "বিদ্যমান গ্রুপ যোগ করুন",
-    "info": "সদস্যরা এডমিন অনুমোদনের জন্য বিদ্যমান গ্রুপ প্রস্তাব করতে পারে এবং সরাসরি নতুন গ্রুপ যোগ করতে পারে। দেখুন",
-    "settingsLink": "কমিউনিটি সেটিংস",
-    "listHeader": "এই কমিউনিটির গ্রুপ",
-    "loading": "গ্রুপ লোড হচ্ছে...",
-    "empty": "এই কমিউনিটির জন্য কোনো গ্রুপ পাওয়া যায়নি",
-    "members": "সদস্য",
-    "unnamedGroup": "নামহীন গ্রুপ",
-    "remove": {
-      "header": "কমিউনিটি থেকে গ্রুপ সরান",
-      "message": "আপনি কি এই গ্রুপটি কমিউনিটি থেকে সরাতে চান? গ্রুপ থাকবে কিন্তু আর কমিউনিটির অংশ হবে না।",
-      "alsoRemoveMembers": "এই গ্রুপের সদস্যদেরও কমিউনিটি ও গ্রুপ থেকে সরান",
-      "cta": "সরান",
-      "aria": "কমিউনিটি থেকে গ্রুপ সরান"
-    },
-    "toasts": {
-      "removed": "গ্রুপটি কমিউনিটি থেকে সরানো হয়েছে এবং সদস্য আপডেট করা হয়েছে",
-      "removeFailed": "গ্রুপ সরাতে ব্যর্থ হয়েছে। আবার চেষ্টা করুন।"
-    }
   },
+  "community": {
+    "manageGroups": {
+      "title": "গ্রুপ পরিচালনা করুন",
+      "groups": "গ্রুপ",
+      "createNew": "নতুন গ্রুপ তৈরি করুন",
+      "addExisting": "বিদ্যমান গ্রুপ যোগ করুন",
+      "info": "সদস্যরা এডমিন অনুমোদনের জন্য বিদ্যমান গ্রুপ প্রস্তাব করতে পারে এবং সরাসরি নতুন গ্রুপ যোগ করতে পারে। দেখুন",
+      "settingsLink": "কমিউনিটি সেটিংস",
+      "listHeader": "এই কমিউনিটির গ্রুপ",
+      "loading": "গ্রুপ লোড হচ্ছে...",
+      "empty": "এই কমিউনিটির জন্য কোনো গ্রুপ পাওয়া যায়নি",
+      "members": "সদস্য",
+      "unnamedGroup": "নামহীন গ্রুপ",
+      "remove": {
+        "header": "কমিউনিটি থেকে গ্রুপ সরান",
+        "message": "আপনি কি এই গ্রুপটি কমিউনিটি থেকে সরাতে চান? গ্রুপ থাকবে কিন্তু আর কমিউনিটির অংশ হবে না।",
+        "alsoRemoveMembers": "এই গ্রুপের সদস্যদেরও কমিউনিটি ও গ্রুপ থেকে সরান",
+        "cta": "সরান",
+        "aria": "কমিউনিটি থেকে গ্রুপ সরান"
+      },
+      "toasts": {
+        "removed": "গ্রুপটি কমিউনিটি থেকে সরানো হয়েছে এবং সদস্য আপডেট করা হয়েছে",
+        "removeFailed": "গ্রুপ সরাতে ব্যর্থ হয়েছে। আবার চেষ্টা করুন।"
+      }
+    },
     "title": "কমিউনিটি",
     "actions": {
       "qr": "QR অ্যাকশন খুলুন",
@@ -646,10 +674,10 @@
     "unnamedCommunity": "নামহীন কমিউনিটি",
     "viewAll": "সব দেখুন",
     "groupType": {
-    "normal": "সাধারণ গ্রুপ",
-    "announcement": "ঘোষণা গ্রুপ",
-    "general": "জেনারেল গ্রুপ"
-  },
+      "normal": "সাধারণ গ্রুপ",
+      "announcement": "ঘোষণা গ্রুপ",
+      "general": "জেনারেল গ্রুপ"
+    },
     "newGroup": {
       "header": "নতুন গ্রুপ",
       "placeholder": "গ্রুপের নাম",
@@ -658,7 +686,8 @@
     "toasts": {
       "groupCreated": "গ্রুপ তৈরি হয়েছে"
     }
-  },"community_menu_component": {
+  },
+  "community_menu_component": {
     "info": "কমিউনিটি তথ্য",
     "invite": "সদস্য আমন্ত্রণ করুন",
     "settings": "কমিউনিটি সেটিংস"
@@ -672,7 +701,8 @@
     "communityLabel": "কমিউনিটি:",
     "joinNote": "যোগদান করলে আপনি সাথে সাথেই সদস্য হবেন।",
     "joinCta": "গ্রুপে যোগ দিন"
-  },"add_existing_groups_page": {
+  },
+  "add_existing_groups_page": {
     "header": "বিদ্যমান গ্রুপ যোগ করুন",
     "actions": {
       "search": "গ্রুপ অনুসন্ধান করুন",
@@ -691,7 +721,4 @@
       "selectAtLeastOne": "অন্তত একটি গ্রুপ নির্বাচন করুন"
     }
   }
-
-
-
 }

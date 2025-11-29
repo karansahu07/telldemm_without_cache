@@ -42,49 +42,49 @@
   },
   "settingsPage": {
     "title": "DemmDesk (تنظیمات)",
-    "account": { 
-      "title": "MyTell (حساب)", 
-      "description": "TellShield (حریم خصوصی)، امنیت، تغییر شماره" 
+    "account": {
+      "title": "MyTell (حساب)",
+      "description": "TellShield (حریم خصوصی)، امنیت، تغییر شماره"
     },
-    "privacy": { 
-      "title": "TellShield (حریم خصوصی)", 
-      "description": "تنظیمات TellShield (حریم خصوصی) خود را کنترل کنید" 
+    "privacy": {
+      "title": "TellShield (حریم خصوصی)",
+      "description": "تنظیمات TellShield (حریم خصوصی) خود را کنترل کنید"
     },
-    "avatar": { 
-      "title": "TellFace (عکس پروفایل)", 
-      "description": "TellFace (عکس پروفایل) خود را تغییر دهید" 
+    "avatar": {
+      "title": "TellFace (عکس پروفایل)",
+      "description": "TellFace (عکس پروفایل) خود را تغییر دهید"
     },
-    "chats": { 
-      "title": "Tells (چت‌ها)", 
-      "description": "تم، والپیپر، SafeDemm (پشتیبان‌گیری)" 
+    "chats": {
+      "title": "Tells (چت‌ها)",
+      "description": "تم، والپیپر، SafeDemm (پشتیبان‌گیری)"
     },
-    "accessibility": { 
-      "title": "Accessibility (دسترسی‌پذیری)", 
-      "description": "اندازه متن و گزینه‌های نمایش را تنظیم کنید" 
+    "accessibility": {
+      "title": "Accessibility (دسترسی‌پذیری)",
+      "description": "اندازه متن و گزینه‌های نمایش را تنظیم کنید"
     },
-    "notifications": { 
-      "title": "TellAlerts (اعلان‌ها)", 
-      "description": "هشدارهای Tell (پیام‌ها)، DemmRoom (گروه) و Connect (تماس‌ها) را مدیریت کنید" 
+    "notifications": {
+      "title": "TellAlerts (اعلان‌ها)",
+      "description": "هشدارهای Tell (پیام‌ها)، DemmRoom (گروه) و Connect (تماس‌ها) را مدیریت کنید"
     },
-    "storage": { 
-      "title": "SafeDemm (فضای ذخیره‌سازی و داده‌ها)", 
-      "description": "فضای ذخیره‌سازی و استفاده از شبکه را مدیریت کنید" 
+    "storage": {
+      "title": "SafeDemm (فضای ذخیره‌سازی و داده‌ها)",
+      "description": "فضای ذخیره‌سازی و استفاده از شبکه را مدیریت کنید"
     },
-    "appLanguage": { 
-      "title": "App Language (زبان اپ)", 
-      "description": "زبان اپ TellDemm را انتخاب کنید" 
+    "appLanguage": {
+      "title": "App Language (زبان اپ)",
+      "description": "زبان اپ TellDemm را انتخاب کنید"
     },
-    "help": { 
-      "title": "DemmHelp (راهنما)", 
-      "description": "مرکز راهنما، تماس با ما، اطلاعات اپ" 
+    "help": {
+      "title": "DemmHelp (راهنما)",
+      "description": "مرکز راهنما، تماس با ما، اطلاعات اپ"
     },
-    "updates": { 
-      "title": "DemmUpdate (به‌روزرسانی اپ)", 
-      "description": "بررسی به‌روزرسانی‌ها و فعال‌سازی به‌روزرسانی خودکار" 
+    "updates": {
+      "title": "DemmUpdate (به‌روزرسانی اپ)",
+      "description": "بررسی به‌روزرسانی‌ها و فعال‌سازی به‌روزرسانی خودکار"
     },
-    "invite": { 
-      "title": "SpreadDemm (دعوت از دوست)", 
-      "description": "اپ TellDemm را با DemmList (مخاطبین) خود به اشتراک بگذارید" 
+    "invite": {
+      "title": "SpreadDemm (دعوت از دوست)",
+      "description": "اپ TellDemm را با DemmList (مخاطبین) خود به اشتراک بگذارید"
     },
     "logout": {
       "title": "Log Out (خروج)",
@@ -97,7 +97,8 @@
       "successMessage": "شما با موفقیت خارج شدید."
     },
     "defaultStatus": "در دسترس"
-  },"accountPage": {
+  },
+  "accountPage": {
     "title": "حساب کاربری",
     "securityNotifications": "اعلان‌های امنیتی",
     "passkeys": "کلیدهای عبور",
@@ -114,34 +115,35 @@
       "cancel": "لغو",
       "log": "پنجره حذف حساب باز شد"
     }
-  },"accessibility": {
-  "title": "دسترسی‌پذیری",
-  "groups": {
-    "displayMotion": "نمایش و حرکت",
-    "interaction": "تعامل"
   },
-  "increaseContrast": {
-    "title": "افزایش کنتراست",
-    "desc": "برای بهبود خوانایی در حالت روشن، رنگ‌های اصلی را تیره‌تر کنید."
+  "accessibility": {
+    "title": "دسترسی‌پذیری",
+    "groups": {
+      "displayMotion": "نمایش و حرکت",
+      "interaction": "تعامل"
+    },
+    "increaseContrast": {
+      "title": "افزایش کنتراست",
+      "desc": "برای بهبود خوانایی در حالت روشن، رنگ‌های اصلی را تیره‌تر کنید."
+    },
+    "reduceMotion": {
+      "title": "کاهش حرکت",
+      "desc": "استیکرهای متحرک، GIFها و انتقال‌ها را به حداقل برسانید."
+    },
+    "largeText": {
+      "title": "متن بزرگ",
+      "desc": "برای مطالعه آسان‌تر، اندازه فونت سیستم را افزایش دهید."
+    },
+    "simpleAnimations": {
+      "title": "انیمیشن‌های ساده‌شده",
+      "desc": "برای تعامل آسان‌تر، انیمیشن‌های پیچیده را کاهش دهید."
+    },
+    "grayscale": {
+      "title": "حالت سیاه و سفید",
+      "desc": "برای کاهش خستگی چشم، تمام رنگ‌های رابط را به سایه‌های خاکستری تبدیل کنید."
+    }
   },
-  "reduceMotion": {
-    "title": "کاهش حرکت",
-    "desc": "استیکرهای متحرک، GIFها و انتقال‌ها را به حداقل برسانید."
-  },
-  "largeText": {
-    "title": "متن بزرگ",
-    "desc": "برای مطالعه آسان‌تر، اندازه فونت سیستم را افزایش دهید."
-  },
-  "simpleAnimations": {
-    "title": "انیمیشن‌های ساده‌شده",
-    "desc": "برای تعامل آسان‌تر، انیمیشن‌های پیچیده را کاهش دهید."
-  },
-  "grayscale": {
-    "title": "حالت سیاه و سفید",
-    "desc": "برای کاهش خستگی چشم، تمام رنگ‌های رابط را به سایه‌های خاکستری تبدیل کنید."
-  }
-}
-, "privacyPage": {
+  "privacyPage": {
     "title": "حریم خصوصی",
     "groups": {
       "whoCanSee": "چه کسی می‌تواند اطلاعات من را ببیند",
@@ -172,7 +174,8 @@
       "contacts": "مخاطبین من",
       "nobody": "هیچ‌کس"
     }
-  },"avatarPage": {
+  },
+  "avatarPage": {
     "title": "آواتار خود را بسازید",
     "previewAlt": "پیش‌نمایش آواتار",
     "sections": {
@@ -205,7 +208,8 @@
       "saved": "گزینه‌های آواتار به صورت محلی ذخیره شد.",
       "downloadError": "دانلود ناموفق بود. لطفاً دوباره تلاش کنید."
     }
-  },"notifications": {
+  },
+  "notifications": {
     "title": "اعلان‌ها",
     "highPriority": {
       "title": "استفاده از اعلان‌های با اولویت بالا",
@@ -223,7 +227,8 @@
       "title": "اعلان‌های تماس",
       "desc": "تنظیمات زنگ تماس و لرزش"
     }
-  }, "storage": {
+  },
+  "storage": {
     "title": "ذخیره‌سازی و داده‌ها",
     "totalUsedHuman": "{{used}} مگابایت از {{total}} مگابایت",
     "cards": {
@@ -264,7 +269,8 @@
       "cleared": "{{mb}} مگابایت کش پاک شد",
       "statsReset": "آمار شبکه بازنشانی شد"
     }
-  },"chats": {
+  },
+  "chats": {
     "title": "گفتگوها",
     "sections": {
       "appearance": "نمایه",
@@ -335,7 +341,8 @@
         "done": "پشتیبان‌گیری کامل شد"
       }
     }
-  }, "profilePage": {
+  },
+  "profilePage": {
     "title": "پروفایل",
     "imageAlt": "تصویر پروفایل",
     "buttons": {
@@ -353,7 +360,8 @@
       "source": {
         "header": "انتخاب منبع تصویر",
         "camera": "دوربین",
-        "gallery": "گالری"
+        "gallery": "گالری",
+        "cancel": "لغو"
       }
     },
     "loading": {
@@ -374,7 +382,8 @@
       "updated": "تصویر پروفایل با موفقیت به‌روزرسانی شد!",
       "updateFailed": "به‌روزرسانی تصویر پروفایل ناموفق بود"
     }
-  },"footerTabs": {
+  },
+  "footerTabs": {
     "chat": "Tells (چت‌ها)",
     "updates": "Echoes (به‌روزرسانی‌ها)",
     "communities": "DemmCircles (جوامع)",
@@ -383,7 +392,8 @@
       "unreadChats": "{{count}} Tells نخوانده",
       "unreadUpdates": "{{count}} Echoes"
     }
-  }, "socialLinks": {
+  },
+  "socialLinks": {
     "title": "لینک‌ها",
     "intro": "افزودن لینک‌ها به پروفایل شما به مخاطبین کمک می‌کند تا به راحتی پروفایل‌های دیگر شما را ببینند.",
     "instagram": {
@@ -392,7 +402,8 @@
     },
     "actions": {
       "add": "افزودن",
-      "edit": "ویرایش"
+      "edit": "ویرایش",
+      "cancel": "لغو"
     },
     "privacy": {
       "note": "برای مدیریت اینکه چه کسی می‌تواند لینک‌های شما را ببیند، به",
@@ -419,12 +430,24 @@
       "saved": "اینستاگرام با موفقیت ذخیره شد!",
       "saveFailed": "به‌روزرسانی لینک اینستاگرام ناموفق بود. دوباره تلاش کنید."
     }
-  },"home": {
-    "search": { "placeholder": "پرس و جو یا جستجو" },
-    "filters": { "all": "همه", "read": "خوانده شده", "unread": "خوانده نشده", "groups": "DemmRoom (گروه‌ها)" },
-    "groupCreator": { "placeholder": "نام DemmRoom را وارد کنید" },
+  },
+  "home": {
+    "search": {
+      "placeholder": "پرس و جو یا جستجو"
+    },
+    "filters": {
+      "all": "همه",
+      "read": "خوانده شده",
+      "unread": "خوانده نشده",
+      "groups": "DemmRoom (گروه‌ها)"
+    },
+    "groupCreator": {
+      "placeholder": "نام DemmRoom را وارد کنید"
+    },
     "typing": "در حال تایپ...",
-    "time": { "yesterday": "دیروز" },
+    "time": {
+      "yesterday": "دیروز"
+    },
     "preview": {
       "deleted": "این پیام حذف شده است",
       "encrypted": "[رمزنگاری شده]",
@@ -452,8 +475,11 @@
       "header": "خروج",
       "message": "جلسه منقضی شد/به پایان رسید."
     },
-    "alt": { "profile": "پروفایل" }
-  }, "menu": {
+    "alt": {
+      "profile": "پروفایل"
+    }
+  },
+  "menu": {
     "newGroup": "گروه جدید",
     "newCommunity": "انجمن جدید",
     "newBroadcast": "پخش جدید (WIP)",
@@ -463,7 +489,8 @@
     "createChannels": "ایجاد کانال‌ها (WIP)",
     "statusPrivacy": "حریم خصوصی وضعیت (WIP)",
     "clearCallLogs": "پاک کردن تاریخچه تماس‌ها (WIP)"
-  },"userabout": {
+  },
+  "userabout": {
     "members": "اعضا",
     "group": "گروه",
     "groups": "گروه‌ها",
@@ -549,7 +576,8 @@
         "cta": "گزارش"
       }
     }
-  }, "invite": {
+  },
+  "invite": {
     "header": "دعوت یک دوست",
     "actions": {
       "search": "جستجوی مخاطبین",
@@ -582,31 +610,32 @@
     "errors": {
       "shareFailed": "امکان باز کردن صفحه اشتراک‌گذاری وجود ندارد."
     }
-  }, "community": {
-    "manageGroups": {
-    "title": "مدیریت گروه‌ها",
-    "groups": "گروه‌ها",
-    "createNew": "ایجاد گروه جدید",
-    "addExisting": "افزودن گروه‌های موجود",
-    "info": "اعضا می‌توانند گروه‌های موجود را برای تأیید مدیر پیشنهاد دهند و گروه‌های جدید را مستقیماً اضافه کنند. مشاهده در",
-    "settingsLink": "تنظیمات انجمن",
-    "listHeader": "گروه‌های این انجمن",
-    "loading": "در حال بارگذاری گروه‌ها...",
-    "empty": "هیچ گروهی برای این انجمن یافت نشد",
-    "members": "اعضا",
-    "unnamedGroup": "گروه بدون نام",
-    "remove": {
-      "header": "حذف گروه از انجمن",
-      "message": "آیا می‌خواهید این گروه را از انجمن حذف کنید؟ گروه باقی می‌ماند اما دیگر به انجمن تعلق نخواهد داشت.",
-      "alsoRemoveMembers": "اعضای این گروه را نیز از انجمن و گروه حذف کن",
-      "cta": "حذف",
-      "aria": "حذف گروه از انجمن"
-    },
-    "toasts": {
-      "removed": "گروه از انجمن حذف شد و اعضا به‌روزرسانی شدند",
-      "removeFailed": "حذف گروه ناموفق بود. دوباره تلاش کنید."
-    }
   },
+  "community": {
+    "manageGroups": {
+      "title": "مدیریت گروه‌ها",
+      "groups": "گروه‌ها",
+      "createNew": "ایجاد گروه جدید",
+      "addExisting": "افزودن گروه‌های موجود",
+      "info": "اعضا می‌توانند گروه‌های موجود را برای تأیید مدیر پیشنهاد دهند و گروه‌های جدید را مستقیماً اضافه کنند. مشاهده در",
+      "settingsLink": "تنظیمات انجمن",
+      "listHeader": "گروه‌های این انجمن",
+      "loading": "در حال بارگذاری گروه‌ها...",
+      "empty": "هیچ گروهی برای این انجمن یافت نشد",
+      "members": "اعضا",
+      "unnamedGroup": "گروه بدون نام",
+      "remove": {
+        "header": "حذف گروه از انجمن",
+        "message": "آیا می‌خواهید این گروه را از انجمن حذف کنید؟ گروه باقی می‌ماند اما دیگر به انجمن تعلق نخواهد داشت.",
+        "alsoRemoveMembers": "اعضای این گروه را نیز از انجمن و گروه حذف کن",
+        "cta": "حذف",
+        "aria": "حذف گروه از انجمن"
+      },
+      "toasts": {
+        "removed": "گروه از انجمن حذف شد و اعضا به‌روزرسانی شدند",
+        "removeFailed": "حذف گروه ناموفق بود. دوباره تلاش کنید."
+      }
+    },
     "title": "انجمن‌ها",
     "actions": {
       "qr": "باز کردن اقدامات QR",
@@ -616,10 +645,10 @@
     "unnamedCommunity": "انجمن بدون نام",
     "viewAll": "مشاهده همه",
     "groupType": {
-    "normal": "گروه عادی",
-    "announcement": "گروه اطلاعیه",
-    "general": "گروه عمومی"
-  },
+      "normal": "گروه عادی",
+      "announcement": "گروه اطلاعیه",
+      "general": "گروه عمومی"
+    },
     "newGroup": {
       "header": "گروه جدید",
       "placeholder": "نام گروه",
@@ -628,7 +657,8 @@
     "toasts": {
       "groupCreated": "گروه ایجاد شد"
     }
-  }, "community_menu_component": {
+  },
+  "community_menu_component": {
     "info": "اطلاعات انجمن",
     "invite": "دعوت اعضا",
     "settings": "تنظیمات انجمن"
@@ -642,7 +672,8 @@
     "communityLabel": "انجمن:",
     "joinNote": "با پیوستن، بلافاصله عضو می‌شوید.",
     "joinCta": "پیوستن به گروه"
-  },"add_existing_groups_page": {
+  },
+  "add_existing_groups_page": {
     "header": "افزودن گروه‌های موجود",
     "actions": {
       "search": "جستجوی گروه‌ها",

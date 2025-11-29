@@ -131,7 +131,7 @@ export class SettingProfilePage implements OnInit, OnDestroy {
           handler: () => this.selectImageFromSource(CameraSource.Photos)
         },
         {
-          text: this.translate.instant('profilePage.actions.cancel'),
+          text: this.translate.instant('profilePage.actions.source.cancel'),
           icon: 'close',
           role: 'cancel'
         }
