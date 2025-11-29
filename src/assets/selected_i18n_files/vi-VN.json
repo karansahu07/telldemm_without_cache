@@ -282,6 +282,15 @@
       "behavior": "Hành vi tin nhắn",
       "management": "Quản lý trò chuyện"
     },
+    "translation": {
+      "title": "Bật dịch",
+      "sub": "Dịch các tin nhắn bạn gửi",
+      "notice": "Tin nhắn đã dịch có thể được xử lý bởi các dịch vụ bên ngoài để đảm bảo độ chính xác. Dữ liệu của bạn vẫn riêng tư và không được lưu trữ.",
+      "reset": {
+        "title": "Đặt lại chấp thuận",
+        "sub": "Xóa chấp thuận dịch và tắt tính năng"
+      }
+    },
     "items": {
       "theme": {
         "title": "Chủ đề",

@@ -301,6 +301,16 @@
   },
   "chats": {
     "title": "Chats",
+    "translation": {
+  "title": "Übersetzung aktivieren",
+  "sub": "Übersetze die Nachrichten, die du sendest",
+  "notice": "Übersetzte Nachrichten können von externen Diensten verarbeitet werden, um die Genauigkeit zu gewährleisten. Deine Daten bleiben privat und werden nicht gespeichert.",
+  "reset": {
+    "title": "Zustimmung zurücksetzen",
+    "sub": "Übersetzungszustimmung löschen und Funktion deaktivieren"
+  }
+}
+,
     "sections": {
       "appearance": "Darstellung",
       "behavior": "Nachrichtenverhalten",

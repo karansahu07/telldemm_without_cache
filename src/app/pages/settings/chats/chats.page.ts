@@ -135,7 +135,7 @@ export class ChatsPage implements OnInit {
 
 
       this.saveSettings();
-      await this.showToast('Translation disabled');
+      await this.showToast(this.translate.instant('chats.toasts.translation.disabled'));
       return;
     }
 
@@ -147,7 +147,7 @@ export class ChatsPage implements OnInit {
       if (!userConsent) {
         // User declined: Revert to previous state (OFF)
         this.translationEnabled = false;
-        await this.showToast('Translation consent declined');
+        await this.showToast(this.translate.instant('chats.toasts.translation.consentDeclined'));
         return;
       }
       // User accepted: Save consent
@@ -157,7 +157,7 @@ export class ChatsPage implements OnInit {
     // Enable translation
     this.translationEnabled = true;
     this.saveSettings();
-    await this.showToast('Translation enabled');
+    await this.showToast(this.translate.instant('chats.toasts.translation.enabled'));
   }
 
   // ========================================
@@ -220,13 +220,13 @@ export class ChatsPage implements OnInit {
           role: 'cancel'
         },
         {
-          text: 'Reset',
+          text: this.translate.instant('common.reset'),
           cssClass: 'alert-button-danger',
           handler: () => {
             localStorage.removeItem(this.TRANSLATION_CONSENT_KEY);
             this.translationEnabled = false;
             this.saveSettings();
-            this.showToast('Translation consent reset');
+            this.showToast(this.translate.instant('chats.toasts.translation.consentReset'));
           }
         }
       ]

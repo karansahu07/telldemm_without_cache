@@ -1,3 +1,5 @@
+
+
 page-app-updates {
   /* Base list surface */
   ion-list {
@@ -30,8 +32,8 @@ page-app-updates {
     margin-left: -10px;
 
     /* Use Ionic blue (or fallback to system default) */
-    --handle-background: var(--ion-color-primary, #007aff);
-    --handle-background-checked: var(--ion-color-primary, #007aff);
+    --handle-background: var(--ion-color-primary, #bc8c2c);
+    --handle-background-checked: var(--ion-color-primary, #bc8c2c);
 
     /* Optional: track color */
     --track-background: color-mix(in srgb, var(--ion-color-primary) 15%, transparent);

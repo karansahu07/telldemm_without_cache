@@ -9,12 +9,10 @@
     <ion-title class="ion_title">{{ 'chats.title' | translate }}</ion-title>
   </ion-toolbar>
 </ion-header>
-
 <ion-content class="chats-content">
   <!-- Appearance -->
   <ion-list>
     <ion-list-header>{{ 'chats.sections.appearance' | translate }}</ion-list-header>
-
     <ion-item button lines="inset" detail (click)="openTheme()"
               [attr.aria-label]="'chats.items.theme.title' | translate">
       <ion-icon slot="start" name="color-palette-outline" class="item-icon setting_icons" aria-hidden="true"></ion-icon>
@@ -23,7 +21,6 @@
         <ion-note class="label-sub">{{ 'chats.items.theme.sub' | translate }}</ion-note>
       </ion-label>
     </ion-item>
-
     <ion-item button lines="inset" detail (click)="openChatTheme()"
               [attr.aria-label]="'chats.items.chatTheme.title' | translate">
       <ion-icon slot="start" name="brush-outline" class="item-icon setting_icons" aria-hidden="true"></ion-icon>
@@ -32,7 +29,6 @@
         <ion-note class="label-sub">{{ 'chats.items.chatTheme.sub' | translate }}</ion-note>
       </ion-label>
     </ion-item>
-
     <ion-item button lines="inset" detail (click)="openFontSize()"
               [attr.aria-label]="'chats.items.fontSize.title' | translate">
       <ion-icon slot="start" name="text-outline" class="item-icon setting_icons" aria-hidden="true"></ion-icon>
@@ -42,11 +38,9 @@
       </ion-label>
     </ion-item>
   </ion-list>
-
   <!-- Message behavior -->
   <ion-list>
     <ion-list-header>{{ 'chats.sections.behavior' | translate }}</ion-list-header>
-
     <ion-item lines="inset">
       <ion-icon slot="start" name="enter-outline" class="item-icon setting_icons" aria-hidden="true"></ion-icon>
       <ion-label>
@@ -59,7 +53,6 @@
                   [attr.aria-label]="'chats.items.enterToSend.title' | translate">
       </ion-toggle>
     </ion-item>
-
     <ion-item lines="inset">
       <ion-icon slot="start" name="image-outline" class="item-icon setting_icons" aria-hidden="true"></ion-icon>
       <ion-label>
@@ -72,7 +65,6 @@
                   [attr.aria-label]="'chats.items.mediaVisibility.title' | translate">
       </ion-toggle>
     </ion-item>
-
     <ion-item lines="inset">
       <ion-icon slot="start" name="archive-outline" class="item-icon setting_icons" aria-hidden="true"></ion-icon>
       <ion-label>
@@ -85,7 +77,6 @@
                   [attr.aria-label]="'chats.items.keepArchived.title' | translate">
       </ion-toggle>
     </ion-item>
-
     <ion-item button lines="inset" detail (click)="toggleVoiceMessageTranscripts()"
               [attr.aria-label]="'chats.items.transcripts.title' | translate">
       <ion-icon slot="start" name="mic-outline" class="item-icon setting_icons" aria-hidden="true"></ion-icon>
@@ -95,51 +86,45 @@
       </ion-label>
     </ion-item>
   </ion-list>
-
-  <!-- ✅ NEW: Translation Feature (Static English Fallback) -->
+  <!-- ✅ UPDATED: Translation Feature (with i18n Labels) -->
   <ion-list>
-    <ion-list-header>Translation</ion-list-header>
-
+    <ion-list-header>{{ 'chats.sections.translation' | translate }}</ion-list-header>
     <ion-item lines="inset">
       <ion-icon slot="start" name="language-outline" class="item-icon setting_icons" aria-hidden="true"></ion-icon>
       <ion-label>
-        <div class="label-title">Enable Translation</div>
-        <ion-note class="label-sub">Translate messages you send</ion-note>
+        <div class="label-title">{{ 'chats.translation.title' | translate }}</div>
+        <ion-note class="label-sub">{{ 'chats.translation.sub' | translate }}</ion-note>
       </ion-label>
       <ion-toggle slot="end"
                   [(ngModel)]="translationEnabled"
                   (ionChange)="onTranslationToggle($event)"
-                  [attr.aria-label]="'Enable Translation'">
+                  [attr.aria-label]="'chats.translation.title' | translate">
       </ion-toggle>
     </ion-item>
-
     <!-- ✅ Show privacy notice when translation is enabled -->
     <ion-item *ngIf="translationEnabled" lines="none" class="translation-notice">
       <ion-icon slot="start" name="information-circle-outline" color="primary" aria-hidden="true"></ion-icon>
       <ion-label class="ion-text-wrap">
         <ion-note style="font-size: 12px; color: var(--ion-color-medium);">
-          Translated messages may be processed by external services for accuracy. Your data remains private and is not stored.
+          {{ 'chats.translation.notice' | translate }}
         </ion-note>
       </ion-label>
     </ion-item>
-
     <!-- ✅ Reset consent button (optional, for testing or user control) -->
     <ion-item *ngIf="translationEnabled" button lines="inset" (click)="resetTranslationConsent()"
-              [attr.aria-label]="'Reset Consent'">
+              [attr.aria-label]="'chats.translation.reset.title' | translate">
       <ion-icon slot="start" name="refresh-outline" class="item-icon setting_icons" color="danger" aria-hidden="true"></ion-icon>
       <ion-label>
         <div class="label-title" style="color: var(--ion-color-danger);">
-          Reset Consent
+          {{ 'chats.translation.reset.title' | translate }}
         </div>
-        <ion-note class="label-sub">Clear translation consent and disable the feature</ion-note>
+        <ion-note class="label-sub">{{ 'chats.translation.reset.sub' | translate }}</ion-note>
       </ion-label>
     </ion-item>
   </ion-list>
-
   <!-- Chats management -->
   <ion-list>
     <ion-list-header>{{ 'chats.sections.management' | translate }}</ion-list-header>
-
     <ion-item button lines="inset" detail (click)="openChatBackup()"
               [attr.aria-label]="'chats.items.backup.title' | translate">
       <ion-icon slot="start" name="cloud-outline" class="item-icon setting_icons" aria-hidden="true"></ion-icon>
@@ -148,7 +133,6 @@
         <ion-note class="label-sub">{{ 'chats.items.backup.sub' | translate }}</ion-note>
       </ion-label>
     </ion-item>
-
     <ion-item button lines="inset" detail (click)="openTransferChats()"
               [attr.aria-label]="'chats.items.transfer.title' | translate">
       <ion-icon slot="start" name="swap-horizontal-outline" class="item-icon setting_icons" aria-hidden="true"></ion-icon>
@@ -157,7 +141,6 @@
         <ion-note class="label-sub">{{ 'chats.items.transfer.sub' | translate }}</ion-note>
       </ion-label>
     </ion-item>
-
     <ion-item button lines="inset" detail (click)="openChatHistory()"
               [attr.aria-label]="'chats.items.history.title' | translate">
       <ion-icon slot="start" name="refresh-outline" class="item-icon setting_icons" aria-hidden="true"></ion-icon>

@@ -1,9 +1,42 @@
 /* Ionic Theme Variables - Updated with Tick Colors */
+:root {
+   --ion-color-primary: #bc8c2c;
+  --ion-color-primary-rgb: 188, 140, 44;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #bc8c2c;
+  --ion-color-primary-tint: #bc8c2c;
 
+  --ion-background-color: #ffffff;
+  --ion-text-color: #0b0b0b;
+  --ion-text-color-head: #bc8c2c;
+
+  --ion-toolbar-background: #ffffff;
+  --ion-toolbar-color: #0b0b0b;
+
+  --ion-item-background: #ffffff;
+  --ion-card-background: #ffffff;
+  --ion-border-color: #e7e7e7;
+
+  --chat-bubble-sent: #ffe5e5;
+  --chat-bubble-received: #ffffff;
+  --chat-bubble-text: #303030;
+
+  --chat-input-bg: #ffffff;
+  --chat-input-text: #0b0b0b;
+  --chat-input-icon: #9b9b9b;
+
+  /* NEW: Chat Tick Colors */
+  --chat-tick-sent: #8a6a3b;        /* Single tick */
+  --chat-tick-delivered: #6d5832;   /* Double tick */
+  // --chat-tick-seen: #3f78b2;        /* Blue tick */
+  --chat-tick-seen: #b10202;   /* Seen tick - red */
+
+}
 /** Base (Light) **/
 body {
   --ion-color-primary: #bc8c2c;
-  --ion-color-primary-rgb: 255, 20, 20;
+  --ion-color-primary-rgb: 188, 140, 44;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
   --ion-color-primary-shade: #bc8c2c;

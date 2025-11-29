@@ -301,6 +301,15 @@
   },
   "chats": {
     "title": "Chat",
+    "translation": {
+      "title": "Abilita traduzione",
+      "sub": "Traduci i messaggi che invii",
+      "notice": "I messaggi tradotti possono essere elaborati da servizi esterni per garantire l'accuratezza. I tuoi dati rimangono privati e non vengono archiviati.",
+      "reset": {
+        "title": "Reimposta consenso",
+        "sub": "Cancella il consenso alla traduzione e disattiva la funzione"
+      }
+    },
     "sections": {
       "appearance": "Aspetto",
       "behavior": "Comportamento messaggi",

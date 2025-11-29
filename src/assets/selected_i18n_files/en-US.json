@@ -306,6 +306,15 @@
       "behavior": "Message behavior",
       "management": "Chat management"
     },
+    "translation": {
+      "title": "Enable Translation",
+      "sub": "Translate messages you send",
+      "notice": "Translated messages may be processed by external services for accuracy. Your data remains private and is not stored.",
+      "reset": {
+        "title": "Reset Consent",
+        "sub": "Clear translation consent and disable the feature"
+      }
+    },
     "items": {
       "theme": {
         "title": "Theme",
@@ -390,7 +399,7 @@
         "header": "Select Image Source",
         "camera": "Camera",
         "gallery": "Gallery",
-         "cancel": "Cancel"
+        "cancel": "Cancel"
       }
     },
     "loading": {
