@@ -299,21 +299,14 @@
       "statsReset": "Estatísticas de rede repostas"
     }
   },
+ 
   "chats": {
     "title": "Conversas",
-    "translation": {
-      "title": "Ativar tradução",
-      "sub": "Traduza as mensagens que você enviar",
-      "notice": "As mensagens traduzidas podem ser processadas por serviços externos para garantir a precisão. Seus dados permanecem privados e não são armazenados.",
-      "reset": {
-        "title": "Redefinir consentimento",
-        "sub": "Limpar o consentimento de tradução e desativar o recurso"
-      }
-    },
     "sections": {
       "appearance": "Aparência",
       "behavior": "Comportamento das mensagens",
-      "management": "Gestão de conversas"
+      "management": "Gestão de conversas",
+      "translation": "Tradução"
     },
     "items": {
       "theme": {
@@ -321,8 +314,8 @@
         "sub": "Padrão do sistema"
       },
       "chatTheme": {
-        "title": "Tema de conversa padrão",
-        "sub": "Escolha papel de parede ou tema"
+        "title": "Tema de conversa predefinido",
+        "sub": "Escolher papel de parede ou tema"
       },
       "fontSize": {
         "title": "Tamanho da letra",
@@ -330,22 +323,31 @@
       },
       "enterToSend": {
         "title": "Enter para enviar",
-        "sub": "Pressione Enter para enviar mensagens"
+        "sub": "Prima Enter para enviar mensagens"
       },
       "mediaVisibility": {
-        "title": "Visibilidade de mídia",
-        "sub": "Mostrar mídias recém-transferidas na sua galeria"
+        "title": "Visibilidade dos conteúdos multimédia",
+        "sub": "Mostrar conteúdos multimédia recém-transferidos na galeria"
       },
       "keepArchived": {
         "title": "Manter conversas arquivadas",
-        "sub": "Conversas arquivadas permanecem arquivadas quando chegam novas mensagens"
+        "sub": "As conversas arquivadas permanecem arquivadas mesmo quando chegam novas mensagens"
       },
       "transcripts": {
-        "title": "Transcrições de mensagens de voz",
+        "title": "Transcrição de mensagens de voz",
         "sub": "Transcrever automaticamente novas mensagens de voz"
       },
+      "translation": {
+        "title": "Ativar tradução",
+        "sub": "Traduzir mensagens que enviar",
+        "notice": "As mensagens traduzidas podem ser processadas por serviços externos para garantir precisão. Os seus dados permanecem privados e não são armazenados.",
+        "reset": {
+          "title": "Repor consentimento",
+          "sub": "Limpar o consentimento de tradução e desativar a funcionalidade"
+        }
+      },
       "backup": {
-        "title": "Cópia de segurança de conversas",
+        "title": "Cópia de segurança das conversas",
         "sub": "Guardar mensagens na nuvem"
       },
       "transfer": {
@@ -359,27 +361,47 @@
     },
     "toasts": {
       "enter": {
-        "enabled": "Enter-para-enviar ativado",
-        "disabled": "Enter-para-enviar desativado"
+        "enabled": "Enter para enviar ativado",
+        "disabled": "Enter para enviar desativado"
       },
       "media": {
-        "on": "Visibilidade de mídia ativada",
-        "off": "Visibilidade de mídia desativada"
+        "on": "Visibilidade multimédia ativada",
+        "off": "Visibilidade multimédia desativada"
       },
       "archived": {
         "enabled": "Manter arquivadas ativado",
         "disabled": "Manter arquivadas desativado"
       },
       "transcripts": {
-        "enabled": "Transcrições de mensagens de voz ativadas",
-        "disabled": "Transcrições de mensagens de voz desativadas"
+        "enabled": "Transcrição ativada",
+        "disabled": "Transcrição desativada"
+      },
+      "translation": {
+        "enabled": "Tradução ativada",
+        "disabled": "Tradução desativada",
+        "consentDeclined": "Consentimento de tradução recusado",
+        "consentReset": "Consentimento de tradução reposto"
       },
       "backup": {
-        "starting": "A iniciar cópia de segurança…",
+        "starting": "A iniciar a cópia de segurança…",
         "done": "Cópia de segurança concluída"
       }
+    },
+    "dialogs": {
+      "translationConsent": {
+        "header": "A tradução requer o envio do texto da mensagem para um serviço externo",
+        "message": "Para fornecer traduções, enviamos o texto das mensagens para um serviço de tradução de terceiros. Não recolhemos quaisquer dados pessoais — apenas o texto é enviado. Se concordar, as traduções serão obtidas e guardadas localmente. Pode revogar este consentimento a qualquer momento.",
+        "decline": "Recusar",
+        "accept": "Aceitar"
+      },
+      "resetTranslationConsent": {
+        "header": "Repor consentimento de tradução",
+        "message": "Isto irá limpar o seu consentimento para tradução de mensagens e desativar a funcionalidade. Poderá reativá-la mais tarde."
+      }
     }
-  },
+  }
+
+,
   "profilePage": {
     "title": "Perfil",
     "imageAlt": "Imagem de perfil",

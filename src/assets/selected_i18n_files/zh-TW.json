@@ -299,21 +299,14 @@
       "statsReset": "網路統計已重設"
     }
   },
+
   "chats": {
     "title": "聊天",
     "sections": {
       "appearance": "外觀",
       "behavior": "訊息行為",
-      "management": "聊天管理"
-    },
-    "translation": {
-      "title": "啟用翻譯",
-      "sub": "翻譯您發送的訊息",
-      "notice": "翻譯的訊息可能會由外部服務處理以確保準確性。您的資料會保持隱私且不會被儲存。",
-      "reset": {
-        "title": "重設同意",
-        "sub": "清除翻譯同意並停用此功能"
-      }
+      "management": "聊天管理",
+      "translation": "翻譯"
     },
     "items": {
       "theme": {
@@ -325,12 +318,12 @@
         "sub": "選擇桌布或主題"
       },
       "fontSize": {
-        "title": "字體大小",
+        "title": "字型大小",
         "sub": "中等"
       },
       "enterToSend": {
-        "title": "Enter 送出",
-        "sub": "按 Enter 鍵傳送訊息"
+        "title": "按 Enter 傳送",
+        "sub": "按 Enter 鍵即可傳送訊息"
       },
       "mediaVisibility": {
         "title": "媒體可見性",
@@ -338,19 +331,28 @@
       },
       "keepArchived": {
         "title": "保持聊天封存",
-        "sub": "新訊息到來時，已封存的聊天保持封存"
+        "sub": "收到新訊息時，封存的聊天仍維持封存狀態"
       },
       "transcripts": {
         "title": "語音訊息轉錄",
         "sub": "自動轉錄新的語音訊息"
       },
+      "translation": {
+        "title": "啟用翻譯",
+        "sub": "翻譯您所傳送的訊息",
+        "notice": "為確保準確性，翻譯後的訊息可能會由外部服務處理。您的資料會保持隱私且不會被儲存。",
+        "reset": {
+          "title": "重設授權",
+          "sub": "清除翻譯授權並停用此功能"
+        }
+      },
       "backup": {
         "title": "聊天備份",
-        "sub": "將訊息備份到雲端儲存"
+        "sub": "將訊息備份至雲端儲存"
       },
       "transfer": {
-        "title": "傳輸聊天",
-        "sub": "在裝置間移動聊天"
+        "title": "轉移聊天",
+        "sub": "在不同裝置間移動聊天"
       },
       "history": {
         "title": "聊天記錄",
@@ -359,27 +361,47 @@
     },
     "toasts": {
       "enter": {
-        "enabled": "Enter-送出 已啟用",
-        "disabled": "Enter-送出 已停用"
+        "enabled": "已啟用 Enter 傳送",
+        "disabled": "已停用 Enter 傳送"
       },
       "media": {
         "on": "媒體可見性已開啟",
         "off": "媒體可見性已關閉"
       },
       "archived": {
-        "enabled": "保持封存 已啟用",
-        "disabled": "保持封存 已停用"
+        "enabled": "保持封存已啟用",
+        "disabled": "保持封存已停用"
       },
       "transcripts": {
         "enabled": "語音訊息轉錄已啟用",
         "disabled": "語音訊息轉錄已停用"
       },
+      "translation": {
+        "enabled": "翻譯已啟用",
+        "disabled": "翻譯已停用",
+        "consentDeclined": "已拒絕翻譯授權",
+        "consentReset": "已重設翻譯授權"
+      },
       "backup": {
         "starting": "正在開始備份…",
         "done": "備份完成"
       }
+    },
+    "dialogs": {
+      "translationConsent": {
+        "header": "翻譯需要將訊息文字傳送至外部服務",
+        "message": "為提供翻譯，我們會將訊息文字傳送給第三方翻譯服務。我們不會收集任何個人帳戶資訊，只會傳送訊息內容。如果您同意，翻譯內容將會被擷取並保存在本機。您可隨時撤銷此授權。",
+        "decline": "拒絕",
+        "accept": "同意"
+      },
+      "resetTranslationConsent": {
+        "header": "重設翻譯授權",
+        "message": "這將清除您對訊息翻譯的授權並停用此功能。您之後可以重新啟用。"
+      }
     }
-  },
+  }
+
+,
   "profilePage": {
     "title": "個人資料",
     "imageAlt": "個人頭像",

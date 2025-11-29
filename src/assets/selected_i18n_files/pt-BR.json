@@ -299,21 +299,14 @@
       "statsReset": "Estatísticas de rede redefinidas"
     }
   },
+  
   "chats": {
     "title": "Conversas",
-    "translation": {
-      "title": "Ativar tradução",
-      "sub": "Traduza as mensagens que você enviar",
-      "notice": "As mensagens traduzidas podem ser processadas por serviços externos para garantir a precisão. Seus dados permanecem privados e não são armazenados.",
-      "reset": {
-        "title": "Redefinir consentimento",
-        "sub": "Limpar o consentimento de tradução e desativar o recurso"
-      }
-    },
     "sections": {
       "appearance": "Aparência",
-      "behavior": "Comportamento da mensagem",
-      "management": "Gerenciamento de conversas"
+      "behavior": "Comportamento das mensagens",
+      "management": "Gerenciamento de conversas",
+      "translation": "Tradução"
     },
     "items": {
       "theme": {
@@ -333,20 +326,29 @@
         "sub": "Pressione Enter para enviar mensagens"
       },
       "mediaVisibility": {
-        "title": "Visibilidade da mídia",
-        "sub": "Mostrar mídias recém-baixadas na sua galeria"
+        "title": "Visibilidade de mídia",
+        "sub": "Mostrar mídias recém-baixadas na galeria"
       },
       "keepArchived": {
         "title": "Manter conversas arquivadas",
-        "sub": "Conversas arquivadas permanecem arquivadas quando novas mensagens chegam"
+        "sub": "Conversas arquivadas continuarão arquivadas mesmo com novas mensagens"
       },
       "transcripts": {
-        "title": "Transcrições de mensagens de voz",
-        "sub": "Transcreva automaticamente novas mensagens de voz"
+        "title": "Transcrição de mensagens de voz",
+        "sub": "Transcrever automaticamente novas mensagens de voz"
+      },
+      "translation": {
+        "title": "Ativar tradução",
+        "sub": "Traduzir mensagens que você enviar",
+        "notice": "Mensagens traduzidas podem ser processadas por serviços externos para garantir precisão. Seus dados permanecem privados e não são armazenados.",
+        "reset": {
+          "title": "Redefinir consentimento",
+          "sub": "Limpar consentimento de tradução e desativar o recurso"
+        }
       },
       "backup": {
-        "title": "Backup de conversas",
-        "sub": "Fazer backup das mensagens na nuvem"
+        "title": "Backup das conversas",
+        "sub": "Fazer backup das mensagens no armazenamento em nuvem"
       },
       "transfer": {
         "title": "Transferir conversas",
@@ -359,27 +361,47 @@
     },
     "toasts": {
       "enter": {
-        "enabled": "Enter-para-enviar ativado",
-        "disabled": "Enter-para-enviar desativado"
+        "enabled": "Enter para enviar ativado",
+        "disabled": "Enter para enviar desativado"
       },
       "media": {
-        "on": "Visibilidade da mídia ativada",
-        "off": "Visibilidade da mídia desativada"
+        "on": "Visibilidade de mídia ativada",
+        "off": "Visibilidade de mídia desativada"
       },
       "archived": {
         "enabled": "Manter arquivadas ativado",
         "disabled": "Manter arquivadas desativado"
       },
       "transcripts": {
-        "enabled": "Transcrições de mensagens de voz ativadas",
-        "disabled": "Transcrições de mensagens de voz desativadas"
+        "enabled": "Transcrição ativada",
+        "disabled": "Transcrição desativada"
+      },
+      "translation": {
+        "enabled": "Tradução ativada",
+        "disabled": "Tradução desativada",
+        "consentDeclined": "Consentimento de tradução recusado",
+        "consentReset": "Consentimento de tradução redefinido"
       },
       "backup": {
         "starting": "Iniciando backup…",
         "done": "Backup concluído"
       }
+    },
+    "dialogs": {
+      "translationConsent": {
+        "header": "A tradução exige o envio do texto da mensagem para um serviço externo",
+        "message": "Para fornecer traduções, enviamos o texto da mensagem para um serviço de tradução terceirizado. Não coletamos dados pessoais da sua conta — apenas o texto da mensagem é enviado. Se você aceitar, as traduções serão obtidas e armazenadas localmente. Você pode revogar esse consentimento a qualquer momento.",
+        "decline": "Recusar",
+        "accept": "Aceitar"
+      },
+      "resetTranslationConsent": {
+        "header": "Redefinir consentimento de tradução",
+        "message": "Isso apagará seu consentimento para tradução de mensagens e desativará o recurso. Você poderá ativá-lo novamente depois."
+      }
     }
-  },
+  }
+
+,
   "profilePage": {
     "title": "Perfil",
     "imageAlt": "Imagem do perfil",

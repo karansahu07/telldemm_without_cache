@@ -303,17 +303,9 @@
     "title": "Chats",
     "sections": {
       "appearance": "Appearance",
-      "behavior": "Message behavior",
-      "management": "Chat management"
-    },
-    "translation": {
-      "title": "Enable Translation",
-      "sub": "Translate messages you send",
-      "notice": "Translated messages may be processed by external services for accuracy. Your data remains private and is not stored.",
-      "reset": {
-        "title": "Reset Consent",
-        "sub": "Clear translation consent and disable the feature"
-      }
+      "behavior": "Message behaviour",
+      "management": "Chat management",
+      "translation": "Translation"
     },
     "items": {
       "theme": {
@@ -343,6 +335,15 @@
       "transcripts": {
         "title": "Voice message transcripts",
         "sub": "Automatically transcribe new voice messages"
+      },
+      "translation": {
+        "title": "Enable Translation",
+        "sub": "Translate messages you send",
+        "notice": "Translated messages may be processed by external services for accuracy. Your data remains private and is not stored.",
+        "reset": {
+          "title": "Reset Consent",
+          "sub": "Clear translation consent and disable the feature"
+        }
       },
       "backup": {
         "title": "Chat backup",
@@ -374,9 +375,27 @@
         "enabled": "Voice message transcripts enabled",
         "disabled": "Voice message transcripts disabled"
       },
+      "translation": {
+        "enabled": "Translation enabled",
+        "disabled": "Translation disabled",
+        "consentDeclined": "Translation consent declined",
+        "consentReset": "Translation consent reset"
+      },
       "backup": {
         "starting": "Starting backup…",
         "done": "Backup completed"
+      }
+    },
+    "dialogs": {
+      "translationConsent": {
+        "header": "Translation requires sending message text to an external service",
+        "message": "To provide message translations we send the message text to a third-party translation service. We do not collect personal account details. Only the message text is sent. If you agree, translations will be fetched and cached locally. You can revoke this permission anytime.",
+        "decline": "Decline",
+        "accept": "Accept"
+      },
+      "resetTranslationConsent": {
+        "header": "Reset Translation Consent",
+        "message": "This will clear your consent for message translation and disable the feature. You can re-enable it later."
       }
     }
   },

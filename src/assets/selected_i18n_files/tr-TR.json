@@ -275,87 +275,109 @@
       "statsReset": "Ağ istatistikleri sıfırlandı"
     }
   },
+
   "chats": {
-    "title": "Sohbetler",
+    "title": "แชท",
     "sections": {
-      "appearance": "Görünüm",
-      "behavior": "Mesaj davranışı",
-      "management": "Sohbet yönetimi"
-    },
-    "translation": {
-      "title": "เปิดใช้การแปลภาษา",
-      "sub": "แปลข้อความที่คุณส่ง",
-      "notice": "ข้อความที่แปลแล้วอาจถูกประมวลผลโดยบริการภายนอกเพื่อความแม่นยำ ข้อมูลของคุณยังคงเป็นส่วนตัวและจะไม่ถูกเก็บไว้",
-      "reset": {
-        "title": "รีเซ็ตความยินยอม",
-        "sub": "ล้างความยินยอมในการแปลและปิดใช้งานฟีเจอร์"
-      }
+      "appearance": "ลักษณะ",
+      "behavior": "พฤติกรรมข้อความ",
+      "management": "การจัดการแชท",
+      "translation": "การแปลภาษา"
     },
     "items": {
       "theme": {
-        "title": "Tema",
-        "sub": "Sistem varsayılanı"
+        "title": "ธีม",
+        "sub": "ค่าเริ่มต้นของระบบ"
       },
       "chatTheme": {
-        "title": "Varsayılan sohbet teması",
-        "sub": "Duvar kağıdı veya tema seçin"
+        "title": "ธีมแชทเริ่มต้น",
+        "sub": "เลือกภาพพื้นหลังหรือธีม"
       },
       "fontSize": {
-        "title": "Yazı tipi boyutu",
-        "sub": "Orta"
+        "title": "ขนาดตัวอักษร",
+        "sub": "ปานกลาง"
       },
       "enterToSend": {
-        "title": "Enter ile gönder",
-        "sub": "Mesaj göndermek için Enter’a basın"
+        "title": "กด Enter เพื่อส่ง",
+        "sub": "กด Enter เพื่อส่งข้อความ"
       },
       "mediaVisibility": {
-        "title": "Medya görünürlüğü",
-        "sub": "Yeni indirilen medyayı galerinizde gösterin"
+        "title": "การแสดงสื่อ",
+        "sub": "แสดงสื่อที่ดาวน์โหลดใหม่ในแกลเลอรี"
       },
       "keepArchived": {
-        "title": "Sohbetleri arşivde tut",
-        "sub": "Yeni mesajlar geldiğinde arşivlenmiş sohbetler arşivde kalır"
+        "title": "เก็บแชทที่เก็บถาวรไว้",
+        "sub": "แชทที่เก็บถาวรจะยังคงอยู่แม้มีข้อความใหม่เข้ามา"
       },
       "transcripts": {
-        "title": "Sesli mesaj transkriptleri",
-        "sub": "Yeni sesli mesajları otomatik olarak yazıya dökün"
+        "title": "ถอดเสียงข้อความเสียง",
+        "sub": "ถอดเสียงข้อความเสียงใหม่โดยอัตโนมัติ"
+      },
+      "translation": {
+        "title": "เปิดใช้การแปลภาษา",
+        "sub": "แปลข้อความที่คุณส่ง",
+        "notice": "ข้อความที่แปลอาจถูกประมวลผลโดยบริการภายนอกเพื่อความแม่นยำ ข้อมูลของคุณยังคงเป็นส่วนตัวและจะไม่ถูกจัดเก็บ",
+        "reset": {
+          "title": "รีเซ็ตความยินยอม",
+          "sub": "ล้างความยินยอมในการแปลและปิดใช้งานฟีเจอร์นี้"
+        }
       },
       "backup": {
-        "title": "Sohbet yedeği",
-        "sub": "Mesajları buluta yedekleyin"
+        "title": "สำรองข้อมูลแชท",
+        "sub": "สำรองข้อความไปยังที่เก็บข้อมูลบนคลาวด์"
       },
       "transfer": {
-        "title": "Sohbetleri aktar",
-        "sub": "Sohbetleri cihazlar arasında taşıyın"
+        "title": "โอนย้ายแชท",
+        "sub": "ย้ายแชทระหว่างอุปกรณ์"
       },
       "history": {
-        "title": "Sohbet geçmişi",
-        "sub": "Tüm sohbetleri dışa aktarın, arşivleyin, temizleyin veya silin"
+        "title": "ประวัติแชท",
+        "sub": "ส่งออก เก็บถาวร ล้าง หรือ ลบแชททั้งหมด"
       }
     },
     "toasts": {
       "enter": {
-        "enabled": "Enter-ile-gönder etkin",
-        "disabled": "Enter-ile-gönder devre dışı"
+        "enabled": "เปิดใช้งานการกด Enter เพื่อส่งแล้ว",
+        "disabled": "ปิดใช้งานการกด Enter เพื่อส่งแล้ว"
       },
       "media": {
-        "on": "Medya görünürlüğü açık",
-        "off": "Medya görünürlüğü kapalı"
+        "on": "เปิดการแสดงสื่อแล้ว",
+        "off": "ปิดการแสดงสื่อแล้ว"
       },
       "archived": {
-        "enabled": "Arşivde tutma etkin",
-        "disabled": "Arşivde tutma devre dışı"
+        "enabled": "เปิดการเก็บถาวรไว้แล้ว",
+        "disabled": "ปิดการเก็บถาวรไว้แล้ว"
       },
       "transcripts": {
-        "enabled": "Sesli mesaj transkriptleri etkin",
-        "disabled": "Sesli mesaj transkriptleri devre dışı"
+        "enabled": "เปิดการถอดเสียงแล้ว",
+        "disabled": "ปิดการถอดเสียงแล้ว"
+      },
+      "translation": {
+        "enabled": "เปิดใช้งานการแปลแล้ว",
+        "disabled": "ปิดใช้งานการแปลแล้ว",
+        "consentDeclined": "ปฏิเสธความยินยอมการแปลแล้ว",
+        "consentReset": "รีเซ็ตความยินยอมการแปลแล้ว"
       },
       "backup": {
-        "starting": "Yedekleme başlatılıyor…",
-        "done": "Yedekleme tamamlandı"
+        "starting": "กำลังเริ่มการสำรองข้อมูล…",
+        "done": "สำรองข้อมูลเสร็จสิ้น"
+      }
+    },
+    "dialogs": {
+      "translationConsent": {
+        "header": "การแปลจำเป็นต้องส่งข้อความไปยังบริการภายนอก",
+        "message": "เพื่อให้การแปลข้อความ เราจะส่งข้อความไปยังบริการแปลภายนอก เราไม่เก็บข้อมูลบัญชีส่วนบุคคลของคุณ จะส่งเฉพาะข้อความเท่านั้น หากคุณยินยอม การแปลจะถูกดาวน์โหลดและเก็บไว้ในเครื่อง คุณสามารถเพิกถอนความยินยอมได้ทุกเมื่อ",
+        "decline": "ปฏิเสธ",
+        "accept": "ยอมรับ"
+      },
+      "resetTranslationConsent": {
+        "header": "รีเซ็ตความยินยอมการแปล",
+        "message": "ระบบจะล้างความยินยอมการแปลของคุณและปิดฟีเจอร์นี้ คุณสามารถเปิดใช้งานอีกครั้งได้ในภายหลัง"
       }
     }
-  },
+  }
+
+,
   "profilePage": {
     "title": "Profil",
     "imageAlt": "Profil resmi",

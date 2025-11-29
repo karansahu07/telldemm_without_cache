@@ -299,21 +299,14 @@
       "statsReset": "Statistiche di rete reimpostate"
     }
   },
+  
   "chats": {
     "title": "Chat",
-    "translation": {
-      "title": "Abilita traduzione",
-      "sub": "Traduci i messaggi che invii",
-      "notice": "I messaggi tradotti possono essere elaborati da servizi esterni per garantire l'accuratezza. I tuoi dati rimangono privati e non vengono archiviati.",
-      "reset": {
-        "title": "Reimposta consenso",
-        "sub": "Cancella il consenso alla traduzione e disattiva la funzione"
-      }
-    },
     "sections": {
       "appearance": "Aspetto",
-      "behavior": "Comportamento messaggi",
-      "management": "Gestione chat"
+      "behavior": "Comportamento dei messaggi",
+      "management": "Gestione chat",
+      "translation": "Traduzione"
     },
     "items": {
       "theme": {
@@ -329,24 +322,33 @@
         "sub": "Media"
       },
       "enterToSend": {
-        "title": "Invio con Invio",
-        "sub": "Premi Invio per inviare i messaggi"
+        "title": "Invia con Enter",
+        "sub": "Premi Enter per inviare i messaggi"
       },
       "mediaVisibility": {
         "title": "Visibilità dei media",
-        "sub": "Mostra i nuovi media scaricati nella tua galleria"
+        "sub": "Mostra i media scaricati di recente nella tua galleria"
       },
       "keepArchived": {
         "title": "Mantieni chat archiviate",
-        "sub": "Le chat archiviate restano tali quando arrivano nuovi messaggi"
+        "sub": "Le chat archiviate rimangono tali anche quando arrivano nuovi messaggi"
       },
       "transcripts": {
-        "title": "Trascrizioni messaggi vocali",
+        "title": "Trascrizione messaggi vocali",
         "sub": "Trascrivi automaticamente i nuovi messaggi vocali"
+      },
+      "translation": {
+        "title": "Abilita traduzione",
+        "sub": "Traduci i messaggi che invii",
+        "notice": "I messaggi tradotti possono essere elaborati da servizi esterni per garantirne l'accuratezza. I tuoi dati restano privati e non vengono archiviati.",
+        "reset": {
+          "title": "Reimposta consenso",
+          "sub": "Cancella il consenso alla traduzione e disabilita la funzione"
+        }
       },
       "backup": {
         "title": "Backup chat",
-        "sub": "Esegui il backup dei messaggi sul cloud"
+        "sub": "Backup dei messaggi sul cloud"
       },
       "transfer": {
         "title": "Trasferisci chat",
@@ -359,8 +361,8 @@
     },
     "toasts": {
       "enter": {
-        "enabled": "Invio-per-inviare attivato",
-        "disabled": "Invio-per-inviare disattivato"
+        "enabled": "Invio con Enter attivato",
+        "disabled": "Invio con Enter disattivato"
       },
       "media": {
         "on": "Visibilità dei media attivata",
@@ -371,15 +373,35 @@
         "disabled": "Mantieni archiviate disattivato"
       },
       "transcripts": {
-        "enabled": "Trascrizioni messaggi vocali attivate",
-        "disabled": "Trascrizioni messaggi vocali disattivate"
+        "enabled": "Trascrizione vocale attivata",
+        "disabled": "Trascrizione vocale disattivata"
+      },
+      "translation": {
+        "enabled": "Traduzione attivata",
+        "disabled": "Traduzione disattivata",
+        "consentDeclined": "Consenso alla traduzione rifiutato",
+        "consentReset": "Consenso alla traduzione reimpostato"
       },
       "backup": {
-        "starting": "Avvio backup…",
+        "starting": "Avvio del backup…",
         "done": "Backup completato"
       }
+    },
+    "dialogs": {
+      "translationConsent": {
+        "header": "La traduzione richiede l'invio del testo del messaggio a un servizio esterno",
+        "message": "Per fornire la traduzione dei messaggi, inviamo il testo del messaggio a un servizio di traduzione di terze parti. Non raccogliamo alcun dato personale dell'account. Viene inviato solo il testo del messaggio. Se acconsenti, le traduzioni verranno recuperate e memorizzate localmente. Puoi revocare il consenso in qualsiasi momento.",
+        "decline": "Rifiuta",
+        "accept": "Accetta"
+      },
+      "resetTranslationConsent": {
+        "header": "Reimposta consenso di traduzione",
+        "message": "Questo cancellerà il tuo consenso alla traduzione dei messaggi e disabiliterà la funzione. Potrai riattivarla in seguito."
+      }
     }
-  },
+  }
+
+,
   "profilePage": {
     "title": "Profilo",
     "imageAlt": "Immagine del profilo",

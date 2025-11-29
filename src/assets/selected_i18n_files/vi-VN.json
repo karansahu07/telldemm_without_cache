@@ -275,21 +275,14 @@
       "statsReset": "Đã đặt lại thống kê mạng"
     }
   },
+  
   "chats": {
     "title": "Trò chuyện",
     "sections": {
       "appearance": "Giao diện",
       "behavior": "Hành vi tin nhắn",
-      "management": "Quản lý trò chuyện"
-    },
-    "translation": {
-      "title": "Bật dịch",
-      "sub": "Dịch các tin nhắn bạn gửi",
-      "notice": "Tin nhắn đã dịch có thể được xử lý bởi các dịch vụ bên ngoài để đảm bảo độ chính xác. Dữ liệu của bạn vẫn riêng tư và không được lưu trữ.",
-      "reset": {
-        "title": "Đặt lại chấp thuận",
-        "sub": "Xóa chấp thuận dịch và tắt tính năng"
-      }
+      "management": "Quản lý trò chuyện",
+      "translation": "Dịch thuật"
     },
     "items": {
       "theme": {
@@ -310,33 +303,42 @@
       },
       "mediaVisibility": {
         "title": "Hiển thị phương tiện",
-        "sub": "Hiển thị phương tiện mới tải trong thư viện"
+        "sub": "Hiển thị phương tiện vừa tải xuống trong thư viện"
       },
       "keepArchived": {
         "title": "Giữ trò chuyện đã lưu trữ",
-        "sub": "Trò chuyện đã lưu trữ sẽ vẫn được lưu trữ khi có tin nhắn mới"
+        "sub": "Trò chuyện đã lưu trữ vẫn giữ nguyên khi có tin nhắn mới"
       },
       "transcripts": {
-        "title": "Bản chép lời tin nhắn thoại",
-        "sub": "Tự động chép lời tin nhắn thoại mới"
+        "title": "Chuyển đổi giọng nói thành văn bản",
+        "sub": "Tự động chuyển giọng nói mới thành văn bản"
+      },
+      "translation": {
+        "title": "Bật dịch",
+        "sub": "Dịch tin nhắn bạn gửi",
+        "notice": "Tin nhắn đã dịch có thể được xử lý bởi dịch vụ bên ngoài để đảm bảo độ chính xác. Dữ liệu của bạn vẫn riêng tư và không được lưu trữ.",
+        "reset": {
+          "title": "Đặt lại sự đồng ý",
+          "sub": "Xóa sự đồng ý dịch và tắt tính năng"
+        }
       },
       "backup": {
         "title": "Sao lưu trò chuyện",
-        "sub": "Sao lưu tin nhắn lên đám mây"
+        "sub": "Sao lưu tin nhắn vào bộ nhớ đám mây"
       },
       "transfer": {
         "title": "Chuyển trò chuyện",
-        "sub": "Di chuyển trò chuyện giữa các thiết bị"
+        "sub": "Chuyển tin nhắn giữa các thiết bị"
       },
       "history": {
         "title": "Lịch sử trò chuyện",
-        "sub": "Xuất, lưu trữ, dọn dẹp hoặc xóa tất cả trò chuyện"
+        "sub": "Xuất, lưu trữ, xóa hoặc xoá sạch toàn bộ trò chuyện"
       }
     },
     "toasts": {
       "enter": {
-        "enabled": "Đã bật Enter-để-gửi",
-        "disabled": "Đã tắt Enter-để-gửi"
+        "enabled": "Đã bật gửi bằng Enter",
+        "disabled": "Đã tắt gửi bằng Enter"
       },
       "media": {
         "on": "Đã bật hiển thị phương tiện",
@@ -347,15 +349,35 @@
         "disabled": "Đã tắt giữ lưu trữ"
       },
       "transcripts": {
-        "enabled": "Đã bật chép lời tin nhắn thoại",
-        "disabled": "Đã tắt chép lời tin nhắn thoại"
+        "enabled": "Đã bật chuyển giọng nói thành văn bản",
+        "disabled": "Đã tắt chuyển giọng nói thành văn bản"
+      },
+      "translation": {
+        "enabled": "Đã bật dịch",
+        "disabled": "Đã tắt dịch",
+        "consentDeclined": "Từ chối đồng ý dịch",
+        "consentReset": "Đặt lại đồng ý dịch"
       },
       "backup": {
         "starting": "Đang bắt đầu sao lưu…",
         "done": "Sao lưu hoàn tất"
       }
+    },
+    "dialogs": {
+      "translationConsent": {
+        "header": "Dịch yêu cầu gửi nội dung tin nhắn đến dịch vụ bên ngoài",
+        "message": "Để cung cấp bản dịch, chúng tôi gửi nội dung tin nhắn đến dịch vụ dịch thuật của bên thứ ba. Không thu thập dữ liệu cá nhân nào của bạn. Chỉ nội dung tin nhắn được gửi đi. Nếu bạn đồng ý, bản dịch sẽ được tải về và lưu cục bộ. Bạn có thể thu hồi sự đồng ý bất kỳ lúc nào.",
+        "decline": "Từ chối",
+        "accept": "Đồng ý"
+      },
+      "resetTranslationConsent": {
+        "header": "Đặt lại đồng ý dịch",
+        "message": "Thao tác này sẽ xóa sự đồng ý dịch và tắt tính năng. Bạn có thể bật lại sau."
+      }
     }
-  },
+  }
+
+,
   "profilePage": {
     "title": "Hồ sơ",
     "imageAlt": "Ảnh hồ sơ",

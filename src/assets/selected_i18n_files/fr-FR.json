@@ -299,21 +299,14 @@
       "statsReset": "Statistiques réseau réinitialisées"
     }
   },
+
   "chats": {
     "title": "Discussions",
-    "translation": {
-      "title": "Activer la traduction",
-      "sub": "Traduire les messages que vous envoyez",
-      "notice": "Les messages traduits peuvent être traités par des services externes pour garantir leur précision. Vos données restent privées et ne sont pas stockées.",
-      "reset": {
-        "title": "Réinitialiser le consentement",
-        "sub": "Effacer le consentement de traduction et désactiver la fonctionnalité"
-      }
-    },
     "sections": {
       "appearance": "Apparence",
       "behavior": "Comportement des messages",
-      "management": "Gestion des discussions"
+      "management": "Gestion des discussions",
+      "translation": "Traduction"
     },
     "items": {
       "theme": {
@@ -322,35 +315,44 @@
       },
       "chatTheme": {
         "title": "Thème de discussion par défaut",
-        "sub": "Choisissez un fond d’écran ou un thème"
+        "sub": "Choisir un fond d’écran ou un thème"
       },
       "fontSize": {
-        "title": "Taille de police",
+        "title": "Taille de la police",
         "sub": "Moyenne"
       },
       "enterToSend": {
         "title": "Entrée pour envoyer",
-        "sub": "Appuyez sur Entrée pour envoyer des messages"
+        "sub": "Appuyez sur Entrée pour envoyer les messages"
       },
       "mediaVisibility": {
         "title": "Visibilité des médias",
-        "sub": "Afficher les médias nouvellement téléchargés dans votre galerie"
+        "sub": "Afficher les médias récemment téléchargés dans votre galerie"
       },
       "keepArchived": {
-        "title": "Garder les discussions archivées",
-        "sub": "Les discussions archivées restent archivées quand de nouveaux messages arrivent"
+        "title": "Conserver les discussions archivées",
+        "sub": "Les discussions archivées restent archivées lorsque de nouveaux messages arrivent"
       },
       "transcripts": {
         "title": "Transcription des messages vocaux",
         "sub": "Transcrire automatiquement les nouveaux messages vocaux"
       },
+      "translation": {
+        "title": "Activer la traduction",
+        "sub": "Traduire les messages que vous envoyez",
+        "notice": "Les messages traduits peuvent être traités par des services externes pour garantir leur précision. Vos données restent privées et ne sont pas stockées.",
+        "reset": {
+          "title": "Réinitialiser le consentement",
+          "sub": "Effacer le consentement à la traduction et désactiver la fonctionnalité"
+        }
+      },
       "backup": {
         "title": "Sauvegarde des discussions",
-        "sub": "Sauvegardez les messages sur le cloud"
+        "sub": "Sauvegarder les messages dans le stockage cloud"
       },
       "transfer": {
         "title": "Transférer les discussions",
-        "sub": "Déplacez les discussions entre appareils"
+        "sub": "Déplacer les discussions entre les appareils"
       },
       "history": {
         "title": "Historique des discussions",
@@ -367,19 +369,39 @@
         "off": "Visibilité des médias désactivée"
       },
       "archived": {
-        "enabled": "Archivage activé",
-        "disabled": "Archivage désactivé"
+        "enabled": "Conservation des discussions archivées activée",
+        "disabled": "Conservation des discussions archivées désactivée"
       },
       "transcripts": {
         "enabled": "Transcription des messages vocaux activée",
         "disabled": "Transcription des messages vocaux désactivée"
       },
+      "translation": {
+        "enabled": "Traduction activée",
+        "disabled": "Traduction désactivée",
+        "consentDeclined": "Consentement à la traduction refusé",
+        "consentReset": "Consentement à la traduction réinitialisé"
+      },
       "backup": {
         "starting": "Démarrage de la sauvegarde…",
         "done": "Sauvegarde terminée"
       }
+    },
+    "dialogs": {
+      "translationConsent": {
+        "header": "La traduction nécessite l’envoi du texte du message à un service externe",
+        "message": "Pour fournir les traductions des messages, nous envoyons le texte du message à un service de traduction tiers. Nous ne collectons aucune information personnelle de votre compte. Seul le texte du message est envoyé. Si vous acceptez, les traductions seront récupérées et mises en cache localement. Vous pouvez retirer ce consentement à tout moment.",
+        "decline": "Refuser",
+        "accept": "Accepter"
+      },
+      "resetTranslationConsent": {
+        "header": "Réinitialiser le consentement à la traduction",
+        "message": "Cela effacera votre consentement à la traduction des messages et désactivera la fonctionnalité. Vous pourrez la réactiver plus tard."
+      }
     }
-  },
+  }
+
+,
   "profilePage": {
     "title": "Profil",
     "imageAlt": "Image de profil",

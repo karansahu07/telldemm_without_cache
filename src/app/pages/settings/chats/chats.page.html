@@ -77,13 +77,17 @@
                   [attr.aria-label]="'chats.items.keepArchived.title' | translate">
       </ion-toggle>
     </ion-item>
-    <ion-item button lines="inset" detail (click)="toggleVoiceMessageTranscripts()"
-              [attr.aria-label]="'chats.items.transcripts.title' | translate">
+    <ion-item lines="inset">
       <ion-icon slot="start" name="mic-outline" class="item-icon setting_icons" aria-hidden="true"></ion-icon>
       <ion-label>
         <div class="label-title">{{ 'chats.items.transcripts.title' | translate }}</div>
         <ion-note class="label-sub">{{ 'chats.items.transcripts.sub' | translate }}</ion-note>
       </ion-label>
+      <ion-toggle slot="end"
+                  [(ngModel)]="voiceTranscriptsEnabled"
+                  (ionChange)="toggleVoiceMessageTranscripts()"
+                  [attr.aria-label]="'chats.items.transcripts.title' | translate">
+      </ion-toggle>
     </ion-item>
   </ion-list>
   <!-- ✅ UPDATED: Translation Feature (with i18n Labels) -->
@@ -92,13 +96,13 @@
     <ion-item lines="inset">
       <ion-icon slot="start" name="language-outline" class="item-icon setting_icons" aria-hidden="true"></ion-icon>
       <ion-label>
-        <div class="label-title">{{ 'chats.translation.title' | translate }}</div>
-        <ion-note class="label-sub">{{ 'chats.translation.sub' | translate }}</ion-note>
+        <div class="label-title">{{ 'chats.items.translation.title' | translate }}</div>
+        <ion-note class="label-sub">{{ 'chats.items.translation.sub' | translate }}</ion-note>
       </ion-label>
       <ion-toggle slot="end"
                   [(ngModel)]="translationEnabled"
                   (ionChange)="onTranslationToggle($event)"
-                  [attr.aria-label]="'chats.translation.title' | translate">
+                  [attr.aria-label]="'chats.items.translation.title' | translate">
       </ion-toggle>
     </ion-item>
     <!-- ✅ Show privacy notice when translation is enabled -->
@@ -106,19 +110,19 @@
       <ion-icon slot="start" name="information-circle-outline" color="primary" aria-hidden="true"></ion-icon>
       <ion-label class="ion-text-wrap">
         <ion-note style="font-size: 12px; color: var(--ion-color-medium);">
-          {{ 'chats.translation.notice' | translate }}
+          {{ 'chats.items.translation.notice' | translate }}
         </ion-note>
       </ion-label>
     </ion-item>
     <!-- ✅ Reset consent button (optional, for testing or user control) -->
     <ion-item *ngIf="translationEnabled" button lines="inset" (click)="resetTranslationConsent()"
-              [attr.aria-label]="'chats.translation.reset.title' | translate">
+              [attr.aria-label]="'chats.items.translation.reset.title' | translate">
       <ion-icon slot="start" name="refresh-outline" class="item-icon setting_icons" color="danger" aria-hidden="true"></ion-icon>
       <ion-label>
         <div class="label-title" style="color: var(--ion-color-danger);">
-          {{ 'chats.translation.reset.title' | translate }}
+          {{ 'chats.items.translation.reset.title' | translate }}
         </div>
-        <ion-note class="label-sub">{{ 'chats.translation.reset.sub' | translate }}</ion-note>
+        <ion-note class="label-sub">{{ 'chats.items.translation.reset.sub' | translate }}</ion-note>
       </ion-label>
     </ion-item>
   </ion-list>

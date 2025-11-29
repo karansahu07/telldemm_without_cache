@@ -301,20 +301,11 @@
   },
   "chats": {
     "title": "Chats",
-    "translation": {
-  "title": "Übersetzung aktivieren",
-  "sub": "Übersetze die Nachrichten, die du sendest",
-  "notice": "Übersetzte Nachrichten können von externen Diensten verarbeitet werden, um die Genauigkeit zu gewährleisten. Deine Daten bleiben privat und werden nicht gespeichert.",
-  "reset": {
-    "title": "Zustimmung zurücksetzen",
-    "sub": "Übersetzungszustimmung löschen und Funktion deaktivieren"
-  }
-}
-,
     "sections": {
       "appearance": "Darstellung",
       "behavior": "Nachrichtenverhalten",
-      "management": "Chatverwaltung"
+      "management": "Chatverwaltung",
+      "translation": "Übersetzung"
     },
     "items": {
       "theme": {
@@ -322,8 +313,8 @@
         "sub": "Systemstandard"
       },
       "chatTheme": {
-        "title": "Standard-Chat-Design",
-        "sub": "Hintergrund oder Design auswählen"
+        "title": "Standard-Chatdesign",
+        "sub": "Hintergrundbild oder Design auswählen"
       },
       "fontSize": {
         "title": "Schriftgröße",
@@ -335,23 +326,32 @@
       },
       "mediaVisibility": {
         "title": "Mediensichtbarkeit",
-        "sub": "Neu heruntergeladene Medien in Ihrer Galerie anzeigen"
+        "sub": "Neu heruntergeladene Medien in der Galerie anzeigen"
       },
       "keepArchived": {
-        "title": "Chats archiviert lassen",
-        "sub": "Archivierte Chats bleiben archiviert, wenn neue Nachrichten eingehen"
+        "title": "Chats archiviert halten",
+        "sub": "Archivierte Chats bleiben archiviert, wenn neue Nachrichten eintreffen"
       },
       "transcripts": {
-        "title": "Sprachnachrichten-Transkripte",
+        "title": "Sprachnachrichten-Transkription",
         "sub": "Neue Sprachnachrichten automatisch transkribieren"
+      },
+      "translation": {
+        "title": "Übersetzung aktivieren",
+        "sub": "Nachrichten, die Sie senden, übersetzen",
+        "notice": "Übersetzte Nachrichten können zur Genauigkeit von externen Diensten verarbeitet werden. Ihre Daten bleiben privat und werden nicht gespeichert.",
+        "reset": {
+          "title": "Zustimmung zurücksetzen",
+          "sub": "Übersetzungszustimmung löschen und Funktion deaktivieren"
+        }
       },
       "backup": {
         "title": "Chat-Backup",
-        "sub": "Nachrichten in der Cloud sichern"
+        "sub": "Nachrichten in der Cloud speichern"
       },
       "transfer": {
         "title": "Chats übertragen",
-        "sub": "Chats zwischen Geräten verschieben"
+        "sub": "Chats zwischen Geräten übertragen"
       },
       "history": {
         "title": "Chatverlauf",
@@ -364,20 +364,38 @@
         "disabled": "Enter-zum-Senden deaktiviert"
       },
       "media": {
-        "on": "Mediensichtbarkeit ein",
-        "off": "Mediensichtbarkeit aus"
+        "on": "Mediensichtbarkeit aktiviert",
+        "off": "Mediensichtbarkeit deaktiviert"
       },
       "archived": {
-        "enabled": "Archivierung aktiviert",
-        "disabled": "Archivierung deaktiviert"
+        "enabled": "Archiviert behalten aktiviert",
+        "disabled": "Archiviert behalten deaktiviert"
       },
       "transcripts": {
-        "enabled": "Sprachnachrichten-Transkripte aktiviert",
-        "disabled": "Sprachnachrichten-Transkripte deaktiviert"
+        "enabled": "Transkription aktiviert",
+        "disabled": "Transkription deaktiviert"
+      },
+      "translation": {
+        "enabled": "Übersetzung aktiviert",
+        "disabled": "Übersetzung deaktiviert",
+        "consentDeclined": "Übersetzungszustimmung abgelehnt",
+        "consentReset": "Übersetzungszustimmung zurückgesetzt"
       },
       "backup": {
         "starting": "Backup wird gestartet…",
         "done": "Backup abgeschlossen"
+      }
+    },
+    "dialogs": {
+      "translationConsent": {
+        "header": "Für die Übersetzung muss der Nachrichtentext an einen externen Dienst gesendet werden",
+        "message": "Um Übersetzungen bereitzustellen, senden wir den Nachrichtentext an einen externen Übersetzungsdienst. Wir sammeln keine persönlichen Kontodaten – es wird nur der Nachrichtentext gesendet. Wenn Sie zustimmen, werden Übersetzungen abgerufen und lokal gespeichert. Sie können die Zustimmung jederzeit widerrufen.",
+        "decline": "Ablehnen",
+        "accept": "Zustimmen"
+      },
+      "resetTranslationConsent": {
+        "header": "Übersetzungszustimmung zurücksetzen",
+        "message": "Dadurch wird Ihre Zustimmung zur Übersetzung gelöscht und die Funktion deaktiviert. Sie können sie später erneut aktivieren."
       }
     }
   },

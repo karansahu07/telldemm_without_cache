@@ -1,5 +1,5 @@
 // ========================================
-// 📄 chats.page.ts - UPDATED with Consent Key Removal on Toggle Off
+// 📄 chats.page.ts - UPDATED with i18n for Consent Dialogs
 // ========================================
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
@@ -131,8 +131,6 @@ export class ChatsPage implements OnInit {
       // Turning OFF: No consent needed, just disable and remove consent key
       this.translationEnabled = false;
       localStorage.removeItem(this.TRANSLATION_CONSENT_KEY);
-      localStorage.removeItem("translationConsent");
-
 
       this.saveSettings();
       await this.showToast(this.translate.instant('chats.toasts.translation.disabled'));
@@ -161,43 +159,33 @@ export class ChatsPage implements OnInit {
   }
 
   // ========================================
-  // ✅ NEW: Consent Dialog (Static English)
+  // ✅ UPDATED: Consent Dialog (with i18n)
   // ========================================
   async showTranslationConsentDialog(): Promise<boolean> {
     return new Promise(async (resolve) => {
       const alert = await this.alertCtrl.create({
-        header: 'Translation requires sending message text to an external service',
-    message: `To provide message translations we send the message text to a third-party translation service.
-             We do not collect personal account details. Only the message text is sent.
-             If you agree, translations will be fetched and cached locally. You can revoke this permission anytime.`,
+        header: this.translate.instant('chats.dialogs.translationConsent.header'),
+        message: this.translate.instant('chats.dialogs.translationConsent.message'),
         backdropDismiss: false,
         buttons: [
           {
-            text: 'Decline',
+            text: this.translate.instant('chats.dialogs.translationConsent.decline'),
             role: 'cancel',
             cssClass: 'alert-button-cancel',
-            // handler: () => {
-            //   resolve(false);
-            // }
             handler: () => {
               try {
                 localStorage.setItem(this.TRANSLATION_CONSENT_KEY, 'denied');
               } catch {}
-              // this.showToast('Translation declined', 'medium');
               resolve(false);
             }
           },
           {
-            text: 'Accept',
+            text: this.translate.instant('chats.dialogs.translationConsent.accept'),
             cssClass: 'alert-button-confirm',
-            // handler: () => {
-            //   resolve(true);
-            // }
             handler: () => {
               try {
                 localStorage.setItem(this.TRANSLATION_CONSENT_KEY, 'granted');
               } catch {}
-              // this.showToast('Translation allowed', 'success');
               resolve(true);
             },
           }
@@ -208,12 +196,12 @@ export class ChatsPage implements OnInit {
   }
 
   // ========================================
-  // ✅ NEW: Reset Translation Consent (Static English)
+  // ✅ UPDATED: Reset Translation Consent (with i18n)
   // ========================================
   async resetTranslationConsent() {
     const alert = await this.alertCtrl.create({
-      header: 'Reset Translation Consent',
-      message: 'This will clear your consent for message translation and disable the feature. You can re-enable it later.',
+      header: this.translate.instant('chats.dialogs.resetTranslationConsent.header'),
+      message: this.translate.instant('chats.dialogs.resetTranslationConsent.message'),
       buttons: [
         {
           text: this.translate.instant('common.cancel'),

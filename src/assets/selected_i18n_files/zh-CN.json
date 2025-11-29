@@ -304,16 +304,8 @@
     "sections": {
       "appearance": "外观",
       "behavior": "消息行为",
-      "management": "聊天管理"
-    },
-    "translation": {
-      "title": "启用翻译",
-      "sub": "翻译您发送的消息",
-      "notice": "翻译的消息可能会由外部服务处理以确保准确性。您的数据仍保持私密且不会被存储。",
-      "reset": {
-        "title": "重置同意",
-        "sub": "清除翻译同意并禁用此功能"
-      }
+      "management": "聊天管理",
+      "translation": "翻译"
     },
     "items": {
       "theme": {
@@ -329,28 +321,37 @@
         "sub": "中等"
       },
       "enterToSend": {
-        "title": "Enter 发送",
+        "title": "回车发送",
         "sub": "按 Enter 键发送消息"
       },
       "mediaVisibility": {
         "title": "媒体可见性",
-        "sub": "在图库中显示新下载的媒体"
+        "sub": "在相册中显示新下载的媒体"
       },
       "keepArchived": {
         "title": "保持聊天归档",
-        "sub": "新消息到来时，已归档的聊天保持归档"
+        "sub": "收到新消息时，已归档的聊天仍保持归档"
       },
       "transcripts": {
         "title": "语音消息转录",
-        "sub": "自动转录新语音消息"
+        "sub": "自动转录新的语音消息"
+      },
+      "translation": {
+        "title": "启用翻译",
+        "sub": "翻译您发送的消息",
+        "notice": "翻译后的消息可能会由外部服务处理以确保准确性。您的数据将保持私密，不会被存储。",
+        "reset": {
+          "title": "重置授权",
+          "sub": "清除翻译授权并禁用该功能"
+        }
       },
       "backup": {
         "title": "聊天备份",
         "sub": "将消息备份到云存储"
       },
       "transfer": {
-        "title": "传输聊天",
-        "sub": "在设备间移动聊天"
+        "title": "转移聊天",
+        "sub": "在设备之间迁移聊天"
       },
       "history": {
         "title": "聊天记录",
@@ -359,24 +360,42 @@
     },
     "toasts": {
       "enter": {
-        "enabled": "Enter-发送 已启用",
-        "disabled": "Enter-发送 已禁用"
+        "enabled": "回车发送已启用",
+        "disabled": "回车发送已禁用"
       },
       "media": {
         "on": "媒体可见性已开启",
         "off": "媒体可见性已关闭"
       },
       "archived": {
-        "enabled": "保持归档 已启用",
-        "disabled": "保持归档 已禁用"
+        "enabled": "保持归档已启用",
+        "disabled": "保持归档已禁用"
       },
       "transcripts": {
         "enabled": "语音消息转录已启用",
         "disabled": "语音消息转录已禁用"
       },
+      "translation": {
+        "enabled": "翻译已启用",
+        "disabled": "翻译已禁用",
+        "consentDeclined": "已拒绝翻译授权",
+        "consentReset": "已重置翻译授权"
+      },
       "backup": {
         "starting": "正在开始备份…",
         "done": "备份完成"
+      }
+    },
+    "dialogs": {
+      "translationConsent": {
+        "header": "翻译需要将消息文本发送到外部服务",
+        "message": "为了提供消息翻译，我们会将消息文本发送到第三方翻译服务。我们不会收集任何个人账户信息，只发送消息文本。如果您同意，翻译内容将被获取并保存在本地。您可以随时撤销授权。",
+        "decline": "拒绝",
+        "accept": "同意"
+      },
+      "resetTranslationConsent": {
+        "header": "重置翻译授权",
+        "message": "这将清除您对消息翻译的授权并禁用该功能。您之后仍可重新启用。"
       }
     }
   },
