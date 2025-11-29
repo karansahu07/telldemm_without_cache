@@ -18,16 +18,34 @@ export interface ChatTheme {
   providedIn: 'root',
 })
 export class ThemeService {
+  // readonly default: ChatTheme = {
+  //   meBubble: '#f5afaf',
+  //   otherBubble: '#FFFFFF',
+  //   bubbleTextColorMe: '#000000',
+  //   bubbleTextColorOther: '#000000',
+  //   backgroundType: 'solid',
+  //   backgroundValue: '#685f5fff',
+  // };
+
+  // readonly default: ChatTheme = {
+  //   meBubble: '#d6ba80',  // Light gold tint matching SCSS --chat-bubble-sent
+  //   otherBubble: '#ffffff',  // Matches SCSS --chat-bubble-received
+  //   bubbleTextColorMe: '#303030',  // Explicit match to SCSS --chat-bubble-text
+  //   bubbleTextColorOther: '#303030',  // Explicit match to SCSS --chat-bubble-text
+  //   backgroundType: 'solid',
+  //   backgroundValue: '#ffffff',  // Light background to align with Ionic light theme
+  // };
+
   readonly default: ChatTheme = {
-    meBubble: '#f5afaf',
-    otherBubble: '#FFFFFF',
+    meBubble: '#d6ba80',
+    otherBubble: '#ffffff',
     bubbleTextColorMe: '#000000',
     bubbleTextColorOther: '#000000',
-    backgroundType: 'solid',
-    backgroundValue: '#685f5fff',
+    backgroundType: 'wallpaper',
+    backgroundValue: 'assets/wallpaper/chat_bg.jpg',
   };
 
-  constructor() {}
+  constructor() { }
 
   /* ---------------- Persistence ---------------- */
 
@@ -69,6 +87,31 @@ export class ThemeService {
    * Pick readable text color (#000000 or #FFFFFF) for a given hex background.
    * Uses relative luminance approximation.
    */
+  // pickTextColor(hex: string): '#000000' | '#FFFFFF' {
+  //   try {
+  //     const h = this.normalizeHex(hex);
+  //     const r = parseInt(h.substr(0, 2), 16);
+  //     const g = parseInt(h.substr(2, 2), 16);
+  //     const b = parseInt(h.substr(4, 2), 16);
+
+  //     // convert to linear-light per sRGB luminance formula
+  //     const [rs, gs, bs] = [r, g, b].map((c) => {
+  //       const s = c / 255;
+  //       return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  //     });
+
+  //     const luminance = 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+  //     // threshold tuned to prefer black for lighter backgrounds
+  //     return luminance > 0.6 ? '#000000' : '#FFFFFF';
+  //   } catch {
+  //     return '#000000';
+  //   }
+  // }
+
+  /**
+ * Pick readable text color (#000000 or #FFFFFF) for a given hex background.
+ * Uses relative luminance approximation.
+ */
   pickTextColor(hex: string): '#000000' | '#FFFFFF' {
     try {
       const h = this.normalizeHex(hex);
@@ -83,8 +126,8 @@ export class ThemeService {
       });
 
       const luminance = 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
-      // threshold tuned to prefer black for lighter backgrounds
-      return luminance > 0.6 ? '#000000' : '#FFFFFF';
+      // Threshold tuned to prefer black for lighter backgrounds (now checks both meBubble and otherBubble effectively)
+      return luminance > 0.5 ? '#000000' : '#FFFFFF';  // Lowered from 0.6 to 0.5 for better handling of mid-light colors like #d6ba80
     } catch {
       return '#000000';
     }
@@ -138,7 +181,7 @@ export class ThemeService {
     // background
     if (t.backgroundType === 'solid') {
       root.style.setProperty('--chat-bg', t.backgroundValue || this.default.backgroundValue);
-      root.style.setProperty('--chat-bg-image', `url('/assets/images/chat_bg.jpg')`);
+      root.style.setProperty('--chat-bg-image', t.backgroundValue);
     } else if (t.backgroundType === 'gradient') {
       // gradients can't be in background-color so set bg to transparent and image to gradient
       root.style.setProperty('--chat-bg', 'transparent');

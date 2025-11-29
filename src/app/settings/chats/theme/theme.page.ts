@@ -24,6 +24,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ThemeService,ChatTheme } from 'src/app/services/theme';
 
 const PRESET_BUBBLES = [
+  { me: '#d6ba80', other: '#FFFFFF' },
   { me: '#DCF8C6', other: '#FFFFFF' },
   { me: '#00A884', other: '#EDEDED' },
   { me: '#E1FFC7', other: '#F0F0F0' },
@@ -39,6 +40,7 @@ const PRESET_GRADIENTS = [
 ];
 
 const PRESET_WALLS = [
+  { id: 'wp9', url: 'assets/wallpaper/chat_bg.jpg' },
   { id: 'wp1', url: 'assets/wallpaper/wp1.jpg' },
   { id: 'wp2', url: 'assets/wallpaper/wp2.jpg' },
   { id: 'wp3', url: 'assets/wallpaper/wp3.jpg' },

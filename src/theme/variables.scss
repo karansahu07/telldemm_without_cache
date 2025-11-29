@@ -1,24 +1,20 @@
-/* Ionic Theme Variables - Red (#FF1414) Based with High Contrast (body-scoped) */
+/* Ionic Theme Variables - Updated with Tick Colors */
 
 /** Base (Light) **/
 body {
-  // --ion-color-primary: #ff1414;
   --ion-color-primary: #bc8c2c;
   --ion-color-primary-rgb: 255, 20, 20;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
-  // --ion-color-primary-shade: #e01313;
-  // --ion-color-primary-tint: #f5afaf;
   --ion-color-primary-shade: #bc8c2c;
   --ion-color-primary-tint: #bc8c2c;
 
   --ion-background-color: #ffffff;
   --ion-text-color: #0b0b0b;
-  // --ion-text-color: #bc8c2c;
   --ion-text-color-head: #bc8c2c;
 
   --ion-toolbar-background: #ffffff;
-  --ion-toolbar-color: #0b0b0b; /* fixed: was white on white */
+  --ion-toolbar-color: #0b0b0b;
 
   --ion-item-background: #ffffff;
   --ion-card-background: #ffffff;
@@ -32,35 +28,26 @@ body {
   --chat-input-text: #0b0b0b;
   --chat-input-icon: #9b9b9b;
 
-  /* Focus ring shared */
-  // --focus-ring: 0 0 0 3px rgba(255, 20, 20, 0.35);
+  /* NEW: Chat Tick Colors */
+  --chat-tick-sent: #8a6a3b;        /* Single tick */
+  --chat-tick-delivered: #6d5832;   /* Double tick */
+  // --chat-tick-seen: #3f78b2;        /* Blue tick */
+  --chat-tick-seen: #b10202;   /* Seen tick - red */
+
 }
 
 
-
-/* Manual override: force High Contrast when this class is on <body> */
+/** High Contrast Mode **/
 body.accessibility-high-contrast {
-  --ion-background-color: #ffffff;   /* pure black */
-  --ion-text-color: #000000;         /* pure white */
-  // --ion-text-color: #bc8c2c;         /* pure white */
+  --ion-background-color: #ffffff;
+  --ion-text-color: #000000;
 
   --ion-toolbar-background: #ffffff;
   --ion-toolbar-color: #000000;
-  --ion-text-white-color: white;   /* pure black */
+  --ion-text-white-color: white;
 
-
-
-
-  // --ion-color-primary: #a80606;      /* brand red */
-  // --ion-color-primary-contrast: #000000;
-  // --ion-color-primary-shade: #d81212;
-  // --ion-color-primary-tint: #c55454;
-
-    --ion-color-primary: #bc8c2c;      /* brand red */
+  --ion-color-primary: #bc8c2c;
   --ion-color-primary-contrast: #000000;
-  // --ion-color-primary-shade: #d81212;
-  // --ion-color-primary-tint: #c55454;
-
 
   --ion-item-background: #ffffff;
   --ion-card-background: #ffffff;
@@ -73,21 +60,11 @@ body.accessibility-high-contrast {
   --chat-input-bg: #ffffff;
   --chat-input-text: #0b0b0b;
   --chat-input-icon: #9b9b9b;
-  // --ion-text-color: w;
 
+  /* NEW: Chat Tick Colors */
+  --chat-tick-sent: #8a6a3b;
+  --chat-tick-delivered: #6d5832;
+  // --chat-tick-seen: #3f78b2;
+  --chat-tick-seen: #720606;   /* Seen tick - red */
 
-  /* Strong focus outline */
-//   --focus-ring: 0 0 0 3px #a80606, 0 0 0 5px #ffffff;
 }
-
-/* Consistent focus style across modes */
-// :where(button, [role="button"], a, input, textarea, select, .focusable):focus-visible {
-//   outline: none;
-//   box-shadow: var(--focus-ring);
-//   border-radius: 8px;
-// }
-
-// /* Borders on list items/cards using your tokens */
-// ion-item, .item, .card, ion-card {
-//   border-color: var(--ion-border-color) !important;
-// }
