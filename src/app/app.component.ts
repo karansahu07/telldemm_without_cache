@@ -148,9 +148,10 @@ export class AppComponent implements OnInit {
 
     // ----------------------------
     let fromNotification = false;
+    localStorage.setItem('fromNotification', 'true');
     const navigation = this.router.getCurrentNavigation();
-    // console.log({navigation})
-    if (navigation?.extras?.state?.['fromNotification']) {   //solution is here handle in fcm token
+    console.log({navigation})
+    if (navigation?.extras?.state?.['fromNotification']) {
       fromNotification = true;
       // console.log({fromNotification})
     } else if (localStorage.getItem('fromNotification') === 'true') {

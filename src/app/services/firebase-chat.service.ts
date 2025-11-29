@@ -670,6 +670,7 @@ export class FirebaseChatService {
   }
 
   async openChat(chat: any, isNew: boolean = false) {
+    console.log("this openchat is called from firebase chat service enters")
     let conv: any = null;
     if (isNew) {
       const { receiver }: { receiver: IUser } = chat;
@@ -678,6 +679,7 @@ export class FirebaseChatService {
         receiver.userId
       );
       conv = this.currentConversations.find((c) => c.roomId === roomId);
+      // console.log({conv});
       if (!conv) {
         conv = {
           title: receiver.username,
@@ -688,6 +690,16 @@ export class FirebaseChatService {
       }
     } else {
       conv = this.currentConversations.find((c) => c.roomId === chat.roomId);
+      console.log({conv});
+      if (!conv) {
+    console.log("Conversation not found in currentConversations. Fetching from server...");
+    conv = await this.fetchConversationFromServer(chat.roomId);
+
+    if (!conv) {
+      console.error("Still no conversation found. Cannot open chat.");
+      return;
+    }
+  }
     }
 
     let memberIds: string[] = [];
@@ -758,6 +770,49 @@ export class FirebaseChatService {
 
     this.setUnreadCount();
   }
+
+  async fetchConversationFromServer(roomId: string): Promise<IConversation | null> {
+  try {
+    console.log("📡 Fetching conversation from server for roomId:", roomId);
+
+    // const db = getDatabase();
+    const chatRef = ref(this.db, `chats/${roomId}`);
+
+    const snapshot = await get(chatRef);
+
+    if (!snapshot.exists()) {
+      console.warn("⚠️ No conversation found on server for roomId:", roomId);
+      return null;
+    }
+
+    const data = snapshot.val();
+    console.log({data})
+
+    // Build a valid conversation object
+    const conversation: IConversation = {
+      roomId: roomId,
+      title: data.title ?? 'Chat',
+      type: data.type ?? 'private',
+      members: data.members ? Object.keys(data.members) : [],
+      lastMessage: data.lastMessage ?? null,
+      createdAt: data.createdAt ?? Date.now(),
+      isArchived: false,
+      isPinned: false,
+      isLocked: false
+    };
+
+    console.log("✅ Conversation fetched from server:", conversation);
+
+    // Also push to local currentConversations so next time it doesn't miss
+    this.currentConversations.push(conversation);
+
+    return conversation;
+  } catch (err) {
+    console.error("❌ Error fetching conversation:", err);
+    return null;
+  }
+}
+
 
   // async openChat(chat: any, isNew: boolean = false) {
   //   let conv: any = null;

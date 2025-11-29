@@ -267,6 +267,8 @@ export class FcmService {
     const roomId = data?.roomId;
 
     if (receiverId) {
+      console.log({receiverId})
+      console.log("opening open chat roomId ", roomId)
       this.firebaseChatService.openChat({roomId})
       this.router.navigate(['/chatting-screen'], {
         queryParams: { receiverId },
