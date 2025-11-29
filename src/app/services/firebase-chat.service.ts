@@ -669,152 +669,8 @@ export class FirebaseChatService {
     }
   }
 
-  async openChat(chat: any, isNew: boolean = false) {
-    console.log("this openchat is called from firebase chat service enters")
-    let conv: any = null;
-    if (isNew) {
-      const { receiver }: { receiver: IUser } = chat;
-      const roomId = this.getRoomIdFor1To1(
-        this.senderId as string,
-        receiver.userId
-      );
-      conv = this.currentConversations.find((c) => c.roomId === roomId);
-      // console.log({conv});
-      if (!conv) {
-        conv = {
-          title: receiver.username,
-          type: 'private',
-          roomId: roomId,
-          members: [this.senderId, receiver.userId],
-        } as unknown as IConversation;
-      }
-    } else {
-      conv = this.currentConversations.find((c) => c.roomId === chat.roomId);
-      console.log({conv});
-      if (!conv) {
-    console.log("Conversation not found in currentConversations. Fetching from server...");
-    conv = await this.fetchConversationFromServer(chat.roomId);
-
-    if (!conv) {
-      console.error("Still no conversation found. Cannot open chat.");
-      return;
-    }
-  }
-    }
-
-    let memberIds: string[] = [];
-    if (conv.type === 'private') {
-      const parts = conv.roomId.split('_');
-      const receiverId =
-        parts.find((p: string) => p !== this.senderId) ??
-        parts[parts.length - 1];
-      memberIds.push(receiverId);
-    } else {
-      memberIds = (conv as IConversation).members || [];
-    }
-
-    this.currentChat = { ...(conv as IConversation) };
-
-    // Setup presence listener
-    this.presenceCleanUp = this.isReceiverOnline(memberIds);
-
-    // 🆕 Setup typing listener for each member
-    const typingUnsubscribers: (() => void)[] = [];
-    for (const memberId of memberIds) {
-      if (memberId !== this.senderId) {
-        const unsub = this.listenToTypingStatus(conv.roomId, memberId);
-        typingUnsubscribers.push(unsub);
-      }
-    }
-
-    // 🆕 Store typing cleanup functions
-    const originalCleanup = this.presenceCleanUp;
-    this.presenceCleanUp = () => {
-      originalCleanup?.();
-      typingUnsubscribers.forEach((unsub) => {
-        try {
-          unsub();
-        } catch (e) {}
-      });
-    };
-
-    this._roomMessageListner = this.listenRoomStream(conv?.roomId as string, {
-      onAdd: async (msgKey, data, isNew) => {
-        if (isNew && data.sender !== this.senderId) {
-          const decryptedText = await this.encryptionService.decrypt(
-            data.text as string
-          );
-          //if data.attachment need to process attachment file(download file using mediaId and save to received folder finally add locally saved url to previewUrl)  localUrl !=
-          const {attachment, ...msg} = data;
-          console.log("this msg sent by me")
-          this.pushMsgToChat({
-            msgId: msgKey,
-            ...data,
-            text: decryptedText,
-            attachment: { ...data.attachment },
-          });
-          // also save message sqlite
-          this.sqliteService.saveMessage({...msg, msgId : msgKey, text : decryptedText})
-          if(attachment){
-            this.sqliteService.saveAttachment({...attachment, localUrl:'', msgId : msgKey})
-          }
-        }
-      },
-      onChange: async (msgKey, data) => {
-        this.updateMessageLocally({ ...data, msgId: msgKey });
-      },
-      onRemove(msgKey) {
-        console.log(`Message removed with key ${msgKey}`);
-      },
-    });
-
-    this.setUnreadCount();
-  }
-
-  async fetchConversationFromServer(roomId: string): Promise<IConversation | null> {
-  try {
-    console.log("📡 Fetching conversation from server for roomId:", roomId);
-
-    // const db = getDatabase();
-    const chatRef = ref(this.db, `chats/${roomId}`);
-
-    const snapshot = await get(chatRef);
-
-    if (!snapshot.exists()) {
-      console.warn("⚠️ No conversation found on server for roomId:", roomId);
-      return null;
-    }
-
-    const data = snapshot.val();
-    console.log({data})
-
-    // Build a valid conversation object
-    const conversation: IConversation = {
-      roomId: roomId,
-      title: data.title ?? 'Chat',
-      type: data.type ?? 'private',
-      members: data.members ? Object.keys(data.members) : [],
-      lastMessage: data.lastMessage ?? null,
-      createdAt: data.createdAt ?? Date.now(),
-      isArchived: false,
-      isPinned: false,
-      isLocked: false
-    };
-
-    console.log("✅ Conversation fetched from server:", conversation);
-
-    // Also push to local currentConversations so next time it doesn't miss
-    this.currentConversations.push(conversation);
-
-    return conversation;
-  } catch (err) {
-    console.error("❌ Error fetching conversation:", err);
-    return null;
-  }
-}
-
-
   // async openChat(chat: any, isNew: boolean = false) {
+  //   console.log("this openchat is called from firebase chat service enters")
   //   let conv: any = null;
   //   if (isNew) {
   //     const { receiver }: { receiver: IUser } = chat;
@@ -823,6 +679,7 @@ export class FirebaseChatService {
   //       receiver.userId
   //     );
   //     conv = this.currentConversations.find((c) => c.roomId === roomId);
+  //     // console.log({conv});
   //     if (!conv) {
   //       conv = {
   //         title: receiver.username,
@@ -874,97 +731,22 @@ export class FirebaseChatService {
   //   this._roomMessageListner = this.listenRoomStream(conv?.roomId as string, {
   //     onAdd: async (msgKey, data, isNew) => {
   //       if (isNew && data.sender !== this.senderId) {
-  //         try {
-  //           // Decrypt message text
-  //           const decryptedText = await this.encryptionService.decrypt(
-  //             data.text as string
-  //           );
-
-  //           // Prepare message object for UI and SQLite
-  //           const messageToSave: IMessage = {
-  //             msgId: msgKey,
-  //             roomId: conv.roomId,
-  //             sender: data.sender,
-  //             sender_name: data.sender_name || 'Unknown',
-  //             receiver_id: this.senderId as string,
-  //             type: data.type || 'text',
-  //             text: decryptedText,
-  //             translations: data.translations || undefined,
-  //             isMe: false,
-  //             status: 'delivered',
-  //             timestamp: data.timestamp || Date.now(),
-  //             receipts: data.receipts || {
-  //               read: { status: false, readBy: [] },
-  //               delivered: { status: false, deliveredTo: [] }
-  //             },
-  //             deletedFor: data.deletedFor || { everyone: false, users: [] },
-  //             reactions: data.reactions || [],
-  //             replyToMsgId: data.replyToMsgId || '',
-  //             isEdit: data.isEdit || false,
-  //             isPinned: data.isPinned || false,
-  //             isForwarded: data.isForwarded || false,
-  //           };
-
-  //           // Handle attachment if present
-  //           if (data.attachment && Object.keys(data.attachment).length > 0) {
-  //             try {
-  //               // Get CDN URL for attachment
-  //               let cdnUrl = '';
-  //               let localUrl = data.attachment.localUrl || '';
-
-  //               if (data.attachment.mediaId) {
-  //                 const res = await firstValueFrom(
-  //                   this.apiService.getDownloadUrl(data.attachment.mediaId)
-  //                 );
-  //                 cdnUrl = res.status ? res.downloadUrl : '';
-  //               }
-
-  //               // Save attachment to SQLite
-  //               const attachmentToSave: IAttachment = {
-  //                 msgId: msgKey,
-  //                 mediaId: data.attachment.mediaId || '',
-  //                 type: data.attachment.type || 'other',
-  //                 fileName: data.attachment.fileName || '',
-  //                 mimeType: data.attachment.mimeType || '',
-  //                 fileSize: data.attachment.fileSize || 0,
-  //                 caption: data.attachment.caption || '',
-  //                 localUrl: localUrl,
-  //                 cdnUrl: cdnUrl,
-  //               };
-
-  //               await this.sqliteService.saveAttachment(attachmentToSave);
-
-  //               // Add mediaId to message for SQLite reference
-  //               messageToSave.mediaId = data.attachment.mediaId;
-
-  //               // Update UI message with attachment details
-  //               this.pushMsgToChat({
-  //                 ...messageToSave,
-  //                 attachment: {
-  //                   ...data.attachment,
-  //                   cdnUrl: cdnUrl,
-  //                   localUrl: localUrl,
-  //                 },
-  //               });
-  //             } catch (attachError) {
-  //               console.error('Error processing attachment:', attachError);
-  //               // Still push message to UI even if attachment fails
-  //               this.pushMsgToChat(messageToSave);
-  //             }
-  //           } else {
-  //             // No attachment, just push text message
-  //             this.pushMsgToChat(messageToSave);
-  //           }
-
-  //           // Save message to SQLite (this will save the reference to attachment via mediaId)
-  //           await this.sqliteService.saveMessage(messageToSave);
-
-  //           // Mark message as delivered
-  //           await this.markAsDelivered(msgKey, null, conv.roomId);
-
-  //           console.log('✅ Message saved to SQLite:', msgKey);
-  //         } catch (error) {
-  //           console.error('❌ Error processing received message:', error);
+  //         const decryptedText = await this.encryptionService.decrypt(
+  //           data.text as string
+  //         );
+  //         //if data.attachment need to process attachment file(download file using mediaId and save to received folder finally add locally saved url to previewUrl)  localUrl !=
+  //         const {attachment, ...msg} = data;
+  //         console.log("this msg sent by me")
+  //         this.pushMsgToChat({
+  //           msgId: msgKey,
+  //           ...data,
+  //           text: decryptedText,
+  //           attachment: { ...data.attachment },
+  //         });
+  //         // also save message sqlite
+  //         this.sqliteService.saveMessage({...msg, msgId : msgKey, text : decryptedText})
+  //         if(attachment){
+  //           this.sqliteService.saveAttachment({...attachment, localUrl:'', msgId : msgKey})
   //         }
   //       }
   //     },
@@ -978,6 +760,197 @@ export class FirebaseChatService {
 
   //   this.setUnreadCount();
   // }
+
+// Replace your openChat method with this improved version:
+
+async openChat(chat: any, isNew: boolean = false) {
+  console.log("📱 openChat called from notification/UI");
+  
+  try {
+    let conv: any = null;
+    
+    if (isNew) {
+      const { receiver }: { receiver: IUser } = chat;
+      const roomId = this.getRoomIdFor1To1(
+        this.senderId as string,
+        receiver.userId
+      );
+      conv = this.currentConversations.find((c) => c.roomId === roomId);
+      
+      if (!conv) {
+        conv = {
+          title: receiver.username,
+          type: 'private',
+          roomId: roomId,
+          members: [this.senderId, receiver.userId],
+        } as unknown as IConversation;
+      }
+    } else {
+      // ✅ CRITICAL: Handle both roomId from notification and full conversation object
+      const roomIdToFind = chat.roomId || chat;
+      conv = this.currentConversations.find((c) => c.roomId === roomIdToFind);
+      
+      // ✅ If conversation not found in memory, try to load from SQLite
+      if (!conv) {
+        console.log('⚠️ Conversation not in memory, loading from SQLite...');
+        try {
+          const sqliteConv = await this.sqliteService.getConversation?.(roomIdToFind);
+          if (sqliteConv) {
+            conv = sqliteConv;
+            // Add to conversations array
+            const existing = this._conversations$.value;
+            this._conversations$.next([...existing, conv]);
+          }
+        } catch (err) {
+          console.warn('Failed to load conversation from SQLite:', err);
+        }
+      }
+      
+      // ✅ If still not found, create a minimal conversation object
+      if (!conv) {
+        console.log('⚠️ Creating minimal conversation object');
+        const parts = roomIdToFind.split('_');
+        const receiverId = parts.find((p: string) => p !== this.senderId) ?? parts[parts.length - 1];
+        
+        // ✅ Try to get title from platformUsers
+        let title = receiverId; // fallback to userId
+        let phoneNumber = '';
+        
+        const receiverUser = this._platformUsers$.value.find(u => u.userId === receiverId);
+        
+        if (receiverUser) {
+          title = receiverUser.username || receiverUser.phoneNumber || receiverId;
+          phoneNumber = receiverUser.phoneNumber || '';
+        } else {
+          // ✅ Try to fetch from API if not in platformUsers
+          try {
+            const profileResp: any = await firstValueFrom(
+              this.apiService.getUserProfilebyId(receiverId)
+            );
+            title = profileResp?.name || profileResp?.phone_number || receiverId;
+            phoneNumber = profileResp?.phone_number || '';
+          } catch (err) {
+            console.warn('Failed to fetch user profile for title:', err);
+          }
+        }
+        
+        // ✅ If still no proper title, use phone number or userId
+        if (title === receiverId && phoneNumber) {
+          title = phoneNumber;
+        }
+        
+        conv = {
+          roomId: roomIdToFind,
+          type: 'private',
+          title: title,
+          phoneNumber: phoneNumber,
+          members: [this.senderId, receiverId],
+          unreadCount: 0,
+        } as IConversation;
+        
+        console.log('✅ Created conversation with title:', title);
+      }
+    }
+
+    // ✅ Determine member IDs
+    let memberIds: string[] = [];
+    if (conv.type === 'private') {
+      const parts = conv.roomId.split('_');
+      const receiverId = parts.find((p: string) => p !== this.senderId) ?? parts[parts.length - 1];
+      memberIds.push(receiverId);
+    } else {
+      memberIds = (conv as IConversation).members || [];
+    }
+
+    // ✅ Set current chat FIRST (critical for other methods)
+    this.currentChat = { ...(conv as IConversation) };
+    console.log('✅ Current chat set:', this.currentChat.roomId);
+
+    // ✅ Setup presence listener
+    this.presenceCleanUp = this.isReceiverOnline(memberIds);
+
+    // ✅ Setup typing listeners
+    const typingUnsubscribers: (() => void)[] = [];
+    for (const memberId of memberIds) {
+      if (memberId !== this.senderId) {
+        const unsub = this.listenToTypingStatus(conv.roomId, memberId);
+        typingUnsubscribers.push(unsub);
+      }
+    }
+
+    // ✅ Combine cleanup functions
+    const originalCleanup = this.presenceCleanUp;
+    this.presenceCleanUp = () => {
+      originalCleanup?.();
+      typingUnsubscribers.forEach((unsub) => {
+        try {
+          unsub();
+        } catch (e) {}
+      });
+    };
+
+    // ✅ Setup real-time message listener
+    this._roomMessageListner = this.listenRoomStream(conv?.roomId as string, {
+      onAdd: async (msgKey, data, isNew) => {
+        if (isNew && data.sender !== this.senderId) {
+          try {
+            const decryptedText = await this.encryptionService.decrypt(
+              data.text as string
+            );
+            
+            const { attachment, ...msg } = data;
+            
+            console.log("📨 New message received from:", data.sender);
+            
+            // ✅ Push to UI
+            this.pushMsgToChat({
+              msgId: msgKey,
+              ...msg,
+              text: decryptedText,
+              attachment: attachment ? { ...attachment } : undefined,
+            });
+            
+            // ✅ Save to SQLite
+            await this.sqliteService.saveMessage({
+              ...msg, 
+              msgId: msgKey, 
+              text: decryptedText
+            });
+            
+            if (attachment) {
+              await this.sqliteService.saveAttachment({
+                ...attachment, 
+                localUrl: '', 
+                msgId: msgKey
+              });
+            }
+            
+            // ✅ Mark as delivered
+            await this.markAsDelivered(msgKey, null, conv.roomId);
+          } catch (err) {
+            console.error('❌ Error processing new message:', err);
+          }
+        }
+      },
+      onChange: async (msgKey, data) => {
+        await this.updateMessageLocally({ ...data, msgId: msgKey });
+      },
+      onRemove(msgKey) {
+        console.log(`Message removed: ${msgKey}`);
+      },
+    });
+
+    // ✅ Reset unread count
+    await this.setUnreadCount();
+    
+    console.log('✅ openChat completed successfully');
+    
+  } catch (error) {
+    console.error('❌ Error in openChat:', error);
+    throw error; // Re-throw so caller can handle
+  }
+}
+
 
   async setUnreadCount(roomId: string | null = null, count: number = 0) {
     const metaRef = rtdbRef(

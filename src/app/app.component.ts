@@ -148,7 +148,7 @@ export class AppComponent implements OnInit {
 
     // ----------------------------
     let fromNotification = false;
-    localStorage.setItem('fromNotification', 'true');
+    // localStorage.setItem('fromNotification', 'true');
     const navigation = this.router.getCurrentNavigation();
     console.log({navigation})
     if (navigation?.extras?.state?.['fromNotification']) {
@@ -159,6 +159,7 @@ export class AppComponent implements OnInit {
       // console.log({fromNotification})
     }
 
+    console.log("authenticated on not ",this.authService.isAuthenticated)
     if (this.authService.isAuthenticated) {
       if (!fromNotification) {
         this.router.navigateByUrl('/home-screen', { replaceUrl: true });

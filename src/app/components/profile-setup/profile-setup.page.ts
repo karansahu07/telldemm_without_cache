@@ -312,42 +312,6 @@ export class ProfileSetupPage implements OnInit, OnDestroy {
   }
 
   /**
-   * Check if user exists in any chat rooms
-   */
-  // checkUserInRooms(userId: string): Observable<boolean> {
-  //   return new Observable((observer) => {
-  //     const chatsRef = ref(this.db, 'chats');
-
-  //     const unsubscribe = onValue(
-  //       chatsRef,
-  //       (snapshot: any) => {
-  //         const data = snapshot.val();
-  //         let userFound = false;
-
-  //         if (data) {
-  //           // Check if user ID is part of any room ID
-  //           Object.keys(data).forEach((roomId: string) => {
-  //             const userIds = roomId.split('_');
-  //             if (userIds.includes(userId)) {
-  //               userFound = true;
-  //             }
-  //           });
-  //         }
-
-  //         observer.next(userFound);
-  //       },
-  //       (error) => {
-  //         console.error('Firebase error:', error);
-  //         observer.error(error);
-  //       }
-  //     );
-
-  //     // Return cleanup function
-  //     return () => unsubscribe();
-  //   });
-  // }
-
-  /**
    * Validate form before submission
    */
   private validateForm(): string | null {
@@ -439,51 +403,6 @@ export class ProfileSetupPage implements OnInit, OnDestroy {
       .toPromise();
   }
 
-  /**
-   * Save additional data (FCM token, profile URL, etc.)
-   */
-  //   private async saveAdditionalData(): Promise<void> {
-  //   try {
-  //     const db = getDatabase();
-  //     const userRef = ref(db, `users/${this.userID}`);
-
-  //     // read current user record
-  //     const snapshot = await get(userRef);
-
-  //     if (!snapshot.exists()) {
-  //       // user does not exist in DB yet -> use existing save flow for new users
-  //       //console.log('User not found in DB — saving as new user and storing FCM token');
-  //       await this.fcmService.saveFcmTokenToDatabase(
-  //         this.userID,
-  //         this.name,
-  //         this.phoneNumber
-  //       );
-  //     } else {
-  //       // user exists — check if fcmToken is present
-  //       const userData: any = snapshot.val();
-  //       if (!userData || !userData.fcmToken) {
-  //         //console.log('User exists but no fcmToken found — refreshing token');
-  //         // updateFcmToken will actively request a fresh token and write it to DB
-  //         await this.fcmService.updateFcmToken(this.userID);
-  //       } else {
-  //         //console.log('User exists and fcmToken is already present — skipping token update');
-  //       }
-  //     }
-
-  //     // Update name in AuthService (keep this regardless of token state)
-  //     await this.authService.updateUserName(this.name);
-
-  //     // Save profile image if present
-  //     if (this.imageData) {
-  //       await this.secureStorage.setItem('profile_url', this.imageData);
-  //     }
-
-  //     //console.log('Additional data saved successfully');
-  //   } catch (error) {
-  //     console.error('Error saving additional data:', error);
-  //   }
-  // }
-
   private async saveAdditionalData(): Promise<void> {
     try {
       const db = getDatabase();
@@ -556,31 +475,6 @@ export class ProfileSetupPage implements OnInit, OnDestroy {
       console.error('Error saving additional data:', error);
     }
   }
-
-  /**
-   * Handle navigation based on user rooms
-   */
-  // private async handleNavigation(): Promise<void> {
-  //   const savedUserId = this.authService.authData?.userId || this.userID;
-
-  //   return new Promise((resolve, reject) => {
-  //     this.checkUserInRooms(savedUserId)
-  //       .pipe(takeUntil(this.destroy$))
-  //       .subscribe({
-  //         next: (userFound: boolean) => {
-  //           const targetRoute = userFound ? '/home-screen' : '/contact-screen';
-  //           this.router.navigateByUrl(targetRoute, { replaceUrl: true });
-  //           resolve();
-  //         },
-  //         error: (error) => {
-  //           console.error('Error checking user rooms:', error);
-  //           // Default to contact-screen on error
-  //           this.router.navigateByUrl('/contact-screen', { replaceUrl: true });
-  //           resolve(); // Still resolve to not break the flow
-  //         },
-  //       });
-  //   });
-  // }
 
   private async handleNavigation(): Promise<void> {
   // Simply navigate to home-screen in all cases

@@ -260,27 +260,43 @@ export class FcmService {
   //    }
   //  }
 
- private async handleNotificationTap(data: any) {
-    console.log('🎯 Final Tap Data Received:', data);
+private async handleNotificationTap(data: any) {
+  console.log('🎯 Final Tap Data Received:', data);
 
-    const receiverId = data?.receiverId;
-    const roomId = data?.roomId;
+  const receiverId = data?.receiverId;
+  const roomId = data?.roomId;
 
-    if (receiverId) {
-      console.log({receiverId})
-      console.log("opening open chat roomId ", roomId)
-      this.firebaseChatService.openChat({roomId})
+  if (receiverId && roomId) {
+    console.log({ receiverId, roomId });
+    console.log("Opening chat with roomId:", roomId);
+    
+    try {
+      await this.firebaseChatService.openChat({ roomId });
+
+      await this.firebaseChatService.loadMessages(20, true);
+
+      await this.firebaseChatService.syncMessagesWithServer();
+      
       this.router.navigate(['/chatting-screen'], {
         queryParams: { receiverId },
-        state: { fromNotification: 'true' }
+        state: { fromNotification: true }
       });
 
       localStorage.setItem('fromNotification', 'true');
+      
+      console.log('✅ Chat opened and messages loaded successfully');
+      return;
+    } catch (error) {
+      console.error('❌ Error opening chat from notification:', error);
+      // Fallback to home if there's an error
+      this.router.navigate(['/home-screen']);
       return;
     }
-
-    this.router.navigate(['/home-screen']);
   }
+
+  // No valid data, go to home
+  this.router.navigate(['/home-screen']);
+}
 
   // ✅ Check for pending notifications (when app becomes active)
   private async checkForPendingNotifications() {
