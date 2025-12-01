@@ -1,6 +1,6 @@
 <ion-header>
   <ion-toolbar color="primary">
-    <ion-title>Create Channel</ion-title>
+    <ion-title>Create MegaTell</ion-title>
     <ion-buttons slot="end">
       <ion-button fill="clear" (click)="dismiss()">
         <ion-icon name="close-outline" slot="icon-only"></ion-icon>
@@ -13,24 +13,22 @@
 
   <ion-card>
     <ion-card-header>
-      <ion-card-title>Channel Information</ion-card-title>
-      <ion-card-subtitle>Fill in the details to create your channel</ion-card-subtitle>
+      <ion-card-title>MegaTell Information</ion-card-title>
+      <ion-card-subtitle>Fill in the details to create your MegaTell</ion-card-subtitle>
     </ion-card-header>
 
     <ion-card-content>
-
       <form (ngSubmit)="submit()">
 
-        <!-- Profile Image Section -->
+        <!-- MegaTell Pic Section -->
         <div class="profile-image-container">
           <div class="profile-image-wrapper">
             <img
               *ngIf="previewUrl; else placeholder"
               [src]="previewUrl"
               class="profile-image"
-              alt="Channel Image"
+              alt="MegaTell Pic"
             />
-
             <ng-template #placeholder>
               <div class="profile-placeholder">
                 <ion-icon name="chatbubble-outline" class="placeholder-icon"></ion-icon>
@@ -40,22 +38,17 @@
             <!-- Upload Button -->
             <label class="camera-button">
               <ion-icon name="camera" class="camera-icon"></ion-icon>
-              <input
-                type="file"
-                accept="image/*"
-                (change)="onFileSelected($event)"
-                hidden
-              />
+              <input type="file" accept="image/*" (change)="onFileSelected($event)" hidden />
             </label>
           </div>
-          <p class="upload-text">Upload Channel Display Picture</p>
+          <p class="upload-text">Upload MegaTell Pic</p>
         </div>
 
-        <!-- Channel Name -->
+        <!-- MegaTell Name -->
         <ion-item>
-          <ion-label position="stacked">Channel Name *</ion-label>
+          <ion-label position="stacked">MegaTell Name *</ion-label>
           <ion-input
-            placeholder="Enter your channel name"
+            placeholder="Enter your MegaTell name"
             [(ngModel)]="channel_name"
             name="channel_name"
             required
@@ -66,7 +59,7 @@
         <ion-item>
           <ion-label position="stacked">Description *</ion-label>
           <ion-textarea
-            placeholder="Describe what this channel is about"
+            placeholder="Describe what this MegaTell is about"
             [(ngModel)]="description"
             name="description"
             rows="4"
@@ -86,22 +79,22 @@
           </ion-segment>
         </ion-item>
 
-        <!-- Max Members -->
+        <!-- Max Tellers -->
         <ion-item>
-          <ion-label position="stacked">Max Members</ion-label>
+          <ion-label position="stacked">Max Tellers</ion-label>
           <ion-input
             type="number"
-            placeholder="Enter maximum members"
+            placeholder="Enter maximum Tellers"
             [(ngModel)]="max_members"
             name="max_members"
           ></ion-input>
         </ion-item>
 
-        <!-- Category -->
+        <!-- Circle Type -->
         <ion-item>
-          <ion-label position="stacked">Category *</ion-label>
+          <ion-label position="stacked">Circle Type *</ion-label>
           <ion-select
-            placeholder="Select category"
+            placeholder="Select circle type"
             [(ngModel)]="category_id"
             name="category_id"
           >
@@ -111,11 +104,11 @@
           </ion-select>
         </ion-item>
 
-        <!-- Region -->
+        <!-- DemmRegion -->
         <ion-item>
-          <ion-label position="stacked">Region *</ion-label>
+          <ion-label position="stacked">DemmRegion *</ion-label>
           <ion-select
-            placeholder="Select region"
+            placeholder="Select DemmRegion"
             [(ngModel)]="region_id"
             name="region_id"
           >
@@ -131,12 +124,11 @@
             Cancel
           </ion-button>
           <ion-button type="submit" color="primary">
-            Create Channel
+            Create MegaTell
           </ion-button>
         </div>
 
       </form>
-
     </ion-card-content>
   </ion-card>
 

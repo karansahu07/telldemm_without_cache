@@ -8,8 +8,8 @@
       <ion-item lines="none" detail="false"
         style="--padding-start: 0; --background: white; color: black; margin-top: 2px; margin-left: 20px;">
         <ion-label class="user-name">
-          <h2 class="user-real-name">Select contacts</h2>
-          <h5>{{ allUsers.length }} contact(s) found on Telldemm</h5>
+          <h2 class="user-real-name">Select Demm(s)</h2>
+          <h5>{{ allUsers.length }} Demm(s) found on TellDemm</h5>
         </ion-label>
       </ion-item>
     </ion-buttons>
@@ -27,7 +27,7 @@
   <ion-toolbar *ngIf="showSearchBar" class="custom-search-toolbar">
     <div class="custom-search-container">
       <ion-icon name="arrow-back-outline" class="search-back-icon" (click)="toggleSearch()"></ion-icon>
-      <ion-input #searchInput [(ngModel)]="searchTerm" [type]="keyboardType" placeholder="Search name or number..."
+      <ion-input #searchInput [(ngModel)]="searchTerm" [type]="keyboardType" placeholder="FindTell name or number..."
         class="custom-search-input" (ionInput)="filterContacts()"></ion-input>
       <ion-icon [name]="keyboardType === 'text' ? 'keypad-outline' : 'text-outline'" class="search-keyboard-icon"
         (click)="toggleKeyboardType()"></ion-icon>
@@ -43,14 +43,14 @@
       <ion-avatar slot="start" class="green-icon">
         <ion-icon name="people-outline"></ion-icon>
       </ion-avatar>
-      <ion-label class="group">New group</ion-label>
+      <ion-label class="group">New DemmRoom</ion-label>
     </ion-item>
 
     <ion-item class="items">
       <ion-avatar slot="start" class="green-icon">
         <ion-icon name="person-add-outline"></ion-icon>
       </ion-avatar>
-      <ion-label class="group">New contact (wip)</ion-label>
+      <ion-label class="group">New Demm (wip)</ion-label>
       <ion-icon style="color: black" name="qr-code-outline" slot="end"></ion-icon>
     </ion-item>
 
@@ -58,20 +58,20 @@
       <ion-avatar slot="start" class="green-icon">
         <ion-icon name="people-circle-outline"></ion-icon>
       </ion-avatar>
-      <ion-label class="group">New community</ion-label>
+      <ion-label class="group">New DemmCircle</ion-label>
     </ion-item>
 
-    <ion-item class="items">
+    <!-- <ion-item class="items">
       <ion-avatar slot="start" class="green-icon">
         <ion-icon name="sparkles-outline"></ion-icon>
       </ion-avatar>
       <ion-label class="group">Chat with AIs (wip)</ion-label>
-    </ion-item>
+    </ion-item> -->
   </ion-list>
 
   <!-- Group Creator UI -->
   <div *ngIf="creatingGroup" class="group-creator" style="padding: 12px">
-    <ion-input [(ngModel)]="newGroupName" placeholder="Enter Group Name" style="margin-bottom: 12px"></ion-input>
+    <ion-input [(ngModel)]="newGroupName" placeholder="Enter DemmRoom Name" style="margin-bottom: 12px"></ion-input>
 
     <ion-list>
       <ion-item *ngFor="let user of allUsers">
@@ -80,7 +80,7 @@
       </ion-item>
     </ion-list>
 
-    <ion-button expand="full" color="primary" (click)="createGroup()">Create Group</ion-button>
+    <ion-button expand="full" color="primary" (click)="createGroup()">Create DemmRoom</ion-button>
   </div>
 
   <!-- 🔄 Skeleton Loader While Contacts Are Loading -->
@@ -102,20 +102,8 @@
 
   <!-- Matched Contacts -->
   <ion-list-header *ngIf="!creatingGroup && !isLoading && filteredContacts.length > 0">
-    <ion-label>Contacts on Telldemm</ion-label>
+    <ion-label>DemmList on TellDemm</ion-label>
   </ion-list-header>
-
-  <!-- <ion-list class="list2" lines="none" *ngIf="!creatingGroup && !isLoading && filteredContacts.length > 0">
-    <ion-item *ngFor="let contact of filteredContacts" (click)="openContactChat(contact)">
-      <ion-avatar slot="start">
-        <img [src]="contact.image" />
-      </ion-avatar>
-      <ion-label>
-        <h2>{{ contact.name }}</h2>
-        <p *ngIf="contact.message">{{ contact.message }}</p>
-      </ion-label>
-    </ion-item>
-  </ion-list> -->
 
   <ion-list class="list2" lines="none" *ngIf="!creatingGroup && !isLoading && filteredContacts.length > 0">
     <ion-item *ngFor="let contact of filteredContacts" (click)="openContactChat(contact.userId)">
@@ -134,13 +122,11 @@
     </ion-item>
   </ion-list>
 
-
-
   <!-- No Contacts Found -->
   <div *ngIf="!creatingGroup && !isLoading && filteredContacts.length === 0" class="no-contacts"
     style="text-align: center; margin-top: 2rem;">
     <ion-icon name="sad-outline" size="large" color="medium"></ion-icon>
-    <p style="margin-top: 10px;">No matched contacts found.</p>
+    <p style="margin-top: 10px;">No matched Demms found.</p>
   </div>
 
 </ion-content>

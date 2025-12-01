@@ -3,13 +3,13 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/setting-profile"></ion-back-button>
     </ion-buttons>
-    <ion-title class="ion_title">About</ion-title>
+    <ion-title class="ion_title">About (MyTell)</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding update-status-page">
   <div class="current-label">
-    <h3>Currently set to</h3>
+    <h3>Currently set to (Current TellStatus)</h3>
     <div class="current-chip">
       <span>{{ status }}</span>
       <ion-button fill="clear" size="small" (click)="status = ''">
@@ -21,7 +21,7 @@
   <form (ngSubmit)="saveStatus()">
     <ion-item class="status-input-item">
       <ion-input
-        placeholder="Type your status"
+        placeholder="Type your status (Type your TellStatus)"
         [(ngModel)]="status"
         name="statusInput"
         maxlength="50"
@@ -31,12 +31,15 @@
 
     <button
       type="submit"
-      [disabled]="!status || status.trim().length === 0 || isSaving" class="save_button">
-      Save
+      [disabled]="!status || status.trim().length === 0 || isSaving"
+      class="save_button">
+      Save (Save Tell)
     </button>
   </form>
 
-  <div class="divider"><span>Select About</span></div>
+  <div class="divider">
+    <span>Select About (Select MyTell)</span>
+  </div>
 
   <ion-list>
     <ion-item *ngFor="let st of commonStatuses" button (click)="fillCommon(st)">

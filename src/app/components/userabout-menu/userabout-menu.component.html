@@ -1,27 +1,24 @@
 <ion-list lines="none">
+
   <!-- Individual Chat Menu -->
   <ng-container *ngIf="chatType === 'private'">
-    <!-- <ion-item button (click)="onOptionClick('viewInAddressBook')">
-      <ion-label>View in address book</ion-label>
-    </ion-item> -->
     <ion-item button (click)="onOptionClick('share')">
-      <ion-label>Share</ion-label>
+      <ion-label>ReTell (Share)</ion-label>
     </ion-item>
     <ion-item button (click)="onOptionClick('edit')">
-      <ion-label>Edit</ion-label>
+      <ion-label>TellInfo (Edit)</ion-label>
     </ion-item>
   </ng-container>
 
   <!-- Group Chat Menu -->
   <ng-container *ngIf="chatType === 'group'">
     <ion-item button (click)="onOptionClick('addMembers')">
-      <ion-label>Add members</ion-label>
+      <ion-label>Add Tellers to DemmRoom (Add members)</ion-label>
     </ion-item>
+
     <ion-item button (click)="onOptionClick('changeGroupName')">
-      <ion-label>Change group name</ion-label>
+      <ion-label>Rename DemmRoom (Change group name)</ion-label>
     </ion-item>
-    <!-- <ion-item button (click)="onOptionClick('report')">
-      <ion-label>Report</ion-label>
-    </ion-item> -->
   </ng-container>
+
 </ion-list>

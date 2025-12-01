@@ -539,104 +539,105 @@
       "profile": "Profile"
     }
   },
-  "menu": {
-    "newGroup": "New group",
-    "newCommunity": "New Community",
-    "newBroadcast": "New broadcast (WIP)",
-    "starred": "Starred (WIP)",
-    "readAll": "Read all (WIP)",
-    "settings": "Settings",
-    "createChannels": "Create channels (WIP)",
-    "statusPrivacy": "Status Privacy (WIP)",
-    "clearCallLogs": "Clear call logs (WIP)"
+"menu": {
+  "newGroup": "New DemmRoom (Group)",
+  "newCommunity": "New DemmCircle (Community)",
+  "newBroadcast": "New MegaTell (Broadcast) (WIP)",
+  "starred": "FavTells (Starred Messages) (WIP)",
+  "readAll": "Mark all Tells as Read (Read All) (WIP)",
+  "settings": "DemmDesk (Settings)",
+  "createChannels": "Create MegaTells / Channels (Channels) (WIP)",
+  "statusPrivacy": "Echo/Pulse Privacy (Status Privacy) (WIP)",
+  "clearCallLogs": "Clear Signal Logs (Call Logs) (WIP)"
+},
+ "userabout": {
+  "members": "Members (Demmians)",
+  "group": "Group (DemmRoom)",
+  "groups": "Groups (DemmRooms)",
+  "inCommon": "In Common (Shared DemmRooms)",
+  "toolbar": {
+    "message": "Message (DemmMessage)",
+    "call": "Call (DemmCall)",
+    "video": "Video (DemmVidCall)",
+    "add": "Add (Add Demmian)"
   },
-  "userabout": {
-    "members": "Members",
-    "group": "Group",
-    "groups": "Groups",
-    "inCommon": "In Common",
-    "toolbar": {
-      "message": "Message",
-      "call": "Call",
-      "video": "Video",
-      "add": "Add"
+  "defaults": {
+    "heyThere": "Hey there! I am using Telldemm.",
+    "noGroupDescription": "No group description. (No DemmRoom bio)",
+    "unknown": "Unknown (Not available)",
+    "unknownDate": "Unknown Date (Date missing)",
+    "unnamedGroup": "Unnamed Group (Unnamed DemmRoom)"
+  },
+  "updatedOn": "Updated on (Last Modified)",
+  "createdByOn": "Created by {{name}} on (DemmRoom Creation Date)",
+  "media": {
+    "title": "Media, Links, and Docs (DemmVault)"
+  },
+  "notifications": "Notifications (DemmAlerts)",
+  "mediaVisibility": "Media Visibility (Auto-Save Media)",
+  "encryption": {
+    "title": "Encryption (DemmShield Encryption)",
+    "subtitle": "Messages and calls are end-to-end encrypted. Tap to verify. (Secure DemmRoom)"
+  },
+  "disappearing": "Disappearing messages (Auto-Vanish)",
+  "chatLock": {
+    "title": "Chat lock (DemmLock)",
+    "subtitle": "Lock and hide this chat on this device. (Secure this DemmRoom)"
+  },
+  "advancedPrivacy": {
+    "title": "Advanced Chat Privacy (DemmShield Advanced)",
+    "off": "Off (Disabled)"
+  },
+  "createGroupWith": "Create group with {{name}} (Create DemmRoom)",
+  "commonGroupWith": "Common group with {{name}} (Shared DemmRooms)",
+  "groupMembers": "Group Members (Demmians in DemmRoom)",
+  "addMembers": "Add Members (Add Demmians)",
+  "groupAdmin": "Group Admin (DemmRoom Admin)",
+  "viewPastMembers": "View Past Members (Past Demmians)",
+  "addToFavourites": "Add to Favourites (Star this Demmian)",
+  "addToList": "Add to list (Add to Custom DemmList)",
+  "block": "Block {{name}} (Block Demmian)",
+  "unblock": "Unblock {{name}} (Unblock Demmian)",
+  "report": "Report {{name}} (Report Demmian)",
+  "actions": {
+    "message": "Message (Send DemmMessage)",
+    "dismissAdmin": "Dismiss as Admin (Remove Admin Rights)",
+    "makeAdmin": "Make Admin (Grant DemmRoom Admin)",
+    "removeFromGroup": "Remove from Group (Remove from DemmRoom)"
+  },
+  "toasts": {
+    "madeAdmin": "{{name}} is now an Admin (DemmRoom Admin Added)",
+    "dismissedAdmin": "{{name}} is no longer an Admin (Admin Removed)",
+    "removedFromGroup": "{{name}} removed from group (Removed from DemmRoom)",
+    "blocked": "{{name}} has been blocked. (Demmian Blocked)",
+    "unblocked": "{{name}} has been unblocked. (Demmian Unblocked)",
+    "reported": "{{name}} has been reported. (Report Submitted)",
+    "reportedAndBlocked": "{{name}} has been reported and blocked. (Reported + Blocked)"
+  },
+  "errors": {
+    "makeAdmin": "Failed to make {{name}} admin (Admin Grant Failed)",
+    "dismissAdmin": "Failed to dismiss {{name}} as admin (Admin Removal Failed)",
+    "removeMember": "Error removing member (Demmian Removal Failed)"
+  },
+  "alerts": {
+    "block": {
+      "header": "Block Contact (Block Demmian)",
+      "message": "You will no longer receive messages or calls from {{name}}. (Communication Disabled)",
+      "cta": "Block (Confirm)"
     },
-    "defaults": {
-      "heyThere": "Hey there! I am using Telldemm.",
-      "noGroupDescription": "No group description.",
-      "unknown": "Unknown",
-      "unknownDate": "Unknown Date",
-      "unnamedGroup": "Unnamed Group"
+    "unblock": {
+      "header": "Unblock Contact (Restore Communication)",
+      "message": "Are you sure you want to unblock {{name}}? (Unblock Demmian)"
     },
-    "updatedOn": "Updated on",
-    "createdByOn": "Created by {{name}} on",
-    "media": {
-      "title": "Media, Links, and Docs"
-    },
-    "notifications": "Notifications",
-    "mediaVisibility": "Media Visibility",
-    "encryption": {
-      "title": "Encryption",
-      "subtitle": "Messages and calls are end-to-end encrypted. Tap to verify."
-    },
-    "disappearing": "Disappearing messages",
-    "chatLock": {
-      "title": "Chat lock",
-      "subtitle": "Lock and hide this chat on this device."
-    },
-    "advancedPrivacy": {
-      "title": "Advanced Chat Privacy",
-      "off": "Off"
-    },
-    "createGroupWith": "Create group with {{name}}",
-    "commonGroupWith": "Common group with {{name}}",
-    "groupMembers": "Group Members",
-    "addMembers": "Add Members",
-    "groupAdmin": "Group admin",
-    "viewPastMembers": "View Past Members",
-    "addToFavourites": "Add to Favourites",
-    "addToList": "Add to list",
-    "block": "Block {{name}}",
-    "unblock": "Unblock {{name}}",
-    "report": "Report {{name}}",
-    "actions": {
-      "message": "Message",
-      "dismissAdmin": "Dismiss as Admin",
-      "makeAdmin": "Make Admin",
-      "removeFromGroup": "Remove from Group"
-    },
-    "toasts": {
-      "madeAdmin": "{{name}} is now an admin",
-      "dismissedAdmin": "{{name}} is no longer an admin",
-      "removedFromGroup": "{{name}} removed from group",
-      "blocked": "{{name}} has been blocked.",
-      "unblocked": "{{name}} has been unblocked.",
-      "reported": "{{name}} has been reported.",
-      "reportedAndBlocked": "{{name}} has been reported and blocked."
-    },
-    "errors": {
-      "makeAdmin": "Failed to make {{name}} admin",
-      "dismissAdmin": "Failed to dismiss {{name}} as admin",
-      "removeMember": "Error removing member"
-    },
-    "alerts": {
-      "block": {
-        "header": "Block Contact",
-        "message": "You will no longer receive messages or calls from {{name}}.",
-        "cta": "Block"
-      },
-      "unblock": {
-        "header": "Unblock Contact",
-        "message": "Are you sure you want to unblock {{name}}?"
-      },
-      "report": {
-        "header": "Report Contact",
-        "message": "The last 5 messages from {{name}} will be reported. Do you also want to block this user?",
-        "alsoBlock": "Also block contact",
-        "cta": "Report"
-      }
+    "report": {
+      "header": "Report Contact (Report Demmian)",
+      "message": "The last 5 messages from {{name}} will be reported. Do you also want to block this user? (Report + Optional Block)",
+      "alsoBlock": "Also block contact (Block Demmian)",
+      "cta": "Report (Submit)"
     }
-  },
+  }
+}
+,
   "invite": {
     "header": "Invite a Friend",
     "actions": {
