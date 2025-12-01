@@ -11,7 +11,7 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 import { FirebaseChatService } from '../../../services/firebase-chat.service';
 import { AuthService } from 'src/app/auth/auth.service';
-import { SqliteService, IConversation } from '../../../services/sqlite.service';
+import { SqliteService, IConversation, IGroup } from '../../../services/sqlite.service';
 
 // Popover component
 import { CommunityMenuPopoverComponent } from '../../components/community-menu-popover/community-menu-popover.component';
@@ -19,6 +19,8 @@ import { CommunityMenuPopoverComponent } from '../../components/community-menu-p
 // Group preview modal component
 import { GroupPreviewModalComponent } from '../../components/group-preview-modal/group-preview-modal.component';
 import { AlertController } from '@ionic/angular';
+import { Database, get, ref } from 'firebase/database';
+import { get as rtdbGet, getDatabase } from 'firebase/database';
 
 interface CommunityGroup extends IConversation {
   membersCount?: number;
@@ -51,6 +53,7 @@ export class CommunityDetailPage implements OnInit {
   currentUserName: string = '';
   currentUserPhone: string = '';
   isCreator: boolean = false;
+  allCommunityGroups : IGroup[]= []
 
   constructor(
     private navCtrl: NavController,
@@ -64,6 +67,7 @@ export class CommunityDetailPage implements OnInit {
     private sqliteService: SqliteService,
     private alertCtrl: AlertController,
     private loadingCtrl: LoadingController,
+    // private db : Database
   ) {}
 
   ngOnInit() {
@@ -93,7 +97,10 @@ export class CommunityDetailPage implements OnInit {
   try {
     // Fetch community details from Firebase
     this.community = await this.firebaseService.getCommunityDetails(
-      this.communityId
+      this.communityId,
+      (updates)=>{
+        // whenever is new group added or some removed updateUI
+      }
     );
     console.log('Community details:', this.community);
 
@@ -112,6 +119,7 @@ export class CommunityDetailPage implements OnInit {
 
     // Sync groups with Firebase
     await this.syncGroupsWithFirebase();
+    await this.getAllGroups();
   } catch (err) {
     console.error('loadCommunityDetail error', err);
     const toast = await this.toastCtrl.create({
@@ -125,17 +133,27 @@ export class CommunityDetailPage implements OnInit {
   }
 }
 
+ async getAllGroups(){
+   try {
+    const groupIds = Object.keys(this.community.groups)
+    const db = getDatabase();
+    for(const groupId of groupIds){
+      const Ref = ref(db, `groups/${groupId}`)
+     const  groupSnapShot =  await rtdbGet(Ref)
+     const group = groupSnapShot.val()
+     this.allCommunityGroups.push(group)
+    }
+    console.log("all groups", this.allCommunityGroups)
+   } catch (error) {
+    console.error("something went wrong", error)
+   }
+ }
+
   /**
    * 🔹 Sync groups with Firebase (background)
    */
   private async syncGroupsWithFirebase() {
     try {
-      // Fetch fresh data from Firebase
-      // const groupsData =
-      //   await this.firebaseService.getCommunityGroupsWithDetails(
-      //     this.communityId!,
-      //     this.currentUserId
-      //   );
 
       // Update announcement group
       console.log("this.firebaseService.currentConversations",this.firebaseService.currentConversations)
@@ -622,3 +640,4 @@ private async performExitCommunity() {
   }
 }
 }
+

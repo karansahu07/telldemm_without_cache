@@ -233,32 +233,39 @@ export class Resetapp {
   }
 
   /** Reset everything */
-  async resetApp() {
-    const userId = await this.authService.authData?.userId;
+async resetApp() {
+  const userId = await this.authService.authData?.userId;
 
-    if (userId) {
-      try {
-        await this.fcmService.deleteFcmToken(userId);
-      } catch (err) {
-        console.warn('Failed to delete FCM token', err);
-      }
-      try {
-        await this.fcmService.setUserOffline(userId);
-      } catch (err) {
-        console.warn('Failed to set user offline', err);
-      }
-    } else {
-      //console.log('No userId found before reset; skipping FCM token delete');
+  // Step 1: Firebase cleanup
+  if (userId) {
+    try {
+      await this.fcmService.deleteFcmToken(userId);
+      console.log('✅ FCM token deleted');
+    } catch (err) {
+      console.warn('⚠️ Failed to delete FCM token', err);
     }
-
-    this.clearLocalStorage();
-    await this.clearCapacitorStorage();
-    await this.clearSecureStorage();
-    await this.clearSQLite();
-    await this.clearFileSystem();
-    // await this.firebasechatservice.clearAllCache();
-    await this.sqliteService.resetDB();
-
-    this.reloadApp();
+    try {
+      await this.fcmService.setUserOffline(userId);
+      console.log('✅ User set offline');
+    } catch (err) {
+      console.warn('⚠️ Failed to set user offline', err);
+    }
   }
+
+  // Step 2: Clear all storage
+  console.log('🗑️ Clearing storage...');
+  this.clearLocalStorage();
+  await this.clearCapacitorStorage();
+  await this.clearSecureStorage();
+  await this.clearFileSystem();
+
+  console.log('🗑️ Resetting SQLite database...');
+  await this.sqliteService.resetDB();
+  
+  console.log('🔌 Closing SQLite connection...');
+  await this.sqliteService.closeConnection();
+
+  console.log('🔄 Reloading app...');
+  this.reloadApp();
+}
 }

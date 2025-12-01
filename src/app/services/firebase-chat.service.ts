@@ -670,7 +670,7 @@ export class FirebaseChatService {
   }
 
   // async openChat(chat: any, isNew: boolean = false) {
-  //   console.log("this openchat is called from firebase chat service enters")
+  //   console.log("this openchat is called from firebase chat service enters", chat)
   //   let conv: any = null;
   //   if (isNew) {
   //     const { receiver }: { receiver: IUser } = chat;
@@ -761,7 +761,6 @@ export class FirebaseChatService {
   //   this.setUnreadCount();
   // }
 
-// Replace your openChat method with this improved version:
 
 async openChat(chat: any, isNew: boolean = false) {
   console.log("📱 openChat called from notification/UI");
@@ -3407,24 +3406,61 @@ async openChat(chat: any, isNew: boolean = false) {
   /**
    * Get community details by ID
    */
-  async getCommunityDetails(communityId: string): Promise<any | null> {
-    try {
-      if (!communityId) return null;
+  // async getCommunityDetails(communityId: string): Promise<any | null> {
+  //   try {
+  //     if (!communityId) return null;
 
-      const communityRef = rtdbRef(this.db, `communities/${communityId}`);
-      const snapshot = await rtdbGet(communityRef);
+  //     const communityRef = rtdbRef(this.db, `communities/${communityId}`);
+  //     const snapshot = await rtdbGet(communityRef);
 
-      if (!snapshot.exists()) {
-        console.warn(`Community ${communityId} not found`);
-        return null;
-      }
+  //     if (!snapshot.exists()) {
+  //       console.warn(`Community ${communityId} not found`);
+  //       return null;
+  //     }
 
-      return snapshot.val();
-    } catch (error) {
-      console.error('getCommunityDetails error:', error);
+  //     return snapshot.val();
+  //   } catch (error) {
+  //     console.error('getCommunityDetails error:', error);
+  //     return null;
+  //   }
+  // }
+
+  async getCommunityDetails(
+  communityId: string,
+  onUpdate?: (data: any) => void
+): Promise<any | null> {
+  try {
+    if (!communityId) return null;
+
+    const communityRef = rtdbRef(this.db, `communities/${communityId}`);
+
+    // ---- 1) GET initial snapshot once ----
+    const snapshot = await rtdbGet(communityRef);
+
+    if (!snapshot.exists()) {
+      console.warn(`Community ${communityId} not found`);
       return null;
     }
+
+    const initialData = snapshot.val();
+
+    // ---- 2) LISTEN for updates if callback provided ----
+    if (onUpdate) {
+      onValue(communityRef, (snap) => {
+        if (snap.exists()) {
+          onUpdate(snap.val());
+        }
+      });
+    }
+
+    return initialData;
+
+  } catch (error) {
+    console.error("getCommunityDetails error:", error);
+    return null;
   }
+}
+
 
   /**
    * Get all groups in a community with full details

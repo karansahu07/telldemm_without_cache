@@ -1646,8 +1646,8 @@ receiver_name = '';
   async openChat(chat: any) {
     console.log({ chat });
     await this.firebaseChatService.openChat(chat);
-
-    if (chat.type == 'private') {
+    try {
+      if (chat.type == 'private') {
       const parts = chat.roomId.split('_');
       const receiverId =
         parts.find((p: string | null) => p !== this.senderUserId) ??
@@ -1668,6 +1668,9 @@ receiver_name = '';
       });
     }
     return;
+    } catch (error) {
+      console.error("chat not open", error)
+    }
   }
 
   async loadUserCommunitiesForHome() {

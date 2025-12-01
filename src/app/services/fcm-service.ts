@@ -30,71 +30,67 @@ export class FcmService {
     private toastController: ToastController,
     private authService: AuthService,
     private service: ApiService,
-    private firebaseChatService : FirebaseChatService
+    private firebaseChatService: FirebaseChatService
   ) {}
 
   // Helper to actively request a fresh token and return it (one-time listener)
-  private async getFreshToken(timeoutMs = 8000): Promise<string> {
+  private async getFreshToken(timeoutMs = 10000): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
+      let timeoutId: any = null;
+      let listener: PluginListenerHandle | null = null;
+
+      const cleanup = () => {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+        if (listener && typeof listener.remove === 'function') {
+          listener.remove();
+          listener = null;
+        }
+      };
+
       try {
-        // Ensure permission
+        // Check and request permissions
         let permStatus = await PushNotifications.checkPermissions();
         if (permStatus.receive !== 'granted') {
           permStatus = await PushNotifications.requestPermissions();
         }
         if (permStatus.receive !== 'granted') {
+          cleanup();
           return reject(new Error('Push notification permission denied'));
         }
 
-        // One-time listener for registration
-        let listener: PluginListenerHandle | null = null;
-        const cleanup = () => {
-          if (listener && typeof listener.remove === 'function') {
-            listener.remove();
-          }
-        };
-
+        // Set up one-time registration listener
         listener = await PushNotifications.addListener(
           'registration',
           (token: Token) => {
-            try {
-              this.fcmToken = token.value;
-              cleanup();
-              resolve(token.value);
-            } catch (e) {
-              cleanup();
-              reject(e);
-            }
+            console.log(
+              '📱 Registration token received:',
+              token.value.substring(0, 20) + '...'
+            );
+            this.fcmToken = token.value;
+            cleanup();
+            resolve(token.value);
           }
         );
 
-        // Register to trigger token generation/refresh
-        await PushNotifications.register();
-
-        // Timeout fallback
-        const timer = setTimeout(() => {
+        // Set up timeout
+        timeoutId = setTimeout(() => {
+          console.warn('⏱️ Token request timed out');
           cleanup();
           if (this.fcmToken) {
-            resolve(this.fcmToken); // return what we have if any
+            resolve(this.fcmToken);
           } else {
             reject(new Error('Timed out waiting for registration token'));
           }
         }, timeoutMs);
 
-        // Ensure we clear timeout when resolved/rejected
-        const origResolve = resolve;
-        const origReject = reject;
-        resolve = (v: any) => {
-          clearTimeout(timer);
-          origResolve(v);
-          return v;
-        };
-        reject = (err: any) => {
-          clearTimeout(timer);
-          origReject(err);
-          throw err;
-        };
+        // Trigger registration
+        console.log('📲 Triggering push notification registration...');
+        await PushNotifications.register();
       } catch (err) {
+        cleanup();
         reject(err);
       }
     });
@@ -206,17 +202,13 @@ export class FcmService {
         }
       );
 
-      // ✅ ADDITIONAL: Handle app state resume (for better reliability)
       App.addListener('appStateChange', ({ isActive }) => {
         if (isActive) {
-          //console.log('App became active, checking for pending notifications');
           this.checkForPendingNotifications();
         }
       });
 
-      // ✅ ADDITIONAL: Custom event listener for MainActivity
       window.addEventListener('notificationTapped', (event: any) => {
-        //console.log('👉 Custom notification event from MainActivity:', event.detail);
         try {
           const data = JSON.parse(event.detail);
           this.handleNotificationTap(data);
@@ -260,62 +252,52 @@ export class FcmService {
   //    }
   //  }
 
-private async handleNotificationTap(data: any) {
-  console.log('🎯 Final Tap Data Received:', data);
+  private async handleNotificationTap(data: any) {
+    console.log('🎯 Final Tap Data Received:', data);
 
-  const receiverId = data?.receiverId;
-  const roomId = data?.roomId;
+    const receiverId = data?.receiverId;
+    const roomId = data?.roomId;
 
-  if (receiverId && roomId) {
-    console.log({ receiverId, roomId });
-    console.log("Opening chat with roomId:", roomId);
-    
-    try {
-      await this.firebaseChatService.openChat({ roomId });
+    if (receiverId && roomId) {
+      console.log({ receiverId, roomId });
+      console.log('Opening chat with roomId:', roomId);
 
-      await this.firebaseChatService.loadMessages(20, true);
+      try {
+        await this.firebaseChatService.openChat({ roomId });
 
-      await this.firebaseChatService.syncMessagesWithServer();
-      
-      this.router.navigate(['/chatting-screen'], {
-        queryParams: { receiverId },
-        state: { fromNotification: true }
-      });
+        await this.firebaseChatService.loadMessages(20, true);
 
-      localStorage.setItem('fromNotification', 'true');
-      
-      console.log('✅ Chat opened and messages loaded successfully');
-      return;
-    } catch (error) {
-      console.error('❌ Error opening chat from notification:', error);
-      // Fallback to home if there's an error
-      this.router.navigate(['/home-screen']);
-      return;
+        await this.firebaseChatService.syncMessagesWithServer();
+
+        this.router.navigate(['/chatting-screen'], {
+          queryParams: { receiverId },
+          state: { fromNotification: true },
+        });
+
+        localStorage.setItem('fromNotification', 'true');
+
+        console.log('✅ Chat opened and messages loaded successfully');
+        return;
+      } catch (error) {
+        console.error('❌ Error opening chat from notification:', error);
+        // Fallback to home if there's an error
+        this.router.navigate(['/home-screen']);
+        return;
+      }
     }
+    this.router.navigate(['/home-screen']);
   }
 
-  // No valid data, go to home
-  this.router.navigate(['/home-screen']);
-}
-
-  // ✅ Check for pending notifications (when app becomes active)
   private async checkForPendingNotifications() {
     try {
-      // Check for delivered notifications that might have been tapped
-      // NOTE: getDeliveredNotifications is part of Capacitor Push Notifications plugin API
-      // but may not be available on all platforms; keep try/catch
-      // @ts-ignore
       const delivered = await PushNotifications.getDeliveredNotifications?.();
-      //console.log('📨 Delivered notifications:', delivered);
     } catch (error) {
       console.error('Error checking delivered notifications:', error);
     }
   }
 
-  // ✅ Enhanced foreground local notification
   private async showLocalNotification(notification: PushNotificationSchema) {
     try {
-      // ✅ Extract data properly - check both data and body for FCM structure
       const notificationData = notification.data || {};
       const title =
         notificationData.title || notification.title || 'New Message';
@@ -357,7 +339,6 @@ private async handleNotificationTap(data: any) {
     }
   }
 
-  // ✅ Save FCM token & user info to Firebase
   async saveFcmTokenToDatabase(
     userId: string,
     userName: string,
@@ -365,7 +346,6 @@ private async handleNotificationTap(data: any) {
   ) {
     try {
       if (!this.fcmToken) {
-        //console.log('⚠️ FCM Token not available yet, will retry in 2s...');
         setTimeout(
           () => this.saveFcmTokenToDatabase(userId, userName, userPhone),
           2000
@@ -385,42 +365,8 @@ private async handleNotificationTap(data: any) {
       };
 
       await set(userRef, userData);
-      //console.log('✅ User data + FCM token saved');
     } catch (error) {
       console.error('❌ Error saving FCM token:', error);
-    }
-  }
-
-  // ✅ Update FCM token only — now actively requests a fresh token
-  async updateFcmToken(userId: string) {
-    try {
-      if (!userId) {
-        console.warn('⚠️ updateFcmToken: userId is required');
-        return;
-      }
-
-      // Actively request a fresh token
-      try {
-        const freshToken = await this.getFreshToken(8000);
-        if (freshToken) {
-          this.fcmToken = freshToken;
-          const db = getDatabase();
-          const tokenRef = ref(db, `users/${userId}/fcmToken`);
-          await set(tokenRef, this.fcmToken);
-          // also update lastActive or whatever metadata you want
-          await set(
-            ref(db, `users/${userId}/lastActive`),
-            new Date().toISOString()
-          );
-          //console.log('✅ FCM Token refreshed and updated successfully:', this.fcmToken);
-        } else {
-          console.warn('⚠️ No fresh token received, skipping DB update');
-        }
-      } catch (err) {
-        console.error('❌ Failed to refresh token:', err);
-      }
-    } catch (error) {
-      console.error('❌ Error updating FCM token:', error);
     }
   }
 
@@ -428,25 +374,55 @@ private async handleNotificationTap(data: any) {
     return this.fcmToken;
   }
 
-  // ✅ Delete FCM token
-  // async deleteFcmToken(userId: string) {
-  //   try {
-  //     if (!userId) {
-  //       console.warn('⚠️ deleteUser: userId is required');
-  //       return;
-  //     }
+  async updateFcmToken(userId: string): Promise<string | null> {
+    try {
+      if (!userId) {
+        console.warn('⚠️ updateFcmToken: userId is required');
+        return null;
+      }
 
-  //     const db = getDatabase();
-  //     const userRef = ref(db, `users/${userId}/fcmToken`);
+      console.log('🔄 Requesting fresh FCM token for user:', userId);
+      this.fcmToken = '';
+      try {
+        const freshToken = await this.getFreshToken(10000);
 
-  //     await remove(userRef);
+        if (freshToken) {
+          this.fcmToken = freshToken;
+          console.log(
+            '✅ Fresh token obtained:',
+            freshToken.substring(0, 20) + '...'
+          );
 
-  //     //console.log('🗑️ User token deleted successfully:', userId);
+          // Update in Firebase
+          const db = getDatabase();
+          const tokenRef = ref(db, `users/${userId}/fcmToken`);
+          await set(tokenRef, this.fcmToken);
 
-  //   } catch (error) {
-  //     console.error('❌ Error deleting user token:', error);
-  //   }
-  // }
+          // Update metadata
+          await set(
+            ref(db, `users/${userId}/lastActive`),
+            new Date().toISOString()
+          );
+          await set(
+            ref(db, `users/${userId}/platform`),
+            this.isIos() ? 'ios' : 'android'
+          );
+
+          console.log('✅ FCM token updated in Firebase successfully');
+          return this.fcmToken;
+        } else {
+          console.warn('⚠️ No fresh token received');
+          return null;
+        }
+      } catch (err) {
+        console.error('❌ Failed to get fresh token:', err);
+        return null;
+      }
+    } catch (error) {
+      console.error('❌ Error in updateFcmToken:', error);
+      return null;
+    }
+  }
 
   async deleteFcmToken(userId: string) {
     try {
@@ -458,16 +434,11 @@ private async handleNotificationTap(data: any) {
       const db = getDatabase();
       const userRef = ref(db, `users/${userId}/fcmToken`);
 
-      // Remove token from Firebase
       await remove(userRef);
-      // //console.log('🗑️ User token deleted successfully from Firebase:', userId);
-
-      // Also call backend logout API
       const UserId = Number(userId);
       if (!Number.isNaN(UserId)) {
         this.service.logoutUser(UserId).subscribe({
           next: (res) => {
-            //console.log('✅ Backend logout success:', res);
           },
           error: (err) => {
             console.error('❌ Backend logout failed:', err);

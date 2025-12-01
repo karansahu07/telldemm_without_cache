@@ -7,6 +7,7 @@ import {
   getDatabase,
   onValue,
   ref,
+  set,
 } from '@angular/fire/database';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -404,80 +405,71 @@ export class ProfileSetupPage implements OnInit, OnDestroy {
   }
 
   private async saveAdditionalData(): Promise<void> {
+  try {
+    const db = getDatabase();
+    const userRef = ref(db, `users/${this.userID}`);
+
+    const snapshot = await get(userRef);
+    let finalFcmToken: string | null = null;
+
+    //console.log('🔄 Refreshing FCM token for user:', this.userID);
+    
     try {
-      const db = getDatabase();
-      const userRef = ref(db, `users/${this.userID}`);
-
-      // read current user record
-      const snapshot = await get(userRef);
-
-      let finalFcmToken: string | null = null;
-
-      if (!snapshot.exists()) {
-        // user does not exist in DB yet -> use existing save flow for new users
-        //console.log('User not found in DB — saving as new user and storing FCM token');
-        await this.fcmService.saveFcmTokenToDatabase(
-          this.userID,
-          this.name,
-          this.phoneNumber
-        );
-
-        // after saving to DB, get token from service
+      await this.fcmService.updateFcmToken(this.userID);
+      finalFcmToken = this.fcmService.getFcmToken();
+      
+      if (!finalFcmToken) {
+        console.warn('⚠️ No token after refresh, retrying...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        await this.fcmService.updateFcmToken(this.userID);
         finalFcmToken = this.fcmService.getFcmToken();
-      } else {
-        // user exists — check if fcmToken is present
-        const userData: any = snapshot.val();
-        if (!userData || !userData.fcmToken) {
-          //console.log('User exists but no fcmToken found — refreshing token');
-          // updateFcmToken will actively request a fresh token and write it to DB
-          await this.fcmService.updateFcmToken(this.userID);
-
-          // fetch refreshed token from service
-          finalFcmToken = this.fcmService.getFcmToken();
-        } else {
-          //console.log('User exists and fcmToken is already present — using existing token');
-          finalFcmToken = userData.fcmToken || this.fcmService.getFcmToken();
-        }
       }
-
-      // If we have a token, call admin API to save/update it
-      if (finalFcmToken) {
-        // Ensure userId is a number for your API (adjust if backend accepts strings)
-        const UserId = Number(this.userID);
-        if (!Number.isNaN(UserId)) {
-          this.service.pushFcmToAdmin(UserId, finalFcmToken).subscribe({
-            next: (res) => {
-              //console.log('✅ pushFcmToAdmin success', res);
-            },
-            error: (err) => {
-              console.error('❌ pushFcmToAdmin failed', err);
-            },
-          });
-        } else {
-          console.warn(
-            'UserID is not numeric — skipping pushFcmToAdmin. If backend accepts strings, change call accordingly.'
-          );
-        }
-      } else {
-        console.warn('No FCM token available to send to admin.');
-      }
-
-      // Update name in AuthService (keep this regardless of token state)
-      await this.authService.updateUserName(this.name);
-
-      // Save profile image if present
-      if (this.imageData) {
-        await this.secureStorage.setItem('profile_url', this.imageData);
-      }
-
-      //console.log('Additional data saved successfully');
     } catch (error) {
-      console.error('Error saving additional data:', error);
+      console.error('❌ Error refreshing FCM token:', error);
     }
+
+    if (!snapshot.exists()) {
+      console.log('📝 New user - saving complete profile');
+      await this.fcmService.saveFcmTokenToDatabase(
+        this.userID,
+        this.name,
+        this.phoneNumber
+      );
+    } else {
+      console.log('🔄 Existing user - updating profile');
+      await set(ref(db, `users/${this.userID}/name`), this.name);
+      await set(ref(db, `users/${this.userID}/lastActive`), new Date().toISOString());
+    }
+
+    if (finalFcmToken) {
+      const UserId = Number(this.userID);
+      if (!Number.isNaN(UserId)) {
+        this.service.pushFcmToAdmin(UserId, finalFcmToken).subscribe({
+          next: (res) => {
+            console.log('✅ FCM token sent to admin API');
+          },
+          error: (err) => {
+            console.error('❌ Failed to send token to admin API:', err);
+          },
+        });
+      }
+    } else {
+      console.warn('⚠️ No FCM token available after all retries');
+    }
+
+    await this.authService.updateUserName(this.name);
+    if (this.imageData) {
+      await this.secureStorage.setItem('profile_url', this.imageData);
+    }
+
+    console.log('✅ Profile data saved successfully');
+  } catch (error) {
+    console.error('❌ Error saving additional data:', error);
+    throw error;
   }
+}
 
   private async handleNavigation(): Promise<void> {
-  // Simply navigate to home-screen in all cases
   await this.router.navigateByUrl('/home-screen', { replaceUrl: true });
 }
 

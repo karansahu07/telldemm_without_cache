@@ -1003,16 +1003,34 @@ export class SqliteService {
 
   /** ----------------- UTILITIES ----------------- **/
   async resetDB() {
-    return this.withOpState('resetDB', async () => {
-      for (const table of ['users', 'conversations', 'messages']) {
+  return this.withOpState('resetDB', async () => {
+    const tables = ['users', 'conversations', 'messages', 'attachments'];
+    
+    console.log('🗑️ Starting database reset...');
+    
+    // Drop all tables
+    for (const table of tables) {
+      try {
         await this.db.execute(`DROP TABLE IF EXISTS ${table}`);
+        console.log(`✅ Dropped table: ${table}`);
+      } catch (error) {
+        console.error(`❌ Error dropping table ${table}:`, error);
       }
-      for (const schema of Object.values(TABLE_SCHEMAS)) {
+    }
+    
+    // Recreate all tables with fresh schemas
+    for (const [tableName, schema] of Object.entries(TABLE_SCHEMAS)) {
+      try {
         await this.db.execute(schema);
+        console.log(`✅ Recreated table: ${tableName}`);
+      } catch (error) {
+        console.error(`❌ Error creating table ${tableName}:`, error);
       }
-      //console.log('DB reset complete ✅');
-    });
-  }
+    }
+    
+    console.log('✅ Database reset complete - all tables cleared and recreated');
+  });
+}
 
   /**
    * Helper: Convert Blob → Base64 string

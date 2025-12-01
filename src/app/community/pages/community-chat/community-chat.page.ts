@@ -43,7 +43,7 @@ import { Keyboard } from '@capacitor/keyboard';
 import { FirebaseChatService } from 'src/app/services/firebase-chat.service';
 import { EncryptionService } from 'src/app/services/encryption.service';
 import { v4 as uuidv4 } from 'uuid';
-import { SecureStorageService } from '../..//../services/secure-storage/secure-storage.service';
+import { SecureStorageService } from '../../../services/secure-storage/secure-storage.service';
 import { FileUploadService } from '../../../services/file-upload/file-upload.service';
 import { ChatOptionsPopoverComponent } from 'src/app/components/chat-options-popover/chat-options-popover.component';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
@@ -72,7 +72,6 @@ import { switchMap } from 'rxjs/operators';
 import { resolve } from 'path';
 import { HttpClient, HttpParams } from '@angular/common/http';
 
-
 interface ICurrentChat {
   roomId: string;
   receiverId?: string;
@@ -80,7 +79,6 @@ interface ICurrentChat {
   type?: 'private' | 'group' | 'community';
   members?: string[];
 }
-
 
 type UIMessageStatus =
   | 'failed'
@@ -96,11 +94,49 @@ interface IconDescriptor {
   title?: string;
 }
 
-// structure for translation items
+// // structure for translation items
+// interface TranslationItem {
+//   code: string;   // e.g., 'en', 'hi-IN', 'orig'
+//   label: string;  // e.g., 'English', 'Hindi', 'Original'
+//   text: string;   // the text
+// }
+
+// ========================================
+// 📦 INTERFACES
+// ========================================
+
+// Translation Item Structure
 interface TranslationItem {
-  code: string;   // e.g., 'en', 'hi-IN', 'orig'
-  label: string;  // e.g., 'English', 'Hindi', 'Original'
-  text: string;   // the text
+  code: string; // e.g., 'en', 'hi-IN', 'ar-SA'
+  label: string; // e.g., 'English', 'Hindi', 'Arabic (Saudi Arabia)'
+  text: string; // the translated text
+}
+
+// Translation Card State
+interface TranslationCard {
+  visible: boolean;
+  mode: 'translateCustom' | 'translateToReceiver' | 'sendOriginal';
+  items: TranslationItem[];
+  createdAt: Date;
+}
+
+// Message Translations Structure
+interface MessageTranslations {
+  original: {
+    code: string;
+    label: string;
+    text: string;
+  };
+  otherLanguage?: {
+    code: string;
+    label: string;
+    text: string;
+  };
+  receiverLanguage?: {
+    code: string;
+    label: string;
+    text: string;
+  };
 }
 
 @Component({
@@ -110,7 +146,6 @@ interface TranslationItem {
   templateUrl: './community-chat.page.html',
   styleUrls: ['./community-chat.page.scss'],
 })
-
 export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('scrollContainer', { static: false }) scrollContainer!: ElementRef;
   @ViewChild(IonContent, { static: false }) ionContent!: IonContent;
@@ -287,7 +322,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
     private actionSheetCtrl: ActionSheetController // private toastCtrl: ToastController, // private modalCtrl: ModalController, // private firebaseChatService : FirebaseChatService
-  ) { }
+  ) {}
 
   async ngOnInit() {
     Keyboard.setScroll({ isDisabled: false });
@@ -295,78 +330,15 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     this.senderId = this.authService.authData?.userId || '';
     this.sender_phone = this.authService.authData?.phone_number || '';
     this.sender_name = this.authService.authData?.name || '';
+    // console.log("sender name is", this.sender_name)
 
     const nameFromQuery =
       this.route.snapshot.queryParamMap.get('receiver_name');
-    this.receiverId =
-      this.route.snapshot.queryParamMap.get('receiverId') || '';
+    this.receiverId = this.route.snapshot.queryParamMap.get('receiverId') || '';
     this.receiver_name =
       nameFromQuery ||
       (await this.secureStorage.getItem('receiver_name')) ||
       '';
-
-    // const rawId = this.route.snapshot.queryParamMap.get('receiverId') || '';
-    // const chatTypeParam = this.route.snapshot.queryParamMap.get('isGroup');
-    // const phoneFromQuery =
-    // this.route.snapshot.queryParamMap.get('receiver_phone');
-
-    // this.chatType = chatTypeParam === 'true' ? 'group' : 'private';
-
-    // if (this.chatType === 'group') {
-    //   this.roomId = decodeURIComponent(rawId);
-
-    //   try {
-    //     const res = await this.chatService.fetchGroupWithProfiles(this.roomId);
-    //     if (!res) return;
-    //     const { groupName, groupMembers } = res;
-    //     this.groupName = groupName;
-    //     this.groupMembers = groupMembers;
-    //   } catch (err) {
-    //     console.warn('Failed to fetch group with profiles', err);
-    //     this.groupName = 'Group';
-    //     this.groupMembers = [];
-    //   }
-    // } else {
-    //   this.receiverId = decodeURIComponent(rawId);
-    //   this.roomId = this.getRoomId(this.senderId, this.receiverId);
-    //   this.receiver_phone =
-    //     phoneFromQuery || localStorage.getItem('receiver_phone') || '';
-    //   localStorage.setItem('receiver_phone', this.receiver_phone);
-    // }
-
-    // this.setupTypingListener();
-
-    // await this.chatService.resetUnreadCount(this.roomId, this.senderId);
-    // await this.markMessagesAsRead();
-
-    // try {
-    //   const db = getDatabase();
-    //   try {
-    //     const myTypingRef = dbRef(db, `typing/${this.roomId}/${this.senderId}`);
-    //     onDisconnect(myTypingRef).remove();
-    //   } catch (err) {
-    //     console.warn('onDisconnect setup failed', err);
-    //   }
-
-    //   const tsub = this.typingInput$
-    //     .pipe(throttleTime(1200, undefined, { leading: true, trailing: true }))
-    //     .subscribe(() => {
-    //       this.sendTypingSignal();
-    //     });
-    //   this.typingRxSubs.push(tsub);
-    // } catch (err) {
-    //   console.warn('Typing setup error', err);
-    // }
-
-    // await this.loadFromLocalStorage();
-    // this.listenForMessages();
-    // this.setupPinnedMessageListener();
-    // this.checkMobileView();
-    // setTimeout(() => this.scrollToBottom(), 100);
-    // await this.loadInitialMessages();
-    // this.loadReceiverProfile();
-    // await this.checkIfBlocked();
-    // this.startReceiverStatusPoll();
   }
 
   onInputTyping() {
@@ -408,75 +380,12 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  // async ionViewWillEnter() {
-  //   // console.log({chatTitle})
-  //   // if (currentChat) {}
-  //   //    try {
-  //   //   this.pfUsersSub = this.chatService.platformUsers$.subscribe((users) => {
-  //   //     // Normalize fields to be consistent with what ContactsPage does
-  //   //     this.pfUsers = (users || []).map((u: any) => ({
-  //   //       userId: u.userId ?? u.user_id ?? u.id ?? null,
-  //   //       username: u.username ?? u.name ?? u.displayName ?? '',
-  //   //       phoneNumber: u.phoneNumber ?? u.phone_number ?? '',
-  //   //       avatar: u.avatar ?? u.profile ?? null,
-  //   //       // isOnPlatform: !!u.isOnPlatform ?? true,
-  //   //     }));
-  //   //     console.log("this.pfUsers",this.pfUsers)
-  //   //     // optional debug
-  //   //     // console.log('pfUsers updated', this.pfUsers);
-  //   //   });
-  //   // } catch (err) {
-  //   //   console.warn('Failed to subscribe to platform users', err);
-  //   // }
-  //   // const nameFromQuery =
-  //   //   this.route.snapshot.queryParamMap.get('receiver_name');
-  //   // this.receiver_name =
-  //   //   nameFromQuery ||
-  //   //   (await this.secureStorage.getItem('receiver_name')) ||
-  //   //   '';
-  //   // const rawId = this.route.snapshot.queryParamMap.get('receiverId') || '';
-  //   // const chatTypeParam = this.route.snapshot.queryParamMap.get('isGroup');
-  //   // const phoneFromQuery =
-  //   //   this.route.snapshot.queryParamMap.get('receiver_phone');
-  //   // this.chatType = chatTypeParam === 'true' ? 'group' : 'private';
-  //   // if (this.chatType === 'group') {
-  //   //   this.roomId = decodeURIComponent(rawId);
-  //   //   try {
-  //   //     const res = await this.chatService.fetchGroupWithProfiles(this.roomId);
-  //   //     if (!res) return;
-  //   //     const { groupName, groupMembers } = res;
-  //   //     this.groupName = groupName;
-  //   //     this.groupMembers = groupMembers;
-  //   //   } catch (err) {
-  //   //     console.warn('Failed to fetch group with profiles', err);
-  //   //     this.groupName = 'Group';
-  //   //     this.groupMembers = [];
-  //   //   }
-  //   //   this.setupTypingListener();
-  //   // } else {
-  //   //   this.receiverId = decodeURIComponent(rawId);
-  //   //   this.roomId = this.getRoomId(this.senderId, this.receiverId);
-  //   //   this.receiver_phone =
-  //   //     phoneFromQuery || localStorage.getItem('receiver_phone') || '';
-  //   //   localStorage.setItem('receiver_phone', this.receiver_phone);
-  //   // }
-  //   // await this.chatService.resetUnreadCount(this.roomId, this.senderId);
-  //   // await this.markMessagesAsRead();
-  //   // // await this.loadFromLocalStorage();
-  //   // // this.listenForMessages();
-  //   // const nav = this.router.getCurrentNavigation();
-  //   // const state = nav?.extras?.state;
-  //   // if (state && state['imageToSend']) {
-  //   //   this.attachmentPath = state['imageToSend'];
-  //   // }
-  //   // this.loadReceiverProfile();
-  // }
 
   async ionViewWillEnter() {
-    await this.chatService.loadMessages(20,true);
+    await this.chatService.loadMessages(20, true);
     this.chatService.syncMessagesWithServer();
     this.chatService.getMessages().subscribe(async (msgs: any) => {
-      console.log({msgs})
+      console.log({ msgs });
       this.groupedMessages = (await this.groupMessagesByDate(
         msgs as any[]
       )) as any[];
@@ -1070,12 +979,12 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     this.onValueUnsubs.push(() => {
       try {
         unsubA();
-      } catch (e) { }
+      } catch (e) {}
     });
     this.onValueUnsubs.push(() => {
       try {
         unsubB();
-      } catch (e) { }
+      } catch (e) {}
     });
   }
 
@@ -1709,7 +1618,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onForward() {
-    console.log("this. selected message ", this.selectedMessages)
+    console.log('this. selected message ', this.selectedMessages);
     this.chatService.setForwardMessage(this.selectedMessages);
     this.selectedMessages = [];
     this.router.navigate(['/forwardmessage']);
@@ -1973,7 +1882,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
 
       try {
         if (this.typingUnsubscribe) this.typingUnsubscribe();
-      } catch (e) { }
+      } catch (e) {}
 
       const unsubscribe = onValue(
         dbRef(db, `typing/${this.roomId}`),
@@ -2058,7 +1967,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
       this.typingUnsubscribe = () => {
         try {
           unsubscribe();
-        } catch (e) { }
+        } catch (e) {}
       };
       this.onValueUnsubs.push(this.typingUnsubscribe);
     } catch (err) {
@@ -2071,36 +1980,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     return message.msgId;
   }
 
-  // async ngAfterViewInit() {
-  //   if (this.ionContent) {
-  //     this.ionContent.ionScroll.subscribe(async (event: any) => {
-  //       if (
-  //         event.detail.scrollTop < 20 &&
-  //         this.chatService.hasMoreMessages &&
-  //         !this.isLoadingMore
-  //       ) {
-  //         await this.chatService.loadMessages();
-  //         // await this.loadMoreMessages();
-  //       } else {
-  //         console.log('Not more messages');
-  //       }
-  //     });
-  //   }
-
-  //   this.setDynamicPadding();
-  //   window.addEventListener('resize', this.resizeHandler);
-
-  //   const footer = this.el.nativeElement.querySelector(
-  //     '.footer-fixed'
-  //   ) as HTMLElement;
-  //   if (footer && 'ResizeObserver' in window) {
-  //     const ro = new (window as any).ResizeObserver(() =>
-  //       this.setDynamicPadding()
-  //     );
-  //     ro.observe(footer);
-  //     (this as any)._ro = ro;
-  //   }
-  // }
+ 
 
   //new this method used in pagination
   async ngAfterViewInit() {
@@ -2202,124 +2082,6 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async listenForMessages() {
-    // this.messageSub?.unsubscribe();
-    // this.messageSub = this.chatService
-    //   .getMessages()
-    //   .subscribe(async (newMessages: any) => {
-    //     if (!Array.isArray(newMessages)) return;
-    //     const decryptPromises = newMessages.map((msg) =>
-    //       this.encryptionService
-    //         .decrypt(msg.text || '')
-    //         .then((dt) => ({ msg, decryptedText: dt }))
-    //         .catch((err) => {
-    //           console.warn('decrypt msg.text failed for key', msg.key, err);
-    //           return { msg, decryptedText: '' };
-    //         })
-    //     );
-    //     const decryptedPairs = await Promise.all(decryptPromises);
-    //     const existingById: Record<string, number> = {};
-    //     this.allMessages.forEach((m, i) => {
-    //       if (m.msgId) existingById[String(m.msgId)] = i;
-    //     });
-    //     for (const pair of decryptedPairs) {
-    //       const msg = pair.msg;
-    //       const serverKey = msg.key || null;
-    //       const messageId = msg.message_id || uuidv4();
-    //       const dm: Message = {
-    //         ...msg,
-    //         key: serverKey,
-    //         message_id: messageId,
-    //         text: pair.decryptedText,
-    //         reactions: msg.reactions || {}, // ✅ Ensure reactions are included
-    //       };
-    //       if (dm.attachment && (dm.attachment as any).caption) {
-    //         try {
-    //           const encCap = (dm.attachment as any).caption;
-    //           if (encCap && typeof encCap === 'string') {
-    //             const captionPlain = await this.encryptionService.decrypt(
-    //               encCap
-    //             );
-    //             (dm.attachment as any).caption = captionPlain;
-    //           }
-    //         } catch (err) {
-    //           console.warn(
-    //             'Failed to decrypt attachment.caption for message_id',
-    //             messageId,
-    //             err
-    //           );
-    //         }
-    //       }
-    //       if (this.applyDeletionFilters(dm)) {
-    //         if (existingById[String(messageId)] !== undefined) {
-    //           const idx = existingById[String(messageId)];
-    //           this.allMessages[idx] = { ...this.allMessages[idx], ...dm };
-    //         }
-    //         continue;
-    //       }
-    //       const existingIndex = existingById[String(messageId)];
-    //       if (existingIndex !== undefined) {
-    //         const old = this.allMessages[existingIndex];
-    //         const merged: Message = {
-    //           ...old,
-    //           ...dm,
-    //           key: dm.key || old.key,
-    //           reactions: dm.reactions || old.reactions || {}, // ✅ Merge reactions
-    //         };
-    //         if ((old as any).localOnly !== undefined)
-    //           (merged as any).localOnly = (old as any).localOnly;
-    //         if ((old as any).isLocallyEdited !== undefined)
-    //           (merged as any).isLocallyEdited = (old as any).isLocallyEdited;
-    //         this.allMessages[existingIndex] = merged;
-    //       } else {
-    //         this.allMessages.push(dm);
-    //         existingById[String(messageId)] = this.allMessages.length - 1;
-    //       }
-    //       if (dm.receiver_id === this.senderId && !dm.read) {
-    //         try {
-    //           await this.chatService.markRead(this.roomId, dm.key);
-    //           await this.chatService.resetUnreadCount(
-    //             this.roomId,
-    //             this.senderId
-    //           );
-    //         } catch (err) {
-    //           console.warn('markRead/resetUnreadCount failed', err);
-    //         }
-    //       }
-    //     }
-    //     const seenIds: Record<string, boolean> = {};
-    //     this.allMessages = this.allMessages.filter((m) => {
-    //       const id = String(m.message_id || '');
-    //       if (!id) return true;
-    //       if (seenIds[id]) return false;
-    //       seenIds[id] = true;
-    //       return true;
-    //     });
-    //     this.allMessages.sort((a, b) => {
-    //       const ta =
-    //         Number(a.timestamp) || new Date(a.timestamp || 0).getTime();
-    //       const tb =
-    //         Number(b.timestamp) || new Date(b.timestamp || 0).getTime();
-    //       return ta - tb;
-    //     });
-    //     const visibleAllMessages = this.allMessages.filter(
-    //       (m) => !this.applyDeletionFilters(m)
-    //     );
-    //     const keepCount = Math.max(
-    //       this.limit || 50,
-    //       this.displayedMessages?.length || 0
-    //     );
-    //     const startIdx = Math.max(0, visibleAllMessages.length - keepCount);
-    //     this.displayedMessages = visibleAllMessages.slice(startIdx);
-    //     this.groupedMessages = await this.groupMessagesByDate(
-    //       this.displayedMessages
-    //     );
-    //     this.saveToLocalStorage();
-    //     if (this.pinnedMessage) {
-    //       this.findPinnedMessageDetails(this.pinnedMessage.key);
-    //     }
-    //     await Promise.resolve();
-    //     this.scrollToBottom();
-    //   });
     this.observeVisibleMessages();
   }
 
@@ -2382,47 +2144,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
       const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
       (msg as any).time = `${formattedHours}:${formattedMinutes} ${ampm}`;
 
-      if (msg.attachment) {
-        const currentUserId = this.authService.authData?.userId;
-        const receiverId = msg.receiver_id;
-
-        if (receiverId === currentUserId) {
-          (async () => {
-            try {
-              const apiResponse = await firstValueFrom(
-                this.service.getDownloadUrl(
-                  (msg.attachment as any).mediaId as string
-                )
-              );
-
-              if (apiResponse.status && apiResponse.downloadUrl) {
-                const response = await fetch(apiResponse.downloadUrl);
-                const blob = await response.blob();
-                const extension =
-                  (msg.attachment as any).fileName?.split('.').pop() || 'dat';
-                const filename = `${(msg.attachment as any).mediaId
-                  }.${extension}`;
-                const file_Path = await this.FileService.saveFileToReceived(
-                  filename,
-                  blob
-                );
-                // await this.sqliteService.saveAttachment(
-                //   this.roomId,
-                //   (msg.attachment as any).type,
-                //   file_Path,
-                //   (msg.attachment as any).mediaId as string
-                // );
-              }
-            } catch (error) {
-              console.error('Error handling received attachment:', error);
-            }
-          })();
-        }
-
-        // (msg.attachment as any).previewUrl = await this.sqliteService.getAttachmentPreview(
-        //   (msg.attachment as any).mediaId as string
-        // );
-      }
+     
 
       const isToday =
         timestamp.getDate() === today.getDate() &&
@@ -2554,8 +2276,8 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
       const type = mimeType?.startsWith('image')
         ? 'image'
         : mimeType?.startsWith('video')
-          ? 'video'
-          : 'file';
+        ? 'video'
+        : 'file';
 
       let blob = file.blob as Blob;
 
@@ -2567,6 +2289,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
       }
 
       const previewUrl = URL.createObjectURL(blob);
+      // console.log({previewUrl})
 
       this.selectedAttachment = {
         type,
@@ -2605,7 +2328,21 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  // cancelAttachment() {
+  //   this.selectedAttachment = null;
+  //   this.showPreviewModal = false;
+  //   this.messageText = '';
+  // }
+
   cancelAttachment() {
+    if (this.selectedAttachment?.previewUrl) {
+      try {
+        URL.revokeObjectURL(this.selectedAttachment.previewUrl);
+      } catch (e) {
+        console.warn('Failed to revoke preview URL:', e);
+      }
+    }
+
     this.selectedAttachment = null;
     this.showPreviewModal = false;
     this.messageText = '';
@@ -2615,193 +2352,125 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     this.replyToMessage = message;
   }
 
-  // async sendMessage() {
-  //   if (this.isSending) return;
-
-  //   this.isSending = true;
-
-  //   try {
-  //     const plainText = this.messageText.trim();
-  //     const localMessage: Partial<IMessage & { attachment?: IAttachment }> = {
-  //       sender: this.senderId,
-  //       text: plainText,
-  //       timestamp: Date.now(),
-  //       msgId: uuidv4(),
-  //       replyToMsgId: this.replyTo?.message.msgId || '',
-  //       isEdit: false,
-  //       isPinned: false,
-  //       type: 'text',
-  //       reactions: [],
-  //     };
-
-  //     if (this.selectedAttachment) {
-  //       try {
-  //         const mediaId = await this.uploadAttachmentToS3(
-  //           this.selectedAttachment
-  //         );
-
-  //         localMessage.attachment = {
-  //           type: this.selectedAttachment.type,
-  //           mediaId: mediaId,
-  //           fileName: this.selectedAttachment.fileName,
-  //           mimeType: this.selectedAttachment.mimeType,
-  //           fileSize: this.selectedAttachment.fileSize,
-  //           caption: plainText,
-  //         };
-
-  //         const file_path = await this.FileService.saveFileToSent(
-  //           this.selectedAttachment.fileName,
-  //           this.selectedAttachment.blob
-  //         );
-  //       } catch (error) {
-  //         console.error('Failed to upload attachment:', error);
-  //         const toast = await this.toastCtrl.create({
-  //           message: 'Failed to upload attachment. Please try again.',
-  //           duration: 3000,
-  //           color: 'danger',
-  //         });
-  //         await toast.present();
-  //         return;
-  //       }
-  //     }
-
-  //     await this.chatService.sendMessage(localMessage);
-
-  //     // clear UI state
-  //     this.messageText = '';
-  //     this.showSendButton = false;
-  //     this.selectedAttachment = null;
-  //     this.showPreviewModal = false;
-  //     this.replyToMessage = null;
-  //     await this.stopTypingSignal();
-  //     this.scrollToBottom();
-  //     this.chatService.setTypingStatus(false);
-  //     if (this.typingTimeout) {
-  //       clearTimeout(this.typingTimeout);
-  //     }
-  //   } catch (error) {
-  //     console.error('Error sending message:', error);
-  //     const toast = await this.toastCtrl.create({
-  //       message: 'Failed to send message. Please try again.',
-  //       duration: 3000,
-  //       color: 'danger',
-  //     });
-  //     await toast.present();
-  //   } finally {
-  //     this.isSending = false;
-  //   }
-  // }
 
   async sendMessage() {
-  if (this.isSending) return;
-  this.isSending = true;
+    console.log("this send message function is called")
+    this.sender_name = this.authService.authData?.name || '';
+    if (this.isSending) return;
+    this.isSending = true;
 
-  try {
-    const plainText = (this.messageText || '').trim();
-    
+    try {
+      const plainText = (this.messageText || '').trim();
 
-    // Defensive: don't send empty message (unless attachment exists)
-    if (!plainText && !this.selectedAttachment) {
-      const toast = await this.toastCtrl.create({
-        message: 'Type something to send',
-        duration: 1500,
-        color: 'warning',
-      });
-      await toast.present();
-      this.isSending = false;
-      return;
-    }
-
-    // Build base local message (conforms to IMessage shape)
-    const msgId = uuidv4();
-    const timestamp = Date.now();
-
-    const localMessage: Partial<IMessage & { attachment?: IAttachment }> = {
-      sender: this.senderId,
-      sender_name: this.sender_name,
-      receiver_id : this.receiverId,
-      text: plainText || '',               // visible text (original)
-      timestamp,
-      msgId,
-      replyToMsgId: this.replyTo?.message?.msgId || '',
-      isEdit: false,
-      isPinned: false,
-      type: 'text',
-      reactions: [],
-      // Add a translations object containing only the original (English).
-      // This keeps the message contract uniform across translated & non-translated sends.
-      translations: {
-        original: {
-          code: 'en',
-          label: 'English (Original)',
-          text: plainText || ''
-        }
-      }
-    };
-
-    // Handle attachment if present
-    if (this.selectedAttachment) {
-      try {
-        const mediaId = await this.uploadAttachmentToS3(this.selectedAttachment);
-        console.log({mediaId})
-        localMessage.attachment = {
-          type: this.selectedAttachment.type,
-          msgId,
-          mediaId,
-          fileName: this.selectedAttachment.fileName,
-          mimeType: this.selectedAttachment.mimeType,
-          fileSize: this.selectedAttachment.fileSize,
-          caption: plainText || ''
-        };
-        console.log(localMessage.attachment)
-        // Save file locally into "sent" folder (existing behavior)
-         localMessage.attachment.localUrl = await this.FileService.saveFileToSent(
-          this.selectedAttachment.fileName,
-          this.selectedAttachment.blob
-        );
-      } catch (error) {
-        console.error('Failed to upload attachment:', error);
+      // Defensive: don't send empty message (unless attachment exists)
+      if (!plainText && !this.selectedAttachment) {
         const toast = await this.toastCtrl.create({
-          message: 'Failed to upload attachment. Please try again.',
-          duration: 3000,
-          color: 'danger',
+          message: 'Type something to send',
+          duration: 1500,
+          color: 'warning',
         });
         await toast.present();
         this.isSending = false;
         return;
       }
+
+      // Build base local message (conforms to IMessage shape)
+      const msgId = uuidv4();
+      const timestamp = Date.now();
+
+      const localMessage: Partial<IMessage & { attachment?: IAttachment }> = {
+        sender: this.senderId,
+        sender_name: this.sender_name,
+        receiver_id: this.receiverId,
+        text: plainText || '', // visible text (original)
+        timestamp,
+        msgId,
+        replyToMsgId: this.replyTo?.message?.msgId || '',
+        isEdit: false,
+        isPinned: false,
+        type: 'text',
+        reactions: [],
+        // Add a translations object containing only the original (English).
+        // This keeps the message contract uniform across translated & non-translated sends.
+        translations: {
+          original: {
+            code: 'en',
+            label: 'English (Original)',
+            text: plainText || '',
+          },
+        },
+      };
+
+      // Handle attachment if present
+      console.log("this is called and upload to S3 before", this.selectedAttachment)
+      if (this.selectedAttachment) {
+        try {
+          console.log("this is called and upload to S3 after")
+          const mediaId = await this.uploadAttachmentToS3(
+            this.selectedAttachment
+          );
+          console.log({ mediaId });
+          localMessage.attachment = {
+            type: this.selectedAttachment.type,
+            msgId,
+            mediaId,
+            fileName: this.selectedAttachment.fileName,
+            mimeType: this.selectedAttachment.mimeType,
+            fileSize: this.selectedAttachment.fileSize,
+            caption: plainText || '',
+          };
+          console.log(localMessage.attachment);
+          // Save file locally into "sent" folder (existing behavior)
+          localMessage.attachment.localUrl =
+            await this.FileService.saveFileToSent(
+              this.selectedAttachment.fileName,
+              this.selectedAttachment.blob
+            );
+        } catch (error) {
+          console.error('Failed to upload attachment:', error);
+          const toast = await this.toastCtrl.create({
+            message: 'Failed to upload attachment. Please try again.',
+            duration: 3000,
+            color: 'danger',
+          });
+          await toast.present();
+          this.isSending = false;
+          return;
+        }
+      }
+
+      // Send using chat service (this will persist to RTDB, SQLite, etc.)
+      console.log({ localMessage });
+      await this.chatService.sendMessage(localMessage);
+
+      // Clear UI state exactly like before
+      this.messageText = '';
+      this.showSendButton = false;
+      this.selectedAttachment = null;
+      this.showPreviewModal = false;
+      this.replyToMessage = null;
+      await this.stopTypingSignal();
+      this.scrollToBottom();
+      this.chatService.setTypingStatus(false);
+      if (this.typingTimeout) {
+        clearTimeout(this.typingTimeout);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      const toast = await this.toastCtrl.create({
+        message: 'Failed to send message. Please try again.',
+        duration: 3000,
+        color: 'danger',
+      });
+      await toast.present();
+    } finally {
+      this.isSending = false;
     }
-
-    // Send using chat service (this will persist to RTDB, SQLite, etc.)
-    console.log({localMessage})
-    await this.chatService.sendMessage(localMessage);
-
-    // Clear UI state exactly like before
-    this.messageText = '';
-    this.showSendButton = false;
-    this.selectedAttachment = null;
-    this.showPreviewModal = false;
-    this.replyToMessage = null;
-    await this.stopTypingSignal();
-    this.scrollToBottom();
-    this.chatService.setTypingStatus(false);
-    if (this.typingTimeout) {
-      clearTimeout(this.typingTimeout);
-    }
-
-  } catch (error) {
-    console.error('Error sending message:', error);
-    const toast = await this.toastCtrl.create({
-      message: 'Failed to send message. Please try again.',
-      duration: 3000,
-      color: 'danger',
-    });
-    await toast.present();
-  } finally {
-    this.isSending = false;
   }
-}
 
+  async getPreviewUrl(msg: any) {
+    return await this.chatService.getPreviewUrl(msg);
+  }
 
   startReceiverStatusPoll(pollIntervalMs = 30000) {
     if (!this.receiverId) return;
@@ -2827,33 +2496,11 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
       : null;
   }
 
-  // formatLastSeen(ts: string | null) {
-  //   if (!ts) return '';
-  //   const d = new Date(ts); // make sure server returns parseable ISO or 'YYYY-MM-DD hh:mm:ss'
-  //   // simple formatting — adjust to locale
-  //   const now = new Date();
-  //   const sameDay = d.toDateString() === now.toDateString();
-  //   if (sameDay) {
-  //     return `Today at, ${d.toLocaleTimeString([], {
-  //       hour: '2-digit',
-  //       minute: '2-digit',
-  //     })}`;
-  //   }
-  //   const yesterday = new Date();
-  //   yesterday.setDate(now.getDate() - 1);
-  //   if (d.toDateString() === yesterday.toDateString()) {
-  //     return `Yesterday, ${d.toLocaleTimeString([], {
-  //       hour: '2-digit',
-  //       minute: '2-digit',
-  //     })}`;
-  //   }
-  //   return d.toLocaleString([], {
-  //     day: 'numeric',
-  //     month: 'short',
-  //     hour: '2-digit',
-  //     minute: '2-digit',
-  //   });
-  // }
+    isEmptyObject(obj: any): boolean {
+  return obj && Object.keys(obj).length === 0;
+}
+
+ 
 
   private async uploadAttachmentToS3(attachment: any): Promise<string> {
     try {
@@ -2893,41 +2540,38 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async openAttachmentModal(msg: any) {
-    if (!msg.attachment) return;
+    // console.log("this is from open attachment modal", msg)
+    if (!msg.attachment.type) return;
 
-    let attachmentUrl = '';
+    // let attachmentUrl = '';
+    // console.log("this msg is show in preview modal", msg);
 
     try {
-      const localUrl = await this.FileService.getFilePreview(
-        `${msg.sender_id === this.senderId ? 'sent' : 'received'}/${msg.attachment.fileName
-        }`
-      );
+     
+      let localUrl = msg.attachment.localUrl;
 
-      if (localUrl) {
-        attachmentUrl = localUrl;
-      } else {
-        const downloadResponse = await firstValueFrom(
-          this.service.getDownloadUrl(msg.attachment.mediaId)
-        );
+      if (!localUrl) {
+     
 
-        if (downloadResponse?.status && downloadResponse.downloadUrl) {
-          attachmentUrl = downloadResponse.downloadUrl;
-
-          if (msg.sender_id !== this.senderId) {
-            this.downloadAndSaveLocally(
-              downloadResponse.downloadUrl,
+          if (!msg.isMe) {
+           const relativePath = await this.downloadAndSaveLocally(
+              msg.attachment.cdnUrl,
               msg.attachment.fileName
             );
+            localUrl = await this.FileService.getFilePreview(relativePath as string)
+            // attachmentUrl = localUrl;
+            this.sqliteService.updateAttachment(msg.msgId, {localUrl})
           }
-        }
+        // }
       }
+      
 
       const modal = await this.modalCtrl.create({
         component: AttachmentPreviewModalComponent,
         componentProps: {
           attachment: {
             ...msg.attachment,
-            url: attachmentUrl,
+            url: localUrl || msg.attachment.cdnUrl,
           },
           message: msg,
         },
@@ -2936,6 +2580,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
 
       await modal.present();
       const { data } = await modal.onDidDismiss();
+      console.log({data})
 
       if (data && data.action === 'reply') {
         this.setReplyToMessage(data.message);
@@ -2955,9 +2600,10 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     try {
       const response = await fetch(url);
       const blob = await response.blob();
-      await this.FileService.saveFileToReceived(fileName, blob);
+      return await this.FileService.saveFileToReceived(fileName, blob);
     } catch (error) {
       console.warn('Failed to save file locally:', error);
+      throw error;
     }
   }
 
@@ -3132,50 +2778,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     msg: IMessage,
     badge: { emoji: string | null; userId: string }
   ) {
-    // ev.stopPropagation();
-    // // Build header text: "1 reaction" / "3 reactions"
-    // const header =
-    //   badge.count === 1 ? '1 reaction' : `${badge.count} reactions`;
-    // // If badge.mine === true, show the remove option; else show only view
-    // const buttons: any[] = [];
-    // // Show the emoji/count as a disabled info row
-    // buttons.push({
-    //   text: `${badge.emoji}  ${badge.count}`,
-    //   icon: undefined,
-    //   role: undefined,
-    //   handler: () => {
-    //     /* noop - disabled by setting css or no-op here */
-    //   },
-    //   cssClass: 'reaction-info-button',
-    // });
-    // // If the current user reacted with this emoji, show "Tap to remove"
-    // if (badge.mine) {
-    //   buttons.push({
-    //     text: 'Tap to remove',
-    //     icon: 'trash',
-    //     handler: async () => {
-    //       // call existing addReaction which toggles/remove when same emoji present
-    //       // await this.addReaction(msg, badge.emoji);
-    //     },
-    //   });
-    // } else {
-    //   // Optionally allow user to react with this same emoji (i.e., add their reaction)
-    //   buttons.push({
-    //     text: `React with ${badge.emoji}`,
-    //     icon: undefined,
-    //     handler: async () => {
-    //       // await this.addReaction(msg, badge.emoji);
-    //     },
-    //   });
-    // }
-    // // Cancel button
-    // buttons.push({ text: 'Cancel', role: 'cancel' });
-    // const sheet = await this.actionSheetCtrl.create({
-    //   header,
-    //   buttons,
-    //   cssClass: 'reaction-action-sheet',
-    // });
-    // await sheet.present();
+    
   }
 
   goToProfile() {
@@ -3222,16 +2825,55 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     this.router.navigate(['/calling-screen']);
   }
 
+
+
   async openCamera() {
     try {
+      // Capture photo from camera
       const image = await Camera.getPhoto({
         source: CameraSource.Camera,
         quality: 90,
         resultType: CameraResultType.Uri,
       });
-      this.capturedImage = image.webPath!;
+
+      if (!image.webPath) {
+        throw new Error('No image path returned');
+      }
+
+      // Fetch the image blob from the webPath
+      const response = await fetch(image.webPath);
+      const blob = await response.blob();
+
+      // Generate filename with timestamp
+      const timestamp = Date.now();
+      const fileName = `camera_${timestamp}.${image.format || 'jpg'}`;
+      const mimeType = `image/${image.format || 'jpeg'}`;
+
+      // Create preview URL (same as pickAttachment)
+      const previewUrl = URL.createObjectURL(blob);
+
+      // Set selectedAttachment exactly like pickAttachment does
+      this.selectedAttachment = {
+        type: 'image',
+        blob: blob,
+        fileName: fileName,
+        mimeType: mimeType,
+        fileSize: blob.size,
+        previewUrl: previewUrl,
+      };
+      console.log("this selected attachment", this.selectedAttachment);
+
+      // Show preview modal (same as pickAttachment)
+      this.showPreviewModal = true;
     } catch (error) {
       console.error('Camera error:', error);
+
+      const toast = await this.toastCtrl.create({
+        message: 'Failed to capture photo. Please try again.',
+        duration: 2000,
+        color: 'danger',
+      });
+      await toast.present();
     }
   }
 
@@ -3252,12 +2894,12 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     if (this.pinnedMessageSubscription) {
       try {
         this.pinnedMessageSubscription();
-      } catch (e) { }
+      } catch (e) {}
     }
     this.typingRxSubs.forEach((s) => s.unsubscribe());
     try {
       if (this.typingUnsubscribe) this.typingUnsubscribe();
-    } catch (e) { }
+    } catch (e) {}
     this.stopTypingSignal();
 
     window.removeEventListener('resize', this.resizeHandler);
@@ -3269,12 +2911,12 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
       if (this.iBlockedRef) off(this.iBlockedRef);
       if (this.theyBlockedRef) off(this.theyBlockedRef);
       clearTimeout(this.blockBubbleTimeout);
-    } catch (e) { }
+    } catch (e) {}
 
     this.onValueUnsubs.forEach((fn) => {
       try {
         fn();
-      } catch (e) { }
+      } catch (e) {}
     });
     this.onValueUnsubs = [];
     this.statusPollSub?.unsubscribe();
@@ -3340,1751 +2982,1063 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
 
   // --------------------------translation module added on 1 nov-----
 
+  // // ============================================
+  // // UPDATED TRANSLATION MODULE - 3 CASES LOGIC
+  // // ============================================
 
-// // ============================================
-// // UPDATED TRANSLATION MODULE - 3 CASES LOGIC
-// // ============================================
+  showTranslationOptions = false;
+  myLangCode = 'en';
+  receiverLangCode = 'hi';
+  myLangLabel = 'English';
+  receiverLangLabel = 'English';
+  translatedPreview: string | null = null;
+  // consent storage key
+  readonly TRANSLATION_CONSENT_KEY = 'translationConsent'; // values: 'granted' | 'denied'
 
-showTranslationOptions = false;
-myLangCode = 'en';
-receiverLangCode = 'hi';
-myLangLabel = 'English';
-receiverLangLabel = 'English';
-translatedPreview: string | null = null;
-// consent storage key
-readonly TRANSLATION_CONSENT_KEY = 'translationConsent'; // values: 'granted' | 'denied'
+  // UI flag (optional) to show a small consent banner in the footer if needed
+  showTranslationConsentBanner = false;
 
-// UI flag (optional) to show a small consent banner in the footer if needed
-showTranslationConsentBanner = false;
-
-/** Return true if user has already granted translation consent */
-hasTranslationConsent(): boolean {
-  try {
-    const v = localStorage.getItem(this.TRANSLATION_CONSENT_KEY);
-    return v === 'granted';
-  } catch {
-    return false;
+  /** Return true if user has already granted translation consent */
+  hasTranslationConsent(): boolean {
+    try {
+      const v = localStorage.getItem(this.TRANSLATION_CONSENT_KEY);
+      return v === 'granted';
+    } catch {
+      return false;
+    }
   }
-}
-/**
- * Shows an Alert asking user to allow using the translation API.
- * Returns true if user grants consent, false otherwise.
- */
-async askForTranslationConsent(): Promise<boolean> {
-  // If already granted, skip
-  if (this.hasTranslationConsent()) return true;
+  /**
+   * Shows an Alert asking user to allow using the translation API.
+   * Returns true if user grants consent, false otherwise.
+   */
+  async askForTranslationConsent(): Promise<boolean> {
+    // If already granted, skip
+    if (this.hasTranslationConsent()) return true;
 
-  // If explicitly denied previously, still show prompt? Here we re-prompt — change if you want.
-  return new Promise<boolean>(async (resolve) => {
-    const alert = await this.alertCtrl.create({
-      header: 'Allow translations?',
-      subHeader: 'Translation requires sending message text to an external service',
-      message: `
+    // If explicitly denied previously, still show prompt? Here we re-prompt — change if you want.
+    return new Promise<boolean>(async (resolve) => {
+      const alert = await this.alertCtrl.create({
+        header: 'Allow translations?',
+        subHeader:
+          'Translation requires sending message text to an external service',
+        message: `
         To provide message translations we send the message text to a third-party translation service.
        
         We do not collect personal account details. Only the message text is sent.
         If you agree, translations will be fetched and cached locally. You can revoke this permission anytime.
       `,
-      buttons: [
-        {
-          text: 'Decline',
-          role: 'cancel',
-          handler: () => {
-            try { localStorage.setItem(this.TRANSLATION_CONSENT_KEY, 'denied'); } catch {}
-            this.showToast('Translation declined', 'medium');
-            resolve(false);
-          }
-        },
-        {
-          text: 'Allow & Proceed',
-          handler: () => {
-            try { localStorage.setItem(this.TRANSLATION_CONSENT_KEY, 'granted'); } catch {}
-            this.showToast('Translation allowed', 'success');
-            resolve(true);
-          }
-        }
-      ],
-      backdropDismiss: false
+        buttons: [
+          {
+            text: 'Decline',
+            role: 'cancel',
+            handler: () => {
+              try {
+                localStorage.setItem(this.TRANSLATION_CONSENT_KEY, 'denied');
+              } catch {}
+              this.showToast('Translation declined', 'medium');
+              resolve(false);
+            },
+          },
+          {
+            text: 'Allow & Proceed',
+            handler: () => {
+              try {
+                localStorage.setItem(this.TRANSLATION_CONSENT_KEY, 'granted');
+              } catch {}
+              this.showToast('Translation allowed', 'success');
+              resolve(true);
+            },
+          },
+        ],
+        backdropDismiss: false,
+      });
+
+      await alert.present();
     });
-
-    await alert.present();
-  });
-}
-/**
- * Ensure consent exists — if not, prompt the user. Returns true only if consent granted.
- */
-async ensureTranslationConsent(): Promise<boolean> {
-  if (this.hasTranslationConsent()) return true;
-  const granted = await this.askForTranslationConsent();
-  return granted;
-}
-
-
-// // ✅ NEW: Loading states for translation buttons
-// isTranslatingToMy = false;
-// isTranslatingToReceiver = false;
-// isTranslatingOriginal = false;
-
-// translationApiBase =
-//   'https://script.google.com/macros/s/AKfycbyxnbC6LBpbtdMw2rLVqCRvqbHkT97CPQo9Ta9by1QpCMBH25BE6edivkNj5_dYp1qj/exec';
-
-// languageMap: Record<string, string> = {
-//   'ar-EG': 'Arabic (Egypt)',
-//   'ar-SA': 'Arabic (Saudi Arabia)',
-//   'bn-BD': 'Bengali (Bangladesh)',
-//   'de-DE': 'German (Germany)',
-//   'en-GB': 'English (UK)',
-//   'en-IN': 'English (India)',
-//   'en-US': 'English (US)',
-//   'es-ES': 'Spanish (Spain)',
-//   'es-MX': 'Spanish (Mexico)',
-//   'fa-IR': 'Persian (Iran)',
-//   'fr-FR': 'French (France)',
-//   'gu-IN': 'Gujarati (India)',
-//   'hi-IN': 'Hindi (India)',
-//   'it-IT': 'Italian (Italy)',
-//   'ja-JP': 'Japanese',
-//   'ko-KR': 'Korean',
-//   'mr-IN': 'Marathi (India)',
-//   'pa-IN': 'Punjabi (India)',
-//   'pt-BR': 'Portuguese (Brazil)',
-//   'pt-PT': 'Portuguese (Portugal)',
-//   'ru-RU': 'Russian',
-//   'ta-IN': 'Tamil (India)',
-//   'te-IN': 'Telugu (India)',
-//   'th-TH': 'Thai',
-//   'tr-TR': 'Turkish',
-//   'ur-PK': 'Urdu (Pakistan)',
-//   'vi-VN': 'Vietnamese',
-//   'zh-CN': 'Chinese (Simplified)',
-//   'zh-TW': 'Chinese (Traditional)',
-// };
-
-// languageName(code: string): string {
-//   return this.languageMap[code] || code;
-// }
-
-// apiLanguageCode(localeCode: string): string {
-//   const specialCases: Record<string, string> = {
-//     'zh-CN': 'zh',
-//     'zh-TW': 'zh-TW',
-//     'pt-BR': 'pt',
-//     'pt-PT': 'pt',
-//     'en-GB': 'en',
-//     'en-IN': 'en',
-//     'es-ES': 'es',
-//     'es-MX': 'es',
-//   };
-
-//   if (specialCases[localeCode]) {
-//     return specialCases[localeCode];
-//   }
-
-//   return localeCode.split('-')[0];
-// }
-
-// async loadLanguages() {
-//   try {
-//     // Load my language from local storage
-//     const myLang = localStorage.getItem('app_language');
-//     this.myLangCode = myLang || this.myLangCode;
-//     this.myLangLabel = this.languageName(this.myLangCode) || 'My Language';
-
-//     console.log("khusa called");
-// // http://localhost:8100/chatting-screen?receiverId=76
-//     // ✅ Fetch receiver ID (assuming it's stored in localStorage)
-//     // const receiverId = localStorage.getItem('receiverId');
-//     // const receiverId = "76";
-
-//     // ✅ Get receiverId from URL query params
-//     const receiverId = this.route.snapshot.queryParamMap.get('receiverId');
-
-
-//     if (receiverId) {
-
-//       // Call API to get receiver's language
-//       this.chatService.getUserLanguage(receiverId).subscribe(
-//         (res) => {
-//           if (res && res.language) {
-//             this.receiverLangCode = res.language;
-//             this.receiverLangLabel = this.languageName(res.language) || 'Receiver Language';
-
-//             // Optionally save to localStorage for reuse
-//             localStorage.setItem('receiverLang', res.language);
-//           } else {
-//             console.warn('⚠️ Receiver language not found in API response');
-//           }
-//         },
-//         (err) => {
-//           console.error('❌ Error fetching receiver language:', err);
-//         }
-//       );
-//     } else {
-//       console.warn('⚠️ No receiverId found in localStorage');
-//       // Fallback to stored receiver language
-//       const storedReceiverLang = localStorage.getItem('receiverLang');
-//       this.receiverLangCode = storedReceiverLang || this.receiverLangCode;
-//       this.receiverLangLabel =
-//         this.languageName(this.receiverLangCode) || 'Receiver Language';
-//     }
-//   } catch (err) {
-//     console.warn('Failed to load language preferences', err);
-//   }
-// }
-
-
-// /**
-//  * Normalize backend language codes (e.g., "hi" -> "hi-IN", keep "hi-IN" as-is).
-//  */
-// normalizeLocaleCode(code: string): string {
-//   if (!code) return code;
-
-//   // lowercase for comparison (keeps original case in return)
-//   const lower = code.trim().toLowerCase();
-//   const keys = Object.keys(this.languageMap);
-
-//   // 1️⃣ Exact match in map (case-insensitive)
-//   const exactKey = keys.find(k => k.toLowerCase() === lower);
-//   if (exactKey) return exactKey;
-
-//   // 2️⃣ Starts-with match (like "hi" → "hi-IN")
-//   const partialKey = keys.find(k => k.toLowerCase().startsWith(lower + '-'));
-//   if (partialKey) return partialKey;
-
-//   // 3️⃣ Fallback map for common 2-letter codes
-//   const fallbackMap: Record<string, string> = {
-//     en: 'en-IN',
-//     hi: 'hi-IN',
-//     bn: 'bn-BD',
-//     ta: 'ta-IN',
-//     te: 'te-IN',
-//     gu: 'gu-IN',
-//     mr: 'mr-IN',
-//     pa: 'pa-IN',
-//     pt: 'pt-BR',
-//     es: 'es-ES',
-//     fr: 'fr-FR',
-//     de: 'de-DE',
-//     ar: 'ar-SA',
-//     zh: 'zh-CN',
-//   };
-//   if (fallbackMap[lower]) return fallbackMap[lower];
-
-//   // 4️⃣ Otherwise return as-is
-//   return code;
-// }
-
-
-// // // Card state
-// translationCard: {
-//   visible: boolean;
-//   mode: 'translateToMy' | 'translateToReceiver' | 'sendOriginal' | null;
-//   items: TranslationItem[];
-//   createdAt: Date;
-// } | null = null;
-
-
-// // /**
-// //  * Parse translation API response
-// //  */
-// parseTranslationResponse(raw: any): string | null {
-//   let result: string | null = null;
-
-//   if (raw == null) {
-//     return null;
-//   }
-
-//   if (typeof raw === 'string') {
-//     const trimmed = raw.trim();
-
-//     if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || 
-//         (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
-//       try {
-//         const parsed = JSON.parse(trimmed);
-//         if (parsed.translatedText) {
-//           result = parsed.translatedText;
-//         } else if (parsed.data?.translations?.[0]) {
-//           result = parsed.data.translations[0].translatedText;
-//         } else if (parsed.text) {
-//           result = parsed.text;
-//         } else {
-//           result = JSON.stringify(parsed);
-//         }
-//       } catch {
-//         result = raw;
-//       }
-//     } else {
-//       result = raw;
-//     }
-//   } else if (typeof raw === 'object') {
-//     if (raw.translatedText) result = raw.translatedText;
-//     else if (raw.text) result = raw.text;
-//     else if (raw.data?.translations?.[0]) result = raw.data.translations[0].translatedText;
-//     else result = JSON.stringify(raw);
-//   }
-
-//   return result;
-// }
-
-// // /**
-// //  * Close translation card
-// //  */
-// closeTranslationCard() {
-//   if (this.translationCard) {
-//     this.translationCard.visible = false;
-//   }
-// }
-
-
-
-
-// // // ---------- per-message UI state ----------
-// messageToggleMap: Map<string, { activeCode: string; showAll: boolean }> = new Map();
-
-// // // Return array of available translations from msg.translations
-// getAllTranslationsArray(msg: any): { code: string; label: string; text: string }[] {
-//   if (!msg?.translations) return [];
-//   const arr: { code: string; label: string; text: string }[] = [];
-
-//   if (msg.translations.original) {
-//     arr.push({
-//       code: msg.translations.original.code || 'en',
-//       label: msg.translations.original.label || 'English (Original)',
-//       text: msg.translations.original.text || ''
-//     });
-//   }
-//   if (msg.translations.myLanguage) {
-//     arr.push({
-//       code: msg.translations.myLanguage.code,
-//       label: msg.translations.myLanguage.label,
-//       text: msg.translations.myLanguage.text || ''
-//     });
-//   }
-//   if (msg.translations.receiverLanguage) {
-//     arr.push({
-//       code: msg.translations.receiverLanguage.code,
-//       label: msg.translations.receiverLanguage.label,
-//       text: msg.translations.receiverLanguage.text || ''
-//     });
-//   }
-
-//   // dedupe by code
-//   const seen = new Set<string>();
-//   return arr.filter(item => {
-//     if (!item.code) return false;
-//     if (seen.has(item.code)) return false;
-//     seen.add(item.code);
-//     return true;
-//   });
-// }
-
-// // /** ensure map entry exists */
-// ensureToggleState(msg: any) {
-//   if (!this.messageToggleMap.has(msg.msgId)) {
-//     let active = 'original';
-//     if (msg.translations) {
-//       const all = this.getAllTranslationsArray(msg);
-//       // prefer whichever translation matches visible msg.text
-//       const matched = all.find(t => t.text && (msg.text || '').trim() === t.text.trim());
-//       if (matched) active = matched.code;
-//       else if (msg.translations.myLanguage) active = msg.translations.myLanguage.code;
-//       else if (msg.translations.receiverLanguage) active = msg.translations.receiverLanguage.code;
-//       else active = msg.translations.original?.code || 'original';
-//     }
-//     this.messageToggleMap.set(msg.msgId, { activeCode: active, showAll: false });
-//   }
-// }
-
-// getActiveTranslationLabel(msg: any): string | null {
-//   if (!msg.translations) return null;
-//   this.ensureToggleState(msg);
-//   const st = this.messageToggleMap.get(msg.msgId)!;
-//   const all = this.getAllTranslationsArray(msg);
-//   const found = all.find(x => x.code === st.activeCode);
-//   return found ? found.label : (st.activeCode === 'original' ? 'English (Original)' : null);
-// }
-
-// getActiveTranslationShortCode(msg: any) {
-//   this.ensureToggleState(msg);
-//   const st = this.messageToggleMap.get(msg.msgId)!;
-//   return st.activeCode;
-// }
-
-// isTranslationLabelled(msg: any) {
-//   this.ensureToggleState(msg);
-//   const st = this.messageToggleMap.get(msg.msgId)!;
-//   return st.activeCode !== 'original';
-// }
-
-// getDisplayedText(msg: any) {
-//   this.ensureToggleState(msg);
-//   const st = this.messageToggleMap.get(msg.msgId)!;
-//   if (!msg.translations) return msg.text || '';
-//   const all = this.getAllTranslationsArray(msg);
-//   const found = all.find(x => x.code === st.activeCode);
-//   if (found) return found.text;
-//   if (st.activeCode === 'original' && msg.translations.original) return msg.translations.original.text;
-//   return msg.text || '';
-// }
-
-// cycleTranslation(msg: any) {
-//   if (!msg.translations) return;
-//   this.ensureToggleState(msg);
-//   const st = this.messageToggleMap.get(msg.msgId)!;
-//   const arr = this.getAllTranslationsArray(msg);
-//   // codes list; ensure 'original' present (use its code)
-//   const codes = arr.map(a => a.code);
-//   if (msg.translations.original && !codes.includes(msg.translations.original.code || 'original')) {
-//     codes.push(msg.translations.original.code || 'original');
-//   }
-//   // find next
-//   const idx = codes.indexOf(st.activeCode);
-//   const next = (idx === -1 || idx === codes.length - 1) ? codes[0] : codes[idx + 1];
-//   st.activeCode = next;
-//   this.messageToggleMap.set(msg.msgId, st);
-// }
-
-// setActiveTranslation(msg: any, code: string) {
-//   this.ensureToggleState(msg);
-//   const st = this.messageToggleMap.get(msg.msgId)!;
-//   st.activeCode = code;
-//   st.showAll = false;
-//   this.messageToggleMap.set(msg.msgId, st);
-// }
-
-// toggleShowAllTranslations(msg: any) {
-//   this.ensureToggleState(msg);
-//   const st = this.messageToggleMap.get(msg.msgId)!;
-//   st.showAll = !st.showAll;
-//   this.messageToggleMap.set(msg.msgId, st);
-// }
-
-// isShowingAllTranslations(msg: any) {
-//   this.ensureToggleState(msg);
-//   return this.messageToggleMap.get(msg.msgId)!.showAll;
-// }
-
-// async copyToClipboard(text: string) {
-//   try {
-//     await navigator.clipboard.writeText(text);
-//     this.showToast?.('Copied', 'success');
-//   } catch (err) {
-//     this.showToast?.('Copy failed', 'danger');
-//   }
-// }
-
-
-// /**
-//  * CASE 1 & 2: Translate to My Language OR Translate to Receiver Language
-//  */
-// async translateTo(target: 'my' | 'receiver') {
-//   const text = this.messageText?.trim();
-//   if (!text) {
-//     this.showToast('Type something to translate', 'warning');
-//     return;
-//   }
-
-//   // Step 1: Ensure user consent
-//   const allowed = await this.ensureTranslationConsent();
-//   if (!allowed) return;
-
-//   // Step 2: Set loading state
-//   if (target === 'my') {
-//     this.isTranslatingToMy = true;
-//   } else {
-//     this.isTranslatingToReceiver = true;
-//   }
-
-//   // Step 3: Determine both target languages
-//   const myApiLang = this.apiLanguageCode(this.myLangCode);
-//   const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
-
-//   // Step 4: Fetch translations based on mode
-//   if (target === 'my') {
-//     // TRANSLATE TO MY: Fetch both (sender + receiver)
-//     this.fetchBothTranslationsParallel('translateToMy', text, myApiLang, recvApiLang);
-//   } else {
-//     // TRANSLATE TO RECEIVER: Fetch only receiver translation
-//     this.fetchReceiverTranslationOnly('translateToReceiver', text, recvApiLang);
-//   }
-// }
-
-// /**
-//  * Fetch BOTH translations (for "Translate to My" mode)
-//  */
-// async fetchBothTranslationsParallel(
-//   mode: 'translateToMy',
-//   originalText: string,
-//   myApiLang: string,
-//   recvApiLang: string
-// ) {
-//   const promises: Promise<{ lang: string; text: string }>[] = [];
-
-//   // Fetch My Language translation (if not English)
-//   if (myApiLang !== 'en') {
-//     const myParams = new HttpParams()
-//       .set('text', originalText)
-//       .set('from', 'en')
-//       .set('to', myApiLang);
-    
-//     promises.push(
-//       this.http.get(this.translationApiBase, { params: myParams, responseType: 'text' })
-//         .toPromise()
-//         .then((raw: any) => ({
-//           lang: 'my',
-//           text: this.parseTranslationResponse(raw) || originalText
-//         }))
-//         .catch(() => ({ lang: 'my', text: originalText }))
-//     );
-//   }
-
-//   // Fetch Receiver Language translation (if not English)
-//   if (recvApiLang !== 'en') {
-//     const recvParams = new HttpParams()
-//       .set('text', originalText)
-//       .set('from', 'en')
-//       .set('to', recvApiLang);
-    
-//     promises.push(
-//       this.http.get(this.translationApiBase, { params: recvParams, responseType: 'text' })
-//         .toPromise()
-//         .then((raw: any) => ({
-//           lang: 'receiver',
-//           text: this.parseTranslationResponse(raw) || originalText
-//         }))
-//         .catch(() => ({ lang: 'receiver', text: originalText }))
-//     );
-//   }
-
-//   try {
-//     const results = await Promise.all(promises);
-    
-//     const translations: any = {};
-//     results.forEach(r => {
-//       if (r.lang === 'my') translations.my = r.text;
-//       if (r.lang === 'receiver') translations.receiver = r.text;
-//     });
-
-//     if (myApiLang === 'en') translations.my = originalText;
-//     if (recvApiLang === 'en') translations.receiver = originalText;
-
-//     // Show BOTH translations for "Translate to My" mode
-//     this.showBothTranslationsCard(mode, originalText, translations);
-    
-//   } catch (err) {
-//     console.error('Translation failed', err);
-//     this.showToast('Translation failed', 'danger');
-//   } finally {
-//     this.isTranslatingToMy = false;
-//   }
-// }
-
-// /**
-//  * Fetch ONLY receiver translation (for "Translate to Receiver" mode)
-//  */
-// async fetchReceiverTranslationOnly(
-//   mode: 'translateToReceiver',
-//   originalText: string,
-//   recvApiLang: string
-// ) {
-//   // If receiver language is English, no need to translate
-//   if (recvApiLang === 'en') {
-//     this.showToast('Receiver language is English, no translation needed', 'medium');
-//     this.isTranslatingToReceiver = false;
-//     return;
-//   }
-
-//   const params = new HttpParams()
-//     .set('text', originalText)
-//     .set('from', 'en')
-//     .set('to', recvApiLang);
-
-//   this.http.get(this.translationApiBase, { params, responseType: 'text' }).subscribe({
-//     next: (raw: any) => {
-//       const receiverTranslation = this.parseTranslationResponse(raw);
-
-//       if (receiverTranslation) {
-//         // Show ONLY receiver translation
-//         this.showReceiverOnlyCard(mode, originalText, receiverTranslation);
-//       } else {
-//         this.showToast('Translation failed', 'warning');
-//       }
-      
-//       this.isTranslatingToReceiver = false;
-//     },
-//     error: (err) => {
-//       console.error('Translation error', err);
-//       this.showToast('Translation failed', 'danger');
-//       this.isTranslatingToReceiver = false;
-//     }
-//   });
-// }
-
-// /**
-//  * Show card with BOTH translations (Translate to My mode)
-//  */
-// showBothTranslationsCard(
-//   mode: 'translateToMy',
-//   originalText: string,
-//   translations: { my: string; receiver: string }
-// ) {
-//   const items: TranslationItem[] = [];
-
-//   // Add My Language
-//   items.push({
-//     code: this.myLangCode,
-//     label: this.languageName(this.myLangCode) + ' (You)',
-//     text: translations.my
-//   });
-
-//   // Add Receiver Language
-//   items.push({
-//     code: this.receiverLangCode,
-//     label: this.languageName(this.receiverLangCode) + ' (Receiver)',
-//     text: translations.receiver
-//   });
-
-//   this.translationCard = {
-//     visible: true,
-//     mode,
-//     items,
-//     createdAt: new Date()
-//   };
-
-//   this.showToast('Translations ready', 'success');
-//   try { this.cdr.detectChanges(); } catch { }
-// }
-
-// /**
-//  * Show card with ONLY receiver translation (Translate to Receiver mode)
-//  */
-// showReceiverOnlyCard(
-//   mode: 'translateToReceiver',
-//   originalText: string,
-//   receiverTranslation: string
-// ) {
-//   const items: TranslationItem[] = [];
-
-//   // Add ONLY Receiver Language
-//   items.push({
-//     code: this.receiverLangCode,
-//     label: this.languageName(this.receiverLangCode) + ' (Receiver)',
-//     text: receiverTranslation
-//   });
-
-//   this.translationCard = {
-//     visible: true,
-//     mode,
-//     items,
-//     createdAt: new Date()
-//   };
-
-//   this.showToast('Translation ready', 'success');
-//   try { this.cdr.detectChanges(); } catch { }
-// }
-
-// /**
-//  * CASE 3: Send Original with auto-translation to receiver
-//  */
-// async sendOriginalWithTranslation() {
-//   const text = this.messageText?.trim();
-//   if (!text) {
-//     this.showToast('Type something to send', 'warning');
-//     return;
-//   }
-
-//   const allowed = await this.ensureTranslationConsent();
-//   if (!allowed) return;
-
-//   this.isTranslatingOriginal = true;
-
-//   const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
-
-//   // If receiver language is English, send directly
-//   if (recvApiLang === 'en') {
-//     this.isTranslatingOriginal = false;
-//     this.sendDirectMessage(text, text);
-//     return;
-//   }
-
-//   // Fetch receiver translation
-//   const params = new HttpParams()
-//     .set('text', text)
-//     .set('from', 'en')
-//     .set('to', recvApiLang);
-
-//   this.http.get(this.translationApiBase, { params, responseType: 'text' }).subscribe({
-//     next: (raw: any) => {
-//       const receiverTranslation = this.parseTranslationResponse(raw);
-
-//       if (receiverTranslation) {
-//         const items: TranslationItem[] = [{
-//           code: this.receiverLangCode,
-//           label: this.languageName(this.receiverLangCode) + ' (Receiver will see)',
-//           text: receiverTranslation
-//         }];
-
-//         this.translationCard = {
-//           visible: true,
-//           mode: 'sendOriginal',
-//           items,
-//           createdAt: new Date()
-//         };
-        
-//         this.showToast('Preview ready', 'success');
-//       } else {
-//         this.showToast('Translation failed', 'warning');
-//       }
-      
-//       this.isTranslatingOriginal = false;
-//     },
-//     error: (err) => {
-//       console.error('Translation error', err);
-//       this.showToast('Translation failed', 'danger');
-//       this.isTranslatingOriginal = false;
-//     }
-//   });
-// }
-
-// /**
-//  * Send message from translation card
-//  */
-// async sendFromTranslationCard() {
-//   if (!this.translationCard) return;
-
-//   const mode = this.translationCard.mode;
-//   const items = this.translationCard.items || [];
-//   const originalText = this.messageText?.trim() || '';
-//   const now = Date.now();
-
-//   const translationsPayload: IMessage['translations'] = {
-//     original: {
-//       code: 'en',
-//       label: 'English (Original)',
-//       text: originalText
-//     }
-//   };
-
-//   let visibleTextForSender: string = originalText;
-
-//   const myItem = items.find(i => i.code === this.myLangCode);
-//   const recvItem = items.find(i => i.code === this.receiverLangCode);
-
-//   if (mode === 'translateToMy') {
-//     // Sender sees: My Language
-//     if (myItem) {
-//       translationsPayload.myLanguage = {
-//         code: myItem.code,
-//         label: myItem.label,
-//         text: myItem.text
-//       };
-//       visibleTextForSender = myItem.text;
-//     }
-    
-//     if (recvItem) {
-//       translationsPayload.receiverLanguage = {
-//         code: recvItem.code,
-//         label: recvItem.label,
-//         text: recvItem.text
-//       };
-//     }
-    
-//   } else if (mode === 'translateToReceiver') {
-//     // Sender sees: Receiver's translation (preview)
-//     if (recvItem) {
-//       translationsPayload.receiverLanguage = {
-//         code: recvItem.code,
-//         label: recvItem.label,
-//         text: recvItem.text
-//       };
-//       visibleTextForSender = recvItem.text;
-//     }
-    
-//   } else if (mode === 'sendOriginal') {
-//     // Sender sees: Original English
-//     visibleTextForSender = originalText;
-    
-//     if (recvItem) {
-//       translationsPayload.receiverLanguage = {
-//         code: recvItem.code,
-//         label: recvItem.label,
-//         text: recvItem.text
-//       };
-//     }
-//   }
-
-//   const localMessage: Partial<IMessage & { attachment?: any }> = {
-//     sender: this.senderId,
-//     text: visibleTextForSender,
-//     translations: translationsPayload,
-//     timestamp: now,
-//     msgId: uuidv4(),
-//     replyToMsgId: this.replyTo?.message.msgId || '',
-//     isEdit: false,
-//     isPinned: false,
-//     type: 'text',
-//     reactions: []
-//   };
-
-//   await this.chatService.sendMessage(localMessage);
-
-//   this.messageText = '';
-//   this.translationCard.visible = false;
-//   this.translationCard = null;
-//   this.showSendButton = false;
-//   this.replyToMessage = null;
-  
-//   this.showToast('Message sent', 'success');
-  
-//   try { 
-//     this.stopTypingSignal();
-//     this.scrollToBottom();
-//   } catch {}
-// }
-
-// /**
-//  * Helper: Send message directly
-//  */
-// async sendDirectMessage(senderText: string, receiverText: string) {
-//   const now = Date.now();
-  
-//   const translationsPayload: IMessage['translations'] = {
-//     original: {
-//       code: 'en',
-//       label: 'English (Original)',
-//       text: this.messageText?.trim() || ''
-//     }
-//   };
-
-//   if (receiverText !== this.messageText) {
-//     translationsPayload.receiverLanguage = {
-//       code: this.receiverLangCode,
-//       label: this.languageName(this.receiverLangCode),
-//       text: receiverText
-//     };
-//   }
-
-//   const localMessage: Partial<IMessage & { attachment?: any }> = {
-//     sender: this.senderId,
-//     text: senderText,
-//     translations: translationsPayload,
-//     timestamp: now,
-//     msgId: uuidv4(),
-//     replyToMsgId: this.replyTo?.message.msgId || '',
-//     isEdit: false,
-//     isPinned: false,
-//     type: 'text',
-//     reactions: []
-//   };
-
-//   await this.chatService.sendMessage(localMessage);
-  
-//   this.messageText = '';
-//   this.showSendButton = false;
-//   this.showToast('Message sent', 'success');
-// }
-
-// /**
-//  * Show toast notification
-//  * @param message - The message to display
-//  * @param color - Toast color ('success' | 'danger' | 'warning' | 'medium' | 'primary' | 'secondary')
-//  * @param duration - Duration in milliseconds (default: 2000)
-//  * @param position - Position ('top' | 'middle' | 'bottom')
-//  */
-// async showToast(
-//   message: string, 
-//   color: string = 'medium', 
-//   duration: number = 2000,
-//   position: 'top' | 'middle' | 'bottom' = 'bottom'
-// ) {
-//   const toast = await this.toastController.create({
-//     message: message,
-//     duration: duration,
-//     color: color,
-//     position: position,
-//     buttons: [
-//       {
-//         text: 'Dismiss',
-//         role: 'cancel'
-//       }
-//     ]
-//   });
-
-//   await toast.present();
-// }
-
-// // Alternative: Simple version without dismiss button
-// async showToastSimple(
-//   message: string, 
-//   color: string = 'medium', 
-//   duration: number = 1500
-// ) {
-//   const toast = await this.toastController.create({
-//     message: message,
-//     duration: duration,
-//     color: color,
-//     position: 'bottom'
-//   });
-
-//   await toast.present();
-// }
-
-// // Alternative: With icon
-// async showToastWithIcon(
-//   message: string, 
-//   color: string = 'success', 
-//   icon: string = 'checkmark-circle'
-// ) {
-//   const toast = await this.toastController.create({
-//     message: message,
-//     duration: 2000,
-//     color: color,
-//     position: 'bottom',
-//     icon: icon,
-//     buttons: [
-//       {
-//         text: 'OK',
-//         role: 'cancel'
-//       }
-//     ]
-//   });
-
-//   await toast.present();
-// }
-
-
-// ✅ NEW: Loading states for translation buttons
-isTranslatingToMy = false;
-isTranslatingToReceiver = false;
-isTranslatingOriginal = false;
-isTranslatingCustom = false; // ✅ NEW: For custom language selection
-
-translationApiBase =
-  // 'https://script.google.com/macros/s/AKfycbyxnbC6LBpbtdMw2rLVqCRvqbHkT97CPQo9Ta9by1QpCMBH25BE6edivkNj5_dYp1qj/exec';
-'https://script.google.com/macros/s/AKfycbxpr7MVGsJNzDTZoBWa_IuTd8z5C9ZDfM3iENhuqBN01hgKiU2fF-Hc3DZ1c0u9KzHZ/exec';
-languageMap: Record<string, string> = {
-  'ar-EG': 'Arabic (Egypt)',
-  'ar-SA': 'Arabic (Saudi Arabia)',
-  'bn-BD': 'Bengali (Bangladesh)',
-  'de-DE': 'German (Germany)',
-  'en-GB': 'English (UK)',
-  'en-IN': 'English (India)',
-  'en-US': 'English (US)',
-  'es-ES': 'Spanish (Spain)',
-  'es-MX': 'Spanish (Mexico)',
-  'fa-IR': 'Persian (Iran)',
-  'fr-FR': 'French (France)',
-  'gu-IN': 'Gujarati (India)',
-  'hi-IN': 'Hindi (India)',
-  'it-IT': 'Italian (Italy)',
-  'ja-JP': 'Japanese',
-  'ko-KR': 'Korean',
-  'mr-IN': 'Marathi (India)',
-  'pa-IN': 'Punjabi (India)',
-  'pt-BR': 'Portuguese (Brazil)',
-  'pt-PT': 'Portuguese (Portugal)',
-  'ru-RU': 'Russian',
-  'ta-IN': 'Tamil (India)',
-  'te-IN': 'Telugu (India)',
-  'th-TH': 'Thai',
-  'tr-TR': 'Turkish',
-  'ur-PK': 'Urdu (Pakistan)',
-  'vi-VN': 'Vietnamese',
-  'zh-CN': 'Chinese (Simplified)',
-  'zh-TW': 'Chinese (Traditional)',
-};
-
-// ✅ NEW: Get all languages as array for dropdown
-get languagesList() {
-  return Object.entries(this.languageMap).map(([code, label]) => ({
-    code,
-    label
-  }));
-}
-
-// languageName(code: string): string {
-//   return this.languageMap[code] || code;
-// }
-
-languageName(code: string): string {
-  const full = this.languageMap[code] || code;
-
-  // Remove anything inside parentheses: (India), (Mexico), etc.
-  const cleaned = full.replace(/\s*\(.*?\)/g, '');
-
-  return cleaned.trim();
-}
-
-
-apiLanguageCode(localeCode: string): string {
-  const specialCases: Record<string, string> = {
-    'zh-CN': 'zh',
-    'zh-TW': 'zh-TW',
-    'pt-BR': 'pt',
-    'pt-PT': 'pt',
-    'en-GB': 'en',
-    'en-IN': 'en',
-    'es-ES': 'es',
-    'es-MX': 'es',
-  };
-
-  if (specialCases[localeCode]) {
-    return specialCases[localeCode];
+  }
+  /**
+   * Ensure consent exists — if not, prompt the user. Returns true only if consent granted.
+   */
+  async ensureTranslationConsent(): Promise<boolean> {
+    if (this.hasTranslationConsent()) return true;
+    const granted = await this.askForTranslationConsent();
+    return granted;
   }
 
-  return localeCode.split('-')[0];
-}
+  // ✅ NEW: Loading states for translation buttons
+  isTranslatingToMy = false;
+  isTranslatingToReceiver = false;
+  isTranslatingOriginal = false;
+  isTranslatingCustom = false; // ✅ NEW: For custom language selection
 
-async loadLanguages() {
-  try {
-    const myLang = localStorage.getItem('app_language');
-    this.myLangCode = myLang || this.myLangCode;
-    this.myLangLabel = this.languageName(this.myLangCode) || 'My Language';
+  translationApiBase =
+    // 'https://script.google.com/macros/s/AKfycbyxnbC6LBpbtdMw2rLVqCRvqbHkT97CPQo9Ta9by1QpCMBH25BE6edivkNj5_dYp1qj/exec';
+    // 'https://script.google.com/macros/s/AKfycbxpr7MVGsJNzDTZoBWa_IuTd8z5C9ZDfM3iENhuqBN01hgKiU2fF-Hc3DZ1c0u9KzHZ/exec';
+    'https://script.google.com/macros/s/AKfycbz069QioIcP8CO2ly7j29cyQPQjzQKywYcrDicxqG35_bQ3Ch_fcuVORsMAdAWu5-uh/exec';
+    
+  languageMap: Record<string, string> = {
+    'ar-EG': 'Arabic (Egypt)',
+    'ar-SA': 'Arabic (Saudi Arabia)',
+    'bn-BD': 'Bengali (Bangladesh)',
+    'de-DE': 'German (Germany)',
+    'en-GB': 'English (UK)',
+    'en-IN': 'English (India)',
+    'en-US': 'English (US)',
+    'es-ES': 'Spanish (Spain)',
+    'es-MX': 'Spanish (Mexico)',
+    'fa-IR': 'Persian (Iran)',
+    'fr-FR': 'French (France)',
+    'gu-IN': 'Gujarati (India)',
+    'hi-IN': 'Hindi (India)',
+    'it-IT': 'Italian (Italy)',
+    'ja-JP': 'Japanese',
+    'ko-KR': 'Korean',
+    'mr-IN': 'Marathi (India)',
+    'pa-IN': 'Punjabi (India)',
+    'pt-BR': 'Portuguese (Brazil)',
+    'pt-PT': 'Portuguese (Portugal)',
+    'ru-RU': 'Russian',
+    'ta-IN': 'Tamil (India)',
+    'te-IN': 'Telugu (India)',
+    'th-TH': 'Thai',
+    'tr-TR': 'Turkish',
+    'ur-PK': 'Urdu (Pakistan)',
+    'vi-VN': 'Vietnamese',
+    'zh-CN': 'Chinese (Simplified)',
+    'zh-TW': 'Chinese (Traditional)',
+  };
 
-    const receiverId = this.route.snapshot.queryParamMap.get('receiverId');
+  // ✅ NEW: Get all languages as array for dropdown
+  get languagesList() {
+    return Object.entries(this.languageMap).map(([code, label]) => ({
+      code,
+      label,
+    }));
+  }
 
-    if (receiverId) {
-      this.chatService.getUserLanguage(receiverId).subscribe(
-        (res) => {
-          if (res && res.language) {
-            this.receiverLangCode = res.language;
-            this.receiverLangLabel = this.languageName(res.language) || 'Receiver Language';
-            localStorage.setItem('receiverLang', res.language);
-          } else {
-            console.warn('⚠️ Receiver language not found in API response');
-          }
-        },
-        (err) => {
-          console.error('❌ Error fetching receiver language:', err);
-        }
-      );
-    } else {
-      const storedReceiverLang = localStorage.getItem('receiverLang');
-      this.receiverLangCode = storedReceiverLang || this.receiverLangCode;
-      this.receiverLangLabel =
-        this.languageName(this.receiverLangCode) || 'Receiver Language';
+  // languageName(code: string): string {
+  //   return this.languageMap[code] || code;
+  // }
+
+  languageName(code: string): string {
+    const full = this.languageMap[code] || code;
+
+    // Remove anything inside parentheses: (India), (Mexico), etc.
+    const cleaned = full.replace(/\s*\(.*?\)/g, '');
+
+    return cleaned.trim();
+  }
+
+  apiLanguageCode(localeCode: string): string {
+    const specialCases: Record<string, string> = {
+      'zh-CN': 'zh',
+      'zh-TW': 'zh-TW',
+      'pt-BR': 'pt',
+      'pt-PT': 'pt',
+      'en-GB': 'en',
+      'en-IN': 'en',
+      'es-ES': 'es',
+      'es-MX': 'es',
+    };
+
+    if (specialCases[localeCode]) {
+      return specialCases[localeCode];
     }
-  } catch (err) {
-    console.warn('Failed to load language preferences', err);
-  }
-}
 
-normalizeLocaleCode(code: string): string {
-  if (!code) return code;
-
-  const lower = code.trim().toLowerCase();
-  const keys = Object.keys(this.languageMap);
-
-  const exactKey = keys.find(k => k.toLowerCase() === lower);
-  if (exactKey) return exactKey;
-
-  const partialKey = keys.find(k => k.toLowerCase().startsWith(lower + '-'));
-  if (partialKey) return partialKey;
-
-  const fallbackMap: Record<string, string> = {
-    en: 'en-IN',
-    hi: 'hi-IN',
-    bn: 'bn-BD',
-    ta: 'ta-IN',
-    te: 'te-IN',
-    gu: 'gu-IN',
-    mr: 'mr-IN',
-    pa: 'pa-IN',
-    pt: 'pt-BR',
-    es: 'es-ES',
-    fr: 'fr-FR',
-    de: 'de-DE',
-    ar: 'ar-SA',
-    zh: 'zh-CN',
-  };
-  if (fallbackMap[lower]) return fallbackMap[lower];
-
-  return code;
-}
-
-// Card state
-translationCard: {
-  visible: boolean;
-  mode: 'translateCustom' | 'translateToReceiver' | 'sendOriginal' | null;
-  items: TranslationItem[];
-  createdAt: Date;
-} | null = null;
-
-parseTranslationResponse(raw: any): string | null {
-  let result: string | null = null;
-
-  if (raw == null) {
-    return null;
+    return localeCode.split('-')[0];
   }
 
-  if (typeof raw === 'string') {
-    const trimmed = raw.trim();
+  async loadLanguages() {
+    try {
+      const myLang = localStorage.getItem('app_language');
+      this.myLangCode = myLang || this.myLangCode;
+      this.myLangLabel = this.languageName(this.myLangCode) || 'My Language';
 
-    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || 
-        (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
-      try {
-        const parsed = JSON.parse(trimmed);
-        if (parsed.translatedText) {
-          result = parsed.translatedText;
-        } else if (parsed.data?.translations?.[0]) {
-          result = parsed.data.translations[0].translatedText;
-        } else if (parsed.text) {
-          result = parsed.text;
-        } else {
-          result = JSON.stringify(parsed);
+      const receiverId = this.route.snapshot.queryParamMap.get('receiverId');
+
+      if (receiverId) {
+        this.chatService.getUserLanguage(receiverId).subscribe(
+          (res) => {
+            if (res && res.language) {
+              this.receiverLangCode = res.language;
+              this.receiverLangLabel =
+                this.languageName(res.language) || 'Receiver Language';
+              localStorage.setItem('receiverLang', res.language);
+            } else {
+              console.warn('⚠️ Receiver language not found in API response');
+            }
+          },
+          (err) => {
+            console.error('❌ Error fetching receiver language:', err);
+          }
+        );
+      } else {
+        const storedReceiverLang = localStorage.getItem('receiverLang');
+        this.receiverLangCode = storedReceiverLang || this.receiverLangCode;
+        this.receiverLangLabel =
+          this.languageName(this.receiverLangCode) || 'Receiver Language';
+      }
+    } catch (err) {
+      console.warn('Failed to load language preferences', err);
+    }
+  }
+
+  normalizeLocaleCode(code: string): string {
+    if (!code) return code;
+
+    const lower = code.trim().toLowerCase();
+    const keys = Object.keys(this.languageMap);
+
+    const exactKey = keys.find((k) => k.toLowerCase() === lower);
+    if (exactKey) return exactKey;
+
+    const partialKey = keys.find((k) =>
+      k.toLowerCase().startsWith(lower + '-')
+    );
+    if (partialKey) return partialKey;
+
+    const fallbackMap: Record<string, string> = {
+      en: 'en-IN',
+      hi: 'hi-IN',
+      bn: 'bn-BD',
+      ta: 'ta-IN',
+      te: 'te-IN',
+      gu: 'gu-IN',
+      mr: 'mr-IN',
+      pa: 'pa-IN',
+      pt: 'pt-BR',
+      es: 'es-ES',
+      fr: 'fr-FR',
+      de: 'de-DE',
+      ar: 'ar-SA',
+      zh: 'zh-CN',
+    };
+    if (fallbackMap[lower]) return fallbackMap[lower];
+
+    return code;
+  }
+
+  // Card state
+  translationCard: {
+    visible: boolean;
+    mode: 'translateCustom' | 'translateToReceiver' | 'sendOriginal' | null;
+    items: TranslationItem[];
+    createdAt: Date;
+  } | null = null;
+
+  parseTranslationResponse(raw: any): string | null {
+    let result: string | null = null;
+
+    if (raw == null) {
+      return null;
+    }
+
+    if (typeof raw === 'string') {
+      const trimmed = raw.trim();
+
+      if (
+        (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+        (trimmed.startsWith('[') && trimmed.endsWith(']'))
+      ) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (parsed.translatedText) {
+            result = parsed.translatedText;
+          } else if (parsed.data?.translations?.[0]) {
+            result = parsed.data.translations[0].translatedText;
+          } else if (parsed.text) {
+            result = parsed.text;
+          } else {
+            result = JSON.stringify(parsed);
+          }
+        } catch {
+          result = raw;
         }
-      } catch {
+      } else {
         result = raw;
       }
-    } else {
-      result = raw;
+    } else if (typeof raw === 'object') {
+      if (raw.translatedText) result = raw.translatedText;
+      else if (raw.text) result = raw.text;
+      else if (raw.data?.translations?.[0])
+        result = raw.data.translations[0].translatedText;
+      else result = JSON.stringify(raw);
     }
-  } else if (typeof raw === 'object') {
-    if (raw.translatedText) result = raw.translatedText;
-    else if (raw.text) result = raw.text;
-    else if (raw.data?.translations?.[0]) result = raw.data.translations[0].translatedText;
-    else result = JSON.stringify(raw);
+
+    return result;
   }
 
-  return result;
-}
-
-closeTranslationCard() {
-  if (this.translationCard) {
-    this.translationCard.visible = false;
-  }
-}
-
-messageToggleMap: Map<string, { activeCode: string }> = new Map();
-
-getAllTranslationsArray(msg: any): { code: string; label: string; text: string }[] {
-  if (!msg?.translations) return [];
-  const arr: { code: string; label: string; text: string }[] = [];
-
-  // Original language (auto-detected, not always English)
-  if (msg.translations.original) {
-    arr.push({
-      code: msg.translations.original.code || 'unknown',
-      label: msg.translations.original.label || 'Original',
-      text: msg.translations.original.text || ''
-    });
-  }
-  
-  // Other custom language translation
-  if (msg.translations.otherLanguage) {
-    arr.push({
-      code: msg.translations.otherLanguage.code,
-      label: msg.translations.otherLanguage.label,
-      text: msg.translations.otherLanguage.text || ''
-    });
-  }
-  
-  // Receiver's language translation
-  if (msg.translations.receiverLanguage) {
-    arr.push({
-      code: msg.translations.receiverLanguage.code,
-      label: msg.translations.receiverLanguage.label,
-      text: msg.translations.receiverLanguage.text || ''
-    });
-  }
-
-  // Deduplicate by code
-  const seen = new Set<string>();
-  return arr.filter(item => {
-    if (!item.code) return false;
-    if (seen.has(item.code)) return false;
-    seen.add(item.code);
-    return true;
-  });
-}
-
-/**
- * Check if message has multiple translations (more than just original)
- */
-hasMultipleTranslations(msg: any): boolean {
-  if (!msg?.translations) return false;
-  const arr = this.getAllTranslationsArray(msg);
-  return arr.length > 1;
-}
-
-ensureToggleState(msg: any) {
-  if (!this.messageToggleMap.has(msg.msgId)) {
-    let active = 'original';
-    if (msg.translations) {
-      const all = this.getAllTranslationsArray(msg);
-      const matched = all.find(t => t.text && (msg.text || '').trim() === t.text.trim());
-      if (matched) active = matched.code;
-      else if (msg.translations.otherLanguage) active = msg.translations.otherLanguage.code;
-      else if (msg.translations.receiverLanguage) active = msg.translations.receiverLanguage.code;
-      else active = msg.translations.original?.code || 'original';
+  closeTranslationCard() {
+    if (this.translationCard) {
+      this.translationCard.visible = false;
     }
-    this.messageToggleMap.set(msg.msgId, { activeCode: active });
-  }
-}
-
-getActiveTranslationLabel(msg: any): string | null {
-  if (!msg.translations) return null;
-  this.ensureToggleState(msg);
-  const st = this.messageToggleMap.get(msg.msgId)!;
-  const all = this.getAllTranslationsArray(msg);
-  const found = all.find(x => x.code === st.activeCode);
-  return found ? found.label : (st.activeCode === 'original' ? 'English (Original)' : null);
-}
-
-getActiveTranslationShortCode(msg: any) {
-  this.ensureToggleState(msg);
-  const st = this.messageToggleMap.get(msg.msgId)!;
-  return st.activeCode;
-}
-
-isTranslationLabelled(msg: any) {
-  this.ensureToggleState(msg);
-  const st = this.messageToggleMap.get(msg.msgId)!;
-  return st.activeCode !== 'original';
-}
-
-getDisplayedText(msg: any) {
-  this.ensureToggleState(msg);
-  const st = this.messageToggleMap.get(msg.msgId)!;
-  if (!msg.translations) return msg.text || '';
-  const all = this.getAllTranslationsArray(msg);
-  const found = all.find(x => x.code === st.activeCode);
-  if (found) return found.text;
-  if (st.activeCode === 'original' && msg.translations.original) return msg.translations.original.text;
-  return msg.text || '';
-}
-
-cycleTranslation(msg: any) {
-  if (!msg.translations) return;
-  this.ensureToggleState(msg);
-  const st = this.messageToggleMap.get(msg.msgId)!;
-  const arr = this.getAllTranslationsArray(msg);
-  const codes = arr.map(a => a.code);
-  if (msg.translations.original && !codes.includes(msg.translations.original.code || 'original')) {
-    codes.push(msg.translations.original.code || 'original');
-  }
-  const idx = codes.indexOf(st.activeCode);
-  const next = (idx === -1 || idx === codes.length - 1) ? codes[0] : codes[idx + 1];
-  st.activeCode = next;
-  this.messageToggleMap.set(msg.msgId, st);
-}
-
-// Removed: setActiveTranslation, toggleShowAllTranslations, isShowingAllTranslations, copyToClipboard
-// These are no longer needed with the simplified bubble
-
-/**
- * ✅ NEW: Handle language selection from dropdown
- */
-async onSelectTranslateLanguage(event: any) {
-  const selectedLang = event.detail.value;
-  if (!selectedLang) return;
-
-  const text = this.messageText?.trim();
-  if (!text) {
-    this.showToast('Type something to translate', 'warning');
-    return;
   }
 
-  const allowed = await this.ensureTranslationConsent();
-  if (!allowed) return;
+  messageToggleMap: Map<string, { activeCode: string }> = new Map();
 
-  this.isTranslatingCustom = true;
+  getAllTranslationsArray(
+    msg: any
+  ): { code: string; label: string; text: string }[] {
+    if (!msg?.translations) return [];
+    const arr: { code: string; label: string; text: string }[] = [];
 
-  const targetApiLang = this.apiLanguageCode(selectedLang.code);
-  
-  await this.fetchCustomTranslation('translateCustom', text, selectedLang.code, selectedLang.label, targetApiLang);
-}
+    // Original language (auto-detected, not always English)
+    if (msg.translations.original) {
+      arr.push({
+        code: msg.translations.original.code || 'unknown',
+        label: msg.translations.original.label || 'Original',
+        text: msg.translations.original.text || '',
+      });
+    }
 
-/**
- * ✅ UPDATED: Fetch custom language translation + receiver language (parallel)
- */
-async fetchCustomTranslation(
-  mode: 'translateCustom',
-  originalText: string,
-  targetCode: string,
-  targetLabel: string,
-  targetApiLang: string
-) {
-  const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
-  
-  const promises: Promise<any>[] = [];
+    // Other custom language translation
+    if (msg.translations.otherLanguage) {
+      arr.push({
+        code: msg.translations.otherLanguage.code,
+        label: msg.translations.otherLanguage.label,
+        text: msg.translations.otherLanguage.text || '',
+      });
+    }
 
-  // ✅ Fetch custom language translation
-  const customParams = new HttpParams()
-    .set('text', originalText)
-    .set('to', targetApiLang);
-  
-  promises.push(
-    this.http.get(this.translationApiBase, { params: customParams, responseType: 'json' }).toPromise()
-  );
+    // Receiver's language translation
+    if (msg.translations.receiverLanguage) {
+      arr.push({
+        code: msg.translations.receiverLanguage.code,
+        label: msg.translations.receiverLanguage.label,
+        text: msg.translations.receiverLanguage.text || '',
+      });
+    }
 
-  // ✅ Fetch receiver language translation (if different from custom selected)
-  if (recvApiLang !== targetApiLang) {
-    const recvParams = new HttpParams()
-      .set('text', originalText)
-      .set('to', recvApiLang);
-    
-    promises.push(
-      this.http.get(this.translationApiBase, { params: recvParams, responseType: 'json' }).toPromise()
+    // Deduplicate by code
+    const seen = new Set<string>();
+    return arr.filter((item) => {
+      if (!item.code) return false;
+      if (seen.has(item.code)) return false;
+      seen.add(item.code);
+      return true;
+    });
+  }
+
+  /**
+   * Check if message has multiple translations (more than just original)
+   */
+  hasMultipleTranslations(msg: any): boolean {
+    // console.log("this hasMultipleTranslations is called");
+    if (!msg?.translations) return false;
+    const arr = this.getAllTranslationsArray(msg);
+    // console.log("hasMultipleTranslations", arr)
+    return arr.length > 1;
+  }
+
+  ensureToggleState(msg: any) {
+    if (!this.messageToggleMap.has(msg.msgId)) {
+      let active = 'original';
+      if (msg.translations) {
+        const all = this.getAllTranslationsArray(msg);
+        const matched = all.find(
+          (t) => t.text && (msg.text || '').trim() === t.text.trim()
+        );
+        if (matched) active = matched.code;
+        else if (msg.translations.otherLanguage)
+          active = msg.translations.otherLanguage.code;
+        else if (msg.translations.receiverLanguage)
+          active = msg.translations.receiverLanguage.code;
+        else active = msg.translations.original?.code || 'original';
+      }
+      this.messageToggleMap.set(msg.msgId, { activeCode: active });
+    }
+  }
+
+  getActiveTranslationLabel(msg: any): string | null {
+    if (!msg.translations) return null;
+    this.ensureToggleState(msg);
+    const st = this.messageToggleMap.get(msg.msgId)!;
+    const all = this.getAllTranslationsArray(msg);
+    const found = all.find((x) => x.code === st.activeCode);
+    return found
+      ? found.label
+      : st.activeCode === 'original'
+      ? 'English (Original)'
+      : null;
+  }
+
+  getActiveTranslationShortCode(msg: any) {
+    this.ensureToggleState(msg);
+    const st = this.messageToggleMap.get(msg.msgId)!;
+    return st.activeCode;
+  }
+
+  isTranslationLabelled(msg: any) {
+    this.ensureToggleState(msg);
+    const st = this.messageToggleMap.get(msg.msgId)!;
+    return st.activeCode !== 'original';
+  }
+
+  getDisplayedText(msg: any) {
+    this.ensureToggleState(msg);
+    const st = this.messageToggleMap.get(msg.msgId)!;
+    if (!msg.translations) return msg.text || '';
+    const all = this.getAllTranslationsArray(msg);
+    const found = all.find((x) => x.code === st.activeCode);
+    if (found) return found.text;
+    if (st.activeCode === 'original' && msg.translations.original)
+      return msg.translations.original.text;
+    return msg.text || '';
+  }
+
+  cycleTranslation(msg: any) {
+    if (!msg.translations) return;
+    this.ensureToggleState(msg);
+    const st = this.messageToggleMap.get(msg.msgId)!;
+    const arr = this.getAllTranslationsArray(msg);
+    const codes = arr.map((a) => a.code);
+    if (
+      msg.translations.original &&
+      !codes.includes(msg.translations.original.code || 'original')
+    ) {
+      codes.push(msg.translations.original.code || 'original');
+    }
+    const idx = codes.indexOf(st.activeCode);
+    const next =
+      idx === -1 || idx === codes.length - 1 ? codes[0] : codes[idx + 1];
+    st.activeCode = next;
+    this.messageToggleMap.set(msg.msgId, st);
+  }
+
+  // Removed: setActiveTranslation, toggleShowAllTranslations, isShowingAllTranslations, copyToClipboard
+  // These are no longer needed with the simplified bubble
+
+  /**
+   * ✅ NEW: Handle language selection from dropdown
+   */
+  async onSelectTranslateLanguage(event: any) {
+    const selectedLang = event.detail.value;
+    if (!selectedLang) return;
+
+    const text = this.messageText?.trim();
+    if (!text) {
+      this.showToast('Type something to translate', 'warning');
+      return;
+    }
+
+    const allowed = await this.ensureTranslationConsent();
+    if (!allowed) return;
+
+    this.isTranslatingCustom = true;
+
+    const targetApiLang = this.apiLanguageCode(selectedLang.code);
+
+    await this.fetchCustomTranslation(
+      'translateCustom',
+      text,
+      selectedLang.code,
+      selectedLang.label,
+      targetApiLang
     );
   }
 
-  try {
-    const results = await Promise.all(promises);
-    
-    const customResponse = results[0];
-    const receiverResponse = results[1]; // undefined if same language
+  /**
+   * ✅ UPDATED: Fetch custom language translation + receiver language (parallel)
+   */
+  async fetchCustomTranslation(
+    mode: 'translateCustom',
+    originalText: string,
+    targetCode: string,
+    targetLabel: string,
+    targetApiLang: string
+  ) {
+    const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
 
-    if (customResponse?.success && customResponse.translatedText) {
-      const detectedLang = customResponse.detectedSource || 'unknown';
-      const detectedLabel = this.languageName(this.normalizeLocaleCode(detectedLang)) || detectedLang;
-      
-      let receiverTranslation = null;
-      if (receiverResponse?.success && receiverResponse.translatedText) {
-        receiverTranslation = receiverResponse.translatedText;
-      }
+    const promises: Promise<any>[] = [];
 
-      this.showCustomTranslationCard(
-        mode, 
-        originalText, 
-        targetCode, 
-        targetLabel, 
-        customResponse.translatedText,
-        detectedLang,
-        detectedLabel,
-        receiverTranslation
+    // ✅ Fetch custom language translation
+    const customParams = new HttpParams()
+      .set('text', originalText)
+      .set('to', targetApiLang);
+
+    promises.push(
+      this.http
+        .get(this.translationApiBase, {
+          params: customParams,
+          responseType: 'json',
+        })
+        .toPromise()
+    );
+
+    // ✅ Fetch receiver language translation (if different from custom selected)
+    if (recvApiLang !== targetApiLang) {
+      const recvParams = new HttpParams()
+        .set('text', originalText)
+        .set('to', recvApiLang);
+
+      promises.push(
+        this.http
+          .get(this.translationApiBase, {
+            params: recvParams,
+            responseType: 'json',
+          })
+          .toPromise()
       );
-    } else {
-      this.showToast('Translation failed', 'warning');
     }
-    
-    this.isTranslatingCustom = false;
-  } catch (err) {
-    console.error('Translation error', err);
-    this.showToast('Translation failed', 'danger');
-    this.isTranslatingCustom = false;
-  }
-}
 
-/**
- * ✅ UPDATED: Show custom translation card with detected source + receiver language
- */
-showCustomTranslationCard(
-  mode: 'translateCustom',
-  originalText: string,
-  targetCode: string,
-  targetLabel: string,
-  translation: string,
-  detectedSourceCode?: string,
-  detectedSourceLabel?: string,
-  receiverTranslation?: string | null
-) {
-  const items: TranslationItem[] = [];
+    try {
+      const results = await Promise.all(promises);
 
-  // Add detected source language (original)
-  if (detectedSourceCode) {
-    items.push({
-      code: detectedSourceCode,
-      label: detectedSourceLabel || 'Original',
-      text: originalText
-    });
-  }
+      const customResponse = results[0];
+      const receiverResponse = results[1]; // undefined if same language
 
-  // Add custom selected language translation
-  items.push({
-    code: targetCode,
-    label: targetLabel,
-    text: translation
-  });
+      if (customResponse?.success && customResponse.translatedText) {
+        const detectedLang = customResponse.detectedSource || 'unknown';
+        const detectedLabel =
+          this.languageName(this.normalizeLocaleCode(detectedLang)) ||
+          detectedLang;
 
-  // ✅ Add receiver language translation (if available and different)
-  if (receiverTranslation && targetCode !== this.receiverLangCode) {
-    items.push({
-      code: this.receiverLangCode,
-      label: this.languageName(this.receiverLangCode) + ' (Receiver)',
-      text: receiverTranslation
-    });
-  }
+        let receiverTranslation = null;
+        if (receiverResponse?.success && receiverResponse.translatedText) {
+          receiverTranslation = receiverResponse.translatedText;
+        }
 
-  this.translationCard = {
-    visible: true,
-    mode,
-    items,
-    createdAt: new Date()
-  };
-
-  this.showToast('Translation ready', 'success');
-  try { this.cdr.detectChanges(); } catch { }
-}
-
-/**
- * UPDATED: Translate to Receiver
- */
-async translateTo(target: 'receiver') {
-  const text = this.messageText?.trim();
-  if (!text) {
-    this.showToast('Type something to translate', 'warning');
-    return;
-  }
-
-  const allowed = await this.ensureTranslationConsent();
-  if (!allowed) return;
-
-  this.isTranslatingToReceiver = true;
-
-  const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
-  
-  await this.fetchReceiverTranslationOnly('translateToReceiver', text, recvApiLang);
-}
-
-/**
- * Fetch ONLY receiver translation (with auto-detect)
- */
-async fetchReceiverTranslationOnly(
-  mode: 'translateToReceiver',
-  originalText: string,
-  recvApiLang: string
-) {
-  // ✅ Auto-detect source language
-  const params = new HttpParams()
-    .set('text', originalText)
-    .set('to', recvApiLang);
-
-  this.http.get(this.translationApiBase, { params, responseType: 'json' }).subscribe({
-    next: (response: any) => {
-      if (response.success && response.translatedText) {
-        const detectedLang = response.detectedSource || 'unknown';
-        const detectedLabel = this.languageName(this.normalizeLocaleCode(detectedLang)) || detectedLang;
-        
-        this.showReceiverOnlyCard(
-          mode, 
-          originalText, 
-          response.translatedText,
+        this.showCustomTranslationCard(
+          mode,
+          originalText,
+          targetCode,
+          targetLabel,
+          customResponse.translatedText,
           detectedLang,
-          detectedLabel
+          detectedLabel,
+          receiverTranslation
         );
       } else {
         this.showToast('Translation failed', 'warning');
       }
-      
-      this.isTranslatingToReceiver = false;
-    },
-    error: (err) => {
+
+      this.isTranslatingCustom = false;
+    } catch (err) {
       console.error('Translation error', err);
       this.showToast('Translation failed', 'danger');
-      this.isTranslatingToReceiver = false;
+      this.isTranslatingCustom = false;
     }
-  });
-}
+  }
 
-/**
- * Show card with ONLY receiver translation (with detected source)
- */
-showReceiverOnlyCard(
-  mode: 'translateToReceiver',
-  originalText: string,
-  receiverTranslation: string,
-  detectedSourceCode?: string,
-  detectedSourceLabel?: string
-) {
-  const items: TranslationItem[] = [];
 
-  // Add detected source language (original)
-  if (detectedSourceCode) {
+  // ========================================
+  // 🎨 SHOW CUSTOM TRANSLATION CARD
+  // ========================================
+
+  showCustomTranslationCard(
+    mode: 'translateCustom',
+    originalText: string,
+    targetCode: string,
+    targetLabel: string,
+    translation: string,
+    detectedSourceCode?: string,
+    detectedSourceLabel?: string,
+    receiverTranslation?: string | null
+  ) {
+    const items: TranslationItem[] = [];
+
+    // [0] Add detected source language (original)
+    if (detectedSourceCode) {
+      items.push({
+        code: detectedSourceCode,
+        label: detectedSourceLabel || 'Original',
+        text: originalText,
+      });
+    }
+
+    // [1] Add custom selected language translation
     items.push({
-      code: detectedSourceCode,
-      label: detectedSourceLabel || 'Original',
-      text: originalText
+      code: targetCode,
+      label: targetLabel,
+      text: translation,
     });
-  }
 
-  // Add Receiver Language
-  items.push({
-    code: this.receiverLangCode,
-    label: this.languageName(this.receiverLangCode) + ' (Receiver)',
-    text: receiverTranslation
-  });
-
-  this.translationCard = {
-    visible: true,
-    mode,
-    items,
-    createdAt: new Date()
-  };
-
-  this.showToast('Translation ready', 'success');
-  try { this.cdr.detectChanges(); } catch { }
-}
-
-/**
- * Send Original with auto-translation (with auto-detect)
- */
-async sendOriginalWithTranslation() {
-  const text = this.messageText?.trim();
-  if (!text) {
-    this.showToast('Type something to send', 'warning');
-    return;
-  }
-
-  const allowed = await this.ensureTranslationConsent();
-  if (!allowed) return;
-
-  this.isTranslatingOriginal = true;
-
-  const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
-
-  // ✅ Auto-detect source language
-  const params = new HttpParams()
-    .set('text', text)
-    .set('to', recvApiLang);
-
-  this.http.get(this.translationApiBase, { params, responseType: 'json' }).subscribe({
-    next: (response: any) => {
-      if (response.success && response.translatedText) {
-        const detectedLang = response.detectedSource || 'unknown';
-        const detectedLabel = this.languageName(this.normalizeLocaleCode(detectedLang)) || detectedLang;
-
-        const items: TranslationItem[] = [
-          {
-            code: detectedLang,
-            label: detectedLabel + ' (Original)',
-            text: text
-          },
-          {
-            code: this.receiverLangCode,
-            label: this.languageName(this.receiverLangCode) + ' (Receiver will see)',
-            text: response.translatedText
-          }
-        ];
-
-        this.translationCard = {
-          visible: true,
-          mode: 'sendOriginal',
-          items,
-          createdAt: new Date()
-        };
-        
-        this.showToast('Preview ready', 'success');
-      } else {
-        this.showToast('Translation failed', 'warning');
-      }
-      
-      this.isTranslatingOriginal = false;
-    },
-    error: (err) => {
-      console.error('Translation error', err);
-      this.showToast('Translation failed', 'danger');
-      this.isTranslatingOriginal = false;
+    // [2] Add receiver language translation (if available and different from custom)
+    if (receiverTranslation && targetCode !== this.receiverLangCode) {
+      items.push({
+        code: this.receiverLangCode,
+        label: this.languageName(this.receiverLangCode) + ' (Receiver)',
+        text: receiverTranslation,
+      });
     }
-  });
-}
 
-/**
- * UPDATED: Send message from translation card (handles multiple translations)
- */
-async sendFromTranslationCard() {
-  if (!this.translationCard) return;
-
-  const mode = this.translationCard.mode;
-  const items = this.translationCard.items || [];
-  const originalText = this.messageText?.trim() || '';
-  const now = Date.now();
-
-  // Find items by matching codes
-  const originalItem = items.find(item => 
-    item.label.includes('Original') || 
-    items.indexOf(item) === 0
-  );
-  
-  const customItem = mode === 'translateCustom' 
-    ? items.find(item => !item.label.includes('Original') && !item.label.includes('Receiver'))
-    : null;
-    
-  const receiverItem = items.find(item => 
-    item.label.includes('Receiver') || 
-    item.code === this.receiverLangCode
-  );
-
-  const translationsPayload: IMessage['translations'] = {
-    original: {
-      code: originalItem?.code || 'unknown',
-      label: originalItem?.label || 'Original',
-      text: originalItem?.text || originalText
-    }
-  };
-
-  let visibleTextForSender: string = originalText;
-
-  if (mode === 'translateCustom') {
-    // Custom language translation - sender sees custom translation
-    if (customItem) {
-      translationsPayload.otherLanguage = {
-        code: customItem.code,
-        label: customItem.label,
-        text: customItem.text
-      };
-      visibleTextForSender = customItem.text;
-    }
-    
-    // Also include receiver translation if available
-    if (receiverItem) {
-      translationsPayload.receiverLanguage = {
-        code: receiverItem.code,
-        label: receiverItem.label,
-        text: receiverItem.text
-      };
-    }
-    
-  } else if (mode === 'translateToReceiver') {
-    // Receiver translation - sender sees receiver translation
-    if (receiverItem) {
-      translationsPayload.receiverLanguage = {
-        code: receiverItem.code,
-        label: receiverItem.label,
-        text: receiverItem.text
-      };
-      visibleTextForSender = receiverItem.text;
-    }
-    
-  } else if (mode === 'sendOriginal') {
-    // Original with receiver translation - sender sees original
-    visibleTextForSender = originalText;
-    
-    if (receiverItem) {
-      translationsPayload.receiverLanguage = {
-        code: receiverItem.code,
-        label: receiverItem.label,
-        text: receiverItem.text
-      };
-    }
-  }
-
-  const localMessage: Partial<IMessage & { attachment?: any }> = {
-    sender: this.senderId,
-    text: visibleTextForSender,
-    translations: translationsPayload,
-    timestamp: now,
-    msgId: uuidv4(),
-    replyToMsgId: this.replyTo?.message.msgId || '',
-    isEdit: false,
-    isPinned: false,
-    type: 'text',
-    reactions: []
-  };
-
-  await this.chatService.sendMessage(localMessage);
-
-  this.messageText = '';
-  this.translationCard.visible = false;
-  this.translationCard = null;
-  this.showSendButton = false;
-  this.replyToMessage = null;
-  
-  this.showToast('Message sent', 'success');
-  
-  try { 
-    this.stopTypingSignal();
-    this.scrollToBottom();
-  } catch {}
-}
-
-async sendDirectMessage(senderText: string, receiverText: string) {
-  const now = Date.now();
-  
-  const translationsPayload: IMessage['translations'] = {
-    original: {
-      code: 'en',
-      label: 'English (Original)',
-      text: this.messageText?.trim() || ''
-    }
-  };
-
-  if (receiverText !== this.messageText) {
-    translationsPayload.receiverLanguage = {
-      code: this.receiverLangCode,
-      label: this.languageName(this.receiverLangCode),
-      text: receiverText
+    this.translationCard = {
+      visible: true,
+      mode,
+      items,
+      createdAt: new Date(),
     };
+
+    this.showToast('Translation ready', 'success');
+    try {
+      this.cdr.detectChanges();
+    } catch {}
   }
 
-  const localMessage: Partial<IMessage & { attachment?: any }> = {
-    sender: this.senderId,
-    text: senderText,
-    translations: translationsPayload,
-    timestamp: now,
-    msgId: uuidv4(),
-    replyToMsgId: this.replyTo?.message.msgId || '',
-    isEdit: false,
-    isPinned: false,
-    type: 'text',
-    reactions: []
-  };
+  /**
+   * UPDATED: Translate to Receiver
+   */
+  async translateTo(target: 'receiver') {
+    const text = this.messageText?.trim();
+    if (!text) {
+      this.showToast('Type something to translate', 'warning');
+      return;
+    }
 
-  await this.chatService.sendMessage(localMessage);
-  
-  this.messageText = '';
-  this.showSendButton = false;
-  this.showToast('Message sent', 'success');
-}
+    const allowed = await this.ensureTranslationConsent();
+    if (!allowed) return;
 
-async showToast(
-  message: string, 
-  color: string = 'medium', 
-  duration: number = 2000,
-  position: 'top' | 'middle' | 'bottom' = 'bottom'
-) {
-  const toast = await this.toastController.create({
-    message: message,
-    duration: duration,
-    color: color,
-    position: position,
-    buttons: [
+    this.isTranslatingToReceiver = true;
+
+    const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
+
+    await this.fetchReceiverTranslationOnly(
+      'translateToReceiver',
+      text,
+      recvApiLang
+    );
+  }
+
+  /**
+   * Fetch ONLY receiver translation (with auto-detect)
+   */
+  async fetchReceiverTranslationOnly(
+    mode: 'translateToReceiver',
+    originalText: string,
+    recvApiLang: string
+  ) {
+    // ✅ Auto-detect source language
+    const params = new HttpParams()
+      .set('text', originalText)
+      .set('to', recvApiLang);
+
+    this.http
+      .get(this.translationApiBase, { params, responseType: 'json' })
+      .subscribe({
+        next: (response: any) => {
+          if (response.success && response.translatedText) {
+            const detectedLang = response.detectedSource || 'unknown';
+            const detectedLabel =
+              this.languageName(this.normalizeLocaleCode(detectedLang)) ||
+              detectedLang;
+
+            this.showReceiverOnlyCard(
+              mode,
+              originalText,
+              response.translatedText,
+              detectedLang,
+              detectedLabel
+            );
+          } else {
+            this.showToast('Translation failed', 'warning');
+          }
+
+          this.isTranslatingToReceiver = false;
+        },
+        error: (err) => {
+          console.error('Translation error', err);
+          this.showToast('Translation failed', 'danger');
+          this.isTranslatingToReceiver = false;
+        },
+      });
+  }
+
+  // ========================================
+  // 🎨 SHOW RECEIVER ONLY CARD
+  // ========================================
+
+  showReceiverOnlyCard(
+    mode: 'translateToReceiver',
+    originalText: string,
+    receiverTranslation: string,
+    detectedSourceCode?: string,
+    detectedSourceLabel?: string
+  ) {
+    const items: TranslationItem[] = [];
+
+    // [0] Add detected source language (original)
+    if (detectedSourceCode) {
+      items.push({
+        code: detectedSourceCode,
+        label: detectedSourceLabel || 'Original',
+        text: originalText,
+      });
+    }
+
+    // [1] Add Receiver Language
+    items.push({
+      code: this.receiverLangCode,
+      label: this.languageName(this.receiverLangCode) + ' (Receiver)',
+      text: receiverTranslation,
+    });
+
+    this.translationCard = {
+      visible: true,
+      mode,
+      items,
+      createdAt: new Date(),
+    };
+
+    this.showToast('Translation ready', 'success');
+    try {
+      this.cdr.detectChanges();
+    } catch {}
+  }
+
+  // ========================================
+  // 🎨 SHOW SEND ORIGINAL CARD
+  // ========================================
+
+  showSendOriginalCard(
+    originalText: string,
+    receiverTranslation: string,
+    detectedSourceCode: string,
+    detectedSourceLabel: string
+  ) {
+    const items: TranslationItem[] = [
+      // [0] Original
       {
-        text: 'Dismiss',
-        role: 'cancel'
-      }
-    ]
-  });
-
-  await toast.present();
-}
-
-async showToastSimple(
-  message: string, 
-  color: string = 'medium', 
-  duration: number = 1500
-) {
-  const toast = await this.toastController.create({
-    message: message,
-    duration: duration,
-    color: color,
-    position: 'bottom'
-  });
-
-  await toast.present();
-}
-
-async showToastWithIcon(
-  message: string, 
-  color: string = 'success', 
-  icon: string = 'checkmark-circle'
-) {
-  const toast = await this.toastController.create({
-    message: message,
-    duration: 2000,
-    color: color,
-    position: 'bottom',
-    icon: icon,
-    buttons: [
+        code: detectedSourceCode,
+        label: detectedSourceLabel + ' (Original)',
+        text: originalText,
+      },
+      // [1] Receiver will see
       {
-        text: 'OK',
-        role: 'cancel'
+        code: this.receiverLangCode,
+        label:
+          this.languageName(this.receiverLangCode) + ' (Receiver will see)',
+        text: receiverTranslation,
+      },
+    ];
+
+    this.translationCard = {
+      visible: true,
+      mode: 'sendOriginal',
+      items,
+      createdAt: new Date(),
+    };
+
+    this.showToast('Preview ready', 'success');
+    try {
+      this.cdr.detectChanges();
+    } catch {}
+  }
+
+  // ========================================
+  // 🔧 HELPER: CLOSE TRANSLATION CARD
+  // ========================================
+
+  // closeTranslationCard() {
+  //   if (this.translationCard) {
+  //     this.translationCard.visible = false;
+  //     this.translationCard = null;
+  //   }
+  // }
+
+  /**
+   * Send Original with auto-translation (with auto-detect)
+   */
+  async sendOriginalWithTranslation() {
+    const text = this.messageText?.trim();
+    if (!text) {
+      this.showToast('Type something to send', 'warning');
+      return;
+    }
+
+    const allowed = await this.ensureTranslationConsent();
+    if (!allowed) return;
+
+    this.isTranslatingOriginal = true;
+
+    const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
+
+    // ✅ Auto-detect source language
+    const params = new HttpParams().set('text', text).set('to', recvApiLang);
+
+    this.http
+      .get(this.translationApiBase, { params, responseType: 'json' })
+      .subscribe({
+        next: (response: any) => {
+          if (response.success && response.translatedText) {
+            const detectedLang = response.detectedSource || 'unknown';
+            const detectedLabel =
+              this.languageName(this.normalizeLocaleCode(detectedLang)) ||
+              detectedLang;
+
+            const items: TranslationItem[] = [
+              {
+                code: detectedLang,
+                label: detectedLabel + ' (Original)',
+                text: text,
+              },
+              {
+                code: this.receiverLangCode,
+                label:
+                  this.languageName(this.receiverLangCode) +
+                  ' (Receiver will see)',
+                text: response.translatedText,
+              },
+            ];
+
+            this.translationCard = {
+              visible: true,
+              mode: 'sendOriginal',
+              items,
+              createdAt: new Date(),
+            };
+
+            this.showToast('Preview ready', 'success');
+          } else {
+            this.showToast('Translation failed', 'warning');
+          }
+
+          this.isTranslatingOriginal = false;
+        },
+        error: (err) => {
+          console.error('Translation error', err);
+          this.showToast('Translation failed', 'danger');
+          this.isTranslatingOriginal = false;
+        },
+      });
+  }
+
+
+  async sendFromTranslationCard() {
+    if (!this.translationCard) return;
+
+    console.log('📋 Translation Card:', this.translationCard);
+
+    const mode = this.translationCard.mode;
+    const items = this.translationCard.items || [];
+    const originalText = this.messageText?.trim() || '';
+    const now = Date.now();
+
+    // ✅ FIXED: Identify items by array position (reliable & predictable)
+    // Array structure based on mode:
+    // - translateCustom:    [0]=Original, [1]=Custom, [2]=Receiver (if different)
+    // - translateToReceiver: [0]=Original, [1]=Receiver
+    // - sendOriginal:        [0]=Original, [1]=Receiver
+
+    const originalItem = items[0]; // First item is always the detected source
+
+    let customItem: TranslationItem | null = null;
+    let receiverItem: TranslationItem | null = null;
+
+    // Determine which items are custom vs receiver based on mode
+    if (mode === 'translateCustom') {
+      // Custom translation mode
+      if (items.length === 3) {
+        // We have: Original, Custom, Receiver
+        customItem = items[1];
+        receiverItem = items[2];
+      } else if (items.length === 2) {
+        // We have: Original, and one translation
+        // Check if it's the receiver language or custom
+        if (items[1]?.code === this.receiverLangCode) {
+          // User selected receiver language as custom = treat as receiver only
+          receiverItem = items[1];
+          customItem = null;
+        } else {
+          // User selected different language = custom without receiver
+          customItem = items[1];
+          receiverItem = null;
+        }
       }
-    ]
-  });
+    } else if (mode === 'translateToReceiver') {
+      // Direct to receiver mode: only receiver translation
+      receiverItem = items[1];
+    } else if (mode === 'sendOriginal') {
+      // Send original with receiver preview
+      receiverItem = items[1];
+    }
 
-  await toast.present();
-}
+    // ✅ Build translations payload
+    const translationsPayload: MessageTranslations = {
+      original: {
+        code: originalItem?.code || 'unknown',
+        label: originalItem?.label || 'Original',
+        text: originalItem?.text || originalText,
+      },
+    };
 
+    let visibleTextForSender: string = originalText;
 
+    // Set payload based on mode
+    if (mode === 'translateCustom') {
+      // Custom language translation - sender sees custom translation
+      if (customItem) {
+        translationsPayload.otherLanguage = {
+          code: customItem.code,
+          label: customItem.label,
+          text: customItem.text,
+        };
+        visibleTextForSender = customItem.text;
+      }
+
+      // Also include receiver translation if available
+      if (receiverItem) {
+        translationsPayload.receiverLanguage = {
+          code: receiverItem.code,
+          label: receiverItem.label,
+          text: receiverItem.text,
+        };
+      }
+    } else if (mode === 'translateToReceiver') {
+      // Receiver translation - sender sees receiver translation
+      if (receiverItem) {
+        translationsPayload.receiverLanguage = {
+          code: receiverItem.code,
+          label: receiverItem.label,
+          text: receiverItem.text,
+        };
+        visibleTextForSender = receiverItem.text;
+      }
+    } else if (mode === 'sendOriginal') {
+      // Original with receiver translation - sender sees original
+      visibleTextForSender = originalText;
+
+      if (receiverItem) {
+        translationsPayload.receiverLanguage = {
+          code: receiverItem.code,
+          label: receiverItem.label,
+          text: receiverItem.text,
+        };
+      }
+    }
+    const msgId = uuidv4();
+    const timestamp = Date.now();
+
+    // ✅ Build final message
+    const localMessage: Partial<IMessage & { attachment?: any }> = {
+      sender: this.senderId,
+      sender_name : this.sender_name,
+      text: visibleTextForSender,
+      receiver_id : this.receiverId,
+      translations: translationsPayload,
+      timestamp,
+      msgId,
+      replyToMsgId: this.replyTo?.message.msgId || '',
+      isEdit: false,
+      isPinned: false,
+      type: 'text',
+      reactions: [],
+    };
+
+    console.log('✅ Local Message:djkfsllllllllllllllllllllllll', localMessage);
+
+    // Send message
+    await this.chatService.sendMessage(localMessage);
+
+    // Reset state
+    this.messageText = '';
+    this.translationCard.visible = false;
+    this.translationCard = null;
+    this.showSendButton = false;
+    this.replyToMessage = null;
+
+    this.showToast('Message sent', 'success');
+
+    try {
+      this.stopTypingSignal();
+      this.scrollToBottom();
+    } catch {}
+  }
+
+  async sendDirectMessage(senderText: string, receiverText: string) {
+    const now = Date.now();
+
+    const translationsPayload: IMessage['translations'] = {
+      original: {
+        code: 'en',
+        label: 'English (Original)',
+        text: this.messageText?.trim() || '',
+      },
+    };
+
+    if (receiverText !== this.messageText) {
+      translationsPayload.receiverLanguage = {
+        code: this.receiverLangCode,
+        label: this.languageName(this.receiverLangCode),
+        text: receiverText,
+      };
+    }
+
+    const localMessage: Partial<IMessage & { attachment?: any }> = {
+      sender: this.senderId,
+      text: senderText,
+      translations: translationsPayload,
+      timestamp: now,
+      msgId: uuidv4(),
+      replyToMsgId: this.replyTo?.message.msgId || '',
+      isEdit: false,
+      isPinned: false,
+      type: 'text',
+      reactions: [],
+    };
+
+    await this.chatService.sendMessage(localMessage);
+
+    this.messageText = '';
+    this.showSendButton = false;
+    this.showToast('Message sent', 'success');
+  }
+
+  async showToast(
+    message: string,
+    color: string = 'medium',
+    duration: number = 2000,
+    position: 'top' | 'middle' | 'bottom' = 'bottom'
+  ) {
+    const toast = await this.toastController.create({
+      message: message,
+      duration: duration,
+      color: color,
+      position: position,
+      buttons: [
+        {
+          text: 'Dismiss',
+          role: 'cancel',
+        },
+      ],
+    });
+
+    await toast.present();
+  }
+
+  async showToastSimple(
+    message: string,
+    color: string = 'medium',
+    duration: number = 1500
+  ) {
+    const toast = await this.toastController.create({
+      message: message,
+      duration: duration,
+      color: color,
+      position: 'bottom',
+    });
+
+    await toast.present();
+  }
+
+  async showToastWithIcon(
+    message: string,
+    color: string = 'success',
+    icon: string = 'checkmark-circle'
+  ) {
+    const toast = await this.toastController.create({
+      message: message,
+      duration: 2000,
+      color: color,
+      position: 'bottom',
+      icon: icon,
+      buttons: [
+        {
+          text: 'OK',
+          role: 'cancel',
+        },
+      ],
+    });
+
+    await toast.present();
+  }
 }
