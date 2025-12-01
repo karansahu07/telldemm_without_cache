@@ -591,7 +591,7 @@ export class FirebaseChatService {
   }
 
   pushMsgToChat(msg: any) {
-    console.log('message attachment', msg.attachment);
+    console.log('message attachment this is from pushmsgtochat', msg);
     const existing = new Map(this._messages$.value);
     const currentMessages =
       existing.get(this.currentChat?.roomId as string) || [];
@@ -599,7 +599,7 @@ export class FirebaseChatService {
     if (messageIdSet.has(msg.msgId)) return;
     currentMessages?.push({
       ...msg,
-      attachment: { ...msg.attachment },
+      attachment: (msg.attachment ?{ ...msg.attachment, cdnUrl : msg.attachment.cdnUrl.replace(/[?#].*$/, "") }: null),
       isMe: msg.sender === this.senderId,
     });
     existing.set(
@@ -2200,13 +2200,14 @@ export class FirebaseChatService {
         return;
       }
 
-      const currentMessagesMap = new Map(this._messages$.value);
-      const existingMessages = currentMessagesMap.get(roomId) || [];
-      const mergedMessages = Array.from(
-        new Set([...existingMessages, ...newMessages])
-      );
-      currentMessagesMap.set(roomId, mergedMessages);
-      this._messages$.next(currentMessagesMap);
+      newMessages.forEach(this.pushMsgToChat);
+      // const currentMessagesMap = new Map(this._messages$.value);
+      // const existingMessages = currentMessagesMap.get(roomId) || [];
+      // const mergedMessages = Array.from(
+      //   new Set([...existingMessages, ...newMessages])
+      // );
+      // currentMessagesMap.set(roomId, mergedMessages);
+      // this._messages$.next(currentMessagesMap);
       const newOffsetMap = new Map(this._offsets$.value);
       newOffsetMap.set(roomId, currentOffset + newMessages.length);
       this._offsets$.next(newOffsetMap);

@@ -44,7 +44,7 @@
   box-sizing: border-box;
   cursor: move; // Drag cursor
   transition: box-shadow 0.2s ease-out; // Smooth shadow change
-
+l
   // Semi-transparent overlay outside the crop area (optional for better focus)
   &::before {
     content: '';
