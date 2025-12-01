@@ -1303,18 +1303,6 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     this.replyToMessage = null;
   }
 
-  // getRepliedMessage(
-  //   replyToMessageId: string
-  // ): (IMessage & { attachment?: IAttachment; fadeOut: boolean }) | null {
-  //   console.log("this all messages", this.allMessages)
-  //   const msg =
-  //     this.allMessages.find((msg) => {
-  //       return msg.msgId === replyToMessageId;
-  //     }) || null;
-  //     console.log({msg})
-  //   return msg;
-  // }
-
   getRepliedMessage(
     replyToMessageId: string
   ): (IMessage & { attachment?: IAttachment; fadeOut: boolean }) | null {
@@ -1338,7 +1326,6 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
 
     // console.log("Found message:", msg);
 
-    // ✅ Add fadeOut property before returning
     if (msg) {
       return {
         ...msg,
