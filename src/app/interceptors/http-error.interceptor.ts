@@ -12,22 +12,46 @@ import { ToastController } from '@ionic/angular';
 
 @Injectable()
 export class ServerErrorInterceptor implements HttpInterceptor {
-  constructor(private toastController: ToastController) {}
+
+  private isToastVisible = false;
+
+  constructor(private toastCtrl: ToastController) {}
+
+  private async showToast(message: string) {
+    if (this.isToastVisible) return;
+
+    this.isToastVisible = true;
+
+    const toast = await this.toastCtrl.create({
+      message,
+      duration: 2500,
+      color: 'danger',
+      position: 'bottom',
+    });
+
+    await toast.present();
+
+    toast.onDidDismiss().then(() => {
+      this.isToastVisible = false;
+    });
+  }
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     return next.handle(req).pipe(
       catchError((error: HttpErrorResponse) => {
-        // 👇 Check for server down (status 0 or network unreachable)
-        if (!navigator.onLine || error.status === 0) {
-          this.toastController.create({
-            message: ' Server is DOWN....unreachable, Please try later.',
-            duration: 3000,
-            color: 'danger',
-            position: 'bottom',
-          }).then(toast => toast.present());
+
+        // 🔴 NO INTERNET
+        if (!navigator.onLine) {
+          this.showToast('No internet connection. Please check your network.');
+          return throwError(() => error);
         }
 
-        // Always return the error
+        // 🔴 SERVER DOWN OR UNREACHABLE
+        if (error.status === 0) {
+          this.showToast('Server is unreachable. Please try again later.');
+          return throwError(() => error);
+        }
+
         return throwError(() => error);
       })
     );

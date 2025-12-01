@@ -1,5 +1,5 @@
 /* =========================
-   Tokenized Welcome / OTP Page
+   Complete Updated CSS File
    ========================= */
 
 ion-content {
@@ -24,25 +24,6 @@ ion-title {
   font-size: 20px;
   font-family: Montserrat-bold;
 }
-ion-content {
-  --background: var(--ion-background-color);
-}
-
-/* Page layout */
-// .Lorem-main { display: flex; flex-direction: column; height: 100%; }
-.Lorem {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-}
-
-.Lorem p {
-  text-align: center;
-  color: var(--ion-text-color);
-  font-size: 18px;
-  width: 94%;
-  font-family: "Montserrat-Medium";
-}
 
 /* Country select */
 .main-dropdown {
@@ -65,8 +46,7 @@ ion-content {
 /* underline (was translucent red) -> tinted primary */
 .underline-text {
   display: inline-block;
-  border-bottom: 2px solid
-    color-mix(in srgb, var(--ion-color-primary) 27%, transparent);
+  border-bottom: 2px solid #bc8c2c;
   padding-bottom: 0;
   width: 63%;
 }
@@ -95,8 +75,7 @@ ion-content {
 
 /* underlines for inputs */
 .underline-country {
-  border-bottom: 2px solid
-    color-mix(in srgb, var(--ion-color-primary) 27%, transparent);
+  border-bottom: 2px solid #bc8c2c;
   margin: 0;
 }
 
@@ -118,19 +97,18 @@ ion-content {
   width: 100%;
 }
 .phone-wrapper .underline-country {
-  border-bottom: 2px solid
-    color-mix(in srgb, var(--ion-color-primary) 27%, transparent);
+  border-bottom: 2px solid #bc8c2c;
   width: 100%;
 }
 
-/* remove spin buttons once */
+/* remove spin buttons */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-/* Validation text (was red) -> use danger token */
+/* Validation text */
 .required-line {
   color: var(--ion-color-danger);
   margin-top: 10px;
@@ -148,33 +126,21 @@ input[type="number"]::-webkit-outer-spin-button {
   margin-top: 70px;
 }
 
-/* Button: gradient derived from primary and a darker mix of primary */
 .agree-div button {
   height: 55px;
   width: 90%;
-  border-radius: 15px;
+  border-radius: 30px;
   font-family: Montserrat-bold;
   font-weight: bold;
   color: var(--ion-color-primary-contrast);
   padding: 10px 20px;
   border: none;
-  border-radius: 30px;
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s, opacity 0.3s;
-  background: linear-gradient(
-    175deg,
-    var(--ion-color-primary) 0%,
-    color-mix(in srgb, var(--ion-color-primary) 60%, var(--ion-color-dark) 40%)
-      50%
-  );
+  background: #bc8c2c !important;
 }
 .agree-div button:disabled {
-  background-color: color-mix(
-    in srgb,
-    var(--ion-color-medium) 25%,
-    transparent
-  );
   opacity: 0.6;
   cursor: not-allowed;
 }
@@ -207,7 +173,7 @@ input[type="number"]::-webkit-outer-spin-button {
   color: var(--ion-color-primary);
 }
 
-/* subtle divider (was light bluish) -> use primary tint */
+/* subtle divider */
 .border-line {
   border: 1px solid
     color-mix(in srgb, var(--ion-color-primary) 18%, var(--ion-border-color));
@@ -221,30 +187,6 @@ input[type="number"]::-webkit-outer-spin-button {
   margin-top: 8px;
 }
 
-// /* OTP inputs — tokenized borders/text */
-// .custom-otp-input input,
-// .custom-otp-input .otp-input input,
-// ion-input-otp input {
-//   width: 44px;
-//   height: 44px;
-//   background: transparent;
-//   outline: none;
-//   border: 1px solid var(--ion-border-color);
-//   color: var(--ion-text-color) !important;
-//   -webkit-text-fill-color: var(--ion-text-color) !important;
-//   font-size: 30px;
-//   text-align: center;
-//   border-radius: 5px;
-//   caret-color: var(--ion-text-color);
-//   box-sizing: border-box;
-// }
-
-// /* fallback for deep selectors */
-// .custom-otp-input ::ng-deep input {
-//   color: var(--ion-text-color) !important;
-//   -webkit-text-fill-color: var(--ion-text-color) !important;
-// }
-
 /* =========================
    Responsive OTP inputs
    ========================= */
@@ -255,23 +197,20 @@ input[type="number"]::-webkit-outer-spin-button {
 ion-input-otp {
   display: flex;
   justify-content: center;
-  gap: clamp(8px, 1.6vw, 14px); /* spacing between cells scales */
+  gap: clamp(8px, 1.6vw, 14px);
   align-items: center;
   width: 100%;
   box-sizing: border-box;
   padding: 6px 8px;
 }
 
-/* Individual input cells: scale with viewport but keep minimum touch target */
+/* Individual input cells */
 .custom-otp-input input,
 .custom-otp-input .otp-input input,
 ion-input-otp input,
 .custom-otp-input ::ng-deep input {
-  /* size scales: min 38px, preferred ~6vw, max 60px */
   width: clamp(38px, 6vw, 56px);
   height: clamp(38px, 6vw, 56px);
-
-  /* font scales accordingly */
   font-size: clamp(20px, 3.2vw, 30px);
   line-height: 1;
   text-align: center;
@@ -291,14 +230,12 @@ ion-input-otp input,
   -webkit-user-select: none;
 }
 
-/* Remove number input spinner UI (redundant but safe) */
 .custom-otp-input input[type="number"]::-webkit-inner-spin-button,
 .custom-otp-input input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-/* Focus state — clear accessible highlight */
 .custom-otp-input input:focus,
 .custom-otp-input ::ng-deep input:focus {
   border-color: color-mix(in srgb, var(--ion-color-primary) 65%, transparent);
@@ -307,14 +244,12 @@ ion-input-otp input,
   transform: translateY(-1px);
 }
 
-/* Filled state — subtle background to indicate entry */
 .custom-otp-input input.filled,
 .custom-otp-input ::ng-deep input.filled {
   background: color-mix(in srgb, var(--ion-color-primary) 6%, transparent);
   border-color: color-mix(in srgb, var(--ion-color-primary) 45%, transparent);
 }
 
-/* Error / invalid state (use when OTP invalid) */
 .custom-otp-input input.invalid,
 .custom-otp-input ::ng-deep input.invalid {
   border-color: var(--ion-color-danger);
@@ -323,47 +258,17 @@ ion-input-otp input,
   animation: wobble 220ms ease;
 }
 
-/* Disabled look */
 .custom-otp-input input:disabled,
 .custom-otp-input ::ng-deep input:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-/* Make sure each input remains visually separate on light/dark themes */
 .custom-otp-input input {
   backdrop-filter: blur(0.5px);
+  animation: otpAppear 220ms ease both;
 }
 
-/* Fine-tune for very small screens (phones) */
-@media (max-width: 420px) {
-  .custom-otp-input,
-  .custom-otp-input .otp-input,
-  ion-input-otp {
-    gap: 8px;
-    padding: 4px 6px;
-  }
-
-  .custom-otp-input input,
-  .custom-otp-input ::ng-deep input {
-    width: clamp(36px, 8vw, 46px);
-    height: clamp(36px, 8vw, 46px);
-    font-size: clamp(18px, 4.2vw, 24px);
-    border-radius: 6px;
-  }
-}
-
-/* Larger devices: reduce visual weight slightly */
-@media (min-width: 900px) {
-  .custom-otp-input input,
-  .custom-otp-input ::ng-deep input {
-    width: clamp(44px, 4.2vw, 56px);
-    height: clamp(44px, 4.2vw, 56px);
-    font-size: clamp(22px, 2.2vw, 30px);
-  }
-}
-
-/* subtle entrance animation for OTP modal inputs */
 @keyframes otpAppear {
   from {
     opacity: 0;
@@ -374,11 +279,7 @@ ion-input-otp input,
     transform: translateY(0) scale(1);
   }
 }
-.custom-otp-input input {
-  animation: otpAppear 220ms ease both;
-}
 
-/* small wobble for invalid feedback */
 @keyframes wobble {
   0% {
     transform: translateX(0);
@@ -397,10 +298,6 @@ ion-input-otp input,
   }
 }
 
-/* Accessibility notes (visual only) */
-/* - Ensure each <input> has aria-label or aria-labelledby and inputmode="numeric" on template side */
-/* - Use JS to toggle 'filled' class when a cell has a digit, and toggle 'invalid' on verification failure */
-
 /* Submit button inside OTP popup */
 .submit {
   width: 100%;
@@ -413,29 +310,23 @@ ion-input-otp input,
 .submit button {
   height: 45px;
   width: 76%;
-  border-radius: 15px;
+  border-radius: 30px;
   font-family: Montserrat-bold;
   font-weight: bold;
   color: var(--ion-color-primary-contrast);
   padding: 10px 20px;
   border: none;
-  border-radius: 30px;
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s, opacity 0.3s;
   background: var(--ion-color-primary);
 }
 .submit button:disabled {
-  // background-color: color-mix(
-  //   in srgb,
-  //   var(--ion-color-medium) 25%,
-  //   transparent
-  // );
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-/* Fullpage OTP overlay — tokenized backdrop */
+/* Fullpage OTP overlay */
 .otp-popup-wrapper {
   position: fixed;
   top: 0;
@@ -470,10 +361,10 @@ ion-input-otp input,
 .resend-section span {
   cursor: pointer;
   font-weight: 500;
-  color: var(--ion-color-primary)!important;
+  color: var(--ion-color-primary) !important;
 }
 
-/* Confirm popup (tokenized) */
+/* Confirm popup */
 .confirm-popup::part(backdrop) {
   backdrop-filter: blur(8px);
   background: color-mix(in srgb, var(--ion-text-color) 12%, transparent);
@@ -485,7 +376,6 @@ ion-input-otp input,
   position: relative;
 }
 
-/* Popup container */
 .popup-container {
   position: absolute;
   top: 50%;
@@ -565,36 +455,11 @@ ion-input-otp input,
   width: 100%;
 }
 .email-wrapper .underline-country {
-  border-bottom: 2px solid
-    color-mix(in srgb, var(--ion-color-primary) 27%, transparent);
+  border-bottom: 2px solid #bc8c2c;
   width: 100%;
 }
 
-/* Responsive tweaks */
-@media (max-width: 420px) {
-  .agree-div {
-    margin-top: 20px;
-  }
-  .count-code {
-    font-size: 14px;
-  }
-  .custom-otp-input input,
-  .custom-otp-input .otp-input input {
-    width: 38px;
-    height: 38px;
-    font-size: 24px;
-  }
-}
-
-.forbg {
-  --background: url("/assets/images/ion-background.jpeg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-// new
-
+/* Background */
 .forbg {
   --background: url(/assets/images/ion-background.jpeg);
   background-size: cover;
@@ -602,17 +467,51 @@ ion-input-otp input,
   background-repeat: no-repeat;
   position: relative;
 }
+
+.darkbg {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.63);
+  width: 100%;
+  height: 100%;
+  z-index: 9;
+  text-align: center;
+}
+
+.logoimg {
+  width: 80%;
+  top: 20px;
+  padding-top: 18px;
+}
+
+/* =========================
+   RESPONSIVE Lorem-main Block
+   ========================= */
+
 .Lorem-main {
   display: flex;
   flex-direction: column;
-  // height: 54%;
   background: white;
   position: absolute;
-  bottom: 0px;
+  bottom: 0;
+  left: 0;
+  right: 0;
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
   z-index: 99999999 !important;
-  padding-bottom: 60px;
+  
+  /* Dynamic height based on content with constraints */
+  min-height: 50vh;
+  max-height: 85vh;
+  height: auto;
+  
+  /* Flexible padding that scales */
+  padding: clamp(20px, 4vh, 40px) clamp(12px, 3vw, 24px) clamp(30px, 6vh, 60px);
+  
+  /* Enable scrolling if content exceeds max-height */
+  overflow-y: auto;
+  
+  /* Smooth transitions */
+  transition: height 0.3s ease;
 }
 
 .Lorem {
@@ -622,68 +521,246 @@ ion-input-otp input,
   flex-direction: column;
   align-items: center;
 }
+
 .Lorem h2 {
   color: var(--ion-text-color-head);
+  margin: 8px 0;
 }
+
 .Lorem p {
   text-align: center;
-  // color: #bc8c2c;
   font-size: 18px;
   width: 94%;
   font-family: "Montserrat-Medium";
 }
 
-.agree-div button {
-  height: 55px;
-  width: 90%;
-  border-radius: 15px;
-  font-family: Montserrat-bold;
-  font-weight: bold;
-  color: var(--ion-color-primary-contrast);
-  padding: 10px 20px;
-  border: none;
-  border-radius: 30px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s, opacity 0.3s;
-  /* background: linear-gradient(175deg, var(--ion-color-primary) 0%,
- color-mix(in srgb, var(--ion-color-primary) 60%, var(--ion-color-dark) 40%) 50%); */
-  background: #bc8c2c !important;
+/* =========================
+   RESPONSIVE BREAKPOINTS
+   ========================= */
+
+/* Small phones (320px - 480px) */
+@media (max-width: 480px) {
+  .Lorem-main {
+    min-height: 55vh;
+    max-height: 88vh;
+    padding: 16px 12px 40px;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+  }
+  
+  .Lorem h2 {
+    font-size: clamp(18px, 5vw, 22px);
+    margin: 8px 0;
+  }
+  
+  .Lorem p {
+    font-size: clamp(14px, 4vw, 16px);
+  }
+  
+  .agree-div {
+    margin-top: 20px;
+  }
+  
+  .count-code {
+    font-size: 14px;
+  }
+  
+  .custom-otp-input input,
+  .custom-otp-input .otp-input input {
+    width: 38px;
+    height: 38px;
+    font-size: 24px;
+  }
 }
-.phone-wrapper .underline-country {
-  border-bottom: 2px solid
-    color-mix(in srgb, var(--ion-color-primary) 27%, transparent);
+
+/* OTP inputs for small screens */
+@media (max-width: 420px) {
+  .custom-otp-input,
+  .custom-otp-input .otp-input,
+  ion-input-otp {
+    gap: 8px;
+    padding: 4px 6px;
+  }
+
+  .custom-otp-input input,
+  .custom-otp-input ::ng-deep input {
+    width: clamp(36px, 8vw, 46px);
+    height: clamp(36px, 8vw, 46px);
+    font-size: clamp(18px, 4.2vw, 24px);
+    border-radius: 6px;
+  }
+}
+
+/* Medium phones (481px - 767px) */
+@media (min-width: 481px) and (max-width: 767px) {
+  .Lorem-main {
+    min-height: 52vh;
+    max-height: 82vh;
+    padding: 24px 16px 50px;
+  }
+  
+  .Lorem h2 {
+    font-size: clamp(20px, 4.5vw, 24px);
+  }
+}
+
+/* Tablets portrait (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .Lorem-main {
+    min-height: 48vh;
+    max-height: 75vh;
+    padding: 32px 24px 55px;
+    max-width: 600px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+/* Larger devices: OTP inputs */
+@media (min-width: 900px) {
+  .custom-otp-input input,
+  .custom-otp-input ::ng-deep input {
+    width: clamp(44px, 4.2vw, 56px);
+    height: clamp(44px, 4.2vw, 56px);
+    font-size: clamp(22px, 2.2vw, 30px);
+  }
+}
+
+/* Tablets landscape & small desktops (1025px+) */
+@media (min-width: 1025px) {
+  .Lorem-main {
+    min-height: 45vh;
+    max-height: 70vh;
+    padding: 36px 32px 60px;
+    max-width: 500px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+/* Very small devices (iPhone SE, etc.) - Height based */
+@media (max-height: 667px) {
+  .Lorem-main {
+    min-height: 58vh;
+    max-height: 90vh;
+    padding: 14px 10px 35px;
+  }
+  
+  .agree-div {
+    margin-top: 15px;
+  }
+}
+
+/* Large screens in portrait */
+@media (min-width: 768px) and (orientation: portrait) {
+  .Lorem-main {
+    max-width: 500px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+/* Ensure content inside doesn't break */
+.Lorem-main > div {
   width: 100%;
-  border-bottom: 2px solid #bc8c2c;
+  max-width: 100%;
 }
-.underline-country {
-  border-bottom: 2px solid
-    color-mix(in srgb, var(--ion-color-primary) 27%, transparent);
-  margin: 0;
-  border-bottom: 2px solid #bc8c2c;
+
+/* Safe area insets for notched devices */
+@supports (padding: max(0px)) {
+  .Lorem-main {
+    padding-bottom: max(30px, env(safe-area-inset-bottom));
+  }
 }
-.underline-text {
-  display: inline-block;
-  border-bottom: 2px solid
-    color-mix(in srgb, var(--ion-color-primary) 27%, transparent);
-  padding-bottom: 0;
-  width: 63%;
-  border-bottom: 2px solid #bc8c2c;
+
+/* Small phones (320px - 480px) */
+@media (max-width: 480px) {
+  .Lorem-main {
+    min-height: 55vh;
+    max-height: 88vh;
+    padding: 16px 12px 40px;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+  }
+  
+  .Lorem h2 {
+    font-size: clamp(18px, 5vw, 22px);
+    margin: 8px 0;
+  }
+  
+  .Lorem p {
+    font-size: clamp(14px, 4vw, 16px);
+  }
 }
-.darkbg {
-  position: absolute;
-  background: rgba(0, 0, 0, 0.63);
-  /* top: 0; */
-  /* left: 0px; */
+
+/* Medium phones (481px - 767px) */
+@media (min-width: 481px) and (max-width: 767px) {
+  .Lorem-main {
+    min-height: 52vh;
+    max-height: 82vh;
+    padding: 24px 16px 50px;
+  }
+  
+  .Lorem h2 {
+    font-size: clamp(20px, 4.5vw, 24px);
+  }
+}
+
+/* Tablets portrait (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .Lorem-main {
+    min-height: 48vh;
+    max-height: 75vh;
+    padding: 32px 24px 55px;
+    max-width: 600px; /* Center on larger screens */
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+/* Tablets landscape & small desktops (1025px+) */
+@media (min-width: 1025px) {
+  .Lorem-main {
+    min-height: 45vh;
+    max-height: 70vh;
+    padding: 36px 32px 60px;
+    max-width: 500px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+/* Very small devices (iPhone SE, etc.) */
+@media (max-height: 667px) {
+  .Lorem-main {
+    min-height: 58vh;
+    max-height: 90vh;
+    padding: 14px 10px 35px;
+  }
+  
+  .agree-div {
+    margin-top: 15px;
+  }
+}
+
+/* Large screens in portrait */
+@media (min-width: 768px) and (orientation: portrait) {
+  .Lorem-main {
+    max-width: 500px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+/* Ensure content inside doesn't break */
+.Lorem-main > div {
   width: 100%;
-  height: 100%;
-  z-index: 9;
-  /* margin: 0 auto; */
-  text-align: center;
+  max-width: 100%;
 }
-.logoimg {
-  width: 80%;
-  /* position: absolute; */
-  top: 20px;
-  padding-top: 18px;
+
+/* Safe area insets for notched devices */
+@supports (padding: max(0px)) {
+  .Lorem-main {
+    padding-bottom: max(30px, env(safe-area-inset-bottom));
+  }
 }

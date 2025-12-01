@@ -1,9 +1,4 @@
-<!-- <div [ngClass]="{ 'blurred': showOtpPopup }" class="Lorem-main"> -->
-  <!-- <ion-header [translucent]="true" class="background" style="padding-top: 30px;">
-    <ion-toolbar>
-      <ion-title>Enter Your Mobile Number</ion-title>
-    </ion-toolbar>
-  </ion-header> -->
+
 
   <ion-content [fullscreen]="true" [ngClass]="{ 'blurred': showOtpPopup }" class="forbg">
     <div class="darkbg"><img src="/assets/icons/Tiara_logo.png" alt="" class="logoimg"></div>
@@ -12,7 +7,9 @@
 
         <div class="Lorem">
           <h2>Enter Your Mobile Number</h2>
-          <p>TellDemm will need to verify your account. What's my number?</p>
+          <!-- <p>TellDemm will need to verify your account. What's my number?</p> -->
+          <p>A quick verification code is on the way.</p>
+
         </div>
 
         <div class="main-dropdown">
@@ -45,7 +42,9 @@
 
       <div class="agree-div">
         <button [disabled]="!isPhoneValid() || isSendingOtp" (click)="onAgreeClick()">
-          <ng-container *ngIf="!isSendingOtp">Agree & Continue</ng-container>
+          <!-- <ng-container *ngIf="!isSendingOtp">Agree & Continue</ng-container> -->
+          <ng-container *ngIf="!isSendingOtp">Let’s Do It</ng-container>
+
           <ion-spinner *ngIf="isSendingOtp" name="crescent" color="light"></ion-spinner>
         </button>
       </div>
