@@ -40,11 +40,7 @@
       "description": "Versione, dettagli legali e tecnici."
     }
   },
-  "common": {
-    "ok": "OK",
-    "cancel": "Annulla",
-    "logout": "Disconnetti"
-  },
+ "common": { "ok": "OK", "cancel": "Annulla", "logout": "Disconnetti", "reset": "Reimposta" },
   "settingsPage": {
     "title": "DemmDesk (Impostazioni)",
     "account": {

@@ -40,11 +40,7 @@
       "description": "Phiên bản, thông tin pháp lý và kỹ thuật."
     }
   },
-  "common": {
-    "ok": "OK",
-    "cancel": "Hủy",
-    "logout": "Đăng xuất"
-  },
+  "common": { "ok": "OK", "cancel": "Hủy", "logout": "Đăng xuất", "reset": "Đặt lại" },
   "settingsPage": {
     "title": "DemmDesk (Cài đặt)",
     "account": {

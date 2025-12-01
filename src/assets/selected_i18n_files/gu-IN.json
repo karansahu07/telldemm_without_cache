@@ -40,11 +40,7 @@
       "description": "વરનીશન, કાનૂની અને ટેકનિકલ વિગતો."
     }
   },
-  "common": {
-    "ok": "બરાબર",
-    "cancel": "રદ કરો",
-    "logout": "લોગ આઉટ"
-  },
+  "common": { "ok": "ઓકે", "cancel": "રદ્દ કરો", "logout": "લૉગ આઉટ", "reset": "રીસેટ કરો" },
   "settingsPage": {
     "title": "DemmDesk (સેટિંગ્સ)",
     "account": {

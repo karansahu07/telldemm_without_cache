@@ -40,11 +40,7 @@
       "description": "వర్షన్, చట్టపరమైన మరియు సాంకేతిక వివరాలు."
     }
   },
-  "common": {
-    "ok": "సరే",
-    "cancel": "రద్దు చేయి",
-    "logout": "లాగ్ అవుట్"
-  },
+   "common": { "ok": "ఓకే", "cancel": "రద్దు", "logout": "లాగ్ అవుట్", "reset": "రీసెట్" },
   "settingsPage": {
     "title": "DemmDesk (సెట్టింగ్స్)",
     "account": {

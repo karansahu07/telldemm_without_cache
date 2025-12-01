@@ -40,11 +40,7 @@
       "description": "Версия, юридические и технические детали."
     }
   },
-  "common": {
-    "ok": "ОК",
-    "cancel": "Отмена",
-    "logout": "Выйти"
-  },
+  "common": { "ok": "ОК", "cancel": "Отмена", "logout": "Выйти", "reset": "Сбросить" },
   "settingsPage": {
     "title": "DemmDesk (Настройки)",
     "account": {

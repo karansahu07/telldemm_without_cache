@@ -40,11 +40,7 @@
       "description": "الإصدار، التفاصيل القانونية والتقنية."
     }
   },
-  "common": {
-    "ok": "حسنًا",
-    "cancel": "إلغاء",
-    "logout": "تسجيل الخروج"
-  },
+  "common": { "ok": "حسنًا", "cancel": "إلغاء", "logout": "تسجيل الخروج", "reset": "إعادة الضبط" },
   "settingsPage": {
     "title": "DemmDesk (إعدادات)",
     "account": {

@@ -40,11 +40,7 @@
       "description": "Version, rechtliche und technische Details."
     }
   },
-  "common": {
-    "ok": "OK",
-    "cancel": "Abbrechen",
-    "logout": "Abmelden"
-  },
+  "common": { "ok": "OK", "cancel": "Abbrechen", "logout": "Abmelden", "reset": "Zurücksetzen" },
   "settingsPage": {
     "title": "DemmDesk (Einstellungen)",
     "account": {

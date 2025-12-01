@@ -40,11 +40,7 @@
       "description": "版本、法律和技术细节。"
     }
   },
-  "common": {
-    "ok": "确定",
-    "cancel": "取消",
-    "logout": "退出登录"
-  },
+  "common": { "ok": "确定", "cancel": "取消", "logout": "退出登录", "reset": "重置" },
   "settingsPage": {
     "title": "DemmDesk (设置)",
     "account": {

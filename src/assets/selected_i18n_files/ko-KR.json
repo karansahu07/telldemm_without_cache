@@ -40,11 +40,7 @@
       "description": "버전, 법적 및 기술적 세부사항."
     }
   },
-  "common": {
-    "ok": "확인",
-    "cancel": "취소",
-    "logout": "로그아웃"
-  },
+   "common": { "ok": "확인", "cancel": "취소", "logout": "로그아웃", "reset": "재설정" },
   "settingsPage": {
     "title": "DemmDesk (설정)",
     "account": {

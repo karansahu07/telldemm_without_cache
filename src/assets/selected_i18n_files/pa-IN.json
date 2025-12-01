@@ -40,11 +40,7 @@
       "description": "ਵਰਜ਼ਨ, ਕਾਨੂੰਨੀ ਅਤੇ ਤਕਨੀਕੀ ਵੇਰਵੇ।"
     }
   },
-  "common": {
-    "ok": "ਠੀਕ ਹੈ",
-    "cancel": "ਰੱਦ ਕਰੋ",
-    "logout": "ਲਾੱਗ ਆਉਟ"
-  },
+  "common": { "ok": "ਓਕੇ", "cancel": "ਰੱਦ ਕਰੋ", "logout": "ਲਾਗ ਆਉਟ", "reset": "ਰੀਸੈਟ" },
   "settingsPage": {
     "title": "DemmDesk (ਸੈਟਿੰਗਜ਼)",
     "account": {

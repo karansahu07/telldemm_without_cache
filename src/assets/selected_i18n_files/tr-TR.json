@@ -40,11 +40,7 @@
       "description": "Sürüm, yasal ve teknik bilgiler."
     }
   },
-  "common": {
-    "ok": "Tamam",
-    "cancel": "İptal",
-    "logout": "Çıkış yap"
-  },
+  "common": { "ok": "Tamam", "cancel": "İptal", "logout": "Çıkış Yap", "reset": "Sıfırla" },
   "settingsPage": {
     "title": "DemmDesk (Ayarlar)",
     "account": {

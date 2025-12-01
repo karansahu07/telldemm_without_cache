@@ -40,11 +40,7 @@
       "description": "ورژن، قانونی اور تکنیکی تفصیلات۔"
     }
   },
-  "common": {
-    "ok": "ٹھیک ہے",
-    "cancel": "منسوخ کریں",
-    "logout": "لاگ آؤٹ"
-  },
+  "common": { "ok": "اوکے", "cancel": "منسوخ", "logout": "لاگ آؤٹ", "reset": "ری سیٹ" },
   "settingsPage": {
     "title": "DemmDesk (ترتیبات)",
     "account": {

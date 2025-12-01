@@ -40,11 +40,7 @@
       "description": "সংস্করণ, আইনী এবং প্রযুক্তিগত বিবরণ।"
     }
   },
-  "common": {
-    "ok": "ঠিক আছে",
-    "cancel": "বাতিল",
-    "logout": "লগ আউট"
-  },
+ "common": { "ok": "ওকে", "cancel": "বাতিল", "logout": "লগ আউট", "reset": "রিসেট" },
   "settingsPage": {
     "title": "DemmDesk (সেটিংস)",
     "account": {

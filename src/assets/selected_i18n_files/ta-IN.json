@@ -40,11 +40,7 @@
       "description": "பதிப்பு, சட்ட மற்றும் தொழில்நுட்ப விவரங்கள்."
     }
   },
-  "common": {
-    "ok": "சரி",
-    "cancel": "ரத்து செய்",
-    "logout": "லாக்அவுட்"
-  },
+   "common": { "ok": "சரி", "cancel": "ரத்து", "logout": "லாக் அவுட்", "reset": "மீட்டமை" },
   "settingsPage": {
     "title": "DemmDesk (அமைப்புகள்)",
     "account": {

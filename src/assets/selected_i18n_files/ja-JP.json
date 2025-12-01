@@ -40,11 +40,7 @@
       "description": "バージョン、法的および技術的な詳細。"
     }
   },
-  "common": {
-    "ok": "OK",
-    "cancel": "キャンセル",
-    "logout": "ログアウト"
-  },
+  "common": { "ok": "OK", "cancel": "キャンセル", "logout": "ログアウト", "reset": "リセット" },
   "settingsPage": {
     "title": "DemmDesk (設定)",
     "account": {

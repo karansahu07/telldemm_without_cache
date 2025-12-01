@@ -40,11 +40,7 @@
       "description": "संस्करण, कानूनी और तकनीकी विवरण।"
     }
   },
-  "common": {
-    "ok": "ठीक है",
-    "cancel": "रद्द करें",
-    "logout": "लॉग आउट"
-  },
+  "common": { "ok": "ओके", "cancel": "रद्द करें", "logout": "लॉग आउट", "reset": "रीसेट" },
   "settingsPage": {
     "title": "DemmDesk (सेटिंग्स)",
     "account": {

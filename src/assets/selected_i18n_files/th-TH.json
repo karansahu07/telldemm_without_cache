@@ -40,11 +40,7 @@
       "description": "เวอร์ชัน ข้อมูลทางกฎหมายและด้านเทคนิค"
     }
   },
-  "common": {
-    "ok": "ตกลง",
-    "cancel": "ยกเลิก",
-    "logout": "ออกจากระบบ"
-  },
+  "common": { "ok": "ตกลง", "cancel": "ยกเลิก", "logout": "ออกจากระบบ", "reset": "รีเซ็ต" },
   "settingsPage": {
     "title": "DemmDesk (การตั้งค่า)",
     "account": {

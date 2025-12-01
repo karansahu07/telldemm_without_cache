@@ -40,11 +40,7 @@
       "description": "Version, aspects légaux et détails techniques."
     }
   },
-  "common": {
-    "ok": "OK",
-    "cancel": "Annuler",
-    "logout": "Se déconnecter"
-  },
+   "common": { "ok": "OK", "cancel": "Annuler", "logout": "Se déconnecter", "reset": "Réinitialiser" },
   "settingsPage": {
     "title": "DemmDesk (Paramètres)",
     "account": {
