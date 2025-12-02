@@ -157,48 +157,92 @@ receiver_name = '';
   }
 
   // 1) First check server for force-logout decision every time user revisits home
+  // async ionViewWillEnter() {
+  //   try {
+  //     // await this.initApp()
+
+  //     console.info('Loading home page ....');
+  //     await this.firebaseChatService.initApp(
+  //       this.authService.senderId as string
+  //     );
+
+  //     this.firebaseChatService.conversations.subscribe((convs) => {
+  //       this.archievedCount = convs.filter((c) => c.isArchived).length || 0;
+  //       // console.log('this archievwed count', this.archievedCount);
+  //       this.conversations = convs
+  //         .map((c) => ({
+  //           ...c,
+  //           // unreadCount : c.unreadCount || 0,
+  //           isTyping: false,
+  //           isSelected: false,
+  //           lastMessage: c.lastMessage ?? 'hello this is last message', // use actual lastMessage if available
+  //         }))
+  //         .filter((c) => !c.isLocked && !c.isArchived);
+
+  //       console.log('Conversations updated:', convs);
+  //       console.log('this.conversations:', this.conversations);
+  //     });
+  //     this.isLoading = false;
+  //     console.info('Loading home page complete!');
+
+  //     this.senderUserId =
+  //       this.authService.authData?.userId || this.senderUserId || '';
+  //     await this.checkForceLogout(); // will show popup & call resetApp() if server says force_logout === 0
+  //   } catch (err) {
+  //     console.warn('checkForceLogout error (ignored):', err);
+  //   }
+
+  //   const verified = await this.verifyDeviceOnEnter();
+  //   if (!verified) return;
+
+  //   this.clearChatData();
+  //   this.sender_name = this.authService.authData?.name || '';
+  //   await this.sqlite.printAllTables();
+  // }
+
   async ionViewWillEnter() {
-    try {
-      // await this.initApp()
+  try {
+    console.info('Loading home page ....');
+    
+    // ✅ Initialize app - this will load from Firebase
+    await this.firebaseChatService.initApp(
+      this.authService.senderId as string
+    );
 
-      console.info('Loading home page ....');
-      await this.firebaseChatService.initApp(
-        this.authService.senderId as string
-      );
+    // ✅ Subscribe to conversations (already loaded from Firebase)
+    this.firebaseChatService.conversations.subscribe((convs) => {
+      this.archievedCount = convs.filter((c) => c.isArchived).length || 0;
+      
+      this.conversations = convs
+        .map((c) => ({
+          ...c,
+          isTyping: false,
+          isSelected: false,
+          lastMessage: c.lastMessage ?? '',
+        }))
+        .filter((c) => !c.isLocked && !c.isArchived);
 
-      this.firebaseChatService.conversations.subscribe((convs) => {
-        this.archievedCount = convs.filter((c) => c.isArchived).length || 0;
-        // console.log('this archievwed count', this.archievedCount);
-        this.conversations = convs
-          .map((c) => ({
-            ...c,
-            // unreadCount : c.unreadCount || 0,
-            isTyping: false,
-            isSelected: false,
-            lastMessage: c.lastMessage ?? 'hello this is last message', // use actual lastMessage if available
-          }))
-          .filter((c) => !c.isLocked && !c.isArchived);
+      console.log('✅ Conversations loaded from Firebase:', convs.length);
+      console.log('📊 Visible conversations:', this.conversations.length);
+    });
 
-        console.log('Conversations updated:', convs);
-        console.log('this.conversations:', this.conversations);
-      });
-      this.isLoading = false;
-      console.info('Loading home page complete!');
+    this.isLoading = false;
+    console.info('✅ Home page loaded successfully!');
 
-      this.senderUserId =
-        this.authService.authData?.userId || this.senderUserId || '';
-      await this.checkForceLogout(); // will show popup & call resetApp() if server says force_logout === 0
-    } catch (err) {
-      console.warn('checkForceLogout error (ignored):', err);
-    }
-
-    const verified = await this.verifyDeviceOnEnter();
-    if (!verified) return;
-
-    this.clearChatData();
-    this.sender_name = this.authService.authData?.name || '';
-    await this.sqlite.printAllTables();
+    this.senderUserId =
+      this.authService.authData?.userId || this.senderUserId || '';
+    
+    await this.checkForceLogout();
+  } catch (err) {
+    console.warn('ionViewWillEnter error:', err);
   }
+
+  const verified = await this.verifyDeviceOnEnter();
+  if (!verified) return;
+
+  this.clearChatData();
+  this.sender_name = this.authService.authData?.name || '';
+}
 
   get showNewChatPrompt(): boolean {
     return !this.isLoading &&

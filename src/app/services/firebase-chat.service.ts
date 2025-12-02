@@ -27,6 +27,7 @@ import {
   orderByChild,
   onDisconnect,
 } from 'firebase/database';
+import { v4 as uuidv4 } from 'uuid';
 import { runTransaction as rtdbRunTransaction } from 'firebase/database';
 import {
   BehaviorSubject,
@@ -1134,68 +1135,134 @@ export class FirebaseChatService {
     }
   }
 
+  // async initApp(rootUserId?: string) {
+  //   try {
+  //     this.senderId = rootUserId || '';
+  //     if (rootUserId) {
+  //       // await this.setSenderId(rootUserId);  //this uses in cache code
+  //     }
+
+  //     if (this.isAppInitialized) {
+  //       console.warn('App already initialized!');
+  //       return;
+  //     }
+  //     this.networkService.isOnline$.subscribe((isOnline) => {
+  //       if (!isOnline) {
+  //         console.log('User is offline');
+  //         throw new Error('user is offline');
+  //       }
+  //     });
+  //     // this.loadConversations();
+  //     let normalizedContacts: any[] = [];
+  //     console.log('init app platform is', this.isWeb);
+  //     if (this.isWeb()) {
+  //       try {
+  //         normalizedContacts =
+  //           (await this.contactsyncService.getDevicePhoneNumbers?.()) || [];
+  //       } catch (e) {
+  //         console.warn('Failed to get device contacts', e);
+  //       }
+  //     } else {
+  //       normalizedContacts = [];
+  //     }
+
+  //     const pfUsers = await this.contactsyncService.getMatchedUsers();
+  //     console.log({ pfUsers });
+  //     await this.sqliteService.upsertContacts(pfUsers);
+  //     this._deviceContacts$.next([...normalizedContacts]);
+  //     this._platformUsers$.next([...pfUsers]);
+  //     await this.loadConversations();
+  //     this.setupPresence();
+  //     //  this.syncReceipt();
+  //     this.isAppInitialized = true;
+  //     // await this.setAppInitialized(true);  //this use in cache code
+  //   } catch (err) {
+  //     console.error('initApp failed', err);
+  //     try {
+  //       const fallbackContacts =
+  //         await this.contactsyncService.getDevicePhoneNumbers?.();
+  //       if (fallbackContacts) {
+  //         this._deviceContacts$.next([...fallbackContacts]);
+  //       }
+  //       await this.loadConversations();
+  //       const cachedPfUsers = await this.sqliteService.getContacts();
+  //       this._platformUsers$.next([...cachedPfUsers]);
+  //     } catch (fallbackErr) {
+  //       console.error('initApp fallback failed', fallbackErr);
+  //       this._deviceContacts$.next([]);
+  //       this._platformUsers$.next([]);
+  //     }
+  //   } finally {
+  //     // this.syncReceipt();
+  //     // console.log("this finally block called")
+  //   }
+  // }
+
   async initApp(rootUserId?: string) {
-    try {
-      this.senderId = rootUserId || '';
-      if (rootUserId) {
-        // await this.setSenderId(rootUserId);  //this uses in cache code
-      }
+  try {
+    this.senderId = rootUserId || '';
 
-      if (this.isAppInitialized) {
-        console.warn('App already initialized!');
-        return;
-      }
-      this.networkService.isOnline$.subscribe((isOnline) => {
-        if (!isOnline) {
-          console.log('User is offline');
-          throw new Error('user is offline');
-        }
-      });
-      // this.loadConversations();
-      let normalizedContacts: any[] = [];
-      console.log('init app platform is', this.isWeb);
-      if (this.isWeb()) {
-        try {
-          normalizedContacts =
-            (await this.contactsyncService.getDevicePhoneNumbers?.()) || [];
-        } catch (e) {
-          console.warn('Failed to get device contacts', e);
-        }
-      } else {
-        normalizedContacts = [];
-      }
-
-      const pfUsers = await this.contactsyncService.getMatchedUsers();
-      console.log({ pfUsers });
-      await this.sqliteService.upsertContacts(pfUsers);
-      this._deviceContacts$.next([...normalizedContacts]);
-      this._platformUsers$.next([...pfUsers]);
-      await this.loadConversations();
-      this.setupPresence();
-      //  this.syncReceipt();
-      this.isAppInitialized = true;
-      // await this.setAppInitialized(true);  //this use in cache code
-    } catch (err) {
-      console.error('initApp failed', err);
-      try {
-        const fallbackContacts =
-          await this.contactsyncService.getDevicePhoneNumbers?.();
-        if (fallbackContacts) {
-          this._deviceContacts$.next([...fallbackContacts]);
-        }
-        await this.loadConversations();
-        const cachedPfUsers = await this.sqliteService.getContacts();
-        this._platformUsers$.next([...cachedPfUsers]);
-      } catch (fallbackErr) {
-        console.error('initApp fallback failed', fallbackErr);
-        this._deviceContacts$.next([]);
-        this._platformUsers$.next([]);
-      }
-    } finally {
-      // this.syncReceipt();
-      // console.log("this finally block called")
+    if (this.isAppInitialized) {
+      console.warn('App already initialized!');
+      return;
     }
+
+    this.networkService.isOnline$.subscribe((isOnline) => {
+      if (!isOnline) {
+        console.log('User is offline');
+        throw new Error('user is offline');
+      }
+    });
+
+    // ✅ Load contacts
+    let normalizedContacts: any[] = [];
+    console.log('init app platform is', this.isWeb);
+    
+    if (this.isWeb()) {
+      try {
+        normalizedContacts =
+          (await this.contactsyncService.getDevicePhoneNumbers?.()) || [];
+      } catch (e) {
+        console.warn('Failed to get device contacts', e);
+      }
+    } else {
+      normalizedContacts = [];
+    }
+
+    const pfUsers = await this.contactsyncService.getMatchedUsers();
+    console.log({ pfUsers });
+    
+    await this.sqliteService.upsertContacts(pfUsers);
+    this._deviceContacts$.next([...normalizedContacts]);
+    this._platformUsers$.next([...pfUsers]);
+
+    // ✅ MAIN CHANGE: Load conversations directly from Firebase
+    console.log('📂 Loading conversations from Firebase...');
+    await this.loadConversations();
+    
+    this.setupPresence();
+    this.isAppInitialized = true;
+
+    console.log('✅ App initialized with Firebase conversations');
+  } catch (err) {
+    console.error('initApp failed', err);
+    
+    // ❌ REMOVE: SQLite fallback for conversations
+    // try {
+    //   const fallbackContacts = await this.contactsyncService.getDevicePhoneNumbers?.();
+    //   if (fallbackContacts) {
+    //     this._deviceContacts$.next([...fallbackContacts]);
+    //   }
+    //   await this.loadConversations();
+    //   const cachedPfUsers = await this.sqliteService.getContacts();
+    //   this._platformUsers$.next([...cachedPfUsers]);
+    // } catch (fallbackErr) {
+    //   console.error('initApp fallback failed', fallbackErr);
+    //   this._deviceContacts$.next([]);
+    //   this._platformUsers$.next([]);
+    // }
   }
+}
 
   setupPresence() {
     if (!this.senderId) return;
@@ -1505,17 +1572,35 @@ export class FirebaseChatService {
     // rtdbUpdate(messageRef,reactions)
   }
 
+  // async loadConversations() {
+  //   try {
+  //     const convs = (await this.sqliteService.getConversations?.()) || [];
+  //     this._conversations$.next([...convs]);
+  //     this.syncConversationWithServer();
+  //     return convs;
+  //   } catch (err) {
+  //     console.error('loadConversations', err);
+  //     return [];
+  //   }
+  // }
+
   async loadConversations() {
-    try {
-      const convs = (await this.sqliteService.getConversations?.()) || [];
-      this._conversations$.next([...convs]);
-      this.syncConversationWithServer();
-      return convs;
-    } catch (err) {
-      console.error('loadConversations', err);
-      return [];
-    }
+  try {
+    // const convs = (await this.sqliteService.getConversations?.()) || [];
+    // this._conversations$.next([...convs]);
+    
+    // ✅ ADD: Directly sync from Firebase
+    console.log('📂 Loading conversations from Firebase userchats node...');
+    
+    // Immediately trigger sync without SQLite fallback
+    await this.syncConversationWithServer();
+    
+    return this._conversations$.value;
+  } catch (err) {
+    console.error('loadConversations error:', err);
+    return [];
   }
+}
 
   private async fetchPrivateConvDetails(
     roomId: string,
@@ -1670,215 +1755,414 @@ export class FirebaseChatService {
     return conv;
   }
 
+  // async syncConversationWithServer(): Promise<void> {
+  //   try {
+  //     if (!this.senderId) {
+  //       console.warn('syncConversationWithServer: senderId is not set');
+  //       return;
+  //     }
+
+  //     this._isSyncing$.next(true);
+
+  //     const userChatsPath = `userchats/${this.senderId}`;
+  //     const userChatsRef = rtdbRef(this.db, userChatsPath);
+  //     const snapshot: DataSnapshot = await rtdbGet(userChatsRef);
+  //     const userChats = snapshot.val() || {};
+  //     const conversations: IConversation[] = [];
+  //     const roomIds = Object.keys(userChats);
+
+  //     for (const roomId of roomIds) {
+  //       const meta: IChatMeta = userChats[roomId] || {};
+  //       try {
+  //         const type: IConversation['type'] = meta.type;
+
+  //         if (type === 'private') {
+  //           const conv = await this.fetchPrivateConvDetails(roomId, meta);
+  //           conversations.push(conv);
+  //         } else if (type === 'group') {
+  //           // Check if this group belongs to a community
+  //           // const groupRef = rtdbRef(this.db, `groups/${roomId}`);
+  //           // const groupSnap = await rtdbGet(groupRef);
+  //           // const groupData = groupSnap.val() || {};
+
+  //           // Skip announcement and general groups that belong to communities
+  //           // const belongsToCommunity = !!groupData.communityId;
+  //           // const isSystemGroup = groupData.title === 'Announcements' || groupData.title === 'General';
+
+  //           // if (belongsToCommunity && isSystemGroup) {
+  //           //   console.log(`Skipping system group ${roomId} from community ${groupData.communityId}`);
+  //           //   continue; // Skip this group
+  //           // }
+
+  //           const conv = await this.fetchGroupConDetails(roomId, meta);
+  //           conversations.push(conv);
+  //         } else if (type === 'community') {
+  //           const conv = await this.fetchCommunityConvDetails(roomId, meta);
+  //           conversations.push(conv);
+  //         } else {
+  //           conversations.push({
+  //             roomId,
+  //             type: 'private',
+  //             title: roomId,
+  //             lastMessage: meta?.lastmessage,
+  //             lastMessageAt: meta?.lastmessageAt
+  //               ? new Date(Number(meta.lastmessageAt))
+  //               : undefined,
+  //             unreadCount: Number(meta?.unreadCount) || 0,
+  //           } as IConversation);
+  //         }
+  //       } catch (innerErr) {
+  //         console.error('Error building conversation for', roomId, innerErr);
+  //       }
+  //     }
+
+  //     const existing = this._conversations$.value;
+  //     const newConversations = conversations.filter(
+  //       ({ roomId }) => !existing.some((c) => c.roomId === roomId)
+  //     );
+
+  //     if (newConversations.length) {
+  //       for (const conv of newConversations) {
+  //         try {
+  //           this.sqliteService.createConversation({ ...conv });
+  //         } catch (error) {}
+  //       }
+  //       this._conversations$.next([...existing, ...newConversations]);
+  //     }
+  //     console.log('all conversations', [...existing, ...newConversations]);
+  //     if (this._userChatsListener) {
+  //       try {
+  //         this._userChatsListener();
+  //       } catch {}
+  //       this._userChatsListener = null;
+  //     }
+
+  //     const onUserChatsChange = async (snap: DataSnapshot) => {
+  //       const updatedData: IChatMeta = snap.val() || {};
+  //       const current = [...this._conversations$.value];
+
+  //       for (const [roomId, meta] of Object.entries(updatedData)) {
+  //         const idx = current.findIndex((c) => c.roomId === roomId);
+  //         const chatMeta: IChatMeta = { ...meta, roomId };
+  //         console.log('chat changed', chatMeta);
+
+  //         try {
+  //           if (idx > -1) {
+  //             const decryptedText = await this.encryptionService.decrypt(
+  //               chatMeta.lastmessage
+  //             );
+  //             const conv = current[idx];
+  //             current[idx] = {
+  //               ...conv,
+  //               lastMessage: decryptedText ?? conv.lastMessage,
+  //               lastMessageType:
+  //                 chatMeta.lastmessageType ?? conv.lastMessageType,
+  //               lastMessageAt: chatMeta.lastmessageAt
+  //                 ? new Date(Number((meta as any).lastmessageAt))
+  //                 : conv.lastMessageAt,
+  //               unreadCount: Number(chatMeta.unreadCount || 0),
+  //               isArchived: chatMeta.isArchived,
+  //               updatedAt: chatMeta.lastmessageAt
+  //                 ? new Date(Number(chatMeta.lastmessageAt))
+  //                 : conv.updatedAt,
+  //             };
+  //           } else {
+  //             console.warn(
+  //               'New room detected in userchats but not present locally:',
+  //               roomId
+  //             );
+  //             const type: IConversation['type'] = chatMeta.type || 'private';
+
+  //             try {
+  //               let newConv: IConversation | null = null;
+
+  //               if (type === 'private') {
+  //                 newConv = await this.fetchPrivateConvDetails(
+  //                   roomId,
+  //                   chatMeta
+  //                 );
+  //               } else if (type === 'group') {
+  //                 // Check if this group belongs to a community
+  //                 // const groupRef = rtdbRef(this.db, `groups/${roomId}`);
+  //                 // const groupSnap = await rtdbGet(groupRef);
+  //                 // const groupData = groupSnap.val() || {};
+
+  //                 // Skip announcement and general groups
+  //                 // const belongsToCommunity = !!groupData.communityId;
+  //                 // const isSystemGroup = groupData.title === 'Announcements' || groupData.title === 'General';
+
+  //                 // if (belongsToCommunity && isSystemGroup) {
+  //                 //   console.log(`Skipping new system group ${roomId}`);
+  //                 //   continue;
+  //                 // }
+
+  //                 newConv = await this.fetchGroupConDetails(roomId, chatMeta);
+  //               } else if (type === 'community') {
+  //                 newConv = await this.fetchCommunityConvDetails(
+  //                   roomId,
+  //                   chatMeta
+  //                 );
+  //               } else {
+  //                 newConv = {
+  //                   roomId,
+  //                   type: 'private',
+  //                   title: roomId,
+  //                   lastMessage: chatMeta.lastmessage,
+  //                   lastMessageAt: chatMeta.lastmessageAt
+  //                     ? new Date(Number(chatMeta.lastmessageAt))
+  //                     : undefined,
+  //                   unreadCount: Number(chatMeta.unreadCount) || 0,
+  //                 } as IConversation;
+  //               }
+
+  //               if (newConv) {
+  //                 current.push(newConv);
+  //                 try {
+  //                   await this.sqliteService.createConversation({ ...newConv });
+  //                 } catch (e) {
+  //                   console.warn(
+  //                     'sqlite createConversation failed for new room',
+  //                     roomId,
+  //                     e
+  //                   );
+  //                 }
+  //               }
+  //             } catch (e) {
+  //               console.error(
+  //                 'Failed to fetch details for new room',
+  //                 roomId,
+  //                 e
+  //               );
+  //             }
+  //           }
+  //         } catch (e) {
+  //           console.error('onUserChatsChange inner error for', roomId, e);
+  //         }
+  //       }
+
+  //       this.syncReceipt(
+  //         current
+  //           .filter((c) => (c.unreadCount || 0) > 0)
+  //           .map((c) => ({
+  //             roomId: c.roomId,
+  //             unreadCount: c.unreadCount as number,
+  //           }))
+  //       );
+
+  //       this._conversations$.next(current);
+  //     };
+
+  //     const unsubscribe = rtdbOnValue(userChatsRef, onUserChatsChange);
+  //     this._userChatsListener = () => {
+  //       try {
+  //         unsubscribe();
+  //       } catch {}
+  //     };
+  //   } catch (error) {
+  //     console.error('syncConversationWithServer error:', error);
+  //   } finally {
+  //     this._isSyncing$.next(false);
+  //   }
+  // }
+
   async syncConversationWithServer(): Promise<void> {
-    try {
-      if (!this.senderId) {
-        console.warn('syncConversationWithServer: senderId is not set');
-        return;
+  try {
+    if (!this.senderId) {
+      console.warn('syncConversationWithServer: senderId is not set');
+      return;
+    }
+
+    this._isSyncing$.next(true);
+
+    const userChatsPath = `userchats/${this.senderId}`;
+    const userChatsRef = rtdbRef(this.db, userChatsPath);
+    const snapshot: DataSnapshot = await rtdbGet(userChatsRef);
+    const userChats = snapshot.val() || {};
+    const conversations: IConversation[] = [];
+    const roomIds = Object.keys(userChats);
+
+    console.log(`📥 Found ${roomIds.length} conversations in Firebase`);
+
+    for (const roomId of roomIds) {
+      const meta: IChatMeta = userChats[roomId] || {};
+      try {
+        const type: IConversation['type'] = meta.type;
+
+        if (type === 'private') {
+          const conv = await this.fetchPrivateConvDetails(roomId, meta);
+          conversations.push(conv);
+        } else if (type === 'group') {
+          const conv = await this.fetchGroupConDetails(roomId, meta);
+          conversations.push(conv);
+        } else if (type === 'community') {
+          const conv = await this.fetchCommunityConvDetails(roomId, meta);
+          conversations.push(conv);
+        } else {
+          conversations.push({
+            roomId,
+            type: 'private',
+            title: roomId,
+            lastMessage: meta?.lastmessage,
+            lastMessageAt: meta?.lastmessageAt
+              ? new Date(Number(meta.lastmessageAt))
+              : undefined,
+            unreadCount: Number(meta?.unreadCount) || 0,
+          } as IConversation);
+        }
+      } catch (innerErr) {
+        console.error('Error building conversation for', roomId, innerErr);
       }
+    }
 
-      this._isSyncing$.next(true);
+    // ✅ Update in-memory conversations first
+    const existing = this._conversations$.value;
+    const newConversations = conversations.filter(
+      ({ roomId }) => !existing.some((c) => c.roomId === roomId)
+    );
 
-      const userChatsPath = `userchats/${this.senderId}`;
-      const userChatsRef = rtdbRef(this.db, userChatsPath);
-      const snapshot: DataSnapshot = await rtdbGet(userChatsRef);
-      const userChats = snapshot.val() || {};
-      const conversations: IConversation[] = [];
-      const roomIds = Object.keys(userChats);
-
-      for (const roomId of roomIds) {
-        const meta: IChatMeta = userChats[roomId] || {};
+    if (newConversations.length) {
+      // ✅ OPTIONAL: Save to SQLite for offline (but don't load from it)
+      for (const conv of newConversations) {
         try {
-          const type: IConversation['type'] = meta.type;
+          await this.sqliteService.createConversation({ ...conv });
+          console.log('💾 Saved to SQLite (offline backup):', conv.roomId);
+        } catch (error) {
+          console.warn('SQLite save failed (non-critical):', error);
+        }
+      }
+      
+      this._conversations$.next([...existing, ...newConversations]);
+    }
 
-          if (type === 'private') {
-            const conv = await this.fetchPrivateConvDetails(roomId, meta);
-            conversations.push(conv);
-          } else if (type === 'group') {
-            // Check if this group belongs to a community
-            // const groupRef = rtdbRef(this.db, `groups/${roomId}`);
-            // const groupSnap = await rtdbGet(groupRef);
-            // const groupData = groupSnap.val() || {};
+    console.log('✅ Total conversations loaded:', [...existing, ...newConversations].length);
 
-            // Skip announcement and general groups that belong to communities
-            // const belongsToCommunity = !!groupData.communityId;
-            // const isSystemGroup = groupData.title === 'Announcements' || groupData.title === 'General';
+    // ✅ Setup real-time listener for updates
+    if (this._userChatsListener) {
+      try {
+        this._userChatsListener();
+      } catch {}
+      this._userChatsListener = null;
+    }
 
-            // if (belongsToCommunity && isSystemGroup) {
-            //   console.log(`Skipping system group ${roomId} from community ${groupData.communityId}`);
-            //   continue; // Skip this group
-            // }
+    const onUserChatsChange = async (snap: DataSnapshot) => {
+      const updatedData: IChatMeta = snap.val() || {};
+      const current = [...this._conversations$.value];
 
-            const conv = await this.fetchGroupConDetails(roomId, meta);
-            conversations.push(conv);
-          } else if (type === 'community') {
-            const conv = await this.fetchCommunityConvDetails(roomId, meta);
-            conversations.push(conv);
-          } else {
-            conversations.push({
-              roomId,
-              type: 'private',
-              title: roomId,
-              lastMessage: meta?.lastmessage,
-              lastMessageAt: meta?.lastmessageAt
+      for (const [roomId, meta] of Object.entries(updatedData)) {
+        const idx = current.findIndex((c) => c.roomId === roomId);
+        const chatMeta: IChatMeta = { ...meta, roomId };
+        console.log('🔄 Chat changed:', chatMeta);
+
+        try {
+          if (idx > -1) {
+            const decryptedText = await this.encryptionService.decrypt(
+              chatMeta.lastmessage
+            );
+            const conv = current[idx];
+            current[idx] = {
+              ...conv,
+              lastMessage: decryptedText ?? conv.lastMessage,
+              lastMessageType:
+                chatMeta.lastmessageType ?? conv.lastMessageType,
+              lastMessageAt: chatMeta.lastmessageAt
                 ? new Date(Number(meta.lastmessageAt))
-                : undefined,
-              unreadCount: Number(meta?.unreadCount) || 0,
-            } as IConversation);
+                : conv.lastMessageAt,
+              unreadCount: Number(chatMeta.unreadCount || 0),
+              isArchived: chatMeta.isArchived,
+              updatedAt: chatMeta.lastmessageAt
+                ? new Date(Number(chatMeta.lastmessageAt))
+                : conv.updatedAt,
+            };
+
+            // ✅ OPTIONAL: Update SQLite
+            try {
+              // await this.sqliteService.updateConversation(current[idx]);
+            } catch (e) {
+              console.warn('SQLite update failed (non-critical):', e);
+            }
+          } else {
+            console.warn(
+              'New room detected in userchats but not present locally:',
+              roomId
+            );
+            const type: IConversation['type'] = chatMeta.type || 'private';
+
+            try {
+              let newConv: IConversation | null = null;
+
+              if (type === 'private') {
+                newConv = await this.fetchPrivateConvDetails(
+                  roomId,
+                  chatMeta
+                );
+              } else if (type === 'group') {
+                newConv = await this.fetchGroupConDetails(roomId, chatMeta);
+              } else if (type === 'community') {
+                newConv = await this.fetchCommunityConvDetails(
+                  roomId,
+                  chatMeta
+                );
+              } else {
+                newConv = {
+                  roomId,
+                  type: 'private',
+                  title: roomId,
+                  lastMessage: chatMeta.lastmessage,
+                  lastMessageAt: chatMeta.lastmessageAt
+                    ? new Date(Number(chatMeta.lastmessageAt))
+                    : undefined,
+                  unreadCount: Number(chatMeta.unreadCount) || 0,
+                } as IConversation;
+              }
+
+              if (newConv) {
+                current.push(newConv);
+                
+                // ✅ OPTIONAL: Save to SQLite
+                try {
+                  await this.sqliteService.createConversation({ ...newConv });
+                } catch (e) {
+                  console.warn('SQLite create failed (non-critical):', e);
+                }
+              }
+            } catch (e) {
+              console.error(
+                'Failed to fetch details for new room',
+                roomId,
+                e
+              );
+            }
           }
-        } catch (innerErr) {
-          console.error('Error building conversation for', roomId, innerErr);
+        } catch (e) {
+          console.error('onUserChatsChange inner error for', roomId, e);
         }
       }
 
-      const existing = this._conversations$.value;
-      const newConversations = conversations.filter(
-        ({ roomId }) => !existing.some((c) => c.roomId === roomId)
+      // Update receipts
+      this.syncReceipt(
+        current
+          .filter((c) => (c.unreadCount || 0) > 0)
+          .map((c) => ({
+            roomId: c.roomId,
+            unreadCount: c.unreadCount as number,
+          }))
       );
 
-      if (newConversations.length) {
-        for (const conv of newConversations) {
-          try {
-            this.sqliteService.createConversation({ ...conv });
-          } catch (error) {}
-        }
-        this._conversations$.next([...existing, ...newConversations]);
-      }
-      console.log('all conversations', [...existing, ...newConversations]);
-      if (this._userChatsListener) {
-        try {
-          this._userChatsListener();
-        } catch {}
-        this._userChatsListener = null;
-      }
+      this._conversations$.next(current);
+    };
 
-      const onUserChatsChange = async (snap: DataSnapshot) => {
-        const updatedData: IChatMeta = snap.val() || {};
-        const current = [...this._conversations$.value];
-
-        for (const [roomId, meta] of Object.entries(updatedData)) {
-          const idx = current.findIndex((c) => c.roomId === roomId);
-          const chatMeta: IChatMeta = { ...meta, roomId };
-          console.log('chat changed', chatMeta);
-
-          try {
-            if (idx > -1) {
-              const decryptedText = await this.encryptionService.decrypt(
-                chatMeta.lastmessage
-              );
-              const conv = current[idx];
-              current[idx] = {
-                ...conv,
-                lastMessage: decryptedText ?? conv.lastMessage,
-                lastMessageType:
-                  chatMeta.lastmessageType ?? conv.lastMessageType,
-                lastMessageAt: chatMeta.lastmessageAt
-                  ? new Date(Number((meta as any).lastmessageAt))
-                  : conv.lastMessageAt,
-                unreadCount: Number(chatMeta.unreadCount || 0),
-                isArchived: chatMeta.isArchived,
-                updatedAt: chatMeta.lastmessageAt
-                  ? new Date(Number(chatMeta.lastmessageAt))
-                  : conv.updatedAt,
-              };
-            } else {
-              console.warn(
-                'New room detected in userchats but not present locally:',
-                roomId
-              );
-              const type: IConversation['type'] = chatMeta.type || 'private';
-
-              try {
-                let newConv: IConversation | null = null;
-
-                if (type === 'private') {
-                  newConv = await this.fetchPrivateConvDetails(
-                    roomId,
-                    chatMeta
-                  );
-                } else if (type === 'group') {
-                  // Check if this group belongs to a community
-                  // const groupRef = rtdbRef(this.db, `groups/${roomId}`);
-                  // const groupSnap = await rtdbGet(groupRef);
-                  // const groupData = groupSnap.val() || {};
-
-                  // Skip announcement and general groups
-                  // const belongsToCommunity = !!groupData.communityId;
-                  // const isSystemGroup = groupData.title === 'Announcements' || groupData.title === 'General';
-
-                  // if (belongsToCommunity && isSystemGroup) {
-                  //   console.log(`Skipping new system group ${roomId}`);
-                  //   continue;
-                  // }
-
-                  newConv = await this.fetchGroupConDetails(roomId, chatMeta);
-                } else if (type === 'community') {
-                  newConv = await this.fetchCommunityConvDetails(
-                    roomId,
-                    chatMeta
-                  );
-                } else {
-                  newConv = {
-                    roomId,
-                    type: 'private',
-                    title: roomId,
-                    lastMessage: chatMeta.lastmessage,
-                    lastMessageAt: chatMeta.lastmessageAt
-                      ? new Date(Number(chatMeta.lastmessageAt))
-                      : undefined,
-                    unreadCount: Number(chatMeta.unreadCount) || 0,
-                  } as IConversation;
-                }
-
-                if (newConv) {
-                  current.push(newConv);
-                  try {
-                    await this.sqliteService.createConversation({ ...newConv });
-                  } catch (e) {
-                    console.warn(
-                      'sqlite createConversation failed for new room',
-                      roomId,
-                      e
-                    );
-                  }
-                }
-              } catch (e) {
-                console.error(
-                  'Failed to fetch details for new room',
-                  roomId,
-                  e
-                );
-              }
-            }
-          } catch (e) {
-            console.error('onUserChatsChange inner error for', roomId, e);
-          }
-        }
-
-        this.syncReceipt(
-          current
-            .filter((c) => (c.unreadCount || 0) > 0)
-            .map((c) => ({
-              roomId: c.roomId,
-              unreadCount: c.unreadCount as number,
-            }))
-        );
-
-        this._conversations$.next(current);
-      };
-
-      const unsubscribe = rtdbOnValue(userChatsRef, onUserChatsChange);
-      this._userChatsListener = () => {
-        try {
-          unsubscribe();
-        } catch {}
-      };
-    } catch (error) {
-      console.error('syncConversationWithServer error:', error);
-    } finally {
-      this._isSyncing$.next(false);
-    }
+    const unsubscribe = rtdbOnValue(userChatsRef, onUserChatsChange);
+    this._userChatsListener = () => {
+      try {
+        unsubscribe();
+      } catch {}
+    };
+  } catch (error) {
+    console.error('syncConversationWithServer error:', error);
+  } finally {
+    this._isSyncing$.next(false);
   }
+}
 
   // New method to fetch community conversation details
   private async fetchCommunityConvDetails(
@@ -2914,6 +3198,144 @@ export class FirebaseChatService {
       console.error('Error in sending message', error);
     }
   }
+  
+  async sendForwardMessage(
+  forwardedMsg: any,
+  receiverId: string
+): Promise<void> {
+  try {
+    console.log('📤 Forwarding message to:', receiverId);
+    console.log('📤 Forwarding message to:', forwardedMsg);
+
+    const { attachment, translations, ...message } = forwardedMsg || {};
+    const { localUrl, ...restAttachment } = attachment || {
+      localUrl: undefined,
+    };
+
+    // Generate room ID for sender and receiver
+    const roomId = this.getRoomIdFor1To1(this.senderId as string, receiverId);
+    const members = [this.senderId, receiverId];
+
+    // Encrypt the text
+    let encryptedText = '';
+    if (forwardedMsg.text) {
+      encryptedText = forwardedMsg.text.startsWith('ENC:')
+        ? forwardedMsg.text
+        : await this.encryptionService.encrypt(forwardedMsg.text);
+    }
+
+    // Generate new message ID and timestamp for forwarded message
+    // const newMsgId = push(ref(this.db, `chats/${roomId}`)).key as string;
+    const newMsgId = uuidv4();
+    // const timestamp = new Date().toISOString();
+    const timestamp = Date.now();
+
+    const messageToSave: Partial<IMessage> = {
+      msgId: newMsgId,
+      roomId,
+      // sender: this.senderId,
+      sender_name: this.authService.authData?.name || '',
+      receiver_id: receiverId,
+      sender : this.senderId || undefined,
+      timestamp,
+      status: 'sent',
+      isForwarded: true,
+      text: forwardedMsg.text || '',
+      translations: translations || undefined,
+      receipts: {
+        read: { status: false, readBy: [] },
+        delivered: { status: false, deliveredTo: [] },
+      },
+    };
+
+    console.log({ messageToSave });
+
+    // Update chat meta for both members
+    const meta: Partial<IChatMeta> = {
+      type: 'private',
+      lastmessageAt: timestamp,
+      lastmessageType: attachment ? restAttachment.type : 'text',
+      lastmessage: encryptedText || '',
+    };
+
+    for (const member of members) {
+      const userChatRef = rtdbRef(this.db, `userchats/${member}/${roomId}`);
+      const idxSnap = await rtdbGet(userChatRef);
+      
+      if (!idxSnap.exists()) {
+        await rtdbSet(userChatRef, {
+          ...meta,
+          isArchived: false,
+          isPinned: false,
+          isLocked: false,
+          unreadCount: member === this.senderId ? 0 : 1,
+        });
+      } else {
+        await rtdbUpdate(userChatRef, {
+          ...meta,
+          ...(member !== this.senderId && {
+            unreadCount: (idxSnap.val().unreadCount || 0) + 1,
+          }),
+        });
+      }
+    }
+
+    let cdnUrl = '';
+    let previewUrl: string | null = null;
+
+    const hasAttachment =
+      !!attachment && Object.keys(restAttachment || {}).length > 0;
+
+    // Handle attachment if present
+    if (hasAttachment) {
+      if (restAttachment.mediaId) {
+        const res: any = await firstValueFrom(
+          this.apiService.getDownloadUrl(restAttachment.mediaId)
+        );
+        cdnUrl = res?.status ? res.downloadUrl : '';
+      }
+
+      if (localUrl) {
+        previewUrl = await this.fileSystemService.getFilePreview(localUrl);
+      }
+    }
+
+    // Save message to Firebase
+    const messagesRef = rtdbRef(this.db, `chats/${roomId}/${newMsgId}`);
+    await rtdbSet(messagesRef, {
+      ...messageToSave,
+      ...(hasAttachment ? { attachment: { ...restAttachment, cdnUrl } } : {}),
+      text: encryptedText,
+      ...(translations ? { translations } : {}),
+    });
+
+    // Mark as delivered if receiver is online
+    const isReceiverOnline = !!this.membersPresence.get(receiverId)?.isOnline;
+    if (isReceiverOnline) {
+      this.markAsDelivered(newMsgId, receiverId, roomId);
+      console.log('✅ Mark delivered triggered (receiver online)');
+    }
+
+    // Save to SQLite
+    if (hasAttachment) {
+      await this.sqliteService.saveAttachment({
+        ...restAttachment,
+        localUrl: previewUrl || localUrl,
+        cdnUrl,
+      });
+    }
+
+    await this.sqliteService.saveMessage({
+      ...messageToSave,
+      isMe: true,
+    } as IMessage);
+
+    console.log('✅ Forward message sent successfully to', receiverId);
+  } catch (error) {
+    console.error('❌ Error in sending forward message:', error);
+    throw error;
+  }
+}
 
   getUserLanguage(userId: string | number) {
     const url = `${this.baseUrl}/get-language/${userId}`;

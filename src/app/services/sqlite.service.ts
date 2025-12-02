@@ -1006,7 +1006,7 @@ export class SqliteService {
   return this.withOpState('resetDB', async () => {
     const tables = ['users', 'conversations', 'messages', 'attachments'];
     
-    console.log('🗑️ Starting database reset...');
+    // console.log('🗑️ Starting database reset...');
     
     // Drop all tables
     for (const table of tables) {
