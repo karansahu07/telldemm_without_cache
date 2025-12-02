@@ -82,7 +82,7 @@
               (click)="onFollowClick($event, ch)"
               [disabled]="loadingChannelId === ch.channel_id">
 
-              <span *ngIf="!isFollowing(ch)">Join MegaTell Follow Now</span>
+              <span *ngIf="!isFollowing(ch)">Join MegaTell</span>
 
               <span *ngIf="isFollowing(ch)" class="following-text">
                 <ion-icon name="checkmark-done-outline"></ion-icon>

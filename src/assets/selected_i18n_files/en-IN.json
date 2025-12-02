@@ -439,10 +439,10 @@
       "updateFailed": "Failed to update profile picture"
     }
   },
-  "footerTabs": {
-    "chat": "Tells (Chat)",
-    "updates": "Echoes (Updates)",
-    "communities": "DemmCircles (Communities)",
+"footerTabs": {
+    "chat": "Tells",
+    "updates": "Echoes",
+    "communities": "DemmCircles",
     "calls": "Connects (Calls)",
     "badges": {
       "unreadChats": "{{count}} unread Tells",
