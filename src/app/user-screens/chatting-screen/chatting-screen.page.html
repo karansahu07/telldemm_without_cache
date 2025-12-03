@@ -565,34 +565,21 @@
 
           <!-- 🟢 FLOATING REACTION BAR -->
           <div
-            class="reaction-bar"
-            *ngIf="isQuickReactionOpen(msg)"
-            [class.right]="msg.sender_id === senderId"
-            [class.left]="msg.sender_id !== senderId"
-          >
-            <button class="react-btn" (click)="addReaction(msg, '👍')">
-              👍
-            </button>
-            <button class="react-btn" (click)="addReaction(msg, '❤️')">
-              ❤️
-            </button>
-            <button class="react-btn" (click)="addReaction(msg, '😂')">
-              😂
-            </button>
-            <button class="react-btn" (click)="addReaction(msg, '😮')">
-              😮
-            </button>
-            <button class="react-btn" (click)="addReaction(msg, '😢')">
-              😢
-            </button>
-            <button class="react-btn" (click)="addReaction(msg, '🙏')">
-              🙏
-            </button>
-            <button class="react-btn more" (click)="openEmojiKeyboard(msg)">
-              ＋
-            </button>
-            <!-- <h2> Reaction emojis here</h2> -->
-          </div>
+  class="reaction-bar"
+  *ngIf="isQuickReactionOpen(msg)"
+  [class.right]="msg.sender === senderId"
+  [class.left]="msg.sender !== senderId"
+  (click)="$event.stopPropagation()"
+  style="z-index: 1000; position: relative;"
+>
+  <button class="react-btn" (click)="addReaction(msg, '👍'); $event.stopPropagation()">👍</button>
+  <button class="react-btn" (click)="addReaction(msg, '❤️'); $event.stopPropagation()">❤️</button>
+  <button class="react-btn" (click)="addReaction(msg, '😂'); $event.stopPropagation()">😂</button>
+  <button class="react-btn" (click)="addReaction(msg, '😮'); $event.stopPropagation()">😮</button>
+  <button class="react-btn" (click)="addReaction(msg, '😢'); $event.stopPropagation()">😢</button>
+  <button class="react-btn" (click)="addReaction(msg, '🙏'); $event.stopPropagation()">🙏</button>
+  <button class="react-btn more" (click)="openEmojiKeyboard(msg); $event.stopPropagation()">＋</button>
+</div>
         </div>
       </ng-container>
     </div>

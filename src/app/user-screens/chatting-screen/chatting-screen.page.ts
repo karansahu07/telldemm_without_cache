@@ -2772,6 +2772,7 @@ async groupMessagesByDate(messages: Message[]) {
         userId,
         emoji: newVal,
       });
+      this.selectedMessages = [];
     } catch (error) {
       console.error('Reaction not save', error);
     }
@@ -2783,8 +2784,6 @@ async groupMessagesByDate(messages: Message[]) {
     const el = (document.querySelector('#chatting-screen') || document) // adjust root if needed
       .querySelector('ion-input[ng-reflect-name="emojiKeyboard"]') as any;
 
-    // better: use @ViewChild('emojiKeyboard') emojiInput!: IonInput;
-    // then: this.emojiInput.setFocus();
     const inputEl = document.querySelector(
       'ion-input + input'
     ) as HTMLInputElement; // Ionic renders native <input> after shadow

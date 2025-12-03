@@ -250,14 +250,14 @@ ion-fab {
 }
 
 .popup-image {
-  width: 250px;
-  height: 250px;
+  width: 300px;
+  height: 300px;
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
 }
 
 .icon-row {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-evenly;
   width: 100%;
   padding: 10px 0;
   background-color: var(--ion-background-color);

@@ -126,6 +126,7 @@ receiver_name = '';
   ];
 
   isChatsLoaded: boolean = false;
+   selectedChat: any = null;
 
   constructor(
     private router: Router,
@@ -403,12 +404,106 @@ async ionViewWillEnter() {
     }, 100);
   }
 
-  async goToUserchat() {
-    this.showPopup = false;
-    setTimeout(async () => {
-      // optional navigation
-    }, 100);
-  }
+// async goToUserchat() {
+//   this.showPopup = false;
+  
+//   setTimeout(async () => {
+//     try {
+//       const chat = this.selectedChat;
+//       console.log("go to user chat ", chat)
+
+//       if (!chat) {
+//         const toast = await this.toastCtrl.create({
+//           message: 'Chat not found',
+//           duration: 2000,
+//           color: 'warning',
+//         });
+//         await toast.present();
+//         return;
+//       }
+
+//       await this.firebaseChatService.openChat(chat);
+
+//       if (chat.type === 'private') {
+//         const parts = chat.roomId.split('_');
+//         const receiverId = parts.find((p: string) => p !== this.senderUserId) 
+//           ?? parts[parts.length - 1];
+        
+//         this.router.navigate(['/chatting-screen'], {
+//           queryParams: { receiverId: receiverId },
+//         });
+//       } else if (chat.type === 'group') {
+//         this.router.navigate(['/chatting-screen'], {
+//           queryParams: { receiverId: chat.roomId },
+//         });
+//       } else if (chat.type === 'community') {
+//         this.router.navigate(['/community-detail'], {
+//           queryParams: { receiverId: chat.roomId },
+//         });
+//       }
+
+//       this.selectedChat = null;
+      
+//     } catch (error) {
+//       console.error('Error opening chat:', error);
+      
+//       const toast = await this.toastCtrl.create({
+//         message: 'Failed to open chat',
+//         duration: 2000,
+//         color: 'danger',
+//       });
+//       await toast.present();
+//     }
+//   }, 100);
+// }
+
+async goToUserchat() {
+  this.showPopup = false;
+  
+  setTimeout(async () => {
+    try {
+      // Find chat from conversations
+      const chat = this.conversations.find(c => {
+        const avatarUrl = this.getChatAvatarUrl(c);
+        return avatarUrl === this.selectedImage;
+      });
+
+      if (!chat) {
+        const toast = await this.toastCtrl.create({
+          message: 'Chat not found',
+          duration: 2000,
+          color: 'warning',
+        });
+        await toast.present();
+        return;
+      }
+
+      // Open chat using firebase service
+      await this.firebaseChatService.openChat(chat);
+
+      // Navigate based on chat type
+      if (chat.type === 'private') {
+        const parts = chat.roomId.split('_');
+        const receiverId = parts.find((p: string) => p !== this.senderUserId) 
+          ?? parts[parts.length - 1];
+        
+        this.router.navigate(['/chatting-screen'], {
+          queryParams: { receiverId: receiverId },
+        });
+      } else if (chat.type === 'group') {
+        this.router.navigate(['/chatting-screen'], {
+          queryParams: { receiverId: chat.roomId },
+        });
+      } else if (chat.type === 'community') {
+        this.router.navigate(['/community-detail'], {
+          queryParams: { receiverId: chat.roomId },
+        });
+      }
+    } catch (error) {
+      console.error('Error opening chat:', error);
+    }
+  }, 100);
+}
 
   goToUsercall() {
     this.showPopup = false;
@@ -424,13 +519,16 @@ async ionViewWillEnter() {
     }, 100);
   }
 
-  openImagePopup(profile_picture_url: string) {
+  openImagePopup(profile_picture_url: string, chat?: any) {
     this.selectedImage = profile_picture_url;
+    this.selectedChat = chat
+    console.log("this.selectedChat", this.selectedChat);
     this.showPopup = true;
   }
 
   closeImagePopup() {
     this.selectedImage = null;
+     this.selectedChat = null;
     this.showPopup = false;
   }
 
@@ -1323,10 +1421,11 @@ async ionViewWillEnter() {
    */
 
   getChatAvatarUrl(chat: any): string | null {
+    console.log("display chat from home page", chat)
     const id = chat.group ? chat.receiver_Id : chat.receiver_Id;
     if (id && this.avatarErrorIds.has(String(id))) return null;
 
-    const url = chat.group ? chat.dp || null : chat.profile_picture_url || null;
+    const url = chat.avatar;
 
     return url && String(url).trim() ? url : null;
   }
