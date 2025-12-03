@@ -1135,134 +1135,134 @@ export class FirebaseChatService {
     }
   }
 
-  // async initApp(rootUserId?: string) {
-  //   try {
-  //     this.senderId = rootUserId || '';
-  //     if (rootUserId) {
-  //       // await this.setSenderId(rootUserId);  //this uses in cache code
-  //     }
-
-  //     if (this.isAppInitialized) {
-  //       console.warn('App already initialized!');
-  //       return;
-  //     }
-  //     this.networkService.isOnline$.subscribe((isOnline) => {
-  //       if (!isOnline) {
-  //         console.log('User is offline');
-  //         throw new Error('user is offline');
-  //       }
-  //     });
-  //     // this.loadConversations();
-  //     let normalizedContacts: any[] = [];
-  //     console.log('init app platform is', this.isWeb);
-  //     if (this.isWeb()) {
-  //       try {
-  //         normalizedContacts =
-  //           (await this.contactsyncService.getDevicePhoneNumbers?.()) || [];
-  //       } catch (e) {
-  //         console.warn('Failed to get device contacts', e);
-  //       }
-  //     } else {
-  //       normalizedContacts = [];
-  //     }
-
-  //     const pfUsers = await this.contactsyncService.getMatchedUsers();
-  //     console.log({ pfUsers });
-  //     await this.sqliteService.upsertContacts(pfUsers);
-  //     this._deviceContacts$.next([...normalizedContacts]);
-  //     this._platformUsers$.next([...pfUsers]);
-  //     await this.loadConversations();
-  //     this.setupPresence();
-  //     //  this.syncReceipt();
-  //     this.isAppInitialized = true;
-  //     // await this.setAppInitialized(true);  //this use in cache code
-  //   } catch (err) {
-  //     console.error('initApp failed', err);
-  //     try {
-  //       const fallbackContacts =
-  //         await this.contactsyncService.getDevicePhoneNumbers?.();
-  //       if (fallbackContacts) {
-  //         this._deviceContacts$.next([...fallbackContacts]);
-  //       }
-  //       await this.loadConversations();
-  //       const cachedPfUsers = await this.sqliteService.getContacts();
-  //       this._platformUsers$.next([...cachedPfUsers]);
-  //     } catch (fallbackErr) {
-  //       console.error('initApp fallback failed', fallbackErr);
-  //       this._deviceContacts$.next([]);
-  //       this._platformUsers$.next([]);
-  //     }
-  //   } finally {
-  //     // this.syncReceipt();
-  //     // console.log("this finally block called")
-  //   }
-  // }
-
   async initApp(rootUserId?: string) {
-  try {
-    this.senderId = rootUserId || '';
-
-    if (this.isAppInitialized) {
-      console.warn('App already initialized!');
-      return;
-    }
-
-    this.networkService.isOnline$.subscribe((isOnline) => {
-      if (!isOnline) {
-        console.log('User is offline');
-        throw new Error('user is offline');
+    try {
+      this.senderId = rootUserId || '';
+      if (rootUserId) {
+        // await this.setSenderId(rootUserId);  //this uses in cache code
       }
-    });
 
-    // ✅ Load contacts
-    let normalizedContacts: any[] = [];
-    console.log('init app platform is', this.isWeb);
-    
-    if (this.isWeb()) {
+      if (this.isAppInitialized) {
+        console.warn('App already initialized!');
+        return;
+      }
+      this.networkService.isOnline$.subscribe((isOnline) => {
+        if (!isOnline) {
+          console.log('User is offline');
+          throw new Error('user is offline');
+        }
+      });
+      // this.loadConversations();
+      let normalizedContacts: any[] = [];
+      console.log('init app platform is', this.isWeb);
+      if (this.isWeb()) {
+        try {
+          normalizedContacts =
+            (await this.contactsyncService.getDevicePhoneNumbers?.()) || [];
+        } catch (e) {
+          console.warn('Failed to get device contacts', e);
+        }
+      } else {
+        normalizedContacts = [];
+      }
+
+      const pfUsers = await this.contactsyncService.getMatchedUsers();
+      console.log({ pfUsers });
+      await this.sqliteService.upsertContacts(pfUsers);
+      this._deviceContacts$.next([...normalizedContacts]);
+      this._platformUsers$.next([...pfUsers]);
+      await this.loadConversations();
+      this.setupPresence();
+      //  this.syncReceipt();
+      this.isAppInitialized = true;
+      // await this.setAppInitialized(true);  //this use in cache code
+    } catch (err) {
+      console.error('initApp failed', err);
       try {
-        normalizedContacts =
-          (await this.contactsyncService.getDevicePhoneNumbers?.()) || [];
-      } catch (e) {
-        console.warn('Failed to get device contacts', e);
+        const fallbackContacts =
+          await this.contactsyncService.getDevicePhoneNumbers?.();
+        if (fallbackContacts) {
+          this._deviceContacts$.next([...fallbackContacts]);
+        }
+        await this.loadConversations();
+        const cachedPfUsers = await this.sqliteService.getContacts();
+        this._platformUsers$.next([...cachedPfUsers]);
+      } catch (fallbackErr) {
+        console.error('initApp fallback failed', fallbackErr);
+        this._deviceContacts$.next([]);
+        this._platformUsers$.next([]);
       }
-    } else {
-      normalizedContacts = [];
+    } finally {
+      // this.syncReceipt();
+      // console.log("this finally block called")
     }
-
-    const pfUsers = await this.contactsyncService.getMatchedUsers();
-    console.log({ pfUsers });
-    
-    await this.sqliteService.upsertContacts(pfUsers);
-    this._deviceContacts$.next([...normalizedContacts]);
-    this._platformUsers$.next([...pfUsers]);
-
-    // ✅ MAIN CHANGE: Load conversations directly from Firebase
-    console.log('📂 Loading conversations from Firebase...');
-    await this.loadConversations();
-    
-    this.setupPresence();
-    this.isAppInitialized = true;
-
-    console.log('✅ App initialized with Firebase conversations');
-  } catch (err) {
-    console.error('initApp failed', err);
-    
-    // ❌ REMOVE: SQLite fallback for conversations
-    // try {
-    //   const fallbackContacts = await this.contactsyncService.getDevicePhoneNumbers?.();
-    //   if (fallbackContacts) {
-    //     this._deviceContacts$.next([...fallbackContacts]);
-    //   }
-    //   await this.loadConversations();
-    //   const cachedPfUsers = await this.sqliteService.getContacts();
-    //   this._platformUsers$.next([...cachedPfUsers]);
-    // } catch (fallbackErr) {
-    //   console.error('initApp fallback failed', fallbackErr);
-    //   this._deviceContacts$.next([]);
-    //   this._platformUsers$.next([]);
-    // }
   }
-}
+
+//   async initApp(rootUserId?: string) {
+//   try {
+//     this.senderId = rootUserId || '';
+
+//     if (this.isAppInitialized) {
+//       console.warn('App already initialized!');
+//       return;
+//     }
+
+//     this.networkService.isOnline$.subscribe((isOnline) => {
+//       if (!isOnline) {
+//         console.log('User is offline');
+//         throw new Error('user is offline');
+//       }
+//     });
+
+//     // ✅ Load contacts
+//     let normalizedContacts: any[] = [];
+//     console.log('init app platform is', this.isWeb);
+    
+//     if (this.isWeb()) {
+//       try {
+//         normalizedContacts =
+//           (await this.contactsyncService.getDevicePhoneNumbers?.()) || [];
+//       } catch (e) {
+//         console.warn('Failed to get device contacts', e);
+//       }
+//     } else {
+//       normalizedContacts = [];
+//     }
+
+//     const pfUsers = await this.contactsyncService.getMatchedUsers();
+//     console.log({ pfUsers });
+    
+//     await this.sqliteService.upsertContacts(pfUsers);
+//     this._deviceContacts$.next([...normalizedContacts]);
+//     this._platformUsers$.next([...pfUsers]);
+
+//     // ✅ MAIN CHANGE: Load conversations directly from Firebase
+//     console.log('📂 Loading conversations from Firebase...');
+//     await this.loadConversations();
+    
+//     this.setupPresence();
+//     this.isAppInitialized = true;
+
+//     console.log('✅ App initialized with Firebase conversations');
+//   } catch (err) {
+//     console.error('initApp failed', err);
+    
+//     // ❌ REMOVE: SQLite fallback for conversations
+//     // try {
+//     //   const fallbackContacts = await this.contactsyncService.getDevicePhoneNumbers?.();
+//     //   if (fallbackContacts) {
+//     //     this._deviceContacts$.next([...fallbackContacts]);
+//     //   }
+//     //   await this.loadConversations();
+//     //   const cachedPfUsers = await this.sqliteService.getContacts();
+//     //   this._platformUsers$.next([...cachedPfUsers]);
+//     // } catch (fallbackErr) {
+//     //   console.error('initApp fallback failed', fallbackErr);
+//     //   this._deviceContacts$.next([]);
+//     //   this._platformUsers$.next([]);
+//     // }
+//   }
+// }
 
   setupPresence() {
     if (!this.senderId) return;
@@ -1572,35 +1572,35 @@ export class FirebaseChatService {
     // rtdbUpdate(messageRef,reactions)
   }
 
-  // async loadConversations() {
-  //   try {
-  //     const convs = (await this.sqliteService.getConversations?.()) || [];
-  //     this._conversations$.next([...convs]);
-  //     this.syncConversationWithServer();
-  //     return convs;
-  //   } catch (err) {
-  //     console.error('loadConversations', err);
-  //     return [];
-  //   }
-  // }
-
   async loadConversations() {
-  try {
-    // const convs = (await this.sqliteService.getConversations?.()) || [];
-    // this._conversations$.next([...convs]);
-    
-    // ✅ ADD: Directly sync from Firebase
-    console.log('📂 Loading conversations from Firebase userchats node...');
-    
-    // Immediately trigger sync without SQLite fallback
-    await this.syncConversationWithServer();
-    
-    return this._conversations$.value;
-  } catch (err) {
-    console.error('loadConversations error:', err);
-    return [];
+    try {
+      const convs = (await this.sqliteService.getConversations?.()) || [];
+      this._conversations$.next([...convs]);
+      this.syncConversationWithServer();
+      return convs;
+    } catch (err) {
+      console.error('loadConversations', err);
+      return [];
+    }
   }
-}
+
+//   async loadConversations() {
+//   try {
+//     // const convs = (await this.sqliteService.getConversations?.()) || [];
+//     // this._conversations$.next([...convs]);
+    
+//     // ✅ ADD: Directly sync from Firebase
+//     console.log('📂 Loading conversations from Firebase userchats node...');
+    
+//     // Immediately trigger sync without SQLite fallback
+//     await this.syncConversationWithServer();
+    
+//     return this._conversations$.value;
+//   } catch (err) {
+//     console.error('loadConversations error:', err);
+//     return [];
+//   }
+// }
 
   private async fetchPrivateConvDetails(
     roomId: string,
@@ -1755,416 +1755,418 @@ export class FirebaseChatService {
     return conv;
   }
 
-  // async syncConversationWithServer(): Promise<void> {
-  //   try {
-  //     if (!this.senderId) {
-  //       console.warn('syncConversationWithServer: senderId is not set');
-  //       return;
-  //     }
-
-  //     this._isSyncing$.next(true);
-
-  //     const userChatsPath = `userchats/${this.senderId}`;
-  //     const userChatsRef = rtdbRef(this.db, userChatsPath);
-  //     const snapshot: DataSnapshot = await rtdbGet(userChatsRef);
-  //     const userChats = snapshot.val() || {};
-  //     const conversations: IConversation[] = [];
-  //     const roomIds = Object.keys(userChats);
-
-  //     for (const roomId of roomIds) {
-  //       const meta: IChatMeta = userChats[roomId] || {};
-  //       try {
-  //         const type: IConversation['type'] = meta.type;
-
-  //         if (type === 'private') {
-  //           const conv = await this.fetchPrivateConvDetails(roomId, meta);
-  //           conversations.push(conv);
-  //         } else if (type === 'group') {
-  //           // Check if this group belongs to a community
-  //           // const groupRef = rtdbRef(this.db, `groups/${roomId}`);
-  //           // const groupSnap = await rtdbGet(groupRef);
-  //           // const groupData = groupSnap.val() || {};
-
-  //           // Skip announcement and general groups that belong to communities
-  //           // const belongsToCommunity = !!groupData.communityId;
-  //           // const isSystemGroup = groupData.title === 'Announcements' || groupData.title === 'General';
-
-  //           // if (belongsToCommunity && isSystemGroup) {
-  //           //   console.log(`Skipping system group ${roomId} from community ${groupData.communityId}`);
-  //           //   continue; // Skip this group
-  //           // }
-
-  //           const conv = await this.fetchGroupConDetails(roomId, meta);
-  //           conversations.push(conv);
-  //         } else if (type === 'community') {
-  //           const conv = await this.fetchCommunityConvDetails(roomId, meta);
-  //           conversations.push(conv);
-  //         } else {
-  //           conversations.push({
-  //             roomId,
-  //             type: 'private',
-  //             title: roomId,
-  //             lastMessage: meta?.lastmessage,
-  //             lastMessageAt: meta?.lastmessageAt
-  //               ? new Date(Number(meta.lastmessageAt))
-  //               : undefined,
-  //             unreadCount: Number(meta?.unreadCount) || 0,
-  //           } as IConversation);
-  //         }
-  //       } catch (innerErr) {
-  //         console.error('Error building conversation for', roomId, innerErr);
-  //       }
-  //     }
-
-  //     const existing = this._conversations$.value;
-  //     const newConversations = conversations.filter(
-  //       ({ roomId }) => !existing.some((c) => c.roomId === roomId)
-  //     );
-
-  //     if (newConversations.length) {
-  //       for (const conv of newConversations) {
-  //         try {
-  //           this.sqliteService.createConversation({ ...conv });
-  //         } catch (error) {}
-  //       }
-  //       this._conversations$.next([...existing, ...newConversations]);
-  //     }
-  //     console.log('all conversations', [...existing, ...newConversations]);
-  //     if (this._userChatsListener) {
-  //       try {
-  //         this._userChatsListener();
-  //       } catch {}
-  //       this._userChatsListener = null;
-  //     }
-
-  //     const onUserChatsChange = async (snap: DataSnapshot) => {
-  //       const updatedData: IChatMeta = snap.val() || {};
-  //       const current = [...this._conversations$.value];
-
-  //       for (const [roomId, meta] of Object.entries(updatedData)) {
-  //         const idx = current.findIndex((c) => c.roomId === roomId);
-  //         const chatMeta: IChatMeta = { ...meta, roomId };
-  //         console.log('chat changed', chatMeta);
-
-  //         try {
-  //           if (idx > -1) {
-  //             const decryptedText = await this.encryptionService.decrypt(
-  //               chatMeta.lastmessage
-  //             );
-  //             const conv = current[idx];
-  //             current[idx] = {
-  //               ...conv,
-  //               lastMessage: decryptedText ?? conv.lastMessage,
-  //               lastMessageType:
-  //                 chatMeta.lastmessageType ?? conv.lastMessageType,
-  //               lastMessageAt: chatMeta.lastmessageAt
-  //                 ? new Date(Number((meta as any).lastmessageAt))
-  //                 : conv.lastMessageAt,
-  //               unreadCount: Number(chatMeta.unreadCount || 0),
-  //               isArchived: chatMeta.isArchived,
-  //               updatedAt: chatMeta.lastmessageAt
-  //                 ? new Date(Number(chatMeta.lastmessageAt))
-  //                 : conv.updatedAt,
-  //             };
-  //           } else {
-  //             console.warn(
-  //               'New room detected in userchats but not present locally:',
-  //               roomId
-  //             );
-  //             const type: IConversation['type'] = chatMeta.type || 'private';
-
-  //             try {
-  //               let newConv: IConversation | null = null;
-
-  //               if (type === 'private') {
-  //                 newConv = await this.fetchPrivateConvDetails(
-  //                   roomId,
-  //                   chatMeta
-  //                 );
-  //               } else if (type === 'group') {
-  //                 // Check if this group belongs to a community
-  //                 // const groupRef = rtdbRef(this.db, `groups/${roomId}`);
-  //                 // const groupSnap = await rtdbGet(groupRef);
-  //                 // const groupData = groupSnap.val() || {};
-
-  //                 // Skip announcement and general groups
-  //                 // const belongsToCommunity = !!groupData.communityId;
-  //                 // const isSystemGroup = groupData.title === 'Announcements' || groupData.title === 'General';
-
-  //                 // if (belongsToCommunity && isSystemGroup) {
-  //                 //   console.log(`Skipping new system group ${roomId}`);
-  //                 //   continue;
-  //                 // }
-
-  //                 newConv = await this.fetchGroupConDetails(roomId, chatMeta);
-  //               } else if (type === 'community') {
-  //                 newConv = await this.fetchCommunityConvDetails(
-  //                   roomId,
-  //                   chatMeta
-  //                 );
-  //               } else {
-  //                 newConv = {
-  //                   roomId,
-  //                   type: 'private',
-  //                   title: roomId,
-  //                   lastMessage: chatMeta.lastmessage,
-  //                   lastMessageAt: chatMeta.lastmessageAt
-  //                     ? new Date(Number(chatMeta.lastmessageAt))
-  //                     : undefined,
-  //                   unreadCount: Number(chatMeta.unreadCount) || 0,
-  //                 } as IConversation;
-  //               }
-
-  //               if (newConv) {
-  //                 current.push(newConv);
-  //                 try {
-  //                   await this.sqliteService.createConversation({ ...newConv });
-  //                 } catch (e) {
-  //                   console.warn(
-  //                     'sqlite createConversation failed for new room',
-  //                     roomId,
-  //                     e
-  //                   );
-  //                 }
-  //               }
-  //             } catch (e) {
-  //               console.error(
-  //                 'Failed to fetch details for new room',
-  //                 roomId,
-  //                 e
-  //               );
-  //             }
-  //           }
-  //         } catch (e) {
-  //           console.error('onUserChatsChange inner error for', roomId, e);
-  //         }
-  //       }
-
-  //       this.syncReceipt(
-  //         current
-  //           .filter((c) => (c.unreadCount || 0) > 0)
-  //           .map((c) => ({
-  //             roomId: c.roomId,
-  //             unreadCount: c.unreadCount as number,
-  //           }))
-  //       );
-
-  //       this._conversations$.next(current);
-  //     };
-
-  //     const unsubscribe = rtdbOnValue(userChatsRef, onUserChatsChange);
-  //     this._userChatsListener = () => {
-  //       try {
-  //         unsubscribe();
-  //       } catch {}
-  //     };
-  //   } catch (error) {
-  //     console.error('syncConversationWithServer error:', error);
-  //   } finally {
-  //     this._isSyncing$.next(false);
-  //   }
-  // }
-
   async syncConversationWithServer(): Promise<void> {
-  try {
-    if (!this.senderId) {
-      console.warn('syncConversationWithServer: senderId is not set');
-      return;
-    }
-
-    this._isSyncing$.next(true);
-
-    const userChatsPath = `userchats/${this.senderId}`;
-    const userChatsRef = rtdbRef(this.db, userChatsPath);
-    const snapshot: DataSnapshot = await rtdbGet(userChatsRef);
-    const userChats = snapshot.val() || {};
-    const conversations: IConversation[] = [];
-    const roomIds = Object.keys(userChats);
-
-    console.log(`📥 Found ${roomIds.length} conversations in Firebase`);
-
-    for (const roomId of roomIds) {
-      const meta: IChatMeta = userChats[roomId] || {};
-      try {
-        const type: IConversation['type'] = meta.type;
-
-        if (type === 'private') {
-          const conv = await this.fetchPrivateConvDetails(roomId, meta);
-          conversations.push(conv);
-        } else if (type === 'group') {
-          const conv = await this.fetchGroupConDetails(roomId, meta);
-          conversations.push(conv);
-        } else if (type === 'community') {
-          const conv = await this.fetchCommunityConvDetails(roomId, meta);
-          conversations.push(conv);
-        } else {
-          conversations.push({
-            roomId,
-            type: 'private',
-            title: roomId,
-            lastMessage: meta?.lastmessage,
-            lastMessageAt: meta?.lastmessageAt
-              ? new Date(Number(meta.lastmessageAt))
-              : undefined,
-            unreadCount: Number(meta?.unreadCount) || 0,
-          } as IConversation);
-        }
-      } catch (innerErr) {
-        console.error('Error building conversation for', roomId, innerErr);
+    try {
+      if (!this.senderId) {
+        console.warn('syncConversationWithServer: senderId is not set');
+        return;
       }
-    }
 
-    // ✅ Update in-memory conversations first
-    const existing = this._conversations$.value;
-    const newConversations = conversations.filter(
-      ({ roomId }) => !existing.some((c) => c.roomId === roomId)
-    );
+      this._isSyncing$.next(true);
 
-    if (newConversations.length) {
-      // ✅ OPTIONAL: Save to SQLite for offline (but don't load from it)
-      for (const conv of newConversations) {
+      const userChatsPath = `userchats/${this.senderId}`;
+      const userChatsRef = rtdbRef(this.db, userChatsPath);
+      const snapshot: DataSnapshot = await rtdbGet(userChatsRef);
+      const userChats = snapshot.val() || {};
+      const conversations: IConversation[] = [];
+      const roomIds = Object.keys(userChats);
+
+      for (const roomId of roomIds) {
+        const meta: IChatMeta = userChats[roomId] || {};
         try {
-          await this.sqliteService.createConversation({ ...conv });
-          console.log('💾 Saved to SQLite (offline backup):', conv.roomId);
-        } catch (error) {
-          console.warn('SQLite save failed (non-critical):', error);
-        }
-      }
-      
-      this._conversations$.next([...existing, ...newConversations]);
-    }
+          const type: IConversation['type'] = meta.type;
 
-    console.log('✅ Total conversations loaded:', [...existing, ...newConversations].length);
+          if (type === 'private') {
+            const conv = await this.fetchPrivateConvDetails(roomId, meta);
+            conversations.push(conv);
+          } else if (type === 'group') {
+            // Check if this group belongs to a community
+            // const groupRef = rtdbRef(this.db, `groups/${roomId}`);
+            // const groupSnap = await rtdbGet(groupRef);
+            // const groupData = groupSnap.val() || {};
 
-    // ✅ Setup real-time listener for updates
-    if (this._userChatsListener) {
-      try {
-        this._userChatsListener();
-      } catch {}
-      this._userChatsListener = null;
-    }
+            // Skip announcement and general groups that belong to communities
+            // const belongsToCommunity = !!groupData.communityId;
+            // const isSystemGroup = groupData.title === 'Announcements' || groupData.title === 'General';
 
-    const onUserChatsChange = async (snap: DataSnapshot) => {
-      const updatedData: IChatMeta = snap.val() || {};
-      const current = [...this._conversations$.value];
+            // if (belongsToCommunity && isSystemGroup) {
+            //   console.log(`Skipping system group ${roomId} from community ${groupData.communityId}`);
+            //   continue; // Skip this group
+            // }
 
-      for (const [roomId, meta] of Object.entries(updatedData)) {
-        const idx = current.findIndex((c) => c.roomId === roomId);
-        const chatMeta: IChatMeta = { ...meta, roomId };
-        console.log('🔄 Chat changed:', chatMeta);
-
-        try {
-          if (idx > -1) {
-            const decryptedText = await this.encryptionService.decrypt(
-              chatMeta.lastmessage
-            );
-            const conv = current[idx];
-            current[idx] = {
-              ...conv,
-              lastMessage: decryptedText ?? conv.lastMessage,
-              lastMessageType:
-                chatMeta.lastmessageType ?? conv.lastMessageType,
-              lastMessageAt: chatMeta.lastmessageAt
-                ? new Date(Number(meta.lastmessageAt))
-                : conv.lastMessageAt,
-              unreadCount: Number(chatMeta.unreadCount || 0),
-              isArchived: chatMeta.isArchived,
-              updatedAt: chatMeta.lastmessageAt
-                ? new Date(Number(chatMeta.lastmessageAt))
-                : conv.updatedAt,
-            };
-
-            // ✅ OPTIONAL: Update SQLite
-            try {
-              // await this.sqliteService.updateConversation(current[idx]);
-            } catch (e) {
-              console.warn('SQLite update failed (non-critical):', e);
-            }
+            const conv = await this.fetchGroupConDetails(roomId, meta);
+            conversations.push(conv);
+          } else if (type === 'community') {
+            const conv = await this.fetchCommunityConvDetails(roomId, meta);
+            conversations.push(conv);
           } else {
-            console.warn(
-              'New room detected in userchats but not present locally:',
-              roomId
-            );
-            const type: IConversation['type'] = chatMeta.type || 'private';
-
-            try {
-              let newConv: IConversation | null = null;
-
-              if (type === 'private') {
-                newConv = await this.fetchPrivateConvDetails(
-                  roomId,
-                  chatMeta
-                );
-              } else if (type === 'group') {
-                newConv = await this.fetchGroupConDetails(roomId, chatMeta);
-              } else if (type === 'community') {
-                newConv = await this.fetchCommunityConvDetails(
-                  roomId,
-                  chatMeta
-                );
-              } else {
-                newConv = {
-                  roomId,
-                  type: 'private',
-                  title: roomId,
-                  lastMessage: chatMeta.lastmessage,
-                  lastMessageAt: chatMeta.lastmessageAt
-                    ? new Date(Number(chatMeta.lastmessageAt))
-                    : undefined,
-                  unreadCount: Number(chatMeta.unreadCount) || 0,
-                } as IConversation;
-              }
-
-              if (newConv) {
-                current.push(newConv);
-                
-                // ✅ OPTIONAL: Save to SQLite
-                try {
-                  await this.sqliteService.createConversation({ ...newConv });
-                } catch (e) {
-                  console.warn('SQLite create failed (non-critical):', e);
-                }
-              }
-            } catch (e) {
-              console.error(
-                'Failed to fetch details for new room',
-                roomId,
-                e
-              );
-            }
+            conversations.push({
+              roomId,
+              type: 'private',
+              title: roomId,
+              lastMessage: meta?.lastmessage,
+              lastMessageAt: meta?.lastmessageAt
+                ? new Date(Number(meta.lastmessageAt))
+                : undefined,
+              unreadCount: Number(meta?.unreadCount) || 0,
+            } as IConversation);
           }
-        } catch (e) {
-          console.error('onUserChatsChange inner error for', roomId, e);
+        } catch (innerErr) {
+          console.error('Error building conversation for', roomId, innerErr);
         }
       }
 
-      // Update receipts
-      this.syncReceipt(
-        current
-          .filter((c) => (c.unreadCount || 0) > 0)
-          .map((c) => ({
-            roomId: c.roomId,
-            unreadCount: c.unreadCount as number,
-          }))
+      const existing = this._conversations$.value;
+      const newConversations = conversations.filter(
+        ({ roomId }) => !existing.some((c) => c.roomId === roomId)
       );
 
-      this._conversations$.next(current);
-    };
+      if (newConversations.length) {
+        for (const conv of newConversations) {
+          try {
+            this.sqliteService.createConversation({ ...conv });
+          } catch (error) {}
+        }
+        this._conversations$.next([...existing, ...newConversations]);
+      }
+      console.log('all conversations', [...existing, ...newConversations]);
+      if (this._userChatsListener) {
+        try {
+          this._userChatsListener();
+        } catch {}
+        this._userChatsListener = null;
+      }
 
-    const unsubscribe = rtdbOnValue(userChatsRef, onUserChatsChange);
-    this._userChatsListener = () => {
-      try {
-        unsubscribe();
-      } catch {}
-    };
-  } catch (error) {
-    console.error('syncConversationWithServer error:', error);
-  } finally {
-    this._isSyncing$.next(false);
+      const onUserChatsChange = async (snap: DataSnapshot) => {
+        const updatedData: IChatMeta = snap.val() || {};
+        const current = [...this._conversations$.value];
+
+        for (const [roomId, meta] of Object.entries(updatedData)) {
+          const idx = current.findIndex((c) => c.roomId === roomId);
+          const chatMeta: IChatMeta = { ...meta, roomId };
+          console.log('chat changed', chatMeta);
+
+          try {
+            if (idx > -1) {
+              const decryptedText = await this.encryptionService.decrypt(
+                chatMeta.lastmessage
+              );
+              const conv = current[idx];
+              current[idx] = {
+                ...conv,
+                lastMessage: decryptedText ?? conv.lastMessage,
+                lastMessageType:
+                  chatMeta.lastmessageType ?? conv.lastMessageType,
+                lastMessageAt: chatMeta.lastmessageAt
+                  ? new Date(Number((meta as any).lastmessageAt))
+                  : conv.lastMessageAt,
+                unreadCount: Number(chatMeta.unreadCount || 0),
+                isArchived: chatMeta.isArchived,
+                updatedAt: chatMeta.lastmessageAt
+                  ? new Date(Number(chatMeta.lastmessageAt))
+                  : conv.updatedAt,
+              };
+            } else {
+              console.warn(
+                'New room detected in userchats but not present locally:',
+                roomId
+              );
+              const type: IConversation['type'] = chatMeta.type || 'private';
+
+              try {
+                let newConv: IConversation | null = null;
+
+                if (type === 'private') {
+                  newConv = await this.fetchPrivateConvDetails(
+                    roomId,
+                    chatMeta
+                  );
+                } else if (type === 'group') {
+                  // Check if this group belongs to a community
+                  // const groupRef = rtdbRef(this.db, `groups/${roomId}`);
+                  // const groupSnap = await rtdbGet(groupRef);
+                  // const groupData = groupSnap.val() || {};
+
+                  // Skip announcement and general groups
+                  // const belongsToCommunity = !!groupData.communityId;
+                  // const isSystemGroup = groupData.title === 'Announcements' || groupData.title === 'General';
+
+                  // if (belongsToCommunity && isSystemGroup) {
+                  //   console.log(`Skipping new system group ${roomId}`);
+                  //   continue;
+                  // }
+
+                  newConv = await this.fetchGroupConDetails(roomId, chatMeta);
+                } else if (type === 'community') {
+                  newConv = await this.fetchCommunityConvDetails(
+                    roomId,
+                    chatMeta
+                  );
+                } else {
+                  newConv = {
+                    roomId,
+                    type: 'private',
+                    title: roomId,
+                    lastMessage: chatMeta.lastmessage,
+                    lastMessageAt: chatMeta.lastmessageAt
+                      ? new Date(Number(chatMeta.lastmessageAt))
+                      : undefined,
+                    unreadCount: Number(chatMeta.unreadCount) || 0,
+                  } as IConversation;
+                }
+
+                if (newConv) {
+                  current.push(newConv);
+                  try {
+                    await this.sqliteService.createConversation({ ...newConv });
+                  } catch (e) {
+                    console.warn(
+                      'sqlite createConversation failed for new room',
+                      roomId,
+                      e
+                    );
+                  }
+                }
+              } catch (e) {
+                console.error(
+                  'Failed to fetch details for new room',
+                  roomId,
+                  e
+                );
+              }
+            }
+          } catch (e) {
+            console.error('onUserChatsChange inner error for', roomId, e);
+          }
+        }
+
+        this.syncReceipt(
+          current
+            .filter((c) => (c.unreadCount || 0) > 0)
+            .map((c) => ({
+              roomId: c.roomId,
+              unreadCount: c.unreadCount as number,
+            }))
+        );
+
+        this._conversations$.next(current);
+      };
+
+      const unsubscribe = rtdbOnValue(userChatsRef, onUserChatsChange);
+      this._userChatsListener = () => {
+        try {
+          unsubscribe();
+        } catch {}
+      };
+    } catch (error) {
+      console.error('syncConversationWithServer error:', error);
+    } finally {
+      this._isSyncing$.next(false);
+    }
   }
-}
 
-  // New method to fetch community conversation details
+  
+//   async syncConversationWithServer(): Promise<void> {      //without sqlite
+//   try {
+//     if (!this.senderId) {
+//       console.warn('syncConversationWithServer: senderId is not set');
+//       return;
+//     }
+
+//     this._isSyncing$.next(true);
+
+//     const userChatsPath = `userchats/${this.senderId}`;
+//     const userChatsRef = rtdbRef(this.db, userChatsPath);
+//     const snapshot: DataSnapshot = await rtdbGet(userChatsRef);
+//     const userChats = snapshot.val() || {};
+//     const conversations: IConversation[] = [];
+//     const roomIds = Object.keys(userChats);
+
+//     console.log(`📥 Found ${roomIds.length} conversations in Firebase`);
+
+//     for (const roomId of roomIds) {
+//       const meta: IChatMeta = userChats[roomId] || {};
+//       try {
+//         const type: IConversation['type'] = meta.type;
+
+//         if (type === 'private') {
+//           const conv = await this.fetchPrivateConvDetails(roomId, meta);
+//           conversations.push(conv);
+//         } else if (type === 'group') {
+//           const conv = await this.fetchGroupConDetails(roomId, meta);
+//           conversations.push(conv);
+//         } else if (type === 'community') {
+//           const conv = await this.fetchCommunityConvDetails(roomId, meta);
+//           conversations.push(conv);
+//         } else {
+//           conversations.push({
+//             roomId,
+//             type: 'private',
+//             title: roomId,
+//             lastMessage: meta?.lastmessage,
+//             lastMessageAt: meta?.lastmessageAt
+//               ? new Date(Number(meta.lastmessageAt))
+//               : undefined,
+//             unreadCount: Number(meta?.unreadCount) || 0,
+//           } as IConversation);
+//         }
+//       } catch (innerErr) {
+//         console.error('Error building conversation for', roomId, innerErr);
+//       }
+//     }
+
+//     // ✅ Update in-memory conversations first
+//     const existing = this._conversations$.value;
+//     const newConversations = conversations.filter(
+//       ({ roomId }) => !existing.some((c) => c.roomId === roomId)
+//     );
+
+//     if (newConversations.length) {
+//       // ✅ OPTIONAL: Save to SQLite for offline (but don't load from it)
+//       for (const conv of newConversations) {
+//         try {
+//           await this.sqliteService.createConversation({ ...conv });
+//           console.log('💾 Saved to SQLite (offline backup):', conv.roomId);
+//         } catch (error) {
+//           console.warn('SQLite save failed (non-critical):', error);
+//         }
+//       }
+      
+//       this._conversations$.next([...existing, ...newConversations]);
+//     }
+
+//     console.log('✅ Total conversations loaded:', [...existing, ...newConversations].length);
+
+//     // ✅ Setup real-time listener for updates
+//     if (this._userChatsListener) {
+//       try {
+//         this._userChatsListener();
+//       } catch {}
+//       this._userChatsListener = null;
+//     }
+
+//     const onUserChatsChange = async (snap: DataSnapshot) => {
+//       const updatedData: IChatMeta = snap.val() || {};
+//       const current = [...this._conversations$.value];
+
+//       for (const [roomId, meta] of Object.entries(updatedData)) {
+//         const idx = current.findIndex((c) => c.roomId === roomId);
+//         const chatMeta: IChatMeta = { ...meta, roomId };
+//         console.log('🔄 Chat changed:', chatMeta);
+
+//         try {
+//           if (idx > -1) {
+//             const decryptedText = await this.encryptionService.decrypt(
+//               chatMeta.lastmessage
+//             );
+//             const conv = current[idx];
+//             current[idx] = {
+//               ...conv,
+//               lastMessage: decryptedText ?? conv.lastMessage,
+//               lastMessageType:
+//                 chatMeta.lastmessageType ?? conv.lastMessageType,
+//               lastMessageAt: chatMeta.lastmessageAt
+//                 ? new Date(Number(meta.lastmessageAt))
+//                 : conv.lastMessageAt,
+//               unreadCount: Number(chatMeta.unreadCount || 0),
+//               isArchived: chatMeta.isArchived,
+//               updatedAt: chatMeta.lastmessageAt
+//                 ? new Date(Number(chatMeta.lastmessageAt))
+//                 : conv.updatedAt,
+//             };
+
+//             // ✅ OPTIONAL: Update SQLite
+//             try {
+//               // await this.sqliteService.updateConversation(current[idx]);
+//             } catch (e) {
+//               console.warn('SQLite update failed (non-critical):', e);
+//             }
+//           } else {
+//             console.warn(
+//               'New room detected in userchats but not present locally:',
+//               roomId
+//             );
+//             const type: IConversation['type'] = chatMeta.type || 'private';
+
+//             try {
+//               let newConv: IConversation | null = null;
+
+//               if (type === 'private') {
+//                 newConv = await this.fetchPrivateConvDetails(
+//                   roomId,
+//                   chatMeta
+//                 );
+//               } else if (type === 'group') {
+//                 newConv = await this.fetchGroupConDetails(roomId, chatMeta);
+//               } else if (type === 'community') {
+//                 newConv = await this.fetchCommunityConvDetails(
+//                   roomId,
+//                   chatMeta
+//                 );
+//               } else {
+//                 newConv = {
+//                   roomId,
+//                   type: 'private',
+//                   title: roomId,
+//                   lastMessage: chatMeta.lastmessage,
+//                   lastMessageAt: chatMeta.lastmessageAt
+//                     ? new Date(Number(chatMeta.lastmessageAt))
+//                     : undefined,
+//                   unreadCount: Number(chatMeta.unreadCount) || 0,
+//                 } as IConversation;
+//               }
+
+//               if (newConv) {
+//                 current.push(newConv);
+                
+//                 // ✅ OPTIONAL: Save to SQLite
+//                 try {
+//                   await this.sqliteService.createConversation({ ...newConv });
+//                 } catch (e) {
+//                   console.warn('SQLite create failed (non-critical):', e);
+//                 }
+//               }
+//             } catch (e) {
+//               console.error(
+//                 'Failed to fetch details for new room',
+//                 roomId,
+//                 e
+//               );
+//             }
+//           }
+//         } catch (e) {
+//           console.error('onUserChatsChange inner error for', roomId, e);
+//         }
+//       }
+
+//       // Update receipts
+//       this.syncReceipt(
+//         current
+//           .filter((c) => (c.unreadCount || 0) > 0)
+//           .map((c) => ({
+//             roomId: c.roomId,
+//             unreadCount: c.unreadCount as number,
+//           }))
+//       );
+
+//       this._conversations$.next(current);
+//     };
+
+//     const unsubscribe = rtdbOnValue(userChatsRef, onUserChatsChange);
+//     this._userChatsListener = () => {
+//       try {
+//         unsubscribe();
+//       } catch {}
+//     };
+//   } catch (error) {
+//     console.error('syncConversationWithServer error:', error);
+//   } finally {
+//     this._isSyncing$.next(false);
+//   }
+// }
+
+ 
+ 
   private async fetchCommunityConvDetails(
     roomId: string,
     meta: IChatMeta

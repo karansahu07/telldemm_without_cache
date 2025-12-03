@@ -254,7 +254,7 @@ async resetApp() {
 
   // Step 2: Clear all storage
   console.log('🗑️ Clearing storage...');
-  this.clearLocalStorage();
+  await this.clearLocalStorage();
   await this.clearCapacitorStorage();
   await this.clearSecureStorage();
   await this.clearFileSystem();

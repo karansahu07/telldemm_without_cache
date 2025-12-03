@@ -469,6 +469,8 @@ export class SqliteService {
   ): Promise<T> {
     this.setOpState(id, { isLoading: true, isError: null, isSuccess: null });
     try {
+      throw new Error("some thing went wrong");
+      
       if (!this.isInitialized) throw new Error('DB not initialized');
       const result = await action();
       this.setOpState(id, { isLoading: false, isSuccess: true });
@@ -1004,31 +1006,38 @@ export class SqliteService {
   /** ----------------- UTILITIES ----------------- **/
   async resetDB() {
   return this.withOpState('resetDB', async () => {
-    const tables = ['users', 'conversations', 'messages', 'attachments'];
+    // const tables = ['users', 'conversations', 'messages', 'attachments'];
     
-    // console.log('🗑️ Starting database reset...');
+    // // console.log('🗑️ Starting database reset...');
     
-    // Drop all tables
-    for (const table of tables) {
-      try {
-        await this.db.execute(`DROP TABLE IF EXISTS ${table}`);
-        console.log(`✅ Dropped table: ${table}`);
-      } catch (error) {
-        console.error(`❌ Error dropping table ${table}:`, error);
-      }
-    }
+    // // Drop all tables
+    // for (const table of Object.keys(TABLE_SCHEMAS)) {
+    //   try {
+    //     await this.db.execute(`DELETE FROM TABLE ${table}`);
+    //     console.log(`✅ Dropped table: ${table}`);
+    //   } catch (error) {
+    //     console.error(`❌ Error dropping table ${table}:`, error);
+    //   }
+    // }
+
+    const tables = ["users", "conversations", "attachments", "messages"];
+
+  for (const table of tables) {
+    await this.db.execute(`DELETE FROM ${table}`);
+    await this.db.execute(`DELETE FROM sqlite_sequence WHERE name='${table}'`);
+  }
     
     // Recreate all tables with fresh schemas
-    for (const [tableName, schema] of Object.entries(TABLE_SCHEMAS)) {
-      try {
-        await this.db.execute(schema);
-        console.log(`✅ Recreated table: ${tableName}`);
-      } catch (error) {
-        console.error(`❌ Error creating table ${tableName}:`, error);
-      }
-    }
-    
-    console.log('✅ Database reset complete - all tables cleared and recreated');
+    // for (const [tableName, schema] of Object.entries(TABLE_SCHEMAS)) {
+    //   try {
+    //     await this.db.execute(schema);
+    //     console.log(`✅ Recreated table: ${tableName}`);
+    //   } catch (error) {
+    //     console.error(`❌ Error creating table ${tableName}:`, error);
+    //   }
+    // }
+    // this.db.close()
+    // console.log('✅ Database reset complete - all tables cleared and recreated');
   });
 }
 

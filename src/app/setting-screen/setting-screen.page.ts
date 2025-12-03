@@ -131,7 +131,7 @@ export class SettingScreenPage implements OnInit, OnDestroy {
       message,
       buttons: [
         { text: cancel, role: 'cancel', cssClass: 'secondary' },
-        { text: logoutTxt, cssClass: 'danger', handler: () => this.performLogout() }
+        { text: logoutTxt, cssClass: 'danger', handler: async () => await this.performLogout() }
       ]
     });
     await alert.present();
@@ -155,7 +155,7 @@ export class SettingScreenPage implements OnInit, OnDestroy {
     const successAlert = await this.alertController.create({
       header: successHeader,
       message: successMessage,
-      buttons: [{ text: okTxt, handler: () => this.resetapp.resetApp() }]
+      buttons: [{ text: okTxt, handler: async () => await this.resetapp.resetApp() }]
     });
     await successAlert.present();
   }

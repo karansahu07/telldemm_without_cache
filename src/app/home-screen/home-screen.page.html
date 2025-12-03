@@ -50,7 +50,7 @@
         <ion-button (click)="onPinSelected()">
           <ion-icon name="pin-outline"></ion-icon>
         </ion-button>
-        <ion-button (click)="onDeleteSelected()">
+        <ion-button (click)="deleteMultipleChats()">
           <ion-icon name="trash-outline"></ion-icon>
         </ion-button>
         <ion-button (click)="onArchievedSelected()">
@@ -236,19 +236,15 @@
     </ion-item>
   </ion-list>
 
-  <div *ngIf="showNewChatPrompt" class="no-chats-container">
+  <!-- <div *ngIf="showNewChatPrompt" class="no-chats-container"> -->
+    <div *ngIf="isLoading" class="no-chat-container">
   <ion-icon name="chatbubbles-outline"></ion-icon>
   <h2>No chats Yet</h2>
   <p>start new chat click on start button</p>
-  <!-- <h2>{{ 'home.noChats.title' | translate }}</h2>
-  <p>{{ 'home.noChats.subtitle' | translate }}</p> -->
   <ion-button (click)="goToContact()" expand="block">
     <ion-icon slot="start" name="person-add-outline"></ion-icon>
     Start Button
   </ion-button>
-    <!-- <ion-icon slot="start" name="person-add-outline"></ion-icon>
-    {{ 'home.noChats.startButton' | translate }}
-  </ion-button> -->
 </div>
 
   <!-- Meta rows: Locked & Archived -->
@@ -501,7 +497,7 @@
       <div class="pre-model">
         <!-- Image Preview -->
         <div class="mine2">
-          <div *ngIf="selectedAttachment?.type === 'image'">
+          <div *ngIf="selectedAttachment?.type === 'image'" class="cropped-image">
             <img [src]="selectedAttachment?.previewUrl" class="preview-image" />
           </div>
         </div>
