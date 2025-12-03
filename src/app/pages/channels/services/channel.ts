@@ -42,31 +42,6 @@ export interface Channel {
   is_following?: boolean | null;
 }
 
-// export interface ChannelDetails {
-//   channel_id: number;
-//   channel_name: string;
-//   description: string | null;
-//   created_by: number;
-//   created_at: string | null;
-//   channel_dp: string | null;
-
-//   is_public: 0 | 1;
-//   max_members: number | null;
-//   firebase_channel_id: string | null;
-
-//   category_id: number | null;
-//   category_name: string | null;
-
-//   region_id: number | null;
-//   region_name: string | null;
-
-//   followers_count: number;
-// }
-
-// export interface ChannelDetailsResponse {
-//   status: boolean;
-//   channel: ChannelDetails;
-// }
 export interface ChannelDetails {
   channel_id: number;
   channel_name: string;
@@ -175,6 +150,27 @@ export interface Region {
   country_code?: string | null;
 }
 
+export interface ChannelFollower {
+  user_id: number;
+  name: string;
+  profile_picture_url: string | null;
+  role_id: number;
+  joined_at: string;
+}
+
+export interface ChannelFollowersResponse {
+  status: boolean;
+  followers: ChannelFollower[];
+  meta?: {
+    page: number;
+    limit: number;
+    total: number;
+    role?: string;
+  };
+  message?: string;
+}
+
+
 /* ---------- Service ---------- */
 
 @Injectable({
@@ -210,32 +206,6 @@ export class ChannelService {
     });
     return httpParams;
   }
-
-  /* ---------- Normalizer helpers ---------- */
-
-  // Normalize a single channel object from backend to our Channel interface
-  // private normalizeChannel(raw: any): Channel {
-  //   if (!raw) return raw;
-  //   return {
-  //     channel_id: Number(raw.channel_id ?? raw.id),
-  //     channel_name: raw.channel_name ?? raw.name ?? '',
-  //     description: raw.description ?? null,
-  //     created_by: Number(raw.created_by ?? raw.creatorId ?? 0),
-  //     channel_dp: raw.channel_dp ?? raw.dp ?? null,
-  //     is_public: raw.is_public ?? 1,
-  //     max_members: raw.max_members ?? null,
-  //     firebase_channel_id: raw.firebase_channel_id ?? null,
-  //     category_id: raw.category_id ?? raw.categoryId ?? null,
-  //     category_name: raw.category_name ?? raw.categoryName ?? null,
-  //     region_id: raw.region_id ?? raw.regionId ?? null,
-  //     region_name: raw.region_name ?? raw.regionName ?? null,
-  //     created_at: raw.created_at ?? raw.createdAt ?? null,
-  //     followers_count: raw.followers_count ?? raw.follower_count ?? null,
-  //     is_verified: raw.is_verified ?? raw.verified ?? null,
-  //     role_id: raw.role_id ?? null,
-  //     is_following: raw.is_following ?? (raw.role_id ? true : false)
-  //   };
-  // }
 
   private normalizeChannel(raw: any): Channel {
   if (!raw) return raw as any;
@@ -470,6 +440,27 @@ getChannelDetails(channelId: number | string): Observable<ChannelDetailsResponse
       catchError(err => this.handleError(err))
     );
 }
+
+
+/* ---------- Followers List API ---------- */
+
+/**
+ * Get list of followers/members of a channel
+ * GET /channels/{channel_id}/followers?page=&limit=
+ */
+getChannelFollowers(
+  channelId: number | string,
+  params?: { page?: number; limit?: number }
+): Observable<ChannelFollowersResponse> {
+
+  const httpParams = this.buildHttpParams(params || {});
+  const url = `${this.baseUrl}/${this.resource}/${channelId}/followers`;
+
+  return this.http
+    .get<ChannelFollowersResponse>(url, { params: httpParams })
+    .pipe(catchError(err => this.handleError(err)));
+}
+
 
 
 }

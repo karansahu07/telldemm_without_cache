@@ -26,10 +26,24 @@ export class ChannelDetailPage implements OnInit {
   isMuted = false;
   userId: any;
   formattedCreatedAt: string = '';
-  
+  followers: any[] = [];
+  isLoadingFollowers = false;
+
+  // View mode for followers section
+  followersViewMode: 'grid' | 'list' = 'grid';
+
+  /**
+   * Toggle between grid and list view
+   */
+  toggleFollowersView(mode: 'grid' | 'list') {
+    this.followersViewMode = mode;
+    // Optionally save preference to localStorage
+    localStorage.setItem('followers_view_mode', mode);
+  }
+
   // Media slider
   mediaItems: any[] = [];
-  
+
   // Stats
   stats = {
     posts: 0,
@@ -50,16 +64,22 @@ export class ChannelDetailPage implements OnInit {
   }
 
   ngOnInit() {
-    this.channelId = this.route.snapshot.queryParams['channelId'] 
-      ? Number(this.route.snapshot.queryParams['channelId']) 
+    this.channelId = this.route.snapshot.queryParams['channelId']
+      ? Number(this.route.snapshot.queryParams['channelId'])
       : null;
-    
+
     if (this.channelId) {
       this.loadChannelDetails();
       this.loadMuteStatus();
     } else {
       this.errorMessage = 'Invalid channel ID';
       this.isLoadingChannel = false;
+    }
+
+    // Load saved view preference
+    const savedViewMode = localStorage.getItem('followers_view_mode') as 'grid' | 'list';
+    if (savedViewMode) {
+      this.followersViewMode = savedViewMode;
     }
   }
 
@@ -121,7 +141,7 @@ export class ChannelDetailPage implements OnInit {
       this.isFollowing = false;
       return;
     }
-    
+
     this.channelService.getUserFollowerChannels(this.userId, { limit: 100 }).subscribe({
       next: (res: any) => {
         if (res?.status && Array.isArray(res.channels)) {
@@ -148,7 +168,7 @@ export class ChannelDetailPage implements OnInit {
 
   toggleFollow() {
     if (!this.channel || this.isLoading || !this.userId) return;
-    
+
     this.isLoading = true;
     const action$ = this.isFollowing
       ? this.channelService.unfollowChannel(this.channel.channel_id, this.userId)
@@ -179,6 +199,80 @@ export class ChannelDetailPage implements OnInit {
     localStorage.setItem(muteKey, this.isMuted.toString());
     this.presentToast(this.isMuted ? 'Notifications muted' : 'Notifications enabled');
   }
+
+  // Add these methods to your ChannelDetailPage class
+
+  /**
+   * Get human-readable role name from role_id
+   */
+  getRoleName(roleId: number): string {
+    const roleMap: { [key: number]: string } = {
+      1: 'Owner',
+      2: 'Follower',
+      3: 'Admin',
+      
+      // Add more role mappings as needed
+    };
+    return roleMap[roleId] || 'Member';
+  }
+
+  /**
+   * View all followers in a modal or separate page
+   */
+  async viewAllFollowers() {
+    // Option 1: Navigate to a dedicated followers page
+    this.router.navigate(['/channel-followers'], {
+      queryParams: { channelId: this.channelId }
+    });
+
+    // Option 2: Show in a modal (uncomment if preferred)
+    /*
+    const modal = await this.modalCtrl.create({
+      component: FollowersModalComponent,
+      componentProps: {
+        channelId: this.channelId,
+        followers: this.followers
+      }
+    });
+    await modal.present();
+    */
+  }
+
+  /**
+   * View individual follower profile
+   */
+  viewFollowerProfile(userId: string) {
+    this.router.navigate(['/profile'], {
+      queryParams: { userId }
+    });
+  }
+
+  /**
+   * Enhanced loadFollowers with pagination support
+   */
+  loadFollowers(showAll: boolean = false) {
+    if (!this.channelId) return;
+
+    this.isLoadingFollowers = true;
+    const limit = showAll ? 100 : 6; // Show 6 in preview, 100 when viewing all
+
+    this.channelService.getChannelFollowers(this.channelId, { page: 1, limit })
+      .subscribe({
+        next: (res: any) => {
+          this.isLoadingFollowers = false;
+          if (res?.status && Array.isArray(res.followers)) {
+            this.followers = res.followers;
+          } else {
+            this.followers = [];
+          }
+        },
+        error: () => {
+          this.isLoadingFollowers = false;
+          this.presentToast("Failed to load followers");
+        }
+      });
+  }
+
 
   async presentChannelOptions() {
     const actionSheet = await this.actionSheetCtrl.create({
@@ -218,9 +312,9 @@ export class ChannelDetailPage implements OnInit {
 
   shareChannel() {
 
-      this.presentToast('wip...');
+    this.presentToast('wip...');
 
-      return;
+    return;
     // Implement share functionality
     if (navigator.share) {
       navigator.share({
@@ -276,8 +370,8 @@ export class ChannelDetailPage implements OnInit {
   }
 
   async presentToast(msg: string) {
-    const toast = await this.toastCtrl.create({ 
-      message: msg, 
+    const toast = await this.toastCtrl.create({
+      message: msg,
       duration: 2000,
       position: 'bottom'
     });
