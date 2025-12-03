@@ -23,6 +23,7 @@ export interface Channel {
   channel_name: string;
   description?: string | null;
   created_by: number;
+   creator_name: any | null;
   channel_dp?: string | null;
   is_public: 0 | 1;
   max_members?: number | null;
@@ -40,6 +41,103 @@ export interface Channel {
   role_id?: number | null;
   is_following?: boolean | null;
 }
+
+// export interface ChannelDetails {
+//   channel_id: number;
+//   channel_name: string;
+//   description: string | null;
+//   created_by: number;
+//   created_at: string | null;
+//   channel_dp: string | null;
+
+//   is_public: 0 | 1;
+//   max_members: number | null;
+//   firebase_channel_id: string | null;
+
+//   category_id: number | null;
+//   category_name: string | null;
+
+//   region_id: number | null;
+//   region_name: string | null;
+
+//   followers_count: number;
+// }
+
+// export interface ChannelDetailsResponse {
+//   status: boolean;
+//   channel: ChannelDetails;
+// }
+export interface ChannelDetails {
+  channel_id: number;
+  channel_name: string;
+  description: string | null;
+  created_by: number;
+  creator_name: any | null;
+  created_at: string | null;
+  channel_dp: string | null;
+
+  is_public: 0 | 1;
+  max_members: number | null;
+  firebase_channel_id: string | null;
+
+  category_id: number | null;
+  category_name: string | null;
+
+  region_id: number | null;
+  region_name: string | null;
+
+  followers_count: number;
+  
+  // Additional fields from API response
+  is_verified: boolean | null;
+  role_id: number | null;
+  is_following: boolean | null;
+}
+
+export interface ChannelDetailsResponse {
+  status: boolean;
+  channel: ChannelDetails;
+  message?: string;
+}
+
+// Optional: Interface for channel posts if needed
+export interface ChannelPost {
+  post_id: number;
+  channel_id: number;
+  title: string;
+  content: string;
+  created_at: string;
+  created_by: number;
+  creator_name: any | null;
+  media_urls?: string[];
+  likes_count?: number;
+  comments_count?: number;
+}
+
+export interface ChannelPostsResponse {
+  status: boolean;
+  posts: ChannelPost[];
+  total?: number;
+  message?: string;
+}
+
+// Interface for media items
+export interface ChannelMedia {
+  media_id: number;
+  channel_id: number;
+  media_url: string;
+  media_type: 'image' | 'video' | 'document';
+  uploaded_at: string;
+  thumbnail_url?: string;
+}
+
+export interface ChannelMediaResponse {
+  status: boolean;
+  media: ChannelMedia[];
+  total?: number;
+  message?: string;
+}
+
 
 export interface ApiResponse<T = any> {
   status: boolean;
@@ -147,6 +245,7 @@ export class ChannelService {
     channel_name: raw.channel_name ?? '',
     description: raw.description ?? null,
     created_by: Number(raw.created_by ?? 0),
+    creator_name:raw.creator_name ?? '',
     channel_dp: raw.channel_dp ?? null,
     is_public: raw.is_public ?? 1,
     max_members: raw.max_members ?? null,
@@ -351,4 +450,26 @@ export class ChannelService {
         return res;
       }), catchError(err => this.handleError(err)));
   }
+
+/**
+ * Independent API for getting detailed channel info.
+ * GET /channels/{channel_id}
+ */
+getChannelDetails(channelId: number | string): Observable<ChannelDetailsResponse> {
+  const url = `${this.baseUrl}/${this.resource}/${channelId}`;
+
+  return this.http
+    .get<ChannelDetailsResponse>(url)
+    .pipe(
+      map(res => {
+        if (res?.channel) {
+          res.channel = this.normalizeChannel(res.channel) as any;
+        }
+        return res;
+      }),
+      catchError(err => this.handleError(err))
+    );
+}
+
+
 }

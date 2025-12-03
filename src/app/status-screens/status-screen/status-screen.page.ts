@@ -200,7 +200,7 @@ toggleFollow(channel: Channel) {
 
   // --- Navigation & UI ---
   openChat(channel: Channel) {
-    //this.router.navigate(['/chatting-screen'], { queryParams: { channelId: channel.channel_id } });
+    this.router.navigate(['/channel-detail'], { queryParams: { channelId: channel.channel_id } });
   }
 
   goToChannels() {

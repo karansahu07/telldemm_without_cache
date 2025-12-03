@@ -1,51 +1,272 @@
-<!-- <ion-header translucent>
-  <ion-toolbar>
-    <ion-buttons slot="start"><ion-back-button></ion-back-button></ion-buttons>
-    <ion-title>{{ channel?.name || 'Channel' }}</ion-title>
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/status-screen" color="light"></ion-back-button>
+    </ion-buttons>
+    <ion-title color="light">Channel Details</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="showPrivacy()">Privacy</ion-button>
+      <ion-button (click)="presentChannelOptions()">
+        <ion-icon slot="icon-only" name="ellipsis-vertical" color="light"></ion-icon>
+      </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content fullscreen>
-  <div class="hero">
-    <ion-avatar class="big">
-      <img [src]="channel?.avatar || 'assets/default-avatar.png'"/>
-    </ion-avatar>
-    <h1>{{ channel?.name }}</h1>
-    <p class="meta">Channel • {{ channel?.followers | number }} followers</p>
-    <div class="actions">
-      <ion-button color="success">Follow</ion-button>
-      <ion-button fill="clear"><ion-icon name="share-outline"></ion-icon></ion-button>
-      <ion-button fill="clear"><ion-icon name="arrow-redo-outline"></ion-icon></ion-button>
-    </div>
+<ion-content>
+  <!-- Loading State -->
+  <div *ngIf="isLoadingChannel" class="loading-container">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p class="loading-text">Loading channel details...</p>
   </div>
 
-  <ion-list>
-    <ion-item lines="none">
-      <ion-label>
-        <h3>About</h3>
-        <p>{{ channel?.description }}</p>
-      </ion-label>
-    </ion-item>
+  <!-- Error State -->
+  <div *ngIf="errorMessage" class="error-container">
+    <ion-icon name="alert-circle-outline" size="large" color="danger"></ion-icon>
+    <p class="error-text">{{ errorMessage }}</p>
+    <ion-button fill="clear" color="primary" (click)="loadChannelDetails()">Retry</ion-button>
+  </div>
 
-    <ion-item button detail (click)="openFeed(channel?.id)">
-      
-      <ion-label>View posts</ion-label>
-    </ion-item>
+  <!-- Channel Details -->
+  <div *ngIf="channel && !isLoadingChannel" class="channel-detail-container">
 
-    <ion-item>
-      <ion-label>
-        <h3>Public channel</h3>
-        <p>Anyone can find this channel and see what's been shared.</p>
-      </ion-label>
-    </ion-item>
+    <!-- Cover Image / Media Slider -->
+    <div class="media-slider-container">
+      <swiper-container 
+        slides-per-view="1" 
+        pagination="true" 
+        navigation="false"
+        class="media-swiper">
+        <swiper-slide *ngFor="let media of mediaItems">
+          <div class="media-slide">
+            <img [src]="media.url" alt="Channel media" />
+          </div>
+        </swiper-slide>
+      </swiper-container>
+      <div class="media-overlay">
+        <ion-chip class="media-count-chip" (click)="viewAllMedia()">
+          <ion-icon name="images-outline"></ion-icon>
+          <ion-label>{{ mediaItems.length }} Photos</ion-label>
+        </ion-chip>
+      </div>
+    </div>
 
-    <ion-item button (click)="reportChannel()">
-      <ion-icon slot="start" name="flag-outline"></ion-icon>
-      <ion-label>Report channel</ion-label>
-    </ion-item>
-  </ion-list>
+    <!-- Channel Header -->
+    <div class="channel-header">
+      <div class="header-content">
+        <div class="avatar-section">
+          <ion-avatar class="channel-avatar">
+            <img [src]="channel.channel_dp || 'assets/images/user.jfif'" alt="Channel DP" />
+          </ion-avatar>
+          <ion-badge 
+            [color]="channel.is_public === 1 ? 'success' : 'warning'" 
+            class="channel-badge">
+            <ion-icon [name]="channel.is_public === 1 ? 'globe-outline' : 'lock-closed-outline'"></ion-icon>
+            {{ channel.is_public === 1 ? 'Public' : 'Private' }}
+          </ion-badge>
+        </div>
+
+        <div class="channel-info">
+          <h1 class="channel-title">
+            {{ channel.channel_name }}
+            <ion-icon 
+              *ngIf="channel.is_verified" 
+              name="checkmark-circle" 
+              color="primary" 
+              class="verified-icon">
+            </ion-icon>
+          </h1>
+          <p class="channel-description">{{ channel.description || 'No description available' }}</p>
+          
+          <!-- Stats Row -->
+          <div class="stats-row">
+            <div class="stat-item">
+              <ion-icon name="people" color="primary"></ion-icon>
+              <div class="stat-content">
+                <span class="stat-value">{{ stats.followers }}</span>
+                <span class="stat-label">Followers</span>
+              </div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <ion-icon name="newspaper" color="primary"></ion-icon>
+              <div class="stat-content">
+                <span class="stat-value">{{ stats.posts }}</span>
+                <span class="stat-label">Posts</span>
+              </div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <ion-icon name="people-circle" color="primary"></ion-icon>
+              <div class="stat-content">
+                <span class="stat-value">{{ channel.max_members }}</span>
+                <span class="stat-label">Max</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <ion-button 
+          expand="block" 
+          [color]="isFollowing ? 'medium' : 'primary'"
+          class="primary-action"
+          (click)="toggleFollow()"
+          [disabled]="isLoading">
+          <ion-icon 
+            [name]="isFollowing ? 'checkmark-circle' : 'add-circle'" 
+            slot="start">
+          </ion-icon>
+          <span *ngIf="!isLoading">{{ isFollowing ? 'Following' : 'Follow Channel' }}</span>
+          <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
+        </ion-button>
+
+        <div class="secondary-actions">
+          <ion-button 
+            fill="outline" 
+            size="default"
+            (click)="toggleMute()">
+            <ion-icon 
+              [name]="isMuted ? 'notifications-off' : 'notifications'" 
+              slot="start">
+            </ion-icon>
+            {{ isMuted ? 'Muted' : 'Notify' }}
+          </ion-button>
+          <ion-button 
+            fill="outline" 
+            size="default"
+            (click)="shareChannel()">
+            <ion-icon name="share-social" slot="start"></ion-icon>
+            Share
+          </ion-button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Channel Details Cards -->
+    <div class="details-section">
+      <ion-card class="info-card">
+        <ion-card-header>
+          <ion-card-subtitle>
+            <ion-icon name="information-circle-outline"></ion-icon>
+            Channel Information
+          </ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="info-row">
+            <div class="info-item">
+              <ion-icon name="folder" color="primary"></ion-icon>
+              <div class="info-text">
+                <span class="info-label">Category</span>
+                <span class="info-value">{{ channel.category_name || 'Uncategorized' }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="info-row">
+            <div class="info-item">
+              <ion-icon name="location" color="primary"></ion-icon>
+              <div class="info-text">
+                <span class="info-label">Region</span>
+                <span class="info-value">{{ channel.region_name || 'Global' }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="info-row">
+            <div class="info-item">
+              <ion-icon name="calendar" color="primary"></ion-icon>
+              <div class="info-text">
+                <span class="info-label">Created</span>
+                <span class="info-value">{{ formattedCreatedAt }}</span>
+              </div>
+            </div>
+          </div>
+          <!-- <div class="info-row" *ngIf="channel.firebase_channel_id">
+            <div class="info-item">
+              <ion-icon name="code-slash" color="primary"></ion-icon>
+              <div class="info-text">
+                <span class="info-label">Channel ID</span>
+                <span class="info-value">{{ channel.firebase_channel_id }}</span>
+              </div>
+            </div>
+          </div> -->
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Creator Info Card -->
+      <ion-card class="info-card">
+        <ion-card-header>
+          <ion-card-subtitle>
+            <ion-icon name="person-circle-outline"></ion-icon>
+            Creator
+          </ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="info-row">
+            <div class="info-item">
+              <ion-icon name="person" color="primary"></ion-icon>
+              <div class="info-text">
+                <span class="info-label">Created by</span>
+                <span class="info-value">{{ channel.creator_name }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="info-row" *ngIf="channel.role_id">
+            <div class="info-item">
+              <ion-icon name="shield" color="primary"></ion-icon>
+              <div class="info-text">
+                <span class="info-label">Your Role</span>
+                <span class="info-value">Role ID: {{ channel.role_id }}</span>
+              </div>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Recent Posts Section -->
+    <div class="posts-section">
+      <div class="section-header">
+        <h2>
+          <ion-icon name="newspaper-outline"></ion-icon>
+          Recent Updates
+        </h2>
+        <ion-note>{{ channelPosts.length }} posts</ion-note>
+      </div>
+
+      <ion-card *ngFor="let post of channelPosts; let i = index" class="post-card" (click)="openPost(post)">
+        <ion-card-content>
+          <div class="post-header">
+            <ion-avatar class="post-avatar">
+              <img [src]="channel.channel_dp || 'assets/images/user.jfif'" />
+            </ion-avatar>
+            <div class="post-info">
+              <h3 class="post-title">{{ post.title || `Update ${i + 1}` }}</h3>
+              <ion-note class="post-time">
+                <ion-icon name="time-outline"></ion-icon>
+                {{ post.timestamp || 'Just now' }}
+              </ion-note>
+            </div>
+          </div>
+          <p class="post-content">
+            {{ post.content || 'No content available' | slice:0:150 }}
+            <span *ngIf="post.content && post.content.length > 150">...</span>
+          </p>
+          <div class="post-footer">
+            <ion-chip color="primary" outline="true">
+              <ion-icon name="eye-outline"></ion-icon>
+              <ion-label>View Post</ion-label>
+            </ion-chip>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <div *ngIf="channelPosts.length === 0" class="empty-state">
+        <ion-icon name="chatbubbles-outline" size="large" color="medium"></ion-icon>
+        <h3>No Updates Yet</h3>
+        <p>Follow this channel to get the latest updates!</p>
+      </div>
+    </div>
+
+  </div>
 </ion-content>
- -->

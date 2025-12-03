@@ -252,17 +252,27 @@ const routes: Routes = [
   {
     path: 'channels',
     loadChildren: () => import('./pages/channels/channels/channels.module').then( m => m.ChannelsPageModule)
-  },  {
+  },
+    {
+    path: 'explore',
+    loadChildren: () => import('./pages/channels/explore/explore.module').then( m => m.ExplorePageModule)
+  },
+  {
+    path: 'channel-detail',
+    loadChildren: () => import('./pages/channels/channel-detail/channel-detail.module').then( m => m.ChannelDetailPageModule)
+  },
+  {
+    path: 'channel-feed',
+    loadChildren: () => import('./pages/channels/channel-feed/channel-feed.module').then( m => m.ChannelFeedPageModule)
+  },
+  {
+    path: 'channel-all',
+    loadChildren: () => import('./pages/channels/channel-all/channel-all.module').then( m => m.ChannelAllPageModule)
+  },
+  {
     path: 'select-contact-list',
     loadChildren: () => import('./pages/select-contact-list/select-contact-list.module').then( m => m.SelectContactListPageModule)
   },
-
-
-
-
-
-
-
 ];
 
 @NgModule({

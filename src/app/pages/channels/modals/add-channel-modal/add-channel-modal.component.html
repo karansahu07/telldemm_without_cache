@@ -91,7 +91,7 @@
         </ion-item>
 
         <!-- Circle Type -->
-        <ion-item>
+        <!-- <ion-item>
           <ion-label position="stacked">Circle Type *</ion-label>
           <ion-select
             placeholder="Select circle type"
@@ -102,10 +102,37 @@
               {{ c.category_name }}
             </ion-select-option>
           </ion-select>
+        </ion-item> -->
+         <!-- Category -->
+        <ion-item>
+          <ion-label position="stacked">Category *</ion-label>
+          <ion-select
+            placeholder="Select category"
+            [(ngModel)]="category_id"
+            name="category_id"
+          >
+            <ion-select-option *ngFor="let c of categories" [value]="c.id">
+              {{ c.category_name }}
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <!-- Region -->
+        <ion-item>
+          <ion-label position="stacked">Region *</ion-label>
+          <ion-select
+            placeholder="Select region"
+            [(ngModel)]="region_id"
+            name="region_id"
+          >
+            <ion-select-option *ngFor="let r of regions" [value]="r.region_id">
+              {{ r.region_name }} ({{ r.country_code }})
+            </ion-select-option>
+          </ion-select>
         </ion-item>
 
         <!-- DemmRegion -->
-        <ion-item>
+        <!-- <ion-item>
           <ion-label position="stacked">DemmRegion *</ion-label>
           <ion-select
             placeholder="Select DemmRegion"
@@ -116,7 +143,7 @@
               {{ r.region_name }} ({{ r.country_code }})
             </ion-select-option>
           </ion-select>
-        </ion-item>
+        </ion-item> -->
 
         <!-- Buttons -->
         <div class="button-container">
