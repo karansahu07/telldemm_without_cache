@@ -381,23 +381,50 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
 
+  // async ionViewWillEnter() {
+  //   await this.chatService.loadMessages(20, true);
+  //   this.chatService.syncMessagesWithServer();
+  //   this.chatService.getMessages().subscribe(async (msgs: any) => {
+  //     console.log({ msgs });
+  //     this.groupedMessages = (await this.groupMessagesByDate(
+  //       msgs as any[]
+  //     )) as any[];
+  //     // msgs.forEach((msg: any) => console.log({msg}));
+  //     this.allMessage = msgs as IMessage[];
+  //     for (const msg of msgs) {
+  //       if (!msg.isMe) {
+  //         // console.log('Marking read from chat screen');
+  //         this.chatService.markAsRead(msg.msgId);
+  //       }
+  //     }
+  //   });
+
   async ionViewWillEnter() {
-    await this.chatService.loadMessages(20, true);
-    this.chatService.syncMessagesWithServer();
-    this.chatService.getMessages().subscribe(async (msgs: any) => {
-      console.log({ msgs });
-      this.groupedMessages = (await this.groupMessagesByDate(
-        msgs as any[]
-      )) as any[];
-      // msgs.forEach((msg: any) => console.log({msg}));
-      this.allMessage = msgs as IMessage[];
-      for (const msg of msgs) {
-        if (!msg.isMe) {
-          // console.log('Marking read from chat screen');
-          this.chatService.markAsRead(msg.msgId);
-        }
+  await this.chatService.loadMessages(20, true);
+  this.chatService.syncMessagesWithServer();
+  
+  this.chatService.getMessages().subscribe(async (msgs: any) => {
+    console.log({ msgs });
+    
+    // ✅ Check if messages array is empty
+    if (!msgs || msgs.length === 0) {
+      this.groupedMessages = [];
+      this.allMessage = [];
+      return;
+    }
+    
+    this.groupedMessages = (await this.groupMessagesByDate(
+      msgs as any[]
+    )) as any[];
+    
+    this.allMessage = msgs as IMessage[];
+    
+    for (const msg of msgs) {
+      if (!msg.isMe) {
+        this.chatService.markAsRead(msg.msgId);
       }
-    });
+    }
+  });
 
     this.presenceSubscription = this.chatService.presenceChanges$.subscribe(
       (presenceMap) => {
@@ -718,7 +745,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async handleOption(option: string) {
-    if (option === 'Search') {
+    if (option === 'Search (FindTell)') {
       this.showSearchBar = true;
       setTimeout(() => {
         const input = document.querySelector('ion-input');
@@ -727,7 +754,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    if (option === 'View Contact') {
+    if (option === 'View Contact (View Demmian)') {
       const queryParams: any = {
         receiverId: this.receiverId,
         receiver_phone: this.receiver_phone,
@@ -739,7 +766,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // ✅ NEW: Clear Chat Option
-    if (option === 'clear chat') {
+    if (option === 'Clear Chat (Clear DemmChat)') {
       //console.log("clear chat calls");
       await this.handleClearChat();
       return;
@@ -748,7 +775,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     const groupId = this.receiverId;
     const userId = await this.secureStorage.getItem('userId');
 
-    if (option === 'Group Info') {
+    if (option === 'Group Info (DemmRoom Info)') {
       const queryParams: any = {
         receiverId: this.chatType === 'group' ? this.roomId : this.receiverId,
         receiver_phone: this.receiver_phone,
@@ -756,7 +783,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
         isGroup: this.chatType === 'group',
       };
       this.router.navigate(['/profile-screen'], { queryParams });
-    } else if (option === 'Add Members') {
+    } else if (option === 'Add Members (Add Demmians)') {
       const memberPhones = this.groupMembers.map((member) => member.phone);
       this.router.navigate(['/add-members'], {
         queryParams: {
@@ -764,7 +791,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
           members: JSON.stringify(memberPhones),
         },
       });
-    } else if (option === 'Exit Group') {
+    } else if (option === 'Exit Group (Leave DemmRoom)') {
       if (!this.roomId || !this.senderId) {
         console.error('Missing groupId or userId');
         return;
@@ -2115,57 +2142,115 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  async groupMessagesByDate(messages: Message[]) {
-    const grouped: { [date: string]: any[] } = {};
-    const today = new Date();
-    const yesterday = new Date();
-    yesterday.setDate(today.getDate() - 1);
+  // async groupMessagesByDate(messages: Message[]) {
+  //   const grouped: { [date: string]: any[] } = {};
+  //   const today = new Date();
+  //   const yesterday = new Date();
+  //   yesterday.setDate(today.getDate() - 1);
 
-    for (const msg of messages) {
-      const timestamp = new Date(msg.timestamp);
+  //   for (const msg of messages) {
+  //     const timestamp = new Date(msg.timestamp);
 
-      const hours = timestamp.getHours();
-      const minutes = timestamp.getMinutes();
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      const formattedHours = hours % 12 || 12;
-      const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
-      (msg as any).time = `${formattedHours}:${formattedMinutes} ${ampm}`;
+  //     const hours = timestamp.getHours();
+  //     const minutes = timestamp.getMinutes();
+  //     const ampm = hours >= 12 ? 'PM' : 'AM';
+  //     const formattedHours = hours % 12 || 12;
+  //     const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
+  //     (msg as any).time = `${formattedHours}:${formattedMinutes} ${ampm}`;
 
      
 
-      const isToday =
-        timestamp.getDate() === today.getDate() &&
-        timestamp.getMonth() === today.getMonth() &&
-        timestamp.getFullYear() === today.getFullYear();
+  //     const isToday =
+  //       timestamp.getDate() === today.getDate() &&
+  //       timestamp.getMonth() === today.getMonth() &&
+  //       timestamp.getFullYear() === today.getFullYear();
 
-      const isYesterday =
-        timestamp.getDate() === yesterday.getDate() &&
-        timestamp.getMonth() === yesterday.getMonth() &&
-        timestamp.getFullYear() === yesterday.getFullYear();
+  //     const isYesterday =
+  //       timestamp.getDate() === yesterday.getDate() &&
+  //       timestamp.getMonth() === yesterday.getMonth() &&
+  //       timestamp.getFullYear() === yesterday.getFullYear();
 
-      let label = '';
-      if (isToday) {
-        label = 'Today';
-      } else if (isYesterday) {
-        label = 'Yesterday';
-      } else {
-        const dd = timestamp.getDate().toString().padStart(2, '0');
-        const mm = (timestamp.getMonth() + 1).toString().padStart(2, '0');
-        const yyyy = timestamp.getFullYear();
-        label = `${dd}/${mm}/${yyyy}`;
-      }
+  //     let label = '';
+  //     if (isToday) {
+  //       label = 'Today';
+  //     } else if (isYesterday) {
+  //       label = 'Yesterday';
+  //     } else {
+  //       const dd = timestamp.getDate().toString().padStart(2, '0');
+  //       const mm = (timestamp.getMonth() + 1).toString().padStart(2, '0');
+  //       const yyyy = timestamp.getFullYear();
+  //       label = `${dd}/${mm}/${yyyy}`;
+  //     }
 
-      if (!grouped[label]) {
-        grouped[label] = [];
-      }
-      grouped[label].push(msg);
+  //     if (!grouped[label]) {
+  //       grouped[label] = [];
+  //     }
+  //     grouped[label].push(msg);
+  //   }
+
+  //   return Object.keys(grouped).map((date) => ({
+  //     date,
+  //     messages: grouped[date],
+  //   }));
+  // }
+
+async groupMessagesByDate(messages: Message[]) {
+  const grouped: { [date: string]: any[] } = {};
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  if (!messages || messages.length === 0) {
+    return [];
+  }
+
+  const visibleMessages = messages.filter(msg => !this.isMessageHiddenForUser(msg));
+
+  for (const msg of visibleMessages) {
+    const timestamp = new Date(msg.timestamp);
+
+    const hours = timestamp.getHours();
+    const minutes = timestamp.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const formattedHours = hours % 12 || 12;
+    const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
+    (msg as any).time = `${formattedHours}:${formattedMinutes} ${ampm}`;
+
+    const isToday =
+      timestamp.getDate() === today.getDate() &&
+      timestamp.getMonth() === today.getMonth() &&
+      timestamp.getFullYear() === today.getFullYear();
+
+    const isYesterday =
+      timestamp.getDate() === yesterday.getDate() &&
+      timestamp.getMonth() === yesterday.getMonth() &&
+      timestamp.getFullYear() === yesterday.getFullYear();
+
+    let label = '';
+    if (isToday) {
+      label = 'Today';
+    } else if (isYesterday) {
+      label = 'Yesterday';
+    } else {
+      const dd = timestamp.getDate().toString().padStart(2, '0');
+      const mm = (timestamp.getMonth() + 1).toString().padStart(2, '0');
+      const yyyy = timestamp.getFullYear();
+      label = `${dd}/${mm}/${yyyy}`;
     }
 
-    return Object.keys(grouped).map((date) => ({
+    if (!grouped[label]) {
+      grouped[label] = [];
+    }
+    grouped[label].push(msg);
+  }
+
+  return Object.keys(grouped)
+    .filter(date => grouped[date].length > 0)
+    .map((date) => ({
       date,
       messages: grouped[date],
     }));
-  }
+}
 
   isLoadingIndicatorVisible(): boolean {
     return this.isLoadingMore;

@@ -1965,7 +1965,7 @@ export class FirebaseChatService {
     }
   }
 
-  
+
 //   async syncConversationWithServer(): Promise<void> {      //without sqlite
 //   try {
 //     if (!this.senderId) {
@@ -5994,67 +5994,120 @@ export class FirebaseChatService {
     }
   }
 
+  // async clearChatForUser(roomId?: string): Promise<void> {
+  //   try {
+  //     const targetRoomId = roomId || this.currentChat?.roomId;
+
+  //     if (!targetRoomId) {
+  //       throw new Error('Room ID not found');
+  //     }
+
+  //     if (!this.senderId) {
+  //       throw new Error('senderId not set');
+  //     }
+
+  //     // Get all messages from the room
+  //     const messagesRef = rtdbRef(this.db, `chats/${targetRoomId}`);
+  //     const snapshot = await rtdbGet(messagesRef);
+
+  //     if (!snapshot.exists()) {
+  //       console.log('No messages to clear');
+  //       return;
+  //     }
+
+  //     const messages = snapshot.val();
+  //     const updates: Record<string, any> = {};
+
+  //     // Mark all messages as deleted for current user
+  //     Object.keys(messages).forEach((msgId) => {
+  //       const prevMsg = messages[msgId];
+  //       const existingUsers = prevMsg?.deletedFor?.users || [];
+
+  //       // Only add if not already in the deleted users list
+  //       if (!existingUsers.includes(this.senderId)) {
+  //         updates[`chats/${targetRoomId}/${msgId}/deletedFor/users`] = [
+  //           ...existingUsers,
+  //           this.senderId,
+  //         ];
+  //       }
+
+  //       // Preserve everyone flag if it exists
+  //       if (!prevMsg?.deletedFor?.everyone) {
+  //         updates[`chats/${targetRoomId}/${msgId}/deletedFor/everyone`] = false;
+  //       }
+  //     });
+
+  //     // Apply all updates atomically
+  //     if (Object.keys(updates).length > 0) {
+  //       await rtdbUpdate(rtdbRef(this.db), updates);
+  //     }
+
+  //     // Reset unread count for this user
+  //     await rtdbUpdate(rtdbRef(this.db, `unreadCounts/${targetRoomId}`), {
+  //       [this.senderId]: 0,
+  //     });
+
+  //     console.log(
+  //       `✅ Chat cleared for user ${this.senderId} in room ${targetRoomId}`
+  //     );
+  //   } catch (error) {
+  //     console.error('❌ Error clearing chat for user:', error);
+  //     throw error;
+  //   }
+  // }
+
   async clearChatForUser(roomId?: string): Promise<void> {
-    try {
-      const targetRoomId = roomId || this.currentChat?.roomId;
+  try {
+    const targetRoomId = roomId || this.currentChat?.roomId;
 
-      if (!targetRoomId) {
-        throw new Error('Room ID not found');
-      }
-
-      if (!this.senderId) {
-        throw new Error('senderId not set');
-      }
-
-      // Get all messages from the room
-      const messagesRef = rtdbRef(this.db, `chats/${targetRoomId}`);
-      const snapshot = await rtdbGet(messagesRef);
-
-      if (!snapshot.exists()) {
-        console.log('No messages to clear');
-        return;
-      }
-
-      const messages = snapshot.val();
-      const updates: Record<string, any> = {};
-
-      // Mark all messages as deleted for current user
-      Object.keys(messages).forEach((msgId) => {
-        const prevMsg = messages[msgId];
-        const existingUsers = prevMsg?.deletedFor?.users || [];
-
-        // Only add if not already in the deleted users list
-        if (!existingUsers.includes(this.senderId)) {
-          updates[`chats/${targetRoomId}/${msgId}/deletedFor/users`] = [
-            ...existingUsers,
-            this.senderId,
-          ];
-        }
-
-        // Preserve everyone flag if it exists
-        if (!prevMsg?.deletedFor?.everyone) {
-          updates[`chats/${targetRoomId}/${msgId}/deletedFor/everyone`] = false;
-        }
-      });
-
-      // Apply all updates atomically
-      if (Object.keys(updates).length > 0) {
-        await rtdbUpdate(rtdbRef(this.db), updates);
-      }
-
-      // Reset unread count for this user
-      await rtdbUpdate(rtdbRef(this.db, `unreadCounts/${targetRoomId}`), {
-        [this.senderId]: 0,
-      });
-
-      console.log(
-        `✅ Chat cleared for user ${this.senderId} in room ${targetRoomId}`
-      );
-    } catch (error) {
-      console.error('❌ Error clearing chat for user:', error);
-      throw error;
+    if (!targetRoomId) {
+      throw new Error('Room ID not found');
     }
+
+    if (!this.senderId) {
+      throw new Error('senderId not set');
+    }
+
+    // Get all messages from the room
+    const messagesRef = rtdbRef(this.db, `chats/${targetRoomId}`);
+    const snapshot = await rtdbGet(messagesRef);
+
+    if (!snapshot.exists()) {
+      console.log('No messages to clear');
+      return;
+    }
+
+    const messages = snapshot.val();
+    const updates: Record<string, any> = {};
+
+    Object.keys(messages).forEach((msgId) => {
+      const prevMsg = messages[msgId];
+      const existingUsers = prevMsg?.deletedFor?.users || [];
+
+      if (!existingUsers.includes(this.senderId)) {
+        updates[`chats/${targetRoomId}/${msgId}/deletedFor/users`] = [
+          ...existingUsers,
+          this.senderId,
+        ];
+      }
+    });
+
+    // Reset unread count for this user
+    updates[`unreadCounts/${targetRoomId}/${this.senderId}`] = 0;
+
+    // Apply all updates atomically
+    if (Object.keys(updates).length > 0) {
+      await rtdbUpdate(rtdbRef(this.db), updates);
+    }
+
+    console.log(
+      `✅ Chat cleared for user ${this.senderId} in room ${targetRoomId}`
+    );
+  } catch (error) {
+    console.error('❌ Error clearing chat for user:', error);
+    throw error;
   }
+}
 
   async deleteMessageForMe(
     roomId: string,
@@ -6131,65 +6184,76 @@ export class FirebaseChatService {
 
   //new delete chats functions
 
-  async deleteChats(roomIds: string[]): Promise<void> {
-    try {
-      if (!this.senderId) {
-        throw new Error('senderId not set');
-      }
-
-      if (!Array.isArray(roomIds) || roomIds.length === 0) {
-        console.error('RoomIds is not an array or empty');
-        return;
-      }
-      const updates: Record<string, any> = {};
-
-      for (const roomId of roomIds) {
-        updates[`userchats/${this.senderId}/${roomId}`] = null;
-
-        const chatsRef = rtdbRef(this.db, `chats/${roomId}`);
-        const snapshot = await rtdbGet(chatsRef);
-
-        if (snapshot.exists()) {
-          const messages = snapshot.val();
-          Object.keys(messages).forEach((messageKey) => {
-            updates[
-              `chats/${roomId}/${messageKey}/deletedFor/${this.senderId}`
-            ] = true;
-          });
-        }
-        updates[`unreadCounts/${roomId}/${this.senderId}`] = 0;
-      }
-      await rtdbUpdate(rtdbRef(this.db), updates);
-
-      const existingConvs = this._conversations$.value.filter(
-        (c) => !roomIds.includes(c.roomId)
-      );
-      this._conversations$.next(existingConvs);
-
-      const messageMap = new Map(this._messages$.value); //this is for some experiment
-      // Delete from SQLite
-      for (const roomId of roomIds) {
-        try {
-          await this.sqliteService.deleteConversation?.(roomId);
-          try {
-            messageMap.delete(roomId);
-          } catch (error) {
-            console.log('message Map is empty/causing error');
-          }
-          // if (deleteType !== 'forMe') {
-          //   await this.sqliteService.deleteMessages?.(roomId);
-          // }
-        } catch (sqlErr) {
-          console.warn('SQLite deletion failed for', roomId, sqlErr);
-        }
-      }
-
-      console.log(`✅ Successfully deleted ${roomIds.length} chat(s)`);
-    } catch (error) {
-      console.error('❌ Error deleting chats:', error);
-      throw error;
+ async deleteChats(roomIds: string[]): Promise<void> {
+  try {
+    if (!this.senderId) {
+      throw new Error('senderId not set');
     }
+
+    if (!Array.isArray(roomIds) || roomIds.length === 0) {
+      console.error('RoomIds is not an array or empty');
+      return;
+    }
+    
+    const updates: Record<string, any> = {};
+
+    for (const roomId of roomIds) {
+      // Remove chat from user's chat list
+      updates[`userchats/${this.senderId}/${roomId}`] = null;
+
+      const chatsRef = rtdbRef(this.db, `chats/${roomId}`);
+      const snapshot = await rtdbGet(chatsRef);
+
+      if (snapshot.exists()) {
+        const messages = snapshot.val();
+        
+        Object.keys(messages).forEach((messageKey) => {
+          const message = messages[messageKey];
+          const existingUsers = message?.deletedFor?.users || [];
+          
+          if (!existingUsers.includes(this.senderId)) {
+            updates[`chats/${roomId}/${messageKey}/deletedFor/users`] = [
+              ...existingUsers,
+              this.senderId
+            ];
+          }
+        });
+      }
+      
+      // Reset unread count for this user
+      updates[`unreadCounts/${roomId}/${this.senderId}`] = 0;
+    }
+    
+    await rtdbUpdate(rtdbRef(this.db), updates);
+
+    // Update local state
+    const existingConvs = this._conversations$.value.filter(
+      (c) => !roomIds.includes(c.roomId)
+    );
+    this._conversations$.next(existingConvs);
+
+    const messageMap = new Map(this._messages$.value);
+    
+    // Delete from SQLite (local storage only)
+    for (const roomId of roomIds) {
+      try {
+        await this.sqliteService.deleteConversation?.(roomId);
+        try {
+          messageMap.delete(roomId);
+        } catch (error) {
+          console.log('message Map is empty/causing error');
+        }
+      } catch (sqlErr) {
+        console.warn('SQLite deletion failed for', roomId, sqlErr);
+      }
+    }
+
+    console.log(`✅ Successfully deleted ${roomIds.length} chat(s) for current user`);
+  } catch (error) {
+    console.error('❌ Error deleting chats:', error);
+    throw error;
   }
+}
 
   async deleteGroup(groupId: string): Promise<void> {
     try {

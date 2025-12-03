@@ -78,7 +78,7 @@
       <ion-buttons
         *ngIf="!showSearchBar"
         slot="start"
-        style="color: black; width: 8%;"
+        style="color: black; width: 8%"
       >
         <ion-back-button (click)="onBack()"></ion-back-button>
         <!-- <ion-icon name="arrow-back-outline" class="back-icon"></ion-icon> -->
@@ -268,9 +268,7 @@
 <ion-content class="chat-background" [fullscreen]="true" [scrollEvents]="true">
   <!-- Pinned Message Banner (Alternative/Mobile View) -->
   <!-- <div class="fordark"><img src="/assets/images/chat_bg.jpg" alt="" /></div> -->
-  <div
-    class="chat-background"
-  ></div>
+  <div class="chat-background"></div>
 
   <div
     #scrollContainer
@@ -305,7 +303,11 @@
     ></ion-spinner>
 
     <div *ngFor="let group of groupedMessages">
-      <div class="date-divider" [id]="'date-group-' + group.date">
+      <div
+        class="date-divider"
+        [id]="'date-group-' + group.date"
+        *ngIf="group.messages && group.messages.length > 0"
+      >
         <div class="text-bg-white date-label">{{ group.date }}</div>
       </div>
 
@@ -395,7 +397,9 @@
             <ng-container *ngIf="!msg.isDeleted">
               <!-- If no attachment and has text -->
               <!-- <ng-container *ngIf="!msg.attachment && msg.text"> -->
-                <ng-container *ngIf="msg.text && (!msg.attachment || isEmptyObject(msg.attachment))">
+              <ng-container
+                *ngIf="msg.text && (!msg.attachment || isEmptyObject(msg.attachment))"
+              >
                 <!-- SIMPLE TRANSLATION BAR (only toggle button, if translations exist) -->
                 <div
                   class="translation-bar"
@@ -449,7 +453,9 @@
               </ng-container>
 
               <!-- <ng-container *ngIf="msg.attachment"> -->
-                <ng-container *ngIf="msg.attachment && !isEmptyObject(msg.attachment)">
+              <ng-container
+                *ngIf="msg.attachment && !isEmptyObject(msg.attachment)"
+              >
                 <!-- existing attachment markup — keep as before -->
                 <!--getPreviewUrl(msg) -->
                 <img

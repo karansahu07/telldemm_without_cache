@@ -10,7 +10,7 @@ import { IonicModule, PopoverController } from '@ionic/angular';
   imports: [CommonModule, IonicModule],
 })
 export class ChatOptionsPopoverComponent {
-  @Input() chatType: string = 'private'; // or 'group'
+  @Input() chatType: string = 'private';
 
   constructor(private popoverCtrl: PopoverController) {}
 
