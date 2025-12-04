@@ -241,12 +241,91 @@ ion-fab {
   border-radius: 12px;
 }
 
+ion-modal.custom-blur-modal {
+  --backdrop-opacity: 0.3;
+  --background: rgba(255, 255, 255, 0.1);
+}
+
+ion-modal.custom-blur-modal::part(backdrop) {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+ion-modal.custom-blur-modal::part(content) {
+  background: transparent;
+}
+
+/* Update popup container styling */
 .popup-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100%;
+  background: transparent;
+  padding: 20px;
+  position: relative;
+}
+
+.user-name {
+    position: absolute;
+    top: calc(50% - 173px);
+    left: calc(50% - 150px);
+    z-index: 10;
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    padding: 0px 4px;
+    background: transparent;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 0 0 8px 0;
+    width: 100%;
+}
+
+.popup-image {
+  width: 300px;
+  height: 300px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  object-fit: cover;
+}
+
+.icon-row {
+  display: flex;
+  justify-content: space-evenly;
+  width: 100%;
+  max-width: 300px;
+  padding: 20px 0;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  // border-radius: 20px;
+  // margin-top: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.popup-icon {
+  font-size: 28px;
+  color: var(--ion-color-primary);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.popup-icon:active {
+  transform: scale(0.9);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .icon-row {
+    background-color: rgba(30, 30, 30, 0.95);
+  }
+  
+  ion-modal.custom-blur-modal::part(backdrop) {
+    background: rgba(0, 0, 0, 0.6);
+  }
 }
 
 .popup-image {

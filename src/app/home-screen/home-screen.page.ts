@@ -377,8 +377,6 @@ async ionViewWillEnter() {
   ngOnDestroy() {
     this.unreadSubs.forEach((sub) => sub.unsubscribe());
     this.unreadSubs = [];
-
-    // detach typing listeners
     this.typingUnsubs.forEach((unsub) => {
       try {
         unsub();
@@ -397,78 +395,15 @@ async ionViewWillEnter() {
     this.archiveUnsub = null;
   }
 
-  goToUserAbout() {
-    this.showPopup = false;
-    setTimeout(() => {
-      this.router.navigate(['/profile-screen']);
-    }, 100);
-  }
-
-// async goToUserchat() {
-//   this.showPopup = false;
-  
-//   setTimeout(async () => {
-//     try {
-//       const chat = this.selectedChat;
-//       console.log("go to user chat ", chat)
-
-//       if (!chat) {
-//         const toast = await this.toastCtrl.create({
-//           message: 'Chat not found',
-//           duration: 2000,
-//           color: 'warning',
-//         });
-//         await toast.present();
-//         return;
-//       }
-
-//       await this.firebaseChatService.openChat(chat);
-
-//       if (chat.type === 'private') {
-//         const parts = chat.roomId.split('_');
-//         const receiverId = parts.find((p: string) => p !== this.senderUserId) 
-//           ?? parts[parts.length - 1];
-        
-//         this.router.navigate(['/chatting-screen'], {
-//           queryParams: { receiverId: receiverId },
-//         });
-//       } else if (chat.type === 'group') {
-//         this.router.navigate(['/chatting-screen'], {
-//           queryParams: { receiverId: chat.roomId },
-//         });
-//       } else if (chat.type === 'community') {
-//         this.router.navigate(['/community-detail'], {
-//           queryParams: { receiverId: chat.roomId },
-//         });
-//       }
-
-//       this.selectedChat = null;
-      
-//     } catch (error) {
-//       console.error('Error opening chat:', error);
-      
-//       const toast = await this.toastCtrl.create({
-//         message: 'Failed to open chat',
-//         duration: 2000,
-//         color: 'danger',
-//       });
-//       await toast.present();
-//     }
-//   }, 100);
-// }
-
-async goToUserchat() {
+  goToUserAbout() {  
   this.showPopup = false;
   
   setTimeout(async () => {
     try {
-      // Find chat from conversations
-      const chat = this.conversations.find(c => {
-        const avatarUrl = this.getChatAvatarUrl(c);
-        return avatarUrl === this.selectedImage;
-      });
+      const chat = this.selectedChat;
 
       if (!chat) {
+        console.error("❌ No chat selected");
         const toast = await this.toastCtrl.create({
           message: 'Chat not found',
           duration: 2000,
@@ -478,10 +413,88 @@ async goToUserchat() {
         return;
       }
 
-      // Open chat using firebase service
+      if (!chat.roomId) {
+        console.error("❌ Chat missing roomId");
+        const toast = await this.toastCtrl.create({
+          message: 'Invalid chat data',
+          duration: 2000,
+          color: 'warning',
+        });
+        await toast.present();
+        return;
+      }
+
       await this.firebaseChatService.openChat(chat);
 
-      // Navigate based on chat type
+      let receiverId: string;
+
+      if (chat.type === 'private') {
+        const parts = chat.roomId.split('_');
+        receiverId = parts.find((p: string) => p !== this.senderUserId) 
+          ?? parts[parts.length - 1];
+      } else if (chat.type === 'group') {
+        receiverId = chat.roomId;
+      } else if (chat.type === 'community') {
+        receiverId = chat.roomId;
+      } else {
+        console.error("❌ Unknown chat type:", chat.type);
+        return;
+      }
+
+      const queryParams: any = {
+        receiverId: receiverId,
+        isGroup: chat.type === 'group',
+      };
+
+      this.router.navigate(['/profile-screen'], { queryParams });
+
+      this.selectedChat = null;
+      this.selectedImage = null;
+
+    } catch (error) {
+      console.error('❌ Error opening profile:', error);
+      
+      const toast = await this.toastCtrl.create({
+        message: 'Failed to open profile',
+        duration: 2000,
+        color: 'danger',
+      });
+      await toast.present();
+    }
+  }, 100);
+}
+
+async goToUserchat() {  
+  this.showPopup = false;
+  
+  setTimeout(async () => {
+    try {
+      const chat = this.selectedChat;
+
+      if (!chat) {
+        console.error("❌ No chat selected");
+        const toast = await this.toastCtrl.create({
+          message: 'Chat not found',
+          duration: 2000,
+          color: 'warning',
+        });
+        await toast.present();
+        return;
+      }
+
+      if (!chat.roomId) {
+        console.error("❌ Chat missing roomId");
+        const toast = await this.toastCtrl.create({
+          message: 'Invalid chat data',
+          duration: 2000,
+          color: 'warning',
+        });
+        await toast.present();
+        return;
+      }
+
+      await this.firebaseChatService.openChat(chat);
+
       if (chat.type === 'private') {
         const parts = chat.roomId.split('_');
         const receiverId = parts.find((p: string) => p !== this.senderUserId) 
@@ -490,17 +503,30 @@ async goToUserchat() {
         this.router.navigate(['/chatting-screen'], {
           queryParams: { receiverId: receiverId },
         });
-      } else if (chat.type === 'group') {
+      } else if (chat.type === 'group') {        
         this.router.navigate(['/chatting-screen'], {
           queryParams: { receiverId: chat.roomId },
         });
-      } else if (chat.type === 'community') {
+      } else if (chat.type === 'community') {        
         this.router.navigate(['/community-detail'], {
           queryParams: { receiverId: chat.roomId },
         });
+      } else {
+        console.warn("⚠️ Unknown chat type:", chat.type);
       }
+
+      this.selectedChat = null;
+      this.selectedImage = null;
+      
     } catch (error) {
-      console.error('Error opening chat:', error);
+      console.error('❌ Error opening chat:', error);
+      
+      const toast = await this.toastCtrl.create({
+        message: 'Failed to open chat',
+        duration: 2000,
+        color: 'danger',
+      });
+      await toast.present();
     }
   }, 100);
 }
@@ -508,23 +534,44 @@ async goToUserchat() {
   goToUsercall() {
     this.showPopup = false;
     setTimeout(() => {
-      this.router.navigate(['/calls-screen']);
+      // this.router.navigate(['/calls-screen']);
     }, 100);
   }
 
   goToUservideocall() {
     this.showPopup = false;
     setTimeout(() => {
-      this.router.navigate(['/calling-screen']);
+      // this.router.navigate(['/calling-screen']);
     }, 100);
   }
 
-  openImagePopup(profile_picture_url: string, chat?: any) {
-    this.selectedImage = profile_picture_url;
-    this.selectedChat = chat
-    console.log("this.selectedChat", this.selectedChat);
-    this.showPopup = true;
+openImagePopup(chat: any) {
+
+  if (!chat) {
+    console.error("❌ No chat object provided");
+    this.toastCtrl.create({
+      message: 'Unable to open chat details',
+      duration: 2000,
+      color: 'warning'
+    }).then(t => t.present());
+    return;
   }
+
+  if (!chat.roomId) {
+    console.error("❌ Chat missing roomId:", chat);
+    this.toastCtrl.create({
+      message: 'Invalid chat data',
+      duration: 2000,
+      color: 'warning'
+    }).then(t => t.present());
+    return;
+  }
+
+  this.selectedChat = chat;
+  this.selectedImage = chat.avatar || 'assets/images/user.jfif';
+  
+  this.showPopup = true;
+}
 
   closeImagePopup() {
     this.selectedImage = null;
