@@ -7,6 +7,7 @@ import { RegionFilterModalComponent } from '../modals/region-filter-modal/region
 import { AddChannelModalComponent } from '../modals/add-channel-modal/add-channel-modal.component';
 import { ChannelService, Category, Region, Channel } from '../services/channel';
 import { firstValueFrom } from 'rxjs';
+import { AuthService } from 'src/app/auth/auth.service';
 
 interface GroupedCategory {
   id: number | 'uncategorized';
@@ -40,7 +41,9 @@ export class ChannelsPage implements OnInit {
   regions: Region[] = [];
 
   // ADD THESE PROPERTIES at the top with others
-  userId: number = 52; // ← Replace with real auth user ID later
+  // userId: number = 52; // ← Replace with real auth user ID later
+  userId: any = this.authService.authData?.userId || ''; // Replace with real auth user ID later
+
   loadingChannelId: string | null = null; // for button loading state
   private followedChannelIds = new Set<string>(); // source of truth
 
@@ -84,7 +87,8 @@ export class ChannelsPage implements OnInit {
     private modalCtrl: ModalController,
     private router: Router,
     private channelService: ChannelService,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private authService: AuthService
   ) { }
 
   async ngOnInit() {

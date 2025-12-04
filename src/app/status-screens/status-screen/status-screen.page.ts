@@ -30,7 +30,7 @@ export class StatusScreenPage implements OnInit {
   // Source of truth: Set of channel IDs user is following
   private followedChannelIds = new Set<number>();
 
-  userId: any = this.authService.authData?.userId || '';; // Replace with real auth user ID later
+  userId: any = this.authService.authData?.userId || ''; // Replace with real auth user ID later
 
   constructor(
     private popoverCtrl: PopoverController,
