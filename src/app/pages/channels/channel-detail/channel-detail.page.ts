@@ -7,6 +7,7 @@ import { AuthService } from 'src/app/auth/auth.service';
 import { ToastController, ActionSheetController, AlertController } from '@ionic/angular';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
+
 @Component({
   selector: 'app-channel-detail',
   templateUrl: './channel-detail.page.html',

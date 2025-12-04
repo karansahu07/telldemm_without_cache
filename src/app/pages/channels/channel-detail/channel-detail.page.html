@@ -338,14 +338,14 @@
 
       <ion-label>
         <h2>{{ user.name }}</h2>
-        <p>
+        <!-- <p>
           <ion-icon name="shield-outline"></ion-icon>
           {{ getRoleName(user.role_id) }}
-        </p>
+        </p> -->
       </ion-label>
 
       <ion-badge slot="end" color="primary">
-        Member
+         {{ getRoleName(user.role_id) }}
       </ion-badge>
     </ion-item>
   </ion-list>
@@ -362,10 +362,15 @@
   </ion-button>
 
   <!-- Empty State -->
+  <!-- Empty State -->
   <div *ngIf="followers.length === 0 && !isLoadingFollowers" class="empty-state">
     <ion-icon name="people-circle-outline" size="large"></ion-icon>
-    <h3>No Followers Yet</h3>
-    <p>Be the first to follow this channel and stay updated!</p>
+    <h3>Load Followers</h3>
+    <p>Tap the refresh button above to see who's following this channel</p>
+    <ion-button fill="outline" size="small" (click)="loadFollowers()" style="margin-top: 16px;">
+      <ion-icon name="refresh-outline" slot="start"></ion-icon>
+      Load Followers
+    </ion-button>
   </div>
 </div>
 
