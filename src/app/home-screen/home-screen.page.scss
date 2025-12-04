@@ -270,7 +270,7 @@ ion-modal.custom-blur-modal::part(content) {
 
 .user-name {
     position: absolute;
-    top: calc(50% - 173px);
+    top: calc(50% - 174px);
     left: calc(50% - 150px);
     z-index: 10;
     color: white;
@@ -278,11 +278,10 @@ ion-modal.custom-blur-modal::part(content) {
     font-weight: 600;
     margin: 0;
     padding: 0px 4px;
-    background: transparent;
+    background: gray;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    border-radius: 0 0 8px 0;
-    width: 100%;
+    width: 72%;
 }
 
 .popup-image {
