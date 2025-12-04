@@ -469,7 +469,7 @@ export class SqliteService {
   ): Promise<T> {
     this.setOpState(id, { isLoading: true, isError: null, isSuccess: null });
     try {
-      // throw new Error("some thing went wrong");
+      throw new Error("some thing went wrong");
       
       if (!this.isInitialized) throw new Error('DB not initialized');
       const result = await action();
@@ -1016,6 +1016,33 @@ export class SqliteService {
     
   });
 }
+
+// async resetDB() {
+//   return this.withOpState('resetDB', async () => {
+//     try {
+//       // Foreign key constraints temporarily disable karo
+//       await this.db.execute('PRAGMA foreign_keys = OFF');
+      
+//       const tables = ["messages", "attachments", "conversations", "users"];
+      
+//       for (const table of tables) {
+//         await this.db.execute(`DELETE FROM ${table}`);
+//         // Auto-increment reset
+//         await this.db.execute(`DELETE FROM sqlite_sequence WHERE name='${table}'`);
+//       }
+      
+//       // Foreign keys wapas enable karo
+//       await this.db.execute('PRAGMA foreign_keys = ON');
+      
+//       console.log('✅ Database reset successfully!');
+//     } catch (error) {
+//       console.error('❌ Reset DB Error:', error);
+//       // Foreign keys ko dobara enable karo even if error aaye
+//       await this.db.execute('PRAGMA foreign_keys = ON');
+//       throw error;
+//     }
+//   });
+// }
 
   /**
    * Helper: Convert Blob → Base64 string

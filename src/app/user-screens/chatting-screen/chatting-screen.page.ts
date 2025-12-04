@@ -2845,12 +2845,28 @@ async groupMessagesByDate(messages: Message[]) {
   }
 
   async onReactionBadgeClick(
-    ev: Event,
-    msg: IMessage,
-    badge: { emoji: string | null; userId: string }
-  ) {
-    
+  ev: Event,
+  msg: IMessage,
+  badge: { emoji: string | null; userId: string }
+) {
+  ev.stopPropagation();
+  
+  const currentUserId = this.senderId;
+  
+  // If user clicks any reaction badge, toggle their reaction with same emoji
+  const currentReaction = msg.reactions?.find((r) => r.userId === currentUserId);
+  const newEmoji = currentReaction?.emoji === badge.emoji ? null : badge.emoji;
+  
+  try {
+    await this.chatService.setQuickReaction({
+      msgId: msg.msgId,
+      userId: currentUserId,
+      emoji: newEmoji,
+    });
+  } catch (error) {
+    console.error('Failed to update reaction:', error);
   }
+}
 
   goToProfile() {
     // const isGroup = this.chatType === 'group';

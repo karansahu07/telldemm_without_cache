@@ -546,8 +546,8 @@
             <div
               class="reaction-badges"
               *ngIf="getReactionBadges(msg).length > 0"
-              [class.right]="msg.sender_id === senderId"
-              [class.left]="msg.sender_id !== senderId"
+              [class.right]="msg.sender === senderId"
+              [class.left]="msg.sender !== senderId"
             >
               <div
                 class="badge"
@@ -556,10 +556,10 @@
                 (click)="onReactionBadgeClick($event, msg, b)"
               >
                 <span class="emoji">{{ b.emoji }}</span>
-                <span class="cnt" *ngIf="getReactionsCount(msg)>1">
-                  {{ getReactionsCount(msg) }}
-                </span>
               </div>
+              <span class="cnt" *ngIf="getReactionsCount(msg)>1">
+                {{ getReactionsCount(msg) }}
+              </span>
             </div>
           </div>
 
