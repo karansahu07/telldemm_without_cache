@@ -42,7 +42,12 @@ export class StatusScreenPage implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.loadUserChannels(this.userId);
+    // this.loadUserChannels(this.userId);
+    // this.loadPublicChannels();
+  }
+
+  ionViewDidEnter(){
+     this.loadUserChannels(this.userId);
     this.loadPublicChannels();
   }
 
