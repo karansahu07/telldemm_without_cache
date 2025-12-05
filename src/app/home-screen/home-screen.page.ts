@@ -1730,7 +1730,7 @@ openImagePopup(chat: any) {
   get filteredChats() {
     // console.log("visible.length",this.chatList)
     let filtered = this.conversations;
-    // console.log({filtered})
+    console.log({filtered})
     // console.log("this.selectedFilter", this.selectedFilter);
 
     filtered = filtered.filter((chat) => {

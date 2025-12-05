@@ -850,7 +850,7 @@ async function handleGroupNotification(
  
     // ✅ Prepare message content
     let messageBody = "New message";
-    const groupName = groupData.name || "Group Chat";
+    const groupName = groupData.title || "Group Chat";
     const senderName = messageData.sender_name || "Someone";
  
     if (messageData.text) {
