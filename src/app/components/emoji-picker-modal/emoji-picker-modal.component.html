@@ -1,0 +1,75 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Select Emoji</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismiss()">
+        <ion-icon name="close" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+
+  <!-- Search Bar -->
+  <ion-toolbar>
+    <ion-searchbar
+      [(ngModel)]="searchText"
+      (ionInput)="onSearchChange()"
+      placeholder="Search emojis..."
+      animated="true"
+    ></ion-searchbar>
+  </ion-toolbar>
+
+  <!-- Category Tabs -->
+  <ion-toolbar class="category-toolbar">
+    <div class="category-tabs">
+      <button
+        *ngFor="let category of emojiCategories"
+        class="category-tab"
+        [class.active]="selectedCategory === category.name"
+        (click)="selectCategory(category.name)"
+      >
+        <span class="category-icon">{{ category.icon }}</span>
+      </button>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <!-- Recent Emojis Section -->
+  <div class="emoji-section" *ngIf="recentEmojis.length > 0 && !searchText.trim()">
+    <div class="section-header">
+      <ion-icon name="time-outline"></ion-icon>
+      <span>Recently Used</span>
+    </div>
+    <div class="emoji-grid">
+      <button
+        *ngFor="let emoji of recentEmojis"
+        class="emoji-button"
+        (click)="selectEmoji(emoji)"
+      >
+        {{ emoji }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Emoji Grid -->
+  <div class="emoji-section">
+    <div class="section-header" *ngIf="!searchText.trim()">
+      <span>{{ selectedCategory | titlecase }}</span>
+    </div>
+    <div class="emoji-grid">
+      <button
+        *ngFor="let emoji of filteredEmojis"
+        class="emoji-button"
+        (click)="selectEmoji(emoji)"
+      >
+        {{ emoji }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="filteredEmojis.length === 0">
+    <ion-icon name="search-outline"></ion-icon>
+    <p>No emojis found</p>
+  </div>
+</ion-content>

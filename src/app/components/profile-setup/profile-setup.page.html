@@ -1,87 +1,5 @@
-<!-- <ion-header>
-  <ion-toolbar>
-    <ion-title>
-      <img src="assets/images/TELLDEMM.svg" />
-    </ion-title>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content class="ion-padding profile-content">
-  <div class="profile-form">
-    <ion-avatar class="profile-avatar">
-      <img [src]="imageData || 'assets/default-avatar.png'" alt="Avatar" />
-    </ion-avatar>
-
-    <input type="file" (change)="onImageSelected($event)" accept="image/*" />
-
-    <ion-item>
-      <ion-input [(ngModel)]="name" placeholder="Enter your name"></ion-input>
-    </ion-item>
-
-    <ion-button expand="block" (click)="onSubmit()">Continue</ion-button>
-  </div>
-</ion-content> -->
-
-<!-- <ion-header [translucent]="true" class="background" style="padding-top: 30px;">
-  <ion-toolbar>
-
-    
-
-    <ion-title>Profile info</ion-title>
-
-    
-
-  </ion-toolbar>
-</ion-header>
-
-
-<ion-content [fullscreen]="true">
-  <div class="main-content">
-    <div>
-      <div class="main-provide">
-        <div class="inner-main">
-          <p class="Please">Please
-            provide your name and an optional Profile photo</p>
-        </div>
-      </div>
-      <div class="camera-main">
-  <div class="camera-inner">
-    <img
-      class="avatar-image"
-      [src]="imageData || 'assets/images/cameraplus.png'"
-      alt="Avatar"
-      (click)="fileInput.click()"
-      style="cursor: pointer;" />
-  </div>
-</div>
-
-<input
-  type="file"
-  #fileInput
-  hidden
-  (change)="onImageSelected($event)"
-  accept="image/*" />
-
-
-      <div class="line-main">
-        <input type="text" class="line-content no-focus-border"[(ngModel)]="name" placeholder="Enter your name" maxlength="25" (input)="onInputChange($event)"/>
-        <div class="main-emoji">
-          <p class="emoji-text">{{ remainingCount }}</p>
-          <ion-icon name="happy-outline"></ion-icon>
-        </div>
-      </div>
-      <div class="line"></div>
-    </div>
-
-    <div class="main-button">
-      <button class="btn" expand="block" (click)="onSubmit()">Next</button>
-    </div>
-  </div>
-</ion-content> -->
-
 <ion-header  class="ion-header">
   <ion-toolbar>
-    <!-- <ion-title>Profile info</ion-title> -->
     <p class="headerhead">Profile info</p>
   </ion-toolbar>
 </ion-header>
@@ -132,7 +50,7 @@
 
           <div class="main-emoji">
             <p class="emoji-text">{{ remainingCount }}</p>
-            <ion-icon name="happy-outline"></ion-icon>
+            <ion-icon name="happy-outline" (click)="openEmojiKeyboard()"></ion-icon>
           </div>
         </div>
         <div class="line"></div>

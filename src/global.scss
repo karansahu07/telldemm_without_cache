@@ -271,3 +271,18 @@ ion-toast.custom-toast button:hover {
     color: var(--ion-color-primary) !important;
     padding: 0px;
 }
+
+.emoji-picker-modal {
+  --height: 75%;
+  --border-radius: 16px 16px 0 0;
+  --box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.1);
+
+  ion-backdrop {
+    --backdrop-opacity: 0.4;
+  }
+}
+
+.emoji-button {
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}

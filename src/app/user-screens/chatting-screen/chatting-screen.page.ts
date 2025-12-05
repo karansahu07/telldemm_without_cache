@@ -71,6 +71,8 @@ import { PresenceService } from 'src/app/services/presence.service';
 import { switchMap } from 'rxjs/operators';
 import { resolve } from 'path';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { ImageCropperModalComponent } from 'src/app/components/image-cropper-modal/image-cropper-modal.component';
+import { EmojiPickerModalComponent } from 'src/app/components/emoji-picker-modal/emoji-picker-modal.component';
 
 interface ICurrentChat {
   roomId: string;
@@ -293,6 +295,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   isReceiverTyping: boolean = false;
   private presenceSubscription?: Subscription;
   private typingTimeout: any;
+  maxDate: string = new Date().toISOString();
 
   constructor(
     private chatService: FirebaseChatService,
@@ -337,8 +340,8 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     this.receiverId = this.route.snapshot.queryParamMap.get('receiverId') || '';
     this.receiver_name =
       nameFromQuery ||
-      (await this.secureStorage.getItem('receiver_name')) ||
-      '';
+      (await this.secureStorage.getItem('receiver_name')) || '';
+      this.maxDate = new Date().toISOString();
   }
 
   onInputTyping() {
@@ -1157,8 +1160,39 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     this.showPopover = true;
   }
 
-  onDateSelected(event: any) {
+  // onDateSelected(event: any) {
+  //   const selectedDateObj = new Date(event.detail.value);
+
+  //   const day = String(selectedDateObj.getDate()).padStart(2, '0');
+  //   const month = String(selectedDateObj.getMonth() + 1).padStart(2, '0');
+  //   const year = selectedDateObj.getFullYear();
+
+  //   const formattedDate = `${day}/${month}/${year}`;
+
+  //   this.selectedDate = event.detail.value;
+  //   this.showPopover = false;
+  //   this.showDateModal = false;
+
+  //   setTimeout(() => {
+  //     const el = document.getElementById('date-group-' + formattedDate);
+  //     if (el) {
+  //       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  //     } else {
+  //       console.warn('No messages found for selected date:', formattedDate);
+  //     }
+  //   }, 300);
+  // }
+
+   onDateSelected(event: any) {
     const selectedDateObj = new Date(event.detail.value);
+    const today = new Date();
+    
+    // ✅ Additional validation: Prevent future dates
+    if (selectedDateObj > today) {
+      console.warn('Future date selected, ignoring');
+      this.showToast('Cannot select future dates', 'warning');
+      return;
+    }
 
     const day = String(selectedDateObj.getDate()).padStart(2, '0');
     const month = String(selectedDateObj.getMonth() + 1).padStart(2, '0');
@@ -1176,9 +1210,11 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } else {
         console.warn('No messages found for selected date:', formattedDate);
+        this.showToast('No messages found for this date', 'warning');
       }
     }, 300);
   }
+
 
   openDatePicker() {
     this.showDateModal = true;
@@ -2778,19 +2814,49 @@ async groupMessagesByDate(messages: Message[]) {
     }
   }
 
-  openEmojiKeyboard(msg: Message) {
-    this.emojiTargetMsg = msg;
-    // focus hidden input to pop OS emoji keyboard
-    const el = (document.querySelector('#chatting-screen') || document) // adjust root if needed
-      .querySelector('ion-input[ng-reflect-name="emojiKeyboard"]') as any;
+  async openEmojiKeyboard(msg: IMessage) {
+  try {
+    const modal = await this.modalCtrl.create({
+      component: EmojiPickerModalComponent,
+      cssClass: 'emoji-picker-modal',
+      breakpoints: [0, 0.5, 0.75, 1],
+      initialBreakpoint: 0.75,
+      backdropDismiss: true,
+    });
 
-    const inputEl = document.querySelector(
-      'ion-input + input'
-    ) as HTMLInputElement; // Ionic renders native <input> after shadow
-    if (this.datePicker) {
-      /* just to keep reference lint happy */
+    await modal.present();
+
+    const { data } = await modal.onDidDismiss();
+
+    if (data && data.selected && data.emoji) {
+      console.log('✅ Emoji selected:', data.emoji);
+      
+      // Add reaction to the message
+      await this.addReaction(msg, data.emoji);
+      
+      // Clear selection
+      this.selectedMessages = [];
+      
+      // Show success toast
+      const toast = await this.toastCtrl.create({
+        message: `Reaction added: ${data.emoji}`,
+        duration: 1500,
+        color: 'success',
+        position: 'bottom',
+      });
+      await toast.present();
     }
+  } catch (error) {
+    console.error('❌ Error opening emoji picker:', error);
+    
+    const toast = await this.toastCtrl.create({
+      message: 'Failed to open emoji picker',
+      duration: 2000,
+      color: 'danger',
+    });
+    await toast.present();
   }
+}
 
   onEmojiPicked(ev: CustomEvent) {
     const val = (ev.detail as any)?.value || '';
@@ -2963,6 +3029,86 @@ async groupMessagesByDate(messages: Message[]) {
       await toast.present();
     }
   }
+
+  // ========================================
+// 📸 CROPPER MODAL INTEGRATION
+// ========================================
+
+async openCropperModal() {
+  if (!this.selectedAttachment || this.selectedAttachment.type !== 'image') {
+    return;
+  }
+
+  try {
+    const modal = await this.modalCtrl.create({
+      component: ImageCropperModalComponent,
+      componentProps: {
+        imageUrl: this.selectedAttachment.previewUrl,
+        aspectRatio: 0, // Free aspect ratio (set to 1 for square, 16/9 for landscape, etc.)
+        cropQuality: 0.9
+      },
+      cssClass: 'image-cropper-modal'
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onDidDismiss();
+
+    if (data && data.success && data.originalBlob) {
+      // ✅ Revoke old preview URL to free memory
+      if (this.selectedAttachment.previewUrl) {
+        URL.revokeObjectURL(this.selectedAttachment.previewUrl);
+      }
+
+      // ✅ Create new preview URL from cropped blob
+      const newPreviewUrl = URL.createObjectURL(data.originalBlob);
+
+      // ✅ Generate new filename with timestamp
+      const timestamp = Date.now();
+      const fileExtension = this.selectedAttachment.fileName.split('.').pop() || 'jpg';
+      const newFileName = `cropped_${timestamp}.${fileExtension}`;
+
+      // ✅ Update selectedAttachment with cropped image data
+      this.selectedAttachment = {
+        ...this.selectedAttachment,
+        blob: data.originalBlob,
+        previewUrl: newPreviewUrl,
+        fileName: newFileName,
+        fileSize: data.originalBlob.size,
+        mimeType: data.originalBlob.type || this.selectedAttachment.mimeType
+      };
+
+      // ✅ Show success toast
+      const toast = await this.toastCtrl.create({
+        message: 'Image cropped successfully',
+        duration: 1500,
+        color: 'success'
+      });
+      await toast.present();
+
+    } else if (data && data.cancelled) {
+      // User cancelled cropping
+      console.log('Cropping cancelled by user');
+    } else if (data && data.error) {
+      // Show error toast
+      const toast = await this.toastCtrl.create({
+        message: data.error,
+        duration: 2000,
+        color: 'danger'
+      });
+      await toast.present();
+    }
+
+  } catch (error) {
+    console.error('Error opening cropper modal:', error);
+    const toast = await this.toastCtrl.create({
+      message: 'Failed to open image editor',
+      duration: 2000,
+      color: 'danger'
+    });
+    await toast.present();
+  }
+}
 
   openKeyboard() {
     setTimeout(() => {

@@ -473,75 +473,79 @@
     </ng-template>
   </ion-modal>
 
-  <ion-modal
-    [isOpen]="showPreviewModal"
-    (didDismiss)="showPreviewModal = false"
-  >
-    <ng-template>
-      <ion-header [translucent]="true" class="model-header">
-        <ion-toolbar class="model-toll">
-          <ion-buttons slot="start">
-            <ion-icon
-              (click)="cancelAttachment()"
-              name="close"
-              style="font-size: 25px; cursor: pointer"
-            ></ion-icon>
-          </ion-buttons>
+  <!-- 📸 Camera Preview Modal (Already in your code - just verifying) -->
+<ion-modal
+  [isOpen]="showPreviewModal"
+  (didDismiss)="showPreviewModal = false"
+>
+  <ng-template>
+    <ion-header [translucent]="true" class="model-header">
+      <ion-toolbar class="model-toll">
+        <ion-buttons slot="start">
+          <ion-icon
+            (click)="cancelAttachment()"
+            name="close"
+            style="font-size: 25px; cursor: pointer"
+          ></ion-icon>
+        </ion-buttons>
 
-          <ion-title>Send Photo</ion-title>
+        <ion-title>Send Photo</ion-title>
 
-          <ion-buttons slot="end" class="pre-icons">
-            <img src="assets/images/hd.png" alt="hd" />
-            <ion-icon name="happy-outline" style="font-size: 24px"></ion-icon>
-            <img src="assets/images/text.png" alt="text" />
-            <img src="assets/images/pencil.png" alt="pencil" />
-          </ion-buttons>
-        </ion-toolbar>
-      </ion-header>
+        <ion-buttons slot="end" class="pre-icons">
+          <!-- ✅ Show pencil icon to re-open cropper -->
+          <img 
+            src="assets/images/pencil.png" 
+            alt="pencil"
+            (click)="openCropperModal(selectedAttachment)"
+            style="cursor: pointer;"
+          />
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
 
-      <ion-content class="">
-        <div class="pre-model">
-          <!-- Image Preview -->
-          <div class="mine2">
-            <div
-              *ngIf="selectedAttachment?.type === 'image'"
-              class="cropped-image"
-            >
-              <img
-                [src]="selectedAttachment?.previewUrl"
-                class="preview-image"
-              />
-            </div>
-          </div>
-
-          <!-- Caption Input & Send Button -->
-          <div class="mine ion-padding">
-            <ion-textarea
-              [(ngModel)]="messageText"
-              placeholder="Add a caption..."
-              class="pre-message"
-              [autoGrow]="true"
-              rows="2"
-            ></ion-textarea>
-
-            <div class="sendbtn">
-              <p>{{ receiver_name || 'Send Photo' }}</p>
-
-              <ion-icon
-                name="send-outline"
-                (click)="goToContactList()"
-                class="mediasend"
-                [class.sending]="isSending"
-                [style.pointer-events]="isSending ? 'none' : 'auto'"
-                [style.opacity]="isSending ? '0.5' : '1'"
-              >
-              </ion-icon>
-            </div>
+    <ion-content class="">
+      <div class="pre-model">
+        <!-- Image Preview -->
+        <div class="mine2">
+          <div
+            *ngIf="selectedAttachment?.type === 'image'"
+            class="cropped-image"
+          >
+            <img
+              [src]="selectedAttachment?.previewUrl"
+              class="preview-image"
+            />
           </div>
         </div>
-      </ion-content>
-    </ng-template>
-  </ion-modal>
+
+        <!-- Caption Input & Send Button -->
+        <div class="mine ion-padding">
+          <ion-textarea
+            [(ngModel)]="messageText"
+            placeholder="Add a caption..."
+            class="pre-message"
+            [autoGrow]="true"
+            rows="2"
+          ></ion-textarea>
+
+          <div class="sendbtn">
+            <p>Send to contacts</p>
+
+            <ion-icon
+              name="send-outline"
+              (click)="goToContactList()"
+              class="mediasend"
+              [class.sending]="isSending"
+              [style.pointer-events]="isSending ? 'none' : 'auto'"
+              [style.opacity]="isSending ? '0.5' : '1'"
+            >
+            </ion-icon>
+          </div>
+        </div>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
 </ion-content>
 
 <app-footer-tabs [totalUnreadCount]="totalUnreadCount"></app-footer-tabs>

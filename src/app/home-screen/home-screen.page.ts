@@ -2058,9 +2058,64 @@ openImagePopup(chat: any) {
 /**
    * Open camera and handle image cropping
    */
-  async openCamera() {
+  // async openCamera() {
+  //   try {
+  //     // Capture image from camera
+  //     const image = await Camera.getPhoto({
+  //       source: CameraSource.Camera,
+  //       quality: 90,
+  //       resultType: CameraResultType.Uri,
+  //     });
+
+  //     if (!image.webPath) {
+  //       throw new Error('No image path returned');
+  //     }
+
+  //     // Show loading indicator
+  //     const loading = await this.loadingController.create({
+  //       message: 'Processing image...',
+  //       duration: 10000,
+  //     });
+  //     await loading.present();
+
+  //     // Convert image to blob
+  //     const response = await fetch(image.webPath);
+  //     const blob = await response.blob();
+
+  //     // Validate file size
+  //     if (blob.size > this.MAX_FILE_SIZE) {
+  //       await loading.dismiss();
+  //       const toast = await this.toastCtrl.create({
+  //         message: 'Image size should be less than 5MB',
+  //         duration: 3000,
+  //         color: 'danger',
+  //       });
+  //       await toast.present();
+  //       return;
+  //     }
+
+  //     // Convert blob to data URL for cropper
+  //     const imageUrl = await this.blobToDataURL(blob);
+  //     await loading.dismiss();
+
+  //     // Open image cropper modal
+  //     await this.openImageCropperForCamera(imageUrl, blob, image.format || 'jpg');
+
+  //   } catch (error) {
+  //     console.error('Camera error:', error);
+      
+  //     const toast = await this.toastCtrl.create({
+  //       message: 'Failed to capture photo. Please try again.',
+  //       duration: 2000,
+  //       color: 'danger',
+  //     });
+  //     await toast.present();
+  //   }
+  // }
+
+async openCamera() {
     try {
-      // Capture image from camera
+      // Capture photo from camera
       const image = await Camera.getPhoto({
         source: CameraSource.Camera,
         quality: 90,
@@ -2071,39 +2126,34 @@ openImagePopup(chat: any) {
         throw new Error('No image path returned');
       }
 
-      // Show loading indicator
-      const loading = await this.loadingController.create({
-        message: 'Processing image...',
-        duration: 10000,
-      });
-      await loading.present();
-
-      // Convert image to blob
+      // Fetch the image blob from the webPath
       const response = await fetch(image.webPath);
       const blob = await response.blob();
 
-      // Validate file size
-      if (blob.size > this.MAX_FILE_SIZE) {
-        await loading.dismiss();
-        const toast = await this.toastCtrl.create({
-          message: 'Image size should be less than 5MB',
-          duration: 3000,
-          color: 'danger',
-        });
-        await toast.present();
-        return;
-      }
+      // Generate filename with timestamp
+      const timestamp = Date.now();
+      const fileName = `camera_${timestamp}.${image.format || 'jpg'}`;
+      const mimeType = `image/${image.format || 'jpeg'}`;
 
-      // Convert blob to data URL for cropper
-      const imageUrl = await this.blobToDataURL(blob);
-      await loading.dismiss();
+      // Create preview URL (same as pickAttachment)
+      const previewUrl = URL.createObjectURL(blob);
 
-      // Open image cropper modal
-      await this.openImageCropperForCamera(imageUrl, blob, image.format || 'jpg');
+      // Set selectedAttachment exactly like pickAttachment does
+      this.selectedAttachment = {
+        type: 'image',
+        blob: blob,
+        fileName: fileName,
+        mimeType: mimeType,
+        fileSize: blob.size,
+        previewUrl: previewUrl,
+      };
+      console.log("this selected attachment", this.selectedAttachment);
 
+      // Show preview modal (same as pickAttachment)
+      this.showPreviewModal = true;
     } catch (error) {
       console.error('Camera error:', error);
-      
+
       const toast = await this.toastCtrl.create({
         message: 'Failed to capture photo. Please try again.',
         duration: 2000,
@@ -2112,6 +2162,170 @@ openImagePopup(chat: any) {
       await toast.present();
     }
   }
+
+/**
+ * 🖼️ Open cropper modal for image editing
+ */
+async openCropperModal(attachment: any) {
+  if (!attachment || attachment.type !== 'image') {
+    console.warn('⚠️ No image attachment to crop');
+    return;
+  }
+
+  try {
+    const modal = await this.modalController.create({
+      component: ImageCropperModalComponent,
+      componentProps: {
+        imageUrl: attachment.previewUrl,
+        aspectRatio: 0, // Free aspect ratio (set to 1 for square, 16/9 for landscape)
+        cropQuality: 0.9
+      },
+      cssClass: 'image-cropper-modal',
+      backdropDismiss: false, // Prevent accidental dismissal
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onDidDismiss<CropResult>();
+
+    if (data && data.success && data.originalBlob) {
+      // ✅ Revoke old preview URL to free memory
+      if (attachment.previewUrl) {
+        try {
+          URL.revokeObjectURL(attachment.previewUrl);
+        } catch (e) {
+          console.warn('Failed to revoke old preview URL:', e);
+        }
+      }
+
+      // ✅ Create new preview URL from cropped blob
+      const newPreviewUrl = URL.createObjectURL(data.originalBlob);
+
+      // ✅ Generate new filename with timestamp
+      const timestamp = Date.now();
+      const fileExtension = attachment.fileName.split('.').pop() || 'jpg';
+      const newFileName = `cropped_${timestamp}.${fileExtension}`;
+
+      // ✅ Update selectedAttachment with cropped image data
+      this.selectedAttachment = {
+        ...attachment,
+        blob: data.originalBlob,
+        previewUrl: newPreviewUrl,
+        fileName: newFileName,
+        fileSize: data.originalBlob.size,
+        mimeType: data.originalBlob.type || attachment.mimeType,
+        caption: '' // Initialize empty caption
+      };
+
+      console.log('✅ Cropped attachment ready:', this.selectedAttachment);
+
+      // ✅ Store in Firebase service for cross-page access
+      this.firebaseChatService.setSelectedAttachment(this.selectedAttachment);
+
+      // ✅ Show preview modal
+      this.showPreviewModal = true;
+
+      // ✅ Show success toast
+      const toast = await this.toastCtrl.create({
+        message: 'Image cropped successfully',
+        duration: 1500,
+        color: 'success'
+      });
+      await toast.present();
+
+    } else if (data && data.cancelled) {
+      // User cancelled cropping - clean up
+      console.log('🚫 Cropping cancelled by user');
+      
+      if (attachment.previewUrl) {
+        try {
+          URL.revokeObjectURL(attachment.previewUrl);
+        } catch (e) {
+          console.warn('Failed to revoke preview URL:', e);
+        }
+      }
+      
+    } else if (data && data.error) {
+      // Show error toast
+      const toast = await this.toastCtrl.create({
+        message: data.error,
+        duration: 2000,
+        color: 'danger'
+      });
+      await toast.present();
+    }
+
+  } catch (error) {
+    console.error('❌ Error opening cropper modal:', error);
+    
+    const toast = await this.toastCtrl.create({
+      message: 'Failed to open image editor',
+      duration: 2000,
+      color: 'danger'
+    });
+    await toast.present();
+  }
+}
+
+/**
+ * ❌ Cancel attachment and close preview modal
+ */
+cancelAttachment() {
+  // Revoke object URL to prevent memory leaks
+  if (this.selectedAttachment?.previewUrl) {
+    try {
+      URL.revokeObjectURL(this.selectedAttachment.previewUrl);
+    } catch (e) {
+      console.warn('Failed to revoke preview URL:', e);
+    }
+  }
+
+  this.selectedAttachment = null;
+  this.showPreviewModal = false;
+  this.messageText = '';
+  
+  console.log('🗑️ Attachment cancelled');
+}
+
+/**
+ * 📤 Navigate to contact list with attachment and caption
+ */
+async goToContactList() {
+  if (!this.selectedAttachment) {
+    const toast = await this.toastCtrl.create({
+      message: 'No attachment to send',
+      duration: 2000,
+      color: 'warning'
+    });
+    await toast.present();
+    return;
+  }
+
+  console.log('📤 Navigating to contact list with attachment');
+  
+  // ✅ Add caption to attachment object
+  this.selectedAttachment.caption = this.messageText.trim();
+  
+  // ✅ Update in Firebase service
+  this.firebaseChatService.setSelectedAttachment(this.selectedAttachment);
+  
+  // ✅ Close preview modal
+  this.showPreviewModal = false;
+  
+  // ✅ Navigate with state
+  setTimeout(() => {
+    this.router.navigate(['/select-contact-list'], {
+      state: {
+        attachmentData: this.selectedAttachment,
+        caption: this.messageText.trim(),
+        fromCamera: true
+      }
+    });
+    
+    // ✅ Clear local state after navigation
+    this.messageText = '';
+  }, 100);
+}
 
   /**
    * Convert blob to data URL
@@ -2194,38 +2408,38 @@ openImagePopup(chat: any) {
   /**
    * Cancel attachment and close preview
    */
-  cancelAttachment() {
-    if (this.selectedAttachment?.previewUrl) {
-      try {
-        URL.revokeObjectURL(this.selectedAttachment.previewUrl);
-      } catch (e) {
-        console.warn('Failed to revoke preview URL:', e);
-      }
-    }
+  // cancelAttachment() {
+  //   if (this.selectedAttachment?.previewUrl) {
+  //     try {
+  //       URL.revokeObjectURL(this.selectedAttachment.previewUrl);
+  //     } catch (e) {
+  //       console.warn('Failed to revoke preview URL:', e);
+  //     }
+  //   }
     
-    this.selectedAttachment = null;
-    this.showPreviewModal = false;
-    this.messageText = '';
-  }
+  //   this.selectedAttachment = null;
+  //   this.showPreviewModal = false;
+  //   this.messageText = '';
+  // }
 
-  /**
-   * Navigate to contact list with attachment
-   */
-  async goToContactList() {
-    console.log('Navigating to contact list with attachment');
+  // /**
+  //  * Navigate to contact list with attachment
+  //  */
+  // async goToContactList() {
+  //   console.log('Navigating to contact list with attachment');
     
-    this.showPreviewModal = false;
+  //   this.showPreviewModal = false;
     
-    setTimeout(() => {
-      this.router.navigate(['/select-contact-list'], {
-        state: {
-          attachmentData: this.selectedAttachment,
-          caption: this.messageText.trim(),
-          fromCamera: true
-        }
-      });
-    }, 100);
-  }
+  //   setTimeout(() => {
+  //     this.router.navigate(['/select-contact-list'], {
+  //       state: {
+  //         attachmentData: this.selectedAttachment,
+  //         caption: this.messageText.trim(),
+  //         fromCamera: true
+  //       }
+  //     });
+  //   }, 100);
+  // }
 
   async scanBarcode() {
     // try {

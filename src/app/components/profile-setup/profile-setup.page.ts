@@ -25,6 +25,7 @@ import { environment } from 'src/environments/environment.prod';
 import { CropResult } from 'src/types';
 import { SecureStorageService } from '../../services/secure-storage/secure-storage.service';
 import { ImageCropperModalComponent } from '../image-cropper-modal/image-cropper-modal.component';
+import { EmojiPickerModalComponent } from '../emoji-picker-modal/emoji-picker-modal.component';
 
 @Component({
   selector: 'app-profile-setup',
@@ -68,6 +69,7 @@ export class ProfileSetupPage implements OnInit, OnDestroy {
     private fcmService: FcmService,
     private service: ApiService,
     private modalController: ModalController,
+    private modalCtrl: ModalController,
     private loadingController: LoadingController
   ) {}
 
@@ -263,6 +265,62 @@ export class ProfileSetupPage implements OnInit, OnDestroy {
     const extension = originalName.split('.').pop() || 'jpg';
     return `cropped_profile_${timestamp}.${extension}`;
   }
+
+ async openEmojiKeyboard() {
+    try {
+      const modal = await this.modalCtrl.create({
+        component: EmojiPickerModalComponent,
+        cssClass: 'emoji-picker-modal',
+        breakpoints: [0, 0.5, 0.75, 1],
+        initialBreakpoint: 0.75,
+        backdropDismiss: true,
+      });
+
+      await modal.present();
+
+      const { data } = await modal.onDidDismiss();
+
+      if (data && data.selected && data.emoji) {
+        console.log('✅ Emoji selected:', data.emoji);
+        
+        // Add emoji to the name input
+        const currentName = this.name || '';
+        const newName = currentName + data.emoji;
+        
+        // Check if adding emoji exceeds max length
+        if (newName.length <= this.maxLength) {
+          this.name = newName;
+          this.updateRemainingCount();
+          
+          // Show success toast
+          const toast = await this.toastController.create({
+            message: `Emoji added: ${data.emoji}`,
+            duration: 1500,
+            color: 'success',
+            position: 'bottom',
+          });
+          await toast.present();
+        } else {
+          // Show warning if max length exceeded
+          await this.showToast(
+            'Cannot add emoji. Character limit reached!',
+            'danger'
+          );
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error opening emoji picker:', error);
+      
+      const toast = await this.toastController.create({
+        message: 'Failed to open emoji picker',
+        duration: 2000,
+        color: 'danger',
+        position: 'bottom',
+      });
+      await toast.present();
+    }
+  }
+
 
   /**
    * Handle input change and update character count

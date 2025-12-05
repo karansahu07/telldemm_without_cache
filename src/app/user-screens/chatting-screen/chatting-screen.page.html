@@ -591,30 +591,31 @@
     <ion-header [translucent]="true" class="model-header">
       <ion-toolbar class="model-toll">
         <ion-buttons slot="start">
-          <!-- <ion-button (click)="cancelAttachment()">Cancel</ion-button> -->
           <ion-icon
             (click)="cancelAttachment()"
             name="close"
             style="font-size: 25px"
           ></ion-icon>
         </ion-buttons>
-
         <ion-buttons slot="end" class="pre-icons">
-          <img src="assets/images/hd.png" alt="hd" />
-          <ion-icon name="happy-outline" style="font-size: 24px"></ion-icon>
-          <img src="assets/images/text.png" alt="text" />
-          <img src="assets/images/pencil.png" alt="pencil" />
+          <!-- Show pencil icon only for images -->
+
+          <img 
+            *ngIf="selectedAttachment?.type === 'image'"
+            src="assets/images/pencil.png" 
+            alt="pencil"
+            (click)="openCropperModal()"
+            style="cursor: pointer;"
+          />
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
-
     <ion-content class="">
       <div class="pre-model">
         <div class="mine2">
           <div *ngIf="selectedAttachment?.type === 'image'">
             <img [src]="selectedAttachment?.previewUrl" class="preview-image" />
           </div>
-
           <div *ngIf="selectedAttachment?.type === 'video'">
             <video
               controls
@@ -622,7 +623,6 @@
               class="preview-video"
             ></video>
           </div>
-
           <div *ngIf="selectedAttachment?.type === 'file'" class="preview-file">
             <ion-icon
               name="document-attach-outline"
@@ -631,22 +631,14 @@
             <p>{{ selectedAttachment?.fileName }}</p>
           </div>
         </div>
-
         <div class="mine ion-padding">
           <ion-textarea
             [(ngModel)]="messageText"
             placeholder="Type your message here..."
             class="pre-message"
           ></ion-textarea>
-
           <div class="sendbtn">
             <p>{{ receiver_name }}</p>
-            <!-- <ion-icon
-              name="send-outline"
-              (click)="sendMessage()"
-              class="mediasend"
-            ></ion-icon> -->
-
             <ion-icon
               name="send-outline"
               (click)="sendMessage()"
@@ -662,6 +654,7 @@
     </ion-content>
   </ng-template>
 </ion-modal>
+
 
 <!-- ✅ Message Input Footer -->
 <!-- ========================= -->
@@ -1046,6 +1039,7 @@
       presentation="date"
       (ionChange)="onDateSelected($event)"
       [value]="selectedDate"
+      [max]="maxDate"
       showDefaultButtons="true"
     ></ion-datetime>
   </ng-template>
