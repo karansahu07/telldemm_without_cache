@@ -405,7 +405,6 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   async ionViewWillEnter() {
   await this.chatService.loadMessages(20, true);
   this.chatService.syncMessagesWithServer();
-  
   this.chatService.getMessages().subscribe(async (msgs: any) => {
     console.log({ msgs });
     

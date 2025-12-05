@@ -507,7 +507,7 @@ export class SqliteService {
   ): Promise<T> {
     this.setOpState(id, { isLoading: true, isError: null, isSuccess: null });
     try {
-      // throw new Error("some thing went wrong");
+      throw new Error("some thing went wrong");
       
       if (!this.isInitialized) throw new Error('DB not initialized');
       const result = await action();
@@ -757,10 +757,10 @@ export class SqliteService {
   }
 
   async getConversations(): Promise<IConversation[]> {
-    return this.withOpState(
-      'getConversations',
-      async () => {
-        const sql = `
+  return this.withOpState(
+    'getConversations',
+    async () => {
+      const sql = `
         SELECT c.*,
         m.text AS lastMessage,
         m.type AS lastMessageType,
@@ -770,33 +770,33 @@ export class SqliteService {
           WHERE um.roomId = c.roomId AND um.ownerId = '${this.ownerId}' AND um.isMe = 0 AND um.status = 'delivered'
         ) AS unreadCount
         FROM conversations c
-        WHERE c.${this.ownerIdWhereClause()}
         LEFT JOIN messages m 
-        ON m.roomId = c.roomId AND m.${this.ownerIdWhereClause()}
-        AND m.timestamp = (SELECT MAX(timestamp) FROM messages WHERE roomId = c.roomId AND ${this.ownerIdWhereClause()})
+        ON m.roomId = c.roomId AND m.ownerId = '${this.ownerId}'
+        AND m.timestamp = (SELECT MAX(timestamp) FROM messages WHERE roomId = c.roomId AND ownerId = '${this.ownerId}')
+        WHERE c.ownerId = '${this.ownerId}'
         ORDER BY c.updatedAt DESC
       `;
-        const res = await this.db.query(sql);
-        return (
-          res.values?.map((c) => ({
-            ...c,
-            type: c.type,
-            communityId: c.communityId,
-            isMyself: !!c.isMyself,
-            isArchived: !!c.isArchived,
-            isPinned: !!c.isPinned,
-            isLocked: !!c.isLocked,
-            members: c.members ? JSON.parse(c.members) : [],
-            adminIds: c.adminIds ? JSON.parse(c.adminIds) : [],
-            lastMessageAt: this.toDate(c.lastMessageAt),
-            createdAt: this.toDate(c.createdAt),
-            updatedAt: this.toDate(c.updatedAt),
-          })) ?? []
-        );
-      },
-      []
-    );
-  }
+      const res = await this.db.query(sql);
+      return (
+        res.values?.map((c) => ({
+          ...c,
+          type: c.type,
+          communityId: c.communityId,
+          isMyself: !!c.isMyself,
+          isArchived: !!c.isArchived,
+          isPinned: !!c.isPinned,
+          isLocked: !!c.isLocked,
+          members: c.members ? JSON.parse(c.members) : [],
+          adminIds: c.adminIds ? JSON.parse(c.adminIds) : [],
+          lastMessageAt: this.toDate(c.lastMessageAt),
+          createdAt: this.toDate(c.createdAt),
+          updatedAt: this.toDate(c.updatedAt),
+        })) ?? []
+      );
+    },
+    []
+  );
+}
 
   // async deleteConversation(roomId: string) {
   //   return this.withOpState('deleteConversation', async () => {
@@ -954,12 +954,12 @@ export class SqliteService {
     return this.withOpState(
       'getMessages',
       async () => {
-        const sql = `SELECT * FROM messages WHERE ${this.ownerIdWhereClause()} AND roomId = ? ORDER BY timestamp DESC LIMIT ? OFFSET ?`;
+        const sql = `SELECT * FROM messages WHERE ownerId = '${this.ownerId}' AND roomId = ? ORDER BY timestamp DESC LIMIT ? OFFSET ?`;
         const res = await this.db.query(sql, [roomId, limit, offset]);
         const msgIds = res.values?.map((m) => m.msgId) || [];
         const placeholders = msgIds.map(() => '?').join(',');
 
-        const attachQuery = `SELECT * FROM attachments WHERE ${this.ownerIdWhereClause()} AND msgId IN (${placeholders})`;
+        const attachQuery = `SELECT * FROM attachments WHERE ownerId = '${this.ownerId}' AND msgId IN (${placeholders})`;
 
         const res2 = await this.db.query(attachQuery, msgIds);
         return (

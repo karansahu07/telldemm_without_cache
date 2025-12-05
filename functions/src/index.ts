@@ -790,7 +790,7 @@ async function handlePrivateNotification(
   }
 }
  
-// 👥 Group Chat Notification Handler
+// 👥 Group Chat Notification Handler - FIXED VERSION
 async function handleGroupNotification(
   messageData: any,
   roomId: string,
@@ -809,16 +809,19 @@ async function handleGroupNotification(
       return;
     }
  
-    // ✅ Get all group members (excluding sender)
+    //exclude sender
     const members = groupData.members || {};
     const memberIds = Object.keys(members).filter(
-      (memberId) => memberId !== messageData.sender_id
+      (memberId) => memberId !== messageData.sender
     );
  
     if (memberIds.length === 0) {
       console.log("📭 No members to notify in group:", roomId);
       return;
     }
+ 
+    // ✅ Log sender info for debugging
+    console.log(`🔍 Sender: ${messageData.sender}, Members to notify: ${memberIds.length}`);
  
     // ✅ Get FCM tokens for all members
     const memberTokens: string[] = [];
@@ -906,7 +909,7 @@ async function handleGroupNotification(
           data: {
             payload: JSON.stringify({
               roomId: String(roomId),
-              senderId: String(messageData.sender),
+              senderId: String(messageData.sender),  // ✅ Using 'sender' consistently
               messageId: String(messageId),
               chatType: "group",
               groupName: String(groupName),
@@ -947,6 +950,7 @@ async function handleGroupNotification(
       successCount: notificationResults.successCount,
       failureCount: notificationResults.failureCount,
       totalTokens: memberTokens.length,
+      senderExcluded: messageData.sender
     });
  
     // ✅ Update message notification status

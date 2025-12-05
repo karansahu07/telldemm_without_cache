@@ -1678,6 +1678,14 @@ ion-datetime {
   opacity: 0.7;
 }
 
+span.emoji {
+    position: absolute;
+    top: -10px;
+    background: white;
+    border-radius: 15px;
+    padding: 5px;
+}
+
 /* Pop-in animation */
 @keyframes fadeScale {
   0% {
