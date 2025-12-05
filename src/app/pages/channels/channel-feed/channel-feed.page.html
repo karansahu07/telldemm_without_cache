@@ -1,30 +1,149 @@
-<ion-header translucent>
+<!-- channel-feed.page.html -->
+<ion-header class="ion-no-border">
   <ion-toolbar>
-    <ion-buttons slot="start"><ion-back-button></ion-back-button></ion-buttons>
-    <ion-title>Channel posts</ion-title>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      <div class="header-content">
+        <ion-avatar class="header-avatar">
+          <div class="avatar-placeholder">V</div>
+        </ion-avatar>
+        <div class="header-info">
+          <div class="channel-name">Volunteer Events</div>
+          <div class="channel-followers">56 followers</div>
+        </div>
+      </div>
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="testAddPost()">
+        <ion-icon slot="icon-only" name="link-outline"></ion-icon>
+      </ion-button>
+      <ion-button>
+        <ion-icon slot="icon-only" name="ellipsis-vertical"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content fullscreen>
-  <ion-list>
-    <ion-item *ngFor="let p of posts" lines="none">
-      <ion-card>
-        <img *ngIf="p.image" [src]="p.image" />
-        <ion-card-header>
-          <ion-card-subtitle>{{ p.author }}</ion-card-subtitle>
-          <ion-card-title>{{ p.title }}</ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-          <p>{{ p.body }}</p>
-          <div class="reactions">
-            <!-- <app-reaction-button (clicked)="react(p, '👍')" [count]="p.reactions?.['👍']"></app-reaction-button>
-            <app-reaction-button (clicked)="react(p, '👍')" [count]="p.reactions?.['👍']"></app-reaction-button>
-            <app-reaction-button (clicked)="react(p, '❤️')" [count]="p.reactions?.['❤️']"></app-reaction-button>
-            <app-reaction-button (clicked)="react(p, '😂')" [count]="p.reactions?.['😂']"></app-reaction-button> -->
-            <ion-button fill="clear" slot="end" size="small"><ion-icon name="share-outline"></ion-icon></ion-button>
+<ion-content class="channel-content">
+  <div class="posts-container">
+    <div
+      *ngFor="let p of posts"
+      class="post-bubble"
+      [class.received]="!p.isSent"
+      [class.sent]="p.isSent"
+    >
+      <!-- Author Info (only for received messages) -->
+      <div *ngIf="!p.isSent" class="author-info">
+        <ion-avatar class="author-avatar">
+          <div class="avatar-placeholder">
+            {{ p.author?.charAt(0) }}
           </div>
-        </ion-card-content>
-      </ion-card>
-    </ion-item>
-  </ion-list>
+        </ion-avatar>
+        <div class="author-details">
+          <span class="author-name">{{ p.author }}</span>
+          <ion-icon
+            *ngIf="p.verified"
+            name="checkmark-circle"
+            class="verified-badge"
+          ></ion-icon>
+        </div>
+      </div>
+
+      <!-- Message Content -->
+      <div class="message-wrapper">
+        <!-- Post Image (if exists) -->
+        <img *ngIf="p.image" [src]="p.image" class="post-image" />
+
+        <!-- Post Content Bubble -->
+        <div class="bubble-content">
+          <p class="post-text">{{ p.body }}</p>
+
+          <!-- Timestamp and Status -->
+          <div class="message-footer">
+            <span class="timestamp">
+              {{ formatTime(p.timestamp) }}
+            </span>
+            <ion-icon
+              *ngIf="p.isSent"
+              name="checkmark-done"
+              class="read-status"
+            ></ion-icon>
+          </div>
+        </div>
+
+        <!-- Reactions Row -->
+        <div class="reactions-bar">
+          <div class="reactions-left">
+            <div
+              class="reaction-item"
+              *ngIf="p.reactions && p.reactions['👍']"
+            >
+              <span class="emoji">👍</span>
+              <span class="count">{{ p.reactions['👍'] }}</span>
+            </div>
+
+            <div
+              class="reaction-item"
+              *ngIf="p.reactions && p.reactions['❤️']"
+            >
+              <span class="emoji">❤️</span>
+              <span class="count">{{ p.reactions['❤️'] }}</span>
+            </div>
+
+            <div
+              class="reaction-item"
+              *ngIf="p.reactions && p.reactions['🙏']"
+            >
+              <span class="emoji">🙏</span>
+              <span class="count">{{ p.reactions['🙏'] }}</span>
+            </div>
+          </div>
+
+          <ion-button fill="clear" size="small" class="forward-btn">
+            <ion-icon
+              slot="icon-only"
+              name="arrow-redo-outline"
+            ></ion-icon>
+          </ion-button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------- CHAT INPUT BOX (BOTTOM) ---------- -->
+    <ion-footer class="chat-footer">
+      <div class="input-row">
+        <!-- Attach Media -->
+        <ion-button
+          fill="clear"
+          class="attach-btn"
+          (click)="selectMedia()
+        ">
+          <ion-icon name="attach-outline"></ion-icon>
+        </ion-button>
+
+        <!-- Text Input -->
+        <ion-input
+          [(ngModel)]="newMessage"
+          placeholder="Type a message"
+          class="chat-input"
+        ></ion-input>
+
+        <!-- Send Button -->
+        <ion-button
+          fill="clear"
+          class="send-btn"
+          (click)="sendPost()"
+        >
+          <ion-icon name="send"></ion-icon>
+        </ion-button>
+      </div>
+    </ion-footer>
+
+    <!-- Today Divider -->
+    <div class="date-divider">
+      <span>Today</span>
+    </div>
+  </div>
 </ion-content>

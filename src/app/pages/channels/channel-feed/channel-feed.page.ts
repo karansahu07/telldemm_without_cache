@@ -1,26 +1,10 @@
-// import { Component, OnInit } from '@angular/core';
-
-// @Component({
-//   selector: 'app-channel-feed',
-//   templateUrl: './channel-feed.page.html',
-//   styleUrls: ['./channel-feed.page.scss'],
-// })
-// export class ChannelFeedPage implements OnInit {
-
-//   constructor() { }
-
-//   ngOnInit() {
-//   }
-
-// }
-
 // src/app/pages/channel-feed/channel-feed.page.ts
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { PostService } from '../services/post';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
+import { PostService } from '../services/post';
 
 interface ReactionMap {
   [emoji: string]: number;
@@ -28,11 +12,14 @@ interface ReactionMap {
 
 export interface Post {
   id: string;
-  title: string;
+  title?: string;
   body: string;
   image?: string;
   author?: string;
   reactions?: ReactionMap;
+  timestamp?: number;
+  verified?: boolean;
+  isSent?: boolean; // true for sent (right), false for received (left)
 }
 
 @Component({
@@ -40,31 +27,95 @@ export interface Post {
   templateUrl: './channel-feed.page.html',
   styleUrls: ['./channel-feed.page.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule,FormsModule],
+  imports: [IonicModule, CommonModule, FormsModule],
 })
 export class ChannelFeedPage implements OnInit {
   channelId!: string | null;
-  posts: Post[] = []; // <- explicit type fixes the error
+  posts: Post[] = [];
 
-  constructor(private route: ActivatedRoute, private postService: PostService) {}
+  newMessage: string = '';
+  selectedImage: string | null = null;
 
-  async ngOnInit() {
-    this.channelId = this.route.snapshot.paramMap.get('id');
-    if (!this.channelId) {
-      // handle missing id (navigate away, show error, etc.)
-      return;
-    }
-    // Ensure postService.getPostsForChannel returns Promise<Post[]>
-    this.posts = await this.postService.getPostsForChannel(this.channelId);
+  constructor(
+    private route: ActivatedRoute,
+    private postService: PostService
+  ) {}
+
+  ngOnInit() {
+    // later you can read from route: this.route.snapshot.paramMap.get('channelId')
+    this.channelId = '28';
+
+    if (!this.channelId) return;
+
+    this.postService.getPosts(this.channelId).subscribe((data) => {
+      this.posts = data;
+    });
   }
 
+  // Optional: if you wire reactions to UI later
   async react(post: Post, emoji: string) {
-    // call service (ensure it returns Promise<void> or similar)
-    await this.postService.addReaction(post.id, emoji);
+    if (!this.channelId) return;
+    await this.postService.addReaction(this.channelId, post.id, emoji);
+  }
 
-    // update local UI optimistically
-    post.reactions = post.reactions || {};
-    post.reactions[emoji] = (post.reactions[emoji] || 0) + 1;
+  /** Format numeric timestamp → HH:MM (like 09:21) */
+  formatTime(ts?: number): string {
+    if (!ts) return '';
+    const date = new Date(ts);
+    return date.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  testAddPost() {
+    if (!this.channelId) return;
+
+    console.log('clicked');
+    this.postService.createPost(this.channelId, {
+      author: 'Volunteer Events',
+      body: 'This is a test message',
+      image:
+        'https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=600',
+      verified: true,
+      isSent: false,
+    });
+  }
+
+  selectMedia() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*,video/*';
+    input.onchange = (event: any) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.selectedImage = reader.result as string;
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  }
+
+  sendPost() {
+    if (!this.channelId) return;
+    if (!this.newMessage && !this.selectedImage) return;
+
+    const postData = {
+      body: this.newMessage,
+      image: this.selectedImage,
+      author: 'Volunteer Events',
+      verified: true,
+      isSent: true,
+      // ❌ no need to send timestamp here; service will set Date.now()
+    };
+
+    this.postService.createPost(this.channelId, postData);
+
+    // Reset UI
+    this.newMessage = '';
+    this.selectedImage = null;
   }
 }
-

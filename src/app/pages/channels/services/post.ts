@@ -1,99 +1,73 @@
-// import { Injectable } from '@angular/core';
-
-// @Injectable({
-//   providedIn: 'root'
-// })
-// export class Post {
-  
-// }
-// src/app/services/post.ts
+// src/app/pages/services/post.ts
 import { Injectable } from '@angular/core';
+import {
+  Database,
+  ref,
+  push,
+  set,
+  onValue,
+  query,
+  orderByChild,
+  runTransaction
+} from '@angular/fire/database';
+import { Observable } from 'rxjs';
 
-export interface ReactionMap {
-  [emoji: string]: number;
-}
-
-export interface Post {
-  id: string;
-  channelId: string;
-  title: string;
-  body: string;
-  image?: string;
-  author?: string;
-  reactions?: ReactionMap;
-  createdAt?: string;
-}
-
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class PostService {
-  // in-memory store keyed by channelId
-  private postsByChannel: Record<string, Post[]> = {
-    upstox: [
-      {
-        id: 'p1',
-        channelId: 'upstox',
-        title: 'This is what 50K people look like in one place!',
-        body: 'Thank you 50K+ strong community',
-        image: 'assets/upstox_post.png',
-        author: 'Upstox',
-        reactions: { '👍': 38 },
-        createdAt: new Date().toISOString(),
-      },
-    ],
-    memes: [
-      {
-        id: 'm1',
-        channelId: 'memes',
-        title: 'Top meme of the day',
-        body: "You won't believe this one!",
-        author: 'Memes',
-        reactions: { '😂': 120 },
-        createdAt: new Date().toISOString(),
-      },
-    ],
-  };
 
-  constructor() {}
+  constructor(private db: Database) {}
 
-  /** Return posts for a channel (shallow copies so callers don't mutate internal state). */
-  async getPostsForChannel(channelId: string): Promise<Post[]> {
-    await this.sleep(150); // simulate network latency
-    const list = this.postsByChannel[channelId] ?? [];
-    return list.map((p) => ({ ...p, reactions: { ...(p.reactions ?? {}) } }));
+  // ============================
+  // 1️⃣ CREATE A POST
+  // ============================
+  async createPost(channelId: string, post: any) {
+    const postsRef = ref(this.db, `channels/${channelId}/posts`);
+    const newPostRef = push(postsRef);
+
+    // Always store timestamp as a number (milliseconds since epoch)
+    return set(newPostRef, {
+      ...post,
+      timestamp: Date.now(),       // numeric timestamp
+      reactions: post.reactions || {}
+    });
   }
 
-  /**
-   * Add a reaction to a post.
-   * Returns the updated post (copy).
-   */
-  async addReaction(postId: string, emoji: string): Promise<Post> {
-    await this.sleep(100);
+  // ============================
+  // 2️⃣ GET POSTS REAL-TIME (OLDEST → NEWEST)
+  // ============================
+  getPosts(channelId: string): Observable<any[]> {
+    const postsRef = query(
+      ref(this.db, `channels/${channelId}/posts`),
+      orderByChild('timestamp')
+    );
 
-    // find the post across channels
-    for (const channelId of Object.keys(this.postsByChannel)) {
-      const idx = this.postsByChannel[channelId].findIndex((p) => p.id === postId);
-      if (idx !== -1) {
-        const post = this.postsByChannel[channelId][idx];
+    return new Observable((observer) => {
+      onValue(postsRef, (snapshot) => {
+        const data = snapshot.val() || {};
 
-        // update internal state
-        const newReactions = { ...(post.reactions ?? {}) };
-        newReactions[emoji] = (newReactions[emoji] || 0) + 1;
+        const posts = Object.keys(data)
+          .map(id => ({ id, ...data[id] }))
+          // ✅ oldest first (11:00, 12:00, 13:00)
+          .sort((a, b) => a.timestamp - b.timestamp);
 
-        this.postsByChannel[channelId][idx] = {
-          ...post,
-          reactions: newReactions,
-        };
-
-        // return a copy
-        return { ...this.postsByChannel[channelId][idx], reactions: { ...newReactions } };
-      }
-    }
-
-    throw new Error(`Post with id "${postId}" not found`);
+        observer.next(posts);
+      });
+    });
   }
 
-  // helper to simulate latency (remove in production)
-  private sleep(ms: number) {
-    return new Promise((res) => setTimeout(res, ms));
+  // ============================
+  // 3️⃣ ADD REACTION (SAFE INCREMENT USING TRANSACTION)
+  // ============================
+  async addReaction(channelId: string, postId: string, emoji: string) {
+    const reactionRef = ref(
+      this.db,
+      `channels/${channelId}/posts/${postId}/reactions/${emoji}`
+    );
+
+    return runTransaction(reactionRef, (currentValue) => {
+      return (currentValue || 0) + 1;
+    });
   }
 }
