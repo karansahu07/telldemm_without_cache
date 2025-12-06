@@ -133,6 +133,8 @@ export class FirebaseChatService {
     typing: null as any | null,
   };
 
+
+
   constructor(
     private cache: CacheService,
     private db: Database,
@@ -592,8 +594,9 @@ export class FirebaseChatService {
   }
 
   pushMsgToChat(msg: any) {
-    console.log('message attachment this is from pushmsgtochat', msg);
-    const existing = new Map(this._messages$.value);
+    try {
+      console.log('message attachment this is from pushmsgtochat', msg);
+    const existing = new Map(this._messages$?.value || []);
     const currentMessages =
       existing.get(this.currentChat?.roomId as string) || [];
     const messageIdSet = new Set(currentMessages.map((m) => m.msgId));
@@ -616,6 +619,9 @@ export class FirebaseChatService {
     console.log({ currentMessages });
     // return
     this._messages$.next(existing);
+    } catch (error) {
+      console.error("not loads pushmsgTochat", error)
+    }
   }
 
   getRoomIdFor1To1(senderId: string, receiverId: string): string {
@@ -677,7 +683,7 @@ export class FirebaseChatService {
 
   async openChat(chat: any, isNew: boolean = false) {
     // console.log('📱 openChat called from notification/UI');
-
+    debugger
     try {
       let conv: any = null;
 
@@ -786,7 +792,7 @@ export class FirebaseChatService {
       this.currentChat = { ...(conv as IConversation) };
       console.log('✅ Current chat set:', this.currentChat.roomId);
 
-      await this.setActiveChat(this.senderId!, this.currentChat.roomId);
+      // await this.setActiveChat(this.senderId!, this.currentChat.roomId);
 
       // ✅ Setup presence listener
       this.presenceCleanUp = this.isReceiverOnline(memberIds);
@@ -865,7 +871,9 @@ export class FirebaseChatService {
       //     console.log(`Message removed: ${msgKey}`);
       //   },
       // });
-
+      await this.loadMessages(20, true)
+      await this.syncMessagesWithServer()
+      if(!this.networkService.isOnline.value) return;
       this._roomMessageListner = this.listenRoomStream(conv?.roomId as string, {
         onAdd: async (msgKey, data, isNew) => {
           if (!this.currentChat || this.currentChat.roomId !== conv.roomId) {
@@ -2161,8 +2169,11 @@ export class FirebaseChatService {
           }),
         };
       };
-
+      
+      console.log("inside the sync mesaage with server")
+      console.log("current array length", currentArr)
       if (!currentArr.length) {
+        console.log("################ load all messages")
         const q = query(baseRef, orderByKey());
         const snap = await rtdbGet(q);
         const fetched: IMessage[] = [];
@@ -2188,22 +2199,22 @@ export class FirebaseChatService {
         }
         fetched.sort((a, b) =>
           a.msgId! < b.msgId! ? -1 : a.msgId! > b.msgId! ? 1 : 0
-        );
-        fetched.forEach((m) => this.pushMsgToChat(m));
-        // currentMap.set(roomId, fetched);
-        // this._messages$.next(currentMap);
+      );
+      fetched.forEach((m) => this.pushMsgToChat(m));
+      // currentMap.set(roomId, fetched);
+      // this._messages$.next(currentMap);
         // console.log('Messages when no prev ->', fetched);
         return;
       }
-
+      
       const last =
-        currentArr?.sort((a, b) =>
-          a.msgId! < b.msgId! ? -1 : a.msgId! > b.msgId! ? 1 : 0
+      currentArr?.sort((a, b) =>
+        a.msgId! < b.msgId! ? -1 : a.msgId! > b.msgId! ? 1 : 0
         )?.[currentArr.length - 1] || null;
       const lastKey = last.msgId ?? null;
       if (!lastKey) {
-        console.warn(
-          'syncMessagesWithServer: last message missing key; falling back to latest page'
+        console.log(
+          '#################################syncMessagesWithServer: last message missing key; falling back to latest page'
         );
         const pageSize = 50;
         const q = query(baseRef, orderByKey(), limitToLast(pageSize));
@@ -2240,6 +2251,7 @@ export class FirebaseChatService {
       }
 
       const qNew = query(baseRef, orderByKey(), startAt(lastKey as string));
+      console.log("loading message after last messages", lastKey)
       const snapNew = await rtdbGet(qNew);
 
       const newMessages: IMessage[] = [];
@@ -2340,7 +2352,7 @@ export class FirebaseChatService {
     const roomId = this.currentChat?.roomId as string;
     try {
       if (intial) {
-        const currentMessagesMap = new Map(this._messages$.value);
+        const currentMessagesMap = new Map(this._messages$?.value || []);
         const existingMessages = currentMessagesMap.get(roomId) || [];
         if (existingMessages.length > 0) return;
       }
@@ -2727,6 +2739,7 @@ export class FirebaseChatService {
         key: k,
         val: v,
       }));
+      // console.log("handlers in onAdd", items)
       items.sort((a, b) => (a.val.timestamp || 0) - (b.val.timestamp || 0));
       items.forEach((i) => handlers.onAdd!(i.key, i.val, false));
     }
@@ -3018,12 +3031,12 @@ export class FirebaseChatService {
         // sender: this.senderId,
         sender_name: this.authService.authData?.name || '',
         receiver_id: receiverId,
-        sender: this.senderId || undefined,
+        sender: this.senderId || '',
         timestamp,
         status: 'sent',
         isForwarded: true,
         text: forwardedMsg.text || '',
-        translations: translations || undefined,
+        translations: translations || null,
         receipts: {
           read: { status: false, readBy: [] },
           delivered: { status: false, deliveredTo: [] },

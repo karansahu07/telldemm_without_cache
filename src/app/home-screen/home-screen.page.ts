@@ -1786,7 +1786,7 @@ openImagePopup(chat: any) {
 
   get totalUnreadCount(): number {
     return this.conversations.reduce(
-      (sum, chat) => sum + (chat.unreadCount || 0),
+      (sum, chat) => sum + ((chat?.unreadCount || 0) > 0 ? 1:0),
       0
     );
   }

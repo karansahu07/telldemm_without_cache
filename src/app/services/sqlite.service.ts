@@ -9,7 +9,6 @@ import { defineCustomElements } from 'jeep-sqlite/loader';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { AttachmentPreviewPage } from '../pages/attachment-preview/attachment-preview.page';
-import { AuthService } from '../auth/auth.service';
 
 /** ----------------- INTERFACES ----------------- **/
 export interface IUser {
@@ -300,7 +299,6 @@ const TABLE_SCHEMAS = {
   users: `
     CREATE TABLE IF NOT EXISTS users (
       userId TEXT PRIMARY KEY,
-      ownerId TEXT NOT NULL,
       username TEXT NOT NULL,
       phoneNumber TEXT UNIQUE NOT NULL,
       lastSeen TEXT,
@@ -314,7 +312,6 @@ const TABLE_SCHEMAS = {
   conversations: `
     CREATE TABLE IF NOT EXISTS conversations (
       roomId TEXT PRIMARY KEY,
-      ownerId TEXT NOT NULL,
       title TEXT,
       phoneNumber TEXT,
       type TEXT,
@@ -332,9 +329,8 @@ const TABLE_SCHEMAS = {
   `,
   attachments: `
     CREATE TABLE IF NOT EXISTS attachments (
+    msgId TEXT,
       mediaId TEXT PRIMARY KEY,
-      ownerId TEXT NOT NULL,
-      msgId TEXT,
       type TEXT,
       fileName TEXT,
       mimeType TEXT,
@@ -367,7 +363,6 @@ const TABLE_SCHEMAS = {
   messages: `
   CREATE TABLE IF NOT EXISTS messages (
     msgId TEXT PRIMARY KEY,
-    ownerId TEXT NOT NULL,
     roomId TEXT NOT NULL,
     sender TEXT NOT NULL,
     sender_name TEXT NOT NULL,
@@ -397,16 +392,9 @@ export class SqliteService {
   private isInitialized: boolean = false;
   private sqliteConnection: SQLiteConnection;
   private db!: SQLiteDBConnection;
-  
   private operationStates = new Map<string, BehaviorSubject<IOpState>>();
 
-  // Static ownerId for now (replace with localStorage.getItem('userId') later)
-  private get ownerId(): string {
-    return this.authService.authData?.userId || ''; // Replace with real auth user ID later
-; // Static value; update this method later to fetch from localStorage
-  }
-
-  constructor(private authService:AuthService) {
+  constructor() {
     this.sqliteConnection = new SQLiteConnection(CapacitorSQLite);
     if (Capacitor.getPlatform() === 'web') {
       defineCustomElements(window);
@@ -451,35 +439,9 @@ export class SqliteService {
         await this.db.execute(schema);
         console.log('Table created for ', schema);
       }
-
-      // Migration: Add ownerId column if it doesn't exist (for existing DBs)
-      await this.migrateOwnerIdColumn();
-
       console.info('SQLite tables created! ✅');
     } catch (err) {
       console.error('DB init error:', err);
-    }
-  }
-
-  /**
-   * Migration helper: Add ownerId column to existing tables if missing
-   * Run this after CREATE IF NOT EXISTS to handle upgrades without full reset
-   */
-  private async migrateOwnerIdColumn(): Promise<void> {
-    const tables = ['users', 'conversations', 'attachments', 'messages'];
-    for (const table of tables) {
-      try {
-        // Check if column exists (query PRAGMA)
-        const checkRes = await this.db.query(`PRAGMA table_info(${table})`);
-        const hasOwnerId = checkRes.values?.some((col: any) => col.name === 'ownerId');
-        if (!hasOwnerId) {
-          // Add the column
-          await this.db.execute(`ALTER TABLE ${table} ADD COLUMN ownerId TEXT NOT NULL DEFAULT '${this.ownerId}'`);
-          console.log(`✅ Added ownerId column to ${table}`);
-        }
-      } catch (err) {
-        console.warn(`Migration warning for ${table}:`, err);
-      }
     }
   }
 
@@ -507,8 +469,6 @@ export class SqliteService {
   ): Promise<T> {
     this.setOpState(id, { isLoading: true, isError: null, isSuccess: null });
     try {
-      throw new Error("some thing went wrong");
-      
       if (!this.isInitialized) throw new Error('DB not initialized');
       const result = await action();
       this.setOpState(id, { isLoading: false, isSuccess: true });
@@ -543,18 +503,13 @@ export class SqliteService {
     return value ? new Date(Number(value)) : undefined;
   }
 
-  private ownerIdWhereClause(): string {
-    return `ownerId = '${this.ownerId}'`;
-  }
-
   /** ----------------- CONTACTS ----------------- **/
   async upsertContact(contact: IUser & { isOnPlatform?: boolean }) {
     return this.withOpState('upsertContact', async () => {
       const sql = `
-        INSERT INTO users (userId, ownerId, username, phoneNumber, avatar, status, lastSeen, isOnPlatform, createdAt, updatedAt)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+        INSERT INTO users (userId, phoneNumber, username, avatar, status, lastSeen, isOnPlatform, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
         ON CONFLICT(userId) DO UPDATE SET
-        ownerId = excluded.ownerId,
         phoneNumber = excluded.phoneNumber,
         username = excluded.username,
         avatar = excluded.avatar,
@@ -562,13 +517,11 @@ export class SqliteService {
         lastSeen = excluded.lastSeen,
         isOnPlatform = excluded.isOnPlatform,
         updatedAt = datetime('now')
-      WHERE ${this.ownerIdWhereClause()}
       `;
       const params = [
         contact.userId,
-        this.ownerId,
-        contact.username || contact.phoneNumber,
         contact.phoneNumber,
+        contact.username || contact.phoneNumber,
         contact.avatar || null,
         contact.status || null,
         contact.lastSeen?.toISOString() || null,
@@ -591,8 +544,9 @@ export class SqliteService {
     return this.withOpState(
       'getContacts',
       async () => {
-        const whereClause = onlyPlatformUsers ? `AND isOnPlatform = 1` : '';
-        const sql = `SELECT * FROM users WHERE ${this.ownerIdWhereClause()} ${whereClause} ORDER BY username ASC`;
+        const sql = onlyPlatformUsers
+          ? `SELECT * FROM users WHERE isOnPlatform = 1 ORDER BY username ASC`
+          : `SELECT * FROM users ORDER BY username ASC`;
         const res = await this.db.query(sql);
         return (
           res.values?.map((c) => ({
@@ -614,7 +568,7 @@ export class SqliteService {
       'getContactByPhone',
       async () => {
         const res = await this.db.query(
-          `SELECT * FROM users WHERE ${this.ownerIdWhereClause()} AND phoneNumber = ?`,
+          `SELECT * FROM users WHERE phoneNumber = ?`,
           [phoneNumber]
         );
         const c = res.values?.[0];
@@ -637,7 +591,7 @@ export class SqliteService {
       'getContactById',
       async () => {
         const res = await this.db.query(
-          `SELECT * FROM users WHERE ${this.ownerIdWhereClause()} AND userId = ?`,
+          `SELECT * FROM users WHERE userId = ?`,
           [id]
         );
         const c = res.values?.[0];
@@ -673,7 +627,7 @@ export class SqliteService {
       await this.db.run(
         `UPDATE users SET ${setClauses.join(
           ', '
-        )}, updatedAt = datetime('now') WHERE ${this.ownerIdWhereClause()} AND userId = ?`,
+        )}, updatedAt = datetime('now') WHERE userId = ?`,
         params
       );
     });
@@ -681,7 +635,7 @@ export class SqliteService {
 
   async deleteContact(phoneNumber: string) {
     return this.withOpState('deleteContact', async () => {
-      await this.db.run(`DELETE FROM users WHERE ${this.ownerIdWhereClause()} AND phoneNumber = ?`, [
+      await this.db.run(`DELETE FROM users WHERE phoneNumber = ?`, [
         phoneNumber,
       ]);
     });
@@ -689,7 +643,7 @@ export class SqliteService {
 
   async deleteAllContacts() {
     return this.withOpState('deleteAllContacts', async () => {
-      await this.db.execute(`DELETE FROM users WHERE ${this.ownerIdWhereClause()}`);
+      await this.db.execute('DELETE FROM users');
     });
   }
 
@@ -698,10 +652,9 @@ export class SqliteService {
     return this.withOpState('createConversation', async () => {
       const sql = `
         INSERT INTO conversations
-        (roomId, ownerId, title, type, communityId, isMyself, avatar, members, adminIds, phoneNumber, isArchived, isPinned, isLocked, createdAt, updatedAt)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+        (roomId, title, type, communityId, isMyself, avatar, members, adminIds, phoneNumber,isArchived, isPinned, isLocked, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,  datetime('now'), datetime('now'))
         ON CONFLICT(roomId) DO UPDATE SET
-        ownerId = excluded.ownerId,
         title = excluded.title,
         type = excluded.type,
         communityId = excluded.communityId,
@@ -709,16 +662,13 @@ export class SqliteService {
         avatar = excluded.avatar,
         members = excluded.members,
         adminIds = excluded.adminIds,
-        phoneNumber = excluded.phoneNumber,
         isArchived = excluded.isArchived,
         isPinned = excluded.isPinned,
         isLocked = excluded.isLocked,
         updatedAt = datetime('now')
-      WHERE ${this.ownerIdWhereClause()}
       `;
       await this.db.run(sql, [
         input.roomId,
-        this.ownerId,
         input.title,
         input.type,
         input.communityId || null,
@@ -739,7 +689,7 @@ export class SqliteService {
       'getConversation',
       async () => {
         const res = await this.db.query(
-          `SELECT * FROM conversations WHERE ${this.ownerIdWhereClause()} AND roomId = ?`,
+          `SELECT * FROM conversations WHERE roomId = ?`,
           [roomId]
         );
         const row = res.values?.[0];
@@ -757,46 +707,45 @@ export class SqliteService {
   }
 
   async getConversations(): Promise<IConversation[]> {
-  return this.withOpState(
-    'getConversations',
-    async () => {
-      const sql = `
+    return this.withOpState(
+      'getConversations',
+      async () => {
+        const sql = `
         SELECT c.*,
         m.text AS lastMessage,
         m.type AS lastMessageType,
         m.timestamp AS lastMessageAt,
         (
           SELECT COUNT(um.msgId) FROM messages um 
-          WHERE um.roomId = c.roomId AND um.ownerId = '${this.ownerId}' AND um.isMe = 0 AND um.status = 'delivered'
+          WHERE um.roomId = c.roomId AND um.isMe = 0 AND um.status = 'delivered'
         ) AS unreadCount
         FROM conversations c
         LEFT JOIN messages m 
-        ON m.roomId = c.roomId AND m.ownerId = '${this.ownerId}'
-        AND m.timestamp = (SELECT MAX(timestamp) FROM messages WHERE roomId = c.roomId AND ownerId = '${this.ownerId}')
-        WHERE c.ownerId = '${this.ownerId}'
+        ON m.roomId = c.roomId
+        AND m.timestamp = (SELECT MAX(timestamp) FROM messages WHERE roomId = c.roomId)
         ORDER BY c.updatedAt DESC
       `;
-      const res = await this.db.query(sql);
-      return (
-        res.values?.map((c) => ({
-          ...c,
-          type: c.type,
-          communityId: c.communityId,
-          isMyself: !!c.isMyself,
-          isArchived: !!c.isArchived,
-          isPinned: !!c.isPinned,
-          isLocked: !!c.isLocked,
-          members: c.members ? JSON.parse(c.members) : [],
-          adminIds: c.adminIds ? JSON.parse(c.adminIds) : [],
-          lastMessageAt: this.toDate(c.lastMessageAt),
-          createdAt: this.toDate(c.createdAt),
-          updatedAt: this.toDate(c.updatedAt),
-        })) ?? []
-      );
-    },
-    []
-  );
-}
+        const res = await this.db.query(sql);
+        return (
+          res.values?.map((c) => ({
+            ...c,
+            type: c.type,
+            communityId: c.communityId,
+            isMyself: !!c.isMyself,
+            isArchived: !!c.isArchived,
+            isPinned: !!c.isPinned,
+            isLocked: !!c.isLocked,
+            members: c.members ? JSON.parse(c.members) : [],
+            adminIds: c.adminIds ? JSON.parse(c.adminIds) : [],
+            lastMessageAt: this.toDate(c.lastMessageAt),
+            createdAt: this.toDate(c.createdAt),
+            updatedAt: this.toDate(c.updatedAt),
+          })) ?? []
+        );
+      },
+      []
+    );
+  }
 
   // async deleteConversation(roomId: string) {
   //   return this.withOpState('deleteConversation', async () => {
@@ -807,19 +756,17 @@ export class SqliteService {
 
   async deleteConversation(roomId: string) {
     return this.withOpState('deleteConversation', async () => {
-      const ownerIdParam = this.ownerId;
-
       // Delete attachments
       await this.db.run(
-        `DELETE FROM attachments WHERE ownerId = ? AND mediaId IN (SELECT mediaId FROM messages WHERE roomId = ? AND ownerId = ?)`,
-        [ownerIdParam, roomId, ownerIdParam]
+        'DELETE FROM attachments WHERE mediaId IN (SELECT mediaId FROM messages WHERE roomId = ?)',
+        [roomId]
       );
 
       // Delete messages
-      await this.db.run(`DELETE FROM messages WHERE ${this.ownerIdWhereClause()} AND roomId = ?`, [roomId]);
+      await this.db.run('DELETE FROM messages WHERE roomId = ?', [roomId]);
 
       // Delete conversation
-      await this.db.run(`DELETE FROM conversations WHERE ${this.ownerIdWhereClause()} AND roomId = ?`, [roomId]);
+      await this.db.run('DELETE FROM conversations WHERE roomId = ?', [roomId]);
     });
   }
 
@@ -827,14 +774,13 @@ export class SqliteService {
     return this.withOpState('deleteConversations', async () => {
       if (!roomIds.length) return;
       const placeholders = roomIds.map(() => '?').join(', ');
-      const ownerIdParam = this.ownerId;
       await this.db.run(
-        `DELETE FROM messages WHERE ${this.ownerIdWhereClause()} AND roomId IN (${placeholders})`,
-        [...roomIds]
+        `DELETE FROM messages WHERE roomId IN (${placeholders})`,
+        roomIds
       );
       await this.db.run(
-        `DELETE FROM conversations WHERE ${this.ownerIdWhereClause()} AND roomId IN (${placeholders})`,
-        [...roomIds]
+        `DELETE FROM conversations WHERE roomId IN (${placeholders})`,
+        roomIds
       );
     });
   }
@@ -872,13 +818,12 @@ export class SqliteService {
     return this.withOpState('saveMessage', async () => {
       const sql = `
       INSERT INTO messages 
-      (msgId, ownerId, roomId, sender, sender_name, receiver_id, type, text, translations, mediaId, isMe, status, timestamp, receipts, deletedFor, replyToMsgId, reactions, isEdit)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (msgId, roomId, sender, sender_name, receiver_id, type, text, translations, mediaId, isMe, status, timestamp, receipts, deletedFor, replyToMsgId, reactions, isEdit)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
       const params = [
         message.msgId,
-        this.ownerId,
         message.roomId,
         message.sender,
         message.sender_name,
@@ -904,12 +849,11 @@ export class SqliteService {
 
   saveAttachment(attachment: IAttachment) {
     return this.withOpState('saveAttachment', async () => {
-      const query = `INSERT INTO attachments (mediaId, ownerId, msgId, type, fileName, mimeType, fileSize, caption, localUrl, cdnUrl)
-      VALUES(?,?,?,?,?,?,?,?,?,?) `;
+      const query = `INSERT INTO attachments (msgId,mediaId, type, fileName, mimeType, fileSize, caption, localUrl, cdnUrl)
+      VALUES(?,?,?,?,?,?,?,?,?) `;
       await this.db.run(query, [
-        attachment.mediaId || '',
-        this.ownerId,
         attachment.msgId || '',
+        attachment.mediaId || '',
         attachment.type || '',
         attachment.fileName || '',
         attachment.mimeType || '',
@@ -929,7 +873,7 @@ export class SqliteService {
     const setClause = fields.map(field => `${field} = ?`).join(', ');
     const values = fields.map(field => (updates as any)[field]);
 
-    const query = `UPDATE attachments SET ${setClause} WHERE ${this.ownerIdWhereClause()} AND msgId = ?`;
+    const query = `UPDATE attachments SET ${setClause} WHERE msgId = ?`;
 
     await this.db.run(query, [...values, msgId]);
   });
@@ -939,7 +883,7 @@ export class SqliteService {
      return this.withOpState(
       `getAttachment`,
       async() => {
-        const sql = `SELECT * FROM attachments WHERE ${this.ownerIdWhereClause()} AND msgId = ?`
+        const sql = `SELECT * FROM msgId WHERE attachments WHERE msgId = ?`
         const res = await this.db.query(sql,[msgId])
         return res.values?.[0] || null
       }
@@ -954,33 +898,26 @@ export class SqliteService {
     return this.withOpState(
       'getMessages',
       async () => {
-        const sql = `SELECT * FROM messages WHERE ownerId = '${this.ownerId}' AND roomId = ? ORDER BY timestamp DESC LIMIT ? OFFSET ?`;
+        const sql = `SELECT * FROM messages WHERE roomId = ? ORDER BY timestamp DESC LIMIT ? OFFSET ?`;
         const res = await this.db.query(sql, [roomId, limit, offset]);
         const msgIds = res.values?.map((m) => m.msgId) || [];
         const placeholders = msgIds.map(() => '?').join(',');
 
-        const attachQuery = `SELECT * FROM attachments WHERE ownerId = '${this.ownerId}' AND msgId IN (${placeholders})`;
+        const attachQuery = `SELECT * FROM attachments WHERE msgId IN (${placeholders})`;
 
         const res2 = await this.db.query(attachQuery, msgIds);
         return (
           res.values?.reverse().map((msg) => {
-            const attachment = res2.values?.find((a: any) => a.msgId == msg.msgId);
+            const attachment = res2.values?.find(a=> a.msgId == msg.msgId)
             return {
               ...msg,
-              // Merge attachment fields directly into message (e.g., localUrl, cdnUrl)
-              ...(attachment && {
-                localUrl: attachment.localUrl,
-                cdnUrl: attachment.cdnUrl,
-                // Add other attachment fields as needed
-              }),
+              ...(attachment && {attachment}),
               receipts: JSON.parse(msg.receipts || '{}'),
               reactions: JSON.parse(msg.reactions || '[]'),
               deletedFor: JSON.parse(msg.deletedFor || '{}'),
               isMe: !!msg.isMe,
               isEdit: !!msg.isEdit,
               timestamp: this.toDate(msg.timestamp),
-              // Parse translations if present
-              translations: msg.translations ? JSON.parse(msg.translations) : null,
             };
           }) ?? []
         );
@@ -994,7 +931,7 @@ export class SqliteService {
       'getMessage',
       async () => {
         const res = await this.db.query(
-          `SELECT * FROM messages WHERE ${this.ownerIdWhereClause()} AND msgId = ?`,
+          `SELECT * FROM messages WHERE msgId = ?`,
           [msgId]
         );
         const m = res.values?.[0];
@@ -1002,12 +939,8 @@ export class SqliteService {
         return {
           ...m,
           receipts: JSON.parse(m.receipts || '{}'),
-          reactions: JSON.parse(m.reactions || '[]'),
-          deletedFor: JSON.parse(m.deletedFor || '{}'),
           isMe: m.isMe === 1,
-          isEdit: m.isEdit === 1,
           timestamp: this.toDate(m.timestamp),
-          translations: m.translations ? JSON.parse(m.translations) : null,
         };
       },
       null
@@ -1019,26 +952,28 @@ export class SqliteService {
       if (msgIds.length > 0) {
         const placeholders = msgIds.map(() => '?').join(', ');
         await this.db.run(
-          `DELETE FROM messages WHERE ${this.ownerIdWhereClause()} AND msgId IN (${placeholders})`,
+          `DELETE FROM messages WHERE msgId IN (${placeholders})`,
           msgIds
         );
       }
     });
   }
 
+  
+
   async updateMessageDeletionStatus(
     msgId: string,
     deletedFor: { everyone: boolean; users: string[] }
   ) {
     return this.withOpState('updateMessageDeletionStatus', async () => {
-      const sql = `UPDATE messages SET deletedFor = ? WHERE ${this.ownerIdWhereClause()} AND msgId = ?`;
+      const sql = `UPDATE messages SET deletedFor = ? WHERE msgId = ?`;
       await this.db.run(sql, [JSON.stringify(deletedFor), msgId]);
     });
   }
 
   async updateMessageStatus(msgId: string, status: IMessage['status']) {
     return this.withOpState('updateMessageStatus', async () => {
-      await this.db.run(`UPDATE messages SET status = ? WHERE ${this.ownerIdWhereClause()} AND msgId = ?`, [
+      await this.db.run(`UPDATE messages SET status = ? WHERE msgId = ?`, [
         status,
         msgId,
       ]);
@@ -1047,7 +982,7 @@ export class SqliteService {
 
   async updateMessageReceipts(msgId: string, receipt: IMessage['receipts']) {
     return this.withOpState('updateMessageReceipts', async () => {
-      await this.db.run(`UPDATE messages SET receipts = ? WHERE ${this.ownerIdWhereClause()} AND msgId = ?`, [
+      await this.db.run(`UPDATE messages SET receipts = ? WHERE msgId = ?`, [
         JSON.stringify(receipt),
         msgId,
       ]);
@@ -1059,7 +994,7 @@ export class SqliteService {
       'getMessageCount',
       async () => {
         const res = await this.db.query(
-          `SELECT COUNT(*) as count FROM messages WHERE ${this.ownerIdWhereClause()} AND roomId = ?`,
+          `SELECT COUNT(*) as count FROM messages WHERE roomId = ?`,
           [roomId]
         );
         return res.values?.[0]?.count ?? 0;
@@ -1069,58 +1004,36 @@ export class SqliteService {
   }
 
   /** ----------------- UTILITIES ----------------- **/
-//   async resetDB() {
-//   return this.withOpState('resetDB', async () => {
-
-//     const tables = ["users", "conversations", "attachments", "messages"];
-
-//   for (const table of tables) {
-//     await this.db.execute(`DELETE FROM ${table} WHERE ${this.ownerIdWhereClause()}`);
-//     await this.db.execute(`DELETE FROM sqlite_sequence WHERE name='${table}'`);
-//   }
-    
-//   });
-// }
-
-// Updated resetDB with correct DB file name for mobile (CapacitorSQLite appends 'SQLite')
-async resetDB() {
+  async resetDB() {
   return this.withOpState('resetDB', async () => {
-    console.log('🔄 Starting DB reinitialization (no file deletion)...');
-
-    // Step 1: Close the current connection to free the DB
-    await this.closeConnection();
-
-    // Step 2: Recreate the connection (reuses existing file if present)
-    const isConn = (await this.sqliteConnection.isConnection(DB_NAME, false)).result;
-    if (isConn) {
-      await this.sqliteConnection.closeConnection(DB_NAME, false);
-    }
-    this.db = await this.sqliteConnection.createConnection(
-      DB_NAME,
-      false,
-      'no-encryption',
-      1,
-      false
-    );
-    await this.db.open();
-
-    // Step 3: Drop all existing tables to start fresh
-    const tables = ['messages', 'attachments', 'conversations', 'users']; // Reversed order for FK safety
+    const tables = ['messages', 'attachments','conversations','users'];
+    
+    // console.log('🗑️ Starting database reset...');
+    
+    // Drop all tables
     for (const table of tables) {
       try {
         await this.db.execute(`DROP TABLE IF EXISTS ${table}`);
-        console.log(`🗑️ Dropped table: ${table}`);
-      } catch (dropError) {
-        console.warn(`⚠️ Drop table ${table} failed (may not exist):`, dropError);
+        console.log(`✅ Dropped table: ${table}`);
+      } catch (error) {
+        console.error(`❌ Error dropping table ${table}:`, error);
       }
     }
-
-    // Step 4: Re-run schema creation to build empty tables
-    await this.initDB(); // This executes all CREATE TABLE IF NOT EXISTS
-
-    console.log('✅ DB reinitialized! Empty tables ready.');
+    
+    // Recreate all tables with fresh schemas
+    for (const [tableName, schema] of Object.entries(TABLE_SCHEMAS)) {
+      try {
+        await this.db.execute(schema);
+        console.log(`✅ Recreated table: ${tableName}`);
+      } catch (error) {
+        console.error(`❌ Error creating table ${tableName}:`, error);
+      }
+    }
+    
+    console.log('✅ Database reset complete - all tables cleared and recreated');
   });
 }
+
   /**
    * Helper: Convert Blob → Base64 string
    */
@@ -1165,22 +1078,22 @@ async resetDB() {
    */
   async printAllTables() {
     try {
-      console.log('========== DATABASE DATA (for ownerId: ' + this.ownerId + ') ==========\n');
+      console.log('========== DATABASE DATA ==========\n');
 
       // Users
-      const users = await this.db.query(`SELECT * FROM users WHERE ${this.ownerIdWhereClause()}`);
+      const users = await this.db.query('SELECT * FROM users');
       console.log('👥 USERS:', users.values);
 
       // Conversations
-      const conversations = await this.db.query(`SELECT * FROM conversations WHERE ${this.ownerIdWhereClause()}`);
+      const conversations = await this.db.query('SELECT * FROM conversations');
       console.log('\n💬 CONVERSATIONS:', conversations.values);
 
       // Messages
-      const messages = await this.db.query(`SELECT * FROM messages WHERE ${this.ownerIdWhereClause()}`);
+      const messages = await this.db.query('SELECT * FROM messages');
       console.log('\n📨 MESSAGES:', messages.values);
 
       // Attachments
-      const attachments = await this.db.query(`SELECT * FROM attachments WHERE ${this.ownerIdWhereClause()}`);
+      const attachments = await this.db.query('SELECT * FROM attachments');
       console.log('\n📎 ATTACHMENTS:', attachments.values);
 
       console.log('\n===================================');

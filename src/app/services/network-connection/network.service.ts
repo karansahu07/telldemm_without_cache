@@ -6,7 +6,7 @@ import { BehaviorSubject } from 'rxjs';
   providedIn: 'root',
 })
 export class NetworkService {
-  private isOnline = new BehaviorSubject<boolean>(true);
+  public isOnline = new BehaviorSubject<boolean>(true);
   public isOnline$ = this.isOnline.asObservable();
 
   constructor() {
