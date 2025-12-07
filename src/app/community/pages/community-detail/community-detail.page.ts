@@ -271,7 +271,7 @@ export class CommunityDetailPage implements OnInit {
       ].filter(Boolean) as CommunityGroup[];
 
       for (const group of allGroups) {
-        await this.sqliteService.createConversation(group);
+        await this.sqliteService.createConversation({...group, ownerId: this.currentUserId});
       }
 
       console.log('✅ Groups saved to SQLite');
@@ -361,7 +361,7 @@ export class CommunityDetailPage implements OnInit {
           this.groupsIn.unshift(group);
 
           // Update SQLite
-          await this.sqliteService.createConversation(group);
+          await this.sqliteService.createConversation({...group, ownerId: this.currentUserId});
         } else {
           // Reload if not found locally
           await this.loadCommunityDetail();
@@ -424,7 +424,7 @@ export class CommunityDetailPage implements OnInit {
           );
 
           // Update SQLite
-          await this.sqliteService.createConversation(group);
+          await this.sqliteService.createConversation({...group, ownerId: this.currentUserId});
         }
 
         const toast = await this.toastCtrl.create({

@@ -133,8 +133,6 @@ export class FirebaseChatService {
     typing: null as any | null,
   };
 
-
-
   constructor(
     private cache: CacheService,
     private db: Database,
@@ -596,31 +594,31 @@ export class FirebaseChatService {
   pushMsgToChat(msg: any) {
     try {
       console.log('message attachment this is from pushmsgtochat', msg);
-    const existing = new Map(this._messages$?.value || []);
-    const currentMessages =
-      existing.get(this.currentChat?.roomId as string) || [];
-    const messageIdSet = new Set(currentMessages.map((m) => m.msgId));
-    if (messageIdSet.has(msg.msgId)) return;
-    currentMessages?.push({
-      ...msg,
-      attachment: msg.attachment
-        ? {
-            ...msg.attachment,
-            cdnUrl: msg.attachment.cdnUrl.replace(/[?#].*$/, ''),
-          }
-        : null,
-      isMe: msg.sender === this.senderId,
-    });
-    existing.set(
-      this.currentChat?.roomId as string,
-      currentMessages as IMessage[]
-    );
+      const existing = new Map(this._messages$?.value || []);
+      const currentMessages =
+        existing.get(this.currentChat?.roomId as string) || [];
+      const messageIdSet = new Set(currentMessages.map((m) => m.msgId));
+      if (messageIdSet.has(msg.msgId)) return;
+      currentMessages?.push({
+        ...msg,
+        attachment: msg.attachment
+          ? {
+              ...msg.attachment,
+              cdnUrl: msg.attachment.cdnUrl.replace(/[?#].*$/, ''),
+            }
+          : null,
+        isMe: msg.sender === this.senderId,
+      });
+      existing.set(
+        this.currentChat?.roomId as string,
+        currentMessages as IMessage[]
+      );
 
-    console.log({ currentMessages });
-    // return
-    this._messages$.next(existing);
+      console.log({ currentMessages });
+      // return
+      this._messages$.next(existing);
     } catch (error) {
-      console.error("not loads pushmsgTochat", error)
+      console.error('not loads pushmsgTochat', error);
     }
   }
 
@@ -682,8 +680,6 @@ export class FirebaseChatService {
   }
 
   async openChat(chat: any, isNew: boolean = false) {
-    // console.log('📱 openChat called from notification/UI');
-    debugger
     try {
       let conv: any = null;
 
@@ -711,7 +707,8 @@ export class FirebaseChatService {
           console.log('⚠️ Conversation not in memory, loading from SQLite...');
           try {
             const sqliteConv = await this.sqliteService.getConversation?.(
-              roomIdToFind
+              roomIdToFind,
+              this.senderId as string
             );
             if (sqliteConv) {
               conv = sqliteConv;
@@ -792,7 +789,7 @@ export class FirebaseChatService {
       this.currentChat = { ...(conv as IConversation) };
       console.log('✅ Current chat set:', this.currentChat.roomId);
 
-      // await this.setActiveChat(this.senderId!, this.currentChat.roomId);
+      await this.setActiveChat(this.senderId!, this.currentChat.roomId);
 
       // ✅ Setup presence listener
       this.presenceCleanUp = this.isReceiverOnline(memberIds);
@@ -871,9 +868,9 @@ export class FirebaseChatService {
       //     console.log(`Message removed: ${msgKey}`);
       //   },
       // });
-      await this.loadMessages(20, true)
-      await this.syncMessagesWithServer()
-      if(!this.networkService.isOnline.value) return;
+      await this.loadMessages(20, true);
+      await this.syncMessagesWithServer();
+      if (!this.networkService.isOnline.value) return;
       this._roomMessageListner = this.listenRoomStream(conv?.roomId as string, {
         onAdd: async (msgKey, data, isNew) => {
           if (!this.currentChat || this.currentChat.roomId !== conv.roomId) {
@@ -903,12 +900,14 @@ export class FirebaseChatService {
               await this.sqliteService.saveMessage({
                 ...msg,
                 msgId: msgKey,
+                ownerId: this.senderId,
                 text: decryptedText,
               });
 
               if (attachment) {
                 await this.sqliteService.saveAttachment({
                   ...attachment,
+                  ownerId: this.senderId,
                   localUrl: '',
                   msgId: msgKey,
                 });
@@ -969,7 +968,14 @@ export class FirebaseChatService {
       this.db,
       `userchats/${this.senderId}/${targetRoomId}`
     );
-    await rtdbUpdate(metaRef, { unreadCount: count });
+
+    // 1. Check if node exists
+    const snap = await get(metaRef);
+
+    if (snap.exists()) {
+      // 2. Update only if exists
+      await rtdbUpdate(metaRef, { unreadCount: count });
+    }
     console.log(`✅ Unread count set to ${count} for ${targetRoomId}`);
   }
 
@@ -1083,7 +1089,9 @@ export class FirebaseChatService {
 
       const pfUsers = await this.contactsyncService.getMatchedUsers();
       console.log({ pfUsers });
-      await this.sqliteService.upsertContacts(pfUsers);
+      await this.sqliteService.upsertContacts(
+        pfUsers.map((u) => ({ ...u, ownerId: this.senderId as string }))
+      );
       this._deviceContacts$.next([...normalizedContacts]);
       this._platformUsers$.next([...pfUsers]);
       await this.loadConversations();
@@ -1455,7 +1463,10 @@ export class FirebaseChatService {
 
   async loadConversations() {
     try {
-      const convs = (await this.sqliteService.getConversations?.()) || [];
+      const convs =
+        (await this.sqliteService.getConversations?.(
+          this.senderId as string
+        )) || [];
       this._conversations$.next([...convs]);
       this.syncConversationWithServer();
       return convs;
@@ -1705,7 +1716,10 @@ export class FirebaseChatService {
       if (newConversations.length) {
         for (const conv of newConversations) {
           try {
-            this.sqliteService.createConversation({ ...conv });
+            this.sqliteService.createConversation({
+              ...conv,
+              ownerId: this.senderId,
+            });
           } catch (error) {}
         }
         this._conversations$.next([...existing, ...newConversations]);
@@ -1799,7 +1813,10 @@ export class FirebaseChatService {
                 if (newConv) {
                   current.push(newConv);
                   try {
-                    await this.sqliteService.createConversation({ ...newConv });
+                    await this.sqliteService.createConversation({
+                      ...newConv,
+                      ownerId: this.senderId as string,
+                    });
                   } catch (e) {
                     console.warn(
                       'sqlite createConversation failed for new room',
@@ -2152,28 +2169,28 @@ export class FirebaseChatService {
         const decryptedText = await this.encryptionService.decrypt(
           payload.text as string
         );
-        let cdnUrl = '';
-        if (payload.attachment) {
-          const res = await firstValueFrom(
-            this.apiService.getDownloadUrl(payload.attachment.mediaId)
-          );
-          cdnUrl = res.status ? res.downloadUrl : '';
-        }
+        // let cdnUrl = '';
+        // if (payload.attachment) {
+        //   const res = await firstValueFrom(
+        //     this.apiService.getDownloadUrl(payload.attachment.mediaId)
+        //   );
+        //   cdnUrl = res.status ? res.downloadUrl : '';
+        // }
         return {
           msgId: s.key!,
           isMe: payload.sender === this.senderId,
           ...payload,
           text: decryptedText,
           ...(payload.attachment && {
-            attachment: { ...payload.attachment, cdnUrl },
+            attachment: { ...payload.attachment },
           }),
         };
       };
-      
-      console.log("inside the sync mesaage with server")
-      console.log("current array length", currentArr)
+
+      console.log('inside the sync mesaage with server');
+      console.log('current array length', currentArr);
       if (!currentArr.length) {
-        console.log("################ load all messages")
+        console.log('################ load all messages');
         const q = query(baseRef, orderByKey());
         const snap = await rtdbGet(q);
         const fetched: IMessage[] = [];
@@ -2188,7 +2205,15 @@ export class FirebaseChatService {
             await this.sqliteService.saveMessage({
               ...m,
               roomId: this.currentChat?.roomId,
+              ownerId: this.senderId,
             });
+            if(m.attachment){
+              await this.sqliteService.saveAttachment({
+                ...m.attachment,
+                ownerId : this.senderId,
+                msgId : m.msgId
+              });
+            }
           } catch (err) {
             console.warn(
               'sqlite saveMessage failed for item',
@@ -2199,17 +2224,17 @@ export class FirebaseChatService {
         }
         fetched.sort((a, b) =>
           a.msgId! < b.msgId! ? -1 : a.msgId! > b.msgId! ? 1 : 0
-      );
-      fetched.forEach((m) => this.pushMsgToChat(m));
-      // currentMap.set(roomId, fetched);
-      // this._messages$.next(currentMap);
+        );
+        fetched.forEach((m) => this.pushMsgToChat(m));
+        // currentMap.set(roomId, fetched);
+        // this._messages$.next(currentMap);
         // console.log('Messages when no prev ->', fetched);
         return;
       }
-      
+
       const last =
-      currentArr?.sort((a, b) =>
-        a.msgId! < b.msgId! ? -1 : a.msgId! > b.msgId! ? 1 : 0
+        currentArr?.sort((a, b) =>
+          a.msgId! < b.msgId! ? -1 : a.msgId! > b.msgId! ? 1 : 0
         )?.[currentArr.length - 1] || null;
       const lastKey = last.msgId ?? null;
       if (!lastKey) {
@@ -2232,7 +2257,15 @@ export class FirebaseChatService {
             await this.sqliteService.saveMessage({
               ...m,
               roomId: this.currentChat?.roomId,
+              ownerId: this.senderId,
             });
+            if(m.attachment){
+              await this.sqliteService.saveAttachment({
+                ...m.attachment,
+                ownerId : this.senderId,
+                msgId : m.msgId
+              })
+            }
           } catch (err) {
             console.warn(
               'sqlite saveMessage failed for item',
@@ -2251,7 +2284,7 @@ export class FirebaseChatService {
       }
 
       const qNew = query(baseRef, orderByKey(), startAt(lastKey as string));
-      console.log("loading message after last messages", lastKey)
+      console.log('loading message after last messages', lastKey);
       const snapNew = await rtdbGet(qNew);
 
       const newMessages: IMessage[] = [];
@@ -2268,7 +2301,15 @@ export class FirebaseChatService {
           await this.sqliteService.saveMessage({
             ...m,
             roomId: this.currentChat?.roomId,
+            ownerId: this.senderId,
           });
+          if(m.attachment){
+            await this.sqliteService.saveAttachment({
+              ...m.attachment,
+              ownerId : this.senderId,
+              msgId: m.msgId
+            })
+          }
         } catch (err) {
           console.warn(
             'sqlite saveMessage failed for item',
@@ -2291,6 +2332,7 @@ export class FirebaseChatService {
           this.sqliteService.saveMessage({
             ...m,
             roomId: this.currentChat?.roomId as string,
+            ownerId: this.senderId as string,
           });
         } catch (e) {
           console.warn('sqlite saveMessage failed for', m.msgId, e);
@@ -2330,9 +2372,10 @@ export class FirebaseChatService {
           messagesMap
             .get(this.currentChat?.roomId as string)
             ?.sort((a, b) => Number(a.timestamp) - Number(b.timestamp))
-            ?.map((msg) => ({
+            ?.map((msg, idx, arr) => ({
               ...msg,
               timestamp: new Date(msg.timestamp), // convert timestamp to Date object
+              isLast: arr.length - 1 == idx,
             })) || []
       )
     );
@@ -2359,6 +2402,7 @@ export class FirebaseChatService {
       const currentOffset = this._offsets$.value.get(roomId) || 0;
       const newMessages = await this.sqliteService.getMessages(
         roomId,
+        this.senderId as string,
         limit,
         currentOffset
       );
@@ -2963,8 +3007,9 @@ export class FirebaseChatService {
 
       this.sqliteService.saveMessage({
         ...messageToSave,
+        ownerId: this.senderId,
         isMe: true,
-      } as IMessage);
+      } as IMessage & { ownerId: string });
     } catch (error) {
       console.error('Error in sending message', error);
     }
@@ -3111,6 +3156,12 @@ export class FirebaseChatService {
         console.log('✅ Mark delivered triggered (receiver online)');
       }
 
+      await this.sqliteService.saveMessage({
+        ...messageToSave,
+        ownerId: this.senderId,
+        isMe: true,
+      } as IMessage & { ownerId: string });
+
       // Save to SQLite
       if (hasAttachment) {
         await this.sqliteService.saveAttachment({
@@ -3119,11 +3170,6 @@ export class FirebaseChatService {
           cdnUrl,
         });
       }
-
-      await this.sqliteService.saveMessage({
-        ...messageToSave,
-        isMe: true,
-      } as IMessage);
 
       console.log('✅ Forward message sent successfully to', receiverId);
     } catch (error) {
@@ -3380,7 +3426,10 @@ export class FirebaseChatService {
       };
 
       try {
-        await this.sqliteService.createConversation(convo);
+        await this.sqliteService.createConversation({
+          ...convo,
+          ownerId: this.senderId,
+        });
       } catch (e) {
         console.warn('SQLite conversation save failed:', e);
       }
@@ -3753,9 +3802,18 @@ export class FirebaseChatService {
 
       // Save to SQLite
       try {
-        await this.sqliteService.createConversation(communityConvo);
-        await this.sqliteService.createConversation(announcementConvo);
-        await this.sqliteService.createConversation(generalConvo);
+        await this.sqliteService.createConversation({
+          ...communityConvo,
+          ownerId: this.senderId as string,
+        });
+        await this.sqliteService.createConversation({
+          ...announcementConvo,
+          ownerId: this.senderId as string,
+        });
+        await this.sqliteService.createConversation({
+          ...generalConvo,
+          ownerId: this.senderId as string,
+        });
       } catch (e) {
         console.warn('SQLite conversation save failed:', e);
       }
@@ -5766,9 +5824,33 @@ export class FirebaseChatService {
 
       // ✅ Update SQLite
       await this.updateLocalMessageDeletion(msgId, deletedForData);
+      await this.sqliteService.permanentlyDeleteMessages([msgId]);
     } catch (error) {
       console.error('❌ Error deleting message:', error);
       throw error;
+    }
+  }
+
+  async updateLastMessageInMeta(msg: IMessage & { attachment: IAttachment }) {
+    try {
+      console.log(
+        'last message sdgffffffffffffffffffffffffffffffffffffffffffffffffff',
+        msg
+      );
+      const encryptedText = await this.encryptionService.encrypt(
+        msg.text as string
+      );
+      const meta: Partial<IChatMeta> = {
+        type: this.currentChat?.type || 'private',
+        lastmessageAt: new Date(msg.timestamp).getTime().toString() as string,
+        lastmessageType: msg.attachment ? msg.attachment.type : 'text',
+        lastmessage: encryptedText || '',
+      };
+      const ref = rtdbRef(this.db, `userchats/${this.senderId}/${msg.roomId}`);
+      // const idxSnap = await rtdbGet(ref);
+      await rtdbUpdate(ref, { ...meta });
+    } catch (error) {
+      console.log('somethiing went wrong', error);
     }
   }
 
@@ -6108,6 +6190,12 @@ export class FirebaseChatService {
       }
 
       // Save to SQLite (sender side)
+      await this.sqliteService.saveMessage({
+        ...messageToSave,
+        ownerId: this.senderId,
+        isMe: true,
+      } as IMessage & { ownerId: string });
+
       if (hasAttachment) {
         await this.sqliteService.saveAttachment({
           ...restAttachment,
@@ -6115,11 +6203,6 @@ export class FirebaseChatService {
           cdnUrl,
         });
       }
-
-      // await this.sqliteService.saveMessage({
-      //   ...messageToSave,
-      //   isMe: true,
-      // } as IMessage);
 
       console.log('✅ Message sent directly to', receiverId);
     } catch (error) {

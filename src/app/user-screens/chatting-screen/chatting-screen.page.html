@@ -461,8 +461,8 @@
                 <img
                   *ngIf="msg.attachment.type === 'image'"
                   [src]="msg.attachment.localUrl?.startsWith('https://') 
-          ? msg.attachment.localUrl 
-          : msg.attachment.cdnUrl"
+          ? msg.attachment.localUrl
+          : escapeUrl(msg.attachment.cdnUrl)"
                   alt="Image"
                   style="max-width: 200px; border-radius: 10px; margin: 5px 0"
                 />
@@ -474,7 +474,7 @@
                   <source
                     [src]="msg.attachment.localUrl?.startsWith('https://') 
           ? msg.attachment.localUrl 
-          : msg.attachment.cdnUrl"
+          : escapeUrl(msg.attachment.cdnUrl)"
                     [type]="msg.attachment.mimeType || 'video/mp4'"
                   />
                 </video>
@@ -486,7 +486,7 @@
                   <source
                     [src]="msg.attachment.localUrl?.startsWith('https://')
           ? msg.attachment.localUrl 
-          : msg.attachment.cdnUrl"
+          : escapeUrl(msg.attachment.cdnUrl)"
                     [type]="msg.attachment.mimeType || 'audio/mpeg'"
                   />
                 </audio>
@@ -602,7 +602,7 @@
 
           <img 
             *ngIf="selectedAttachment?.type === 'image'"
-            src="assets/images/pencil.png" 
+            src="assets/images/crop-simple-solid-full.svg" 
             alt="pencil"
             (click)="openCropperModal()"
             style="cursor: pointer;"
@@ -613,7 +613,7 @@
     <ion-content class="">
       <div class="pre-model">
         <div class="mine2">
-          <div *ngIf="selectedAttachment?.type === 'image'">
+          <div *ngIf="selectedAttachment?.type === 'image'" class="cropped-image">
             <img [src]="selectedAttachment?.previewUrl" class="preview-image" />
           </div>
           <div *ngIf="selectedAttachment?.type === 'video'">
@@ -638,7 +638,7 @@
             class="pre-message"
           ></ion-textarea>
           <div class="sendbtn">
-            <p>{{ receiver_name }}</p>
+            <!-- <p>{{ receiver_name }}</p> -->
             <ion-icon
               name="send-outline"
               (click)="sendMessage()"

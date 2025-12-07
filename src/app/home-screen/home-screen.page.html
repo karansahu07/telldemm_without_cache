@@ -102,13 +102,12 @@
       </ion-title>
 
       <ion-buttons slot="end">
-        <ion-button
+        <!-- <ion-button
           (click)="scanBarcode()"
           [attr.aria-label]="'home.actions.scan' | translate"
         >
-          <!-- <img src="assets/images/qr-code.svg" alt="" /> -->
           <i class="fa-solid fa-qrcode homemainicons"></i>
-        </ion-button>
+        </ion-button> -->
 
         <ion-button
           (click)="openCamera()"
@@ -474,10 +473,7 @@
   </ion-modal>
 
   <!-- 📸 Camera Preview Modal (Already in your code - just verifying) -->
-<ion-modal
-  [isOpen]="showPreviewModal"
-  (didDismiss)="showPreviewModal = false"
->
+<ion-modal [isOpen]="showPreviewModal" (didDismiss)="showPreviewModal = false">
   <ng-template>
     <ion-header [translucent]="true" class="model-header">
       <ion-toolbar class="model-toll">
@@ -485,16 +481,15 @@
           <ion-icon
             (click)="cancelAttachment()"
             name="close"
-            style="font-size: 25px; cursor: pointer"
+            style="font-size: 25px"
           ></ion-icon>
         </ion-buttons>
-
-        <ion-title>Send Photo</ion-title>
-
         <ion-buttons slot="end" class="pre-icons">
-          <!-- ✅ Show pencil icon to re-open cropper -->
+          <!-- Show pencil icon only for images -->
+
           <img 
-            src="assets/images/pencil.png" 
+            *ngIf="selectedAttachment?.type === 'image'"
+            src="assets/images/crop-simple-solid-full.svg" 
             alt="pencil"
             (click)="openCropperModal(selectedAttachment)"
             style="cursor: pointer;"
@@ -502,35 +497,35 @@
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
-
     <ion-content class="">
       <div class="pre-model">
-        <!-- Image Preview -->
         <div class="mine2">
-          <div
-            *ngIf="selectedAttachment?.type === 'image'"
-            class="cropped-image"
-          >
-            <img
+          <div *ngIf="selectedAttachment?.type === 'image'" class="cropped-image">
+            <img [src]="selectedAttachment?.previewUrl" class="preview-image" />
+          </div>
+          <div *ngIf="selectedAttachment?.type === 'video'">
+            <video
+              controls
               [src]="selectedAttachment?.previewUrl"
-              class="preview-image"
-            />
+              class="preview-video"
+            ></video>
+          </div>
+          <div *ngIf="selectedAttachment?.type === 'file'" class="preview-file">
+            <ion-icon
+              name="document-attach-outline"
+              style="font-size: 48px"
+            ></ion-icon>
+            <p>{{ selectedAttachment?.fileName }}</p>
           </div>
         </div>
-
-        <!-- Caption Input & Send Button -->
         <div class="mine ion-padding">
           <ion-textarea
             [(ngModel)]="messageText"
-            placeholder="Add a caption..."
+            placeholder="Type your message here..."
             class="pre-message"
-            [autoGrow]="true"
-            rows="2"
           ></ion-textarea>
-
           <div class="sendbtn">
-            <p>Send to contacts</p>
-
+            <!-- <p>{{ receiver_name }}</p> -->
             <ion-icon
               name="send-outline"
               (click)="goToContactList()"

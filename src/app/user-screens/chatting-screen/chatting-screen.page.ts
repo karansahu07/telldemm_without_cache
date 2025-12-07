@@ -297,6 +297,13 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   private typingTimeout: any;
   maxDate: string = new Date().toISOString();
 
+   private isUserScrolling = false;
+  private isNearBottom = true;
+  private scrollThreshold = 150; // Distance from bottom to consider "near bottom"
+  private isInitialLoad = true;
+  private lastScrollTop = 0;
+  private scrollDebounceTimer: any;
+
   constructor(
     private chatService: FirebaseChatService,
     private toastController: ToastController,
@@ -402,52 +409,53 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   //     }
   //   });
 
-  async ionViewWillEnter() {
-  // await this.chatService.loadMessages(20, true);
-  // this.chatService.syncMessagesWithServer();
-  this.chatService.getMessages().subscribe(async (msgs: any) => {
-    console.log({ msgs });
+   async ionViewWillEnter() {
+    // Load initial messages
+    // await this.chatService.loadMessages(20, true);
+    // this.chatService.syncMessagesWithServer();
     
-    // ✅ Check if messages array is empty
-    if (!msgs || msgs.length === 0) {
-      this.groupedMessages = [];
-      this.allMessage = [];
-      return;
-    }
-    
-    this.groupedMessages = (await this.groupMessagesByDate(
-      msgs as any[]
-    )) as any[];
-    
-    this.allMessage = msgs as IMessage[];
-    
-    for (const msg of msgs) {
-      if (!msg.isMe) {
-        this.chatService.markAsRead(msg.msgId);
+    this.chatService.getMessages().subscribe(async (msgs: any) => {
+      console.log({ msgs });
+      
+      if (!msgs || msgs.length === 0) {
+        this.groupedMessages = [];
+        this.allMessage = [];
+        return;
       }
-    }
-  });
+      
+      const previousMessageCount = this.groupedMessages.reduce(
+        (count, group) => count + group.messages.length,
+        0
+      );
 
+      this.groupedMessages = (await this.groupMessagesByDate(msgs as any[])) as any[];
+      this.allMessage = msgs as IMessage[];
+      
+      const newMessageCount = this.groupedMessages.reduce(
+        (count, group) => count + group.messages.length,
+        0
+      );
+
+      // Mark messages as read
+      for (const msg of msgs) {
+        if (!msg.isMe) {
+          this.chatService.markAsRead(msg.msgId);
+        }
+      }
+
+      // Handle scroll behavior based on context
+      await this.handleMessageUpdate(previousMessageCount, newMessageCount);
+    });
+
+    // Setup presence subscription
     this.presenceSubscription = this.chatService.presenceChanges$.subscribe(
       (presenceMap) => {
         this.updateReceiverStatus();
       }
     );
 
-    // Initial status check
     this.updateReceiverStatus();
-
     this.loadLanguages();
-
-    //scroll to bottom pagination load messages
-    const scrollElement = await this.ionContent.getScrollElement();
-    const distanceFromBottom =
-      scrollElement.scrollHeight -
-      (scrollElement.scrollTop + scrollElement.clientHeight);
-
-    if (distanceFromBottom < 300) {
-      this.scrollToBottomSmooth();
-    }
 
     this.currentConv = this.chatService.currentChat;
     Keyboard.setScroll({ isDisabled: false });
@@ -472,7 +480,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     this.chatTitle = currentChat?.title || null;
 
     // ✅ Scroll to bottom after first load
-    setTimeout(() => this.scrollToBottomSmooth(), 100);
+    // setTimeout(() => this.scrollToBottomSmooth(), 100);
   }
 
   async ionViewWillLeave() {
@@ -1573,6 +1581,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
               });
 
               // Now apply deletions to server/db for each selected message
+              const isLastMessageUpdateNeeded = this.selectedMessages.some(m=> m.isLast)
               for (const msg of [...this.selectedMessages]) {
                 const key = msg.msgId;
                 if (!key) continue;
@@ -1580,7 +1589,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
                 // DELETE FOR ME: mark deleted for this user
                 if (doForMe) {
                   try {
-                    this.chatService.deleteMessage(key, false);
+                    await this.chatService.deleteMessage(key, false);
                     console.log('calling from chatting screen');
                   } catch (err) {
                     console.warn('deleteForMe failed for key', key, err);
@@ -1590,11 +1599,16 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
                 // DELETE FOR EVERYONE: attempt for all messages (not restricted to sender)
                 if (doForEveryone) {
                   try {
-                    this.chatService.deleteMessage(key, true);
+                   await this.chatService.deleteMessage(key, true);
                   } catch (err) {
                     console.warn('deleteForEveryone failed for key', key, err);
                   }
                 }
+              }
+
+              if(isLastMessageUpdateNeeded){
+                const lastMessage = await this.sqliteService.getLastMessage(this.roomId, currentUserId);
+                await this.chatService.updateLastMessageInMeta(lastMessage);
               }
 
               const toast = await this.toastCtrl.create({
@@ -1625,23 +1639,23 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     await alert.present();
   }
 
-  isMessageHiddenForUser(msg: any): boolean {
-    if (!msg) return false;
+  // isMessageHiddenForUser(msg: any): boolean {
+  //   if (!msg) return false;
 
-    if (msg.deletedFor && msg.deletedFor.everyone === true) {
-      return true;
-    }
+  //   if (msg.deletedFor && msg.deletedFor.everyone === true) {
+  //     return true;
+  //   }
 
-    if (
-      msg.deletedFor &&
-      Array.isArray(msg.deletedFor.users) &&
-      msg.deletedFor.users.includes(String(this.senderId))
-    ) {
-      return true;
-    }
+  //   if (
+  //     msg.deletedFor &&
+  //     Array.isArray(msg.deletedFor.users) &&
+  //     msg.deletedFor.users.includes(String(this.senderId))
+  //   ) {
+  //     return true;
+  //   }
 
-    return false;
-  }
+  //   return false;
+  // }
 
   private applyDeletionFilters(dm: Message): boolean {
     try {
@@ -2032,57 +2046,94 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
  
 
   //new this method used in pagination
-  async ngAfterViewInit() {
+    async ngAfterViewInit() {
+    // Setup scroll listener for pagination
     if (this.ionContent) {
       this.ionContent.ionScroll.subscribe(async (event: any) => {
-        const scrollTop = event.detail.scrollTop;
+        await this.handleScroll(event);
+      });
 
-        // 🟢 Load older messages when user scrolls up near top
-        if (
-          scrollTop < 100 &&
-          this.chatService.hasMoreMessages &&
-          !this.isLoadingMore
-        ) {
-          await this.loadOlderMessages();
-        }
+      // Setup scroll event for tracking user scroll
+      const scrollElement = await this.ionContent.getScrollElement();
+      scrollElement.addEventListener('scroll', () => {
+        this.trackUserScroll();
       });
     }
 
-    this.setDynamicPadding();
-    window.addEventListener('resize', this.resizeHandler);
+    // Initial scroll to bottom after short delay
+    setTimeout(() => {
+      this.scrollToBottomInstant();
+      this.isInitialLoad = false;
+    }, 300);
+  }
 
-    const footer = this.el.nativeElement.querySelector(
-      '.footer-fixed'
-    ) as HTMLElement;
-    if (footer && 'ResizeObserver' in window) {
-      const ro = new (window as any).ResizeObserver(() =>
-        this.setDynamicPadding()
-      );
-      ro.observe(footer);
-      (this as any)._ro = ro;
+  /**
+   * 🎯 Handle scroll events for pagination
+   */
+  async handleScroll(event: any) {
+    const scrollTop = event.detail.scrollTop;
+    
+    // Calculate if user is near bottom
+    const scrollElement = await this.ionContent.getScrollElement();
+    const scrollHeight = scrollElement.scrollHeight;
+    const clientHeight = scrollElement.clientHeight;
+    const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
+    
+    this.isNearBottom = distanceFromBottom < this.scrollThreshold;
+
+    // Load older messages when scrolling near top
+    if (scrollTop < 100 && !this.isLoadingMore && this.chatService.hasMoreMessages) {
+      await this.loadOlderMessages();
     }
   }
 
-  //new function used in pagination
+  /**
+   * 🎯 Track if user is actively scrolling
+   */
+  private trackUserScroll() {
+    this.isUserScrolling = true;
+
+    // Reset flag after scroll stops
+    if (this.scrollDebounceTimer) {
+      clearTimeout(this.scrollDebounceTimer);
+    }
+
+    this.scrollDebounceTimer = setTimeout(() => {
+      this.isUserScrolling = false;
+    }, 150);
+  }
+
+  /**
+   * 🎯 Load older messages with scroll position preservation
+   */
   async loadOlderMessages() {
     if (this.isLoadingMore || !this.chatService.hasMoreMessages) return;
 
     this.isLoadingMore = true;
-
-    // Remember current scroll height
-    const scrollElement = await this.ionContent.getScrollElement();
-    const oldScrollHeight = scrollElement.scrollHeight;
+    console.log('⬆️ Loading older messages...');
 
     try {
-      console.log('⬆️ Loading older messages...');
-      await this.chatService.loadMessages(); // loads next offset from SQLite
+      // Get current scroll position
+      const scrollElement = await this.ionContent.getScrollElement();
+      const oldScrollHeight = scrollElement.scrollHeight;
+      const oldScrollTop = scrollElement.scrollTop;
 
-      // After messages load, adjust scroll position to stay at same spot
-      setTimeout(async () => {
-        const newScrollHeight = scrollElement.scrollHeight;
-        const scrollDiff = newScrollHeight - oldScrollHeight;
-        await this.ionContent.scrollByPoint(0, scrollDiff, 0);
-      }, 100);
+      // Load more messages
+      await this.chatService.loadMessages();
+
+      // Wait for DOM to update
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Calculate new scroll position to maintain user's view
+      const newScrollHeight = scrollElement.scrollHeight;
+      const scrollDiff = newScrollHeight - oldScrollHeight;
+
+      // Restore scroll position
+      if (scrollDiff > 0) {
+        await this.ionContent.scrollToPoint(0, oldScrollTop + scrollDiff, 0);
+      }
+
+      console.log('✅ Older messages loaded, scroll position maintained');
     } catch (error) {
       console.error('❌ Error loading older messages:', error);
     } finally {
@@ -2090,14 +2141,107 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  //new function used in pagination
-  scrollToBottomSmooth() {
-    if (this.ionContent) {
-      setTimeout(() => {
-        this.ionContent.scrollToBottom(200);
-      }, 100);
+  /**
+   * 🎯 Handle message updates intelligently
+   */
+  private async handleMessageUpdate(previousCount: number, newCount: number) {
+    // Wait for DOM update
+    await this.waitForDOM();
+
+    if (this.isInitialLoad) {
+      // Initial load - always scroll to bottom
+      this.scrollToBottomInstant();
+      return;
+    }
+
+    if (newCount > previousCount) {
+      // New messages received
+      if (this.isNearBottom) {
+        // User is near bottom - auto scroll to new message
+        this.scrollToBottomSmooth();
+      } else {
+        // User is reading older messages - don't disturb
+        console.log('📨 New message received but user is scrolling up - not auto-scrolling');
+      }
     }
   }
+
+  /**
+   * 🎯 Scroll to bottom instantly (for initial load)
+   */
+  async scrollToBottomInstant() {
+    if (!this.ionContent) return;
+
+    try {
+      await this.ionContent.scrollToBottom(0);
+      this.isNearBottom = true;
+      console.log('📍 Scrolled to bottom (instant)');
+    } catch (error) {
+      console.warn('Scroll to bottom failed:', error);
+    }
+  }
+
+  /**
+   * 🎯 Scroll to bottom smoothly (for new messages)
+   */
+  async scrollToBottomSmooth() {
+    if (!this.ionContent) return;
+
+    try {
+      await this.ionContent.scrollToBottom(300);
+      this.isNearBottom = true;
+      console.log('📍 Scrolled to bottom (smooth)');
+    } catch (error) {
+      console.warn('Scroll to bottom failed:', error);
+    }
+  }
+
+  /**
+   * 🎯 Wait for DOM to update
+   */
+  private waitForDOM(): Promise<void> {
+    return new Promise(resolve => {
+      requestAnimationFrame(() => {
+        setTimeout(() => resolve(), 50);
+      });
+    });
+  }
+
+  //new function used in pagination
+  // async loadOlderMessages() {
+  //   if (this.isLoadingMore || !this.chatService.hasMoreMessages) return;
+
+  //   this.isLoadingMore = true;
+
+  //   // Remember current scroll height
+  //   const scrollElement = await this.ionContent.getScrollElement();
+  //   const oldScrollHeight = scrollElement.scrollHeight;
+
+  //   try {
+  //     console.log('⬆️ Loading older messages...');
+  //     await this.chatService.loadMessages(); // loads next offset from SQLite
+
+  //     // After messages load, adjust scroll position to stay at same spot
+  //     setTimeout(async () => {
+  //       const newScrollHeight = scrollElement.scrollHeight;
+  //       const scrollDiff = newScrollHeight - oldScrollHeight;
+  //       await this.ionContent.scrollByPoint(0, scrollDiff, 0);
+  //     }, 100);
+  //   } catch (error) {
+  //     console.error('❌ Error loading older messages:', error);
+  //   } finally {
+  //     this.isLoadingMore = false;
+  //   }
+  // }
+
+  //new function used in pagination
+  // scrollToBottomSmooth() {
+  //   if (this.ionContent) {
+  //     setTimeout(() => {
+  //       this.ionContent.scrollToBottom(200);
+  //     }, 100);
+  //   }
+  // }
 
   async loadMoreMessages() {
     if (this.isLoadingMore || !this.hasMoreMessages) {
@@ -2229,63 +2373,63 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   //   }));
   // }
 
-async groupMessagesByDate(messages: Message[]) {
-  const grouped: { [date: string]: any[] } = {};
-  const today = new Date();
-  const yesterday = new Date();
-  yesterday.setDate(today.getDate() - 1);
+// async groupMessagesByDate(messages: Message[]) {
+//   const grouped: { [date: string]: any[] } = {};
+//   const today = new Date();
+//   const yesterday = new Date();
+//   yesterday.setDate(today.getDate() - 1);
 
-  if (!messages || messages.length === 0) {
-    return [];
-  }
+//   if (!messages || messages.length === 0) {
+//     return [];
+//   }
 
-  const visibleMessages = messages.filter(msg => !this.isMessageHiddenForUser(msg));
+//   const visibleMessages = messages.filter(msg => !this.isMessageHiddenForUser(msg));
 
-  for (const msg of visibleMessages) {
-    const timestamp = new Date(msg.timestamp);
+//   for (const msg of visibleMessages) {
+//     const timestamp = new Date(msg.timestamp);
 
-    const hours = timestamp.getHours();
-    const minutes = timestamp.getMinutes();
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    const formattedHours = hours % 12 || 12;
-    const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
-    (msg as any).time = `${formattedHours}:${formattedMinutes} ${ampm}`;
+//     const hours = timestamp.getHours();
+//     const minutes = timestamp.getMinutes();
+//     const ampm = hours >= 12 ? 'PM' : 'AM';
+//     const formattedHours = hours % 12 || 12;
+//     const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
+//     (msg as any).time = `${formattedHours}:${formattedMinutes} ${ampm}`;
 
-    const isToday =
-      timestamp.getDate() === today.getDate() &&
-      timestamp.getMonth() === today.getMonth() &&
-      timestamp.getFullYear() === today.getFullYear();
+//     const isToday =
+//       timestamp.getDate() === today.getDate() &&
+//       timestamp.getMonth() === today.getMonth() &&
+//       timestamp.getFullYear() === today.getFullYear();
 
-    const isYesterday =
-      timestamp.getDate() === yesterday.getDate() &&
-      timestamp.getMonth() === yesterday.getMonth() &&
-      timestamp.getFullYear() === yesterday.getFullYear();
+//     const isYesterday =
+//       timestamp.getDate() === yesterday.getDate() &&
+//       timestamp.getMonth() === yesterday.getMonth() &&
+//       timestamp.getFullYear() === yesterday.getFullYear();
 
-    let label = '';
-    if (isToday) {
-      label = 'Today';
-    } else if (isYesterday) {
-      label = 'Yesterday';
-    } else {
-      const dd = timestamp.getDate().toString().padStart(2, '0');
-      const mm = (timestamp.getMonth() + 1).toString().padStart(2, '0');
-      const yyyy = timestamp.getFullYear();
-      label = `${dd}/${mm}/${yyyy}`;
-    }
+//     let label = '';
+//     if (isToday) {
+//       label = 'Today';
+//     } else if (isYesterday) {
+//       label = 'Yesterday';
+//     } else {
+//       const dd = timestamp.getDate().toString().padStart(2, '0');
+//       const mm = (timestamp.getMonth() + 1).toString().padStart(2, '0');
+//       const yyyy = timestamp.getFullYear();
+//       label = `${dd}/${mm}/${yyyy}`;
+//     }
 
-    if (!grouped[label]) {
-      grouped[label] = [];
-    }
-    grouped[label].push(msg);
-  }
+//     if (!grouped[label]) {
+//       grouped[label] = [];
+//     }
+//     grouped[label].push(msg);
+//   }
 
-  return Object.keys(grouped)
-    .filter(date => grouped[date].length > 0)
-    .map((date) => ({
-      date,
-      messages: grouped[date],
-    }));
-}
+//   return Object.keys(grouped)
+//     .filter(date => grouped[date].length > 0)
+//     .map((date) => ({
+//       date,
+//       messages: grouped[date],
+//     }));
+// }
 
   isLoadingIndicatorVisible(): boolean {
     return this.isLoadingMore;
@@ -2460,16 +2604,131 @@ async groupMessagesByDate(messages: Message[]) {
   }
 
 
+  // async sendMessage() {
+  //   console.log("this send message function is called")
+  //   this.sender_name = this.authService.authData?.name || '';
+  //   if (this.isSending) return;
+  //   this.isSending = true;
+
+  //   try {
+  //     const plainText = (this.messageText || '').trim();
+
+  //     // Defensive: don't send empty message (unless attachment exists)
+  //     if (!plainText && !this.selectedAttachment) {
+  //       const toast = await this.toastCtrl.create({
+  //         message: 'Type something to send',
+  //         duration: 1500,
+  //         color: 'warning',
+  //       });
+  //       await toast.present();
+  //       this.isSending = false;
+  //       return;
+  //     }
+
+  //     // Build base local message (conforms to IMessage shape)
+  //     const msgId = uuidv4();
+  //     const timestamp = Date.now();
+
+  //     const localMessage: Partial<IMessage & { attachment?: IAttachment }> = {
+  //       sender: this.senderId,
+  //       sender_name: this.sender_name,
+  //       receiver_id: this.receiverId,
+  //       text: plainText || '', // visible text (original)
+  //       timestamp,
+  //       msgId,
+  //       replyToMsgId: this.replyTo?.message?.msgId || '',
+  //       isEdit: false,
+  //       isPinned: false,
+  //       type: 'text',
+  //       reactions: [],
+  //       // Add a translations object containing only the original (English).
+  //       // This keeps the message contract uniform across translated & non-translated sends.
+  //       translations: {
+  //         original: {
+  //           code: 'en',
+  //           label: 'English (Original)',
+  //           text: plainText || '',
+  //         },
+  //       },
+  //     };
+
+  //     // Handle attachment if present
+  //     console.log("this is called and upload to S3 before", this.selectedAttachment)
+  //     if (this.selectedAttachment) {
+  //       try {
+  //         console.log("this is called and upload to S3 after")
+  //         const mediaId = await this.uploadAttachmentToS3(
+  //           this.selectedAttachment
+  //         );
+  //         console.log({ mediaId });
+  //         localMessage.attachment = {
+  //           type: this.selectedAttachment.type,
+  //           msgId,
+  //           mediaId,
+  //           fileName: this.selectedAttachment.fileName,
+  //           mimeType: this.selectedAttachment.mimeType,
+  //           fileSize: this.selectedAttachment.fileSize,
+  //           caption: plainText || '',
+  //         };
+  //         console.log(localMessage.attachment);
+  //         // Save file locally into "sent" folder (existing behavior)
+  //         localMessage.attachment.localUrl =
+  //           await this.FileService.saveFileToSent(
+  //             this.selectedAttachment.fileName,
+  //             this.selectedAttachment.blob
+  //           );
+  //       } catch (error) {
+  //         console.error('Failed to upload attachment:', error);
+  //         const toast = await this.toastCtrl.create({
+  //           message: 'Failed to upload attachment. Please try again.',
+  //           duration: 3000,
+  //           color: 'danger',
+  //         });
+  //         await toast.present();
+  //         this.isSending = false;
+  //         return;
+  //       }
+  //     }
+
+  //     // Send using chat service (this will persist to RTDB, SQLite, etc.)
+  //     console.log({ localMessage });
+  //     await this.chatService.sendMessage(localMessage);
+
+  //     // Clear UI state exactly like before
+  //     this.messageText = '';
+  //     this.showSendButton = false;
+  //     this.selectedAttachment = null;
+  //     this.showPreviewModal = false;
+  //     this.replyToMessage = null;
+  //     await this.stopTypingSignal();
+  //     this.scrollToBottom();
+  //     this.chatService.setTypingStatus(false);
+  //     if (this.typingTimeout) {
+  //       clearTimeout(this.typingTimeout);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error sending message:', error);
+  //     const toast = await this.toastCtrl.create({
+  //       message: 'Failed to send message. Please try again.',
+  //       duration: 3000,
+  //       color: 'danger',
+  //     });
+  //     await toast.present();
+  //   } finally {
+  //     this.isSending = false;
+  //   }
+  // }
+
+   /**
+   * 🎯 Send message with smart scroll
+   */
   async sendMessage() {
-    console.log("this send message function is called")
-    this.sender_name = this.authService.authData?.name || '';
     if (this.isSending) return;
     this.isSending = true;
 
     try {
       const plainText = (this.messageText || '').trim();
 
-      // Defensive: don't send empty message (unless attachment exists)
       if (!plainText && !this.selectedAttachment) {
         const toast = await this.toastCtrl.create({
           message: 'Type something to send',
@@ -2481,7 +2740,7 @@ async groupMessagesByDate(messages: Message[]) {
         return;
       }
 
-      // Build base local message (conforms to IMessage shape)
+      // Build message
       const msgId = uuidv4();
       const timestamp = Date.now();
 
@@ -2489,7 +2748,7 @@ async groupMessagesByDate(messages: Message[]) {
         sender: this.senderId,
         sender_name: this.sender_name,
         receiver_id: this.receiverId,
-        text: plainText || '', // visible text (original)
+        text: plainText || '',
         timestamp,
         msgId,
         replyToMsgId: this.replyTo?.message?.msgId || '',
@@ -2497,8 +2756,6 @@ async groupMessagesByDate(messages: Message[]) {
         isPinned: false,
         type: 'text',
         reactions: [],
-        // Add a translations object containing only the original (English).
-        // This keeps the message contract uniform across translated & non-translated sends.
         translations: {
           original: {
             code: 'en',
@@ -2509,14 +2766,10 @@ async groupMessagesByDate(messages: Message[]) {
       };
 
       // Handle attachment if present
-      console.log("this is called and upload to S3 before", this.selectedAttachment)
       if (this.selectedAttachment) {
         try {
-          console.log("this is called and upload to S3 after")
-          const mediaId = await this.uploadAttachmentToS3(
-            this.selectedAttachment
-          );
-          console.log({ mediaId });
+          const mediaId = await this.uploadAttachmentToS3(this.selectedAttachment);
+          
           localMessage.attachment = {
             type: this.selectedAttachment.type,
             msgId,
@@ -2526,13 +2779,11 @@ async groupMessagesByDate(messages: Message[]) {
             fileSize: this.selectedAttachment.fileSize,
             caption: plainText || '',
           };
-          console.log(localMessage.attachment);
-          // Save file locally into "sent" folder (existing behavior)
-          localMessage.attachment.localUrl =
-            await this.FileService.saveFileToSent(
-              this.selectedAttachment.fileName,
-              this.selectedAttachment.blob
-            );
+
+          localMessage.attachment.localUrl = await this.FileService.saveFileToSent(
+            this.selectedAttachment.fileName,
+            this.selectedAttachment.blob
+          );
         } catch (error) {
           console.error('Failed to upload attachment:', error);
           const toast = await this.toastCtrl.create({
@@ -2546,18 +2797,22 @@ async groupMessagesByDate(messages: Message[]) {
         }
       }
 
-      // Send using chat service (this will persist to RTDB, SQLite, etc.)
-      console.log({ localMessage });
+      // Send message
       await this.chatService.sendMessage(localMessage);
 
-      // Clear UI state exactly like before
+      // Clear UI
       this.messageText = '';
       this.showSendButton = false;
       this.selectedAttachment = null;
       this.showPreviewModal = false;
       this.replyToMessage = null;
+      
       await this.stopTypingSignal();
-      this.scrollToBottom();
+      
+      // Always scroll to bottom after sending
+      await this.waitForDOM();
+      this.scrollToBottomSmooth();
+      
       this.chatService.setTypingStatus(false);
       if (this.typingTimeout) {
         clearTimeout(this.typingTimeout);
@@ -2573,6 +2828,91 @@ async groupMessagesByDate(messages: Message[]) {
     } finally {
       this.isSending = false;
     }
+  }
+
+  /**
+   * 🎯 Group messages by date (filter empty/deleted)
+   */
+  async groupMessagesByDate(messages: Message[]) {
+    const grouped: { [date: string]: any[] } = {};
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+
+    if (!messages || messages.length === 0) {
+      return [];
+    }
+
+    // Filter out hidden messages
+    const visibleMessages = messages.filter(msg => !this.isMessageHiddenForUser(msg));
+
+    for (const msg of visibleMessages) {
+      const timestamp = new Date(msg.timestamp);
+
+      const hours = timestamp.getHours();
+      const minutes = timestamp.getMinutes();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const formattedHours = hours % 12 || 12;
+      const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
+      (msg as any).time = `${formattedHours}:${formattedMinutes} ${ampm}`;
+
+      const isToday =
+        timestamp.getDate() === today.getDate() &&
+        timestamp.getMonth() === today.getMonth() &&
+        timestamp.getFullYear() === today.getFullYear();
+
+      const isYesterday =
+        timestamp.getDate() === yesterday.getDate() &&
+        timestamp.getMonth() === yesterday.getMonth() &&
+        timestamp.getFullYear() === yesterday.getFullYear();
+
+      let label = '';
+      if (isToday) {
+        label = 'Today';
+      } else if (isYesterday) {
+        label = 'Yesterday';
+      } else {
+        const dd = timestamp.getDate().toString().padStart(2, '0');
+        const mm = (timestamp.getMonth() + 1).toString().padStart(2, '0');
+        const yyyy = timestamp.getFullYear();
+        label = `${dd}/${mm}/${yyyy}`;
+      }
+
+      if (!grouped[label]) {
+        grouped[label] = [];
+      }
+      grouped[label].push(msg);
+    }
+
+    return Object.keys(grouped)
+      .filter(date => grouped[date].length > 0)
+      .map((date) => ({
+        date,
+        messages: grouped[date],
+      }));
+  }
+
+  /**
+   * 🎯 Check if message is hidden for current user
+   */
+  isMessageHiddenForUser(msg: any): boolean {
+    if (!msg) return false;
+
+    // Global deletion
+    if (msg.deletedFor && msg.deletedFor.everyone === true) {
+      return true;
+    }
+
+    // User-specific deletion
+    if (
+      msg.deletedFor &&
+      Array.isArray(msg.deletedFor.users) &&
+      msg.deletedFor.users.includes(String(this.senderId))
+    ) {
+      return true;
+    }
+
+    return false;
   }
 
   async getPreviewUrl(msg: any) {
@@ -2662,12 +3002,14 @@ async groupMessagesByDate(messages: Message[]) {
 
           if (!msg.isMe) {
            const relativePath = await this.downloadAndSaveLocally(
-              msg.attachment.cdnUrl,
+              this.escapeUrl(msg.attachment.cdnUrl),
               msg.attachment.fileName
             );
-            localUrl = await this.FileService.getFilePreview(relativePath as string)
-            // attachmentUrl = localUrl;
-            this.sqliteService.updateAttachment(msg.msgId, {localUrl})
+            if(relativePath){
+              localUrl = await this.FileService.getFilePreview(relativePath as string)
+              // attachmentUrl = localUrl;
+              this.sqliteService.updateAttachment(msg.msgId, {localUrl})
+           }
           }
         // }
       }
@@ -2678,7 +3020,7 @@ async groupMessagesByDate(messages: Message[]) {
         componentProps: {
           attachment: {
             ...msg.attachment,
-            url: localUrl || msg.attachment.cdnUrl,
+            url: localUrl || this.escapeUrl(msg.attachment.cdnUrl),
           },
           message: msg,
         },
@@ -2710,7 +3052,7 @@ async groupMessagesByDate(messages: Message[]) {
       return await this.FileService.saveFileToReceived(fileName, blob);
     } catch (error) {
       console.warn('Failed to save file locally:', error);
-      throw error;
+      return null;
     }
   }
 
@@ -2974,10 +3316,9 @@ async groupMessagesByDate(messages: Message[]) {
   }
 
   goToCallingScreen() {
-    this.router.navigate(['/calling-screen']);
+    // this.router.navigate(['/calling-screen']);
+    console.log("will work in future")
   }
-
-
 
   async openCamera() {
     try {
@@ -3001,10 +3342,9 @@ async groupMessagesByDate(messages: Message[]) {
       const fileName = `camera_${timestamp}.${image.format || 'jpg'}`;
       const mimeType = `image/${image.format || 'jpeg'}`;
 
-      // Create preview URL (same as pickAttachment)
+      // Create preview URL
       const previewUrl = URL.createObjectURL(blob);
 
-      // Set selectedAttachment exactly like pickAttachment does
       this.selectedAttachment = {
         type: 'image',
         blob: blob,
@@ -3015,7 +3355,7 @@ async groupMessagesByDate(messages: Message[]) {
       };
       console.log("this selected attachment", this.selectedAttachment);
 
-      // Show preview modal (same as pickAttachment)
+      // Show preview modal
       this.showPreviewModal = true;
     } catch (error) {
       console.error('Camera error:', error);
@@ -3043,7 +3383,7 @@ async openCropperModal() {
       component: ImageCropperModalComponent,
       componentProps: {
         imageUrl: this.selectedAttachment.previewUrl,
-        aspectRatio: 0, // Free aspect ratio (set to 1 for square, 16/9 for landscape, etc.)
+        aspectRatio: 0, // Free aspect ratio
         cropQuality: 0.9
       },
       cssClass: 'image-cropper-modal'
@@ -3054,7 +3394,6 @@ async openCropperModal() {
     const { data } = await modal.onDidDismiss();
 
     if (data && data.success && data.originalBlob) {
-      // ✅ Revoke old preview URL to free memory
       if (this.selectedAttachment.previewUrl) {
         URL.revokeObjectURL(this.selectedAttachment.previewUrl);
       }
@@ -3210,6 +3549,11 @@ async openCropperModal() {
   // ---------- small helpers ----------
   private escapeRegExp(s: string) {
     return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  //for removing query params from local or cdn url
+  escapeUrl(url : any){
+    return url.replace(/[?#].*$/, '')
   }
 
   // --------------------------translation module added on 1 nov-----

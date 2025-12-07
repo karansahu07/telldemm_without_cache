@@ -290,7 +290,9 @@ export interface IOpState {
   isSuccess: boolean | null;
 }
 
-export interface CreateConversationInput extends IConversation {}
+export interface CreateConversationInput extends IConversation {
+  ownerId: string;
+}
 
 const DB_NAME = 'telldemm.db';
 
@@ -300,18 +302,20 @@ const TABLE_SCHEMAS = {
     CREATE TABLE IF NOT EXISTS users (
       userId TEXT PRIMARY KEY,
       username TEXT NOT NULL,
+      ownerId TEXT NOT NULL,
       phoneNumber TEXT UNIQUE NOT NULL,
       lastSeen TEXT,
       avatar TEXT,
       status TEXT,
       isOnPlatform INTEGER DEFAULT 0,
       createdAt TEXT,
-      updatedAt TEXT 
+      updatedAt TEXT
     );
   `,
   conversations: `
     CREATE TABLE IF NOT EXISTS conversations (
       roomId TEXT PRIMARY KEY,
+      ownerId TEXT NOT NULL,
       title TEXT,
       phoneNumber TEXT,
       type TEXT,
@@ -327,62 +331,48 @@ const TABLE_SCHEMAS = {
       updatedAt TEXT NOT NULL
     );
   `,
+  messages: `
+    CREATE TABLE IF NOT EXISTS messages (
+      msgId TEXT PRIMARY KEY,
+      roomId TEXT NOT NULL,
+      ownerId TEXT NOT NULL,
+      sender TEXT NOT NULL,
+      sender_name TEXT NOT NULL,
+      receiver_id TEXT NOT NULL,
+      type TEXT DEFAULT 'text',
+      text TEXT,
+      translations TEXT,                       -- JSON string for translations
+      isMe INTEGER DEFAULT 0,
+      status TEXT,
+      timestamp TEXT NOT NULL,
+      receipts TEXT,
+      replyToMsgId TEXT,
+      isEdit INTEGER DEFAULT 0,
+      reactions TEXT,
+      deletedFor TEXT,
+      mediaId TEXT,                            -- just a reference key, no FK
+      FOREIGN KEY (roomId)
+        REFERENCES conversations(roomId)
+        ON DELETE CASCADE
+    );
+  `,
   attachments: `
     CREATE TABLE IF NOT EXISTS attachments (
-    msgId TEXT,
       mediaId TEXT PRIMARY KEY,
+      msgId TEXT UNIQUE,       -- one attachment per message (adjust if needed)
+      ownerId TEXT NOT NULL,
       type TEXT,
       fileName TEXT,
       mimeType TEXT,
       fileSize TEXT,
       caption TEXT,
       localUrl TEXT,
-      cdnUrl TEXT
+      cdnUrl TEXT,
+      FOREIGN KEY (msgId)
+        REFERENCES messages(msgId)
+        ON DELETE CASCADE
     );
   `,
-  // messages: `
-  //  CREATE TABLE IF NOT EXISTS messages (
-  //   msgId TEXT PRIMARY KEY,
-  //   roomId TEXT NOT NULL,
-  //   sender TEXT NOT NULL,
-  //   type TEXT DEFAULT 'text',
-  //   text TEXT,
-  //   isMe INTEGER DEFAULT 0,
-  //   status TEXT,
-  //   timestamp TEXT NOT NULL,
-  //   receipts TEXT,
-  //   replyToMsgId TEXT,
-  //   isEdit INTEGER DEFAULT 0,
-  //   reactions TEXT,
-  //   deletedFor TEXT,
-  //   mediaId TEXT,
-  //   FOREIGN KEY (roomId) REFERENCES conversations(roomId),
-  //   FOREIGN KEY (mediaId) REFERENCES attachments(mediaId)
-  // );
-  // `,
-  messages: `
-  CREATE TABLE IF NOT EXISTS messages (
-    msgId TEXT PRIMARY KEY,
-    roomId TEXT NOT NULL,
-    sender TEXT NOT NULL,
-    sender_name TEXT NOT NULL,
-    receiver_id TEXT NOT NULL,
-    type TEXT DEFAULT 'text',
-    text TEXT,
-    translations TEXT,                       -- NEW: JSON string for translations object
-    isMe INTEGER DEFAULT 0,
-    status TEXT,
-    timestamp TEXT NOT NULL,
-    receipts TEXT,
-    replyToMsgId TEXT,
-    isEdit INTEGER DEFAULT 0,
-    reactions TEXT,
-    deletedFor TEXT,
-    mediaId TEXT,
-    FOREIGN KEY (roomId) REFERENCES conversations(roomId),
-    FOREIGN KEY (mediaId) REFERENCES attachments(mediaId)
-  );
-`,
 };
 
 @Injectable({
@@ -504,13 +494,16 @@ export class SqliteService {
   }
 
   /** ----------------- CONTACTS ----------------- **/
-  async upsertContact(contact: IUser & { isOnPlatform?: boolean }) {
+  async upsertContact(
+    contact: IUser & { isOnPlatform?: boolean; ownerId: string }
+  ) {
     return this.withOpState('upsertContact', async () => {
       const sql = `
-        INSERT INTO users (userId, phoneNumber, username, avatar, status, lastSeen, isOnPlatform, createdAt, updatedAt)
-        VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+        INSERT INTO users (userId, phoneNumber,ownerId, username, avatar, status, lastSeen, isOnPlatform, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?,?, ?, datetime('now'), datetime('now'))
         ON CONFLICT(userId) DO UPDATE SET
         phoneNumber = excluded.phoneNumber,
+        ownerId = excluded.ownerId,
         username = excluded.username,
         avatar = excluded.avatar,
         status = excluded.status,
@@ -521,6 +514,7 @@ export class SqliteService {
       const params = [
         contact.userId,
         contact.phoneNumber,
+        contact.ownerId,
         contact.username || contact.phoneNumber,
         contact.avatar || null,
         contact.status || null,
@@ -531,7 +525,9 @@ export class SqliteService {
     });
   }
 
-  async upsertContacts(contacts: (IUser & { isOnPlatform?: boolean })[]) {
+  async upsertContacts(
+    contacts: (IUser & { isOnPlatform?: boolean; ownerId: string })[]
+  ) {
     return this.withOpState('upsertContacts', async () => {
       for (const c of contacts) {
         await this.upsertContact(c);
@@ -652,10 +648,11 @@ export class SqliteService {
     return this.withOpState('createConversation', async () => {
       const sql = `
         INSERT INTO conversations
-        (roomId, title, type, communityId, isMyself, avatar, members, adminIds, phoneNumber,isArchived, isPinned, isLocked, createdAt, updatedAt)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,  datetime('now'), datetime('now'))
+        (roomId, title, ownerId, type, communityId, isMyself, avatar, members, adminIds, phoneNumber,isArchived, isPinned, isLocked, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?,?, ?, ?,?,?,?,?,  datetime('now'), datetime('now'))
         ON CONFLICT(roomId) DO UPDATE SET
         title = excluded.title,
+        ownerId = excluded.ownerId,
         type = excluded.type,
         communityId = excluded.communityId,
         isMyself = excluded.isMyself,
@@ -670,6 +667,7 @@ export class SqliteService {
       await this.db.run(sql, [
         input.roomId,
         input.title,
+        input.ownerId,
         input.type,
         input.communityId || null,
         input.isMyself ? 1 : 0,
@@ -684,13 +682,16 @@ export class SqliteService {
     });
   }
 
-  async getConversation(roomId: string): Promise<IConversation | null> {
+  async getConversation(
+    roomId: string,
+    ownerId: string
+  ): Promise<IConversation | null> {
     return this.withOpState(
       'getConversation',
       async () => {
         const res = await this.db.query(
-          `SELECT * FROM conversations WHERE roomId = ?`,
-          [roomId]
+          `SELECT * FROM conversations WHERE roomId = ? AND ownerId = ?`,
+          [roomId, ownerId]
         );
         const row = res.values?.[0];
         if (!row) return null;
@@ -706,7 +707,7 @@ export class SqliteService {
     );
   }
 
-  async getConversations(): Promise<IConversation[]> {
+  async getConversations(ownerId: string): Promise<IConversation[]> {
     return this.withOpState(
       'getConversations',
       async () => {
@@ -717,15 +718,16 @@ export class SqliteService {
         m.timestamp AS lastMessageAt,
         (
           SELECT COUNT(um.msgId) FROM messages um 
-          WHERE um.roomId = c.roomId AND um.isMe = 0 AND um.status = 'delivered'
+          WHERE um.roomId = c.roomId AND um.isMe = 0 AND um.status = 'delivered' AND um.ownerId = ?
         ) AS unreadCount
         FROM conversations c
         LEFT JOIN messages m 
         ON m.roomId = c.roomId
-        AND m.timestamp = (SELECT MAX(timestamp) FROM messages WHERE roomId = c.roomId)
+        AND m.timestamp = (SELECT MAX(timestamp) FROM messages WHERE roomId = c.roomId AND ownerId = ?)
+        WHERE c.ownerId = ?
         ORDER BY c.updatedAt DESC
       `;
-        const res = await this.db.query(sql);
+        const res = await this.db.query(sql, [ownerId, ownerId, ownerId]);
         return (
           res.values?.map((c) => ({
             ...c,
@@ -813,18 +815,20 @@ export class SqliteService {
   //   });
   // }
 
-  async saveMessage(message: IMessage) {
-    console.log("this is from savemessage sqlite",message)
+  async saveMessage(message: IMessage & { ownerId: string }) {
+    console.log('this is from savemessage sqlite', message);
     return this.withOpState('saveMessage', async () => {
+      if(message.deletedFor?.everyone || (message.deletedFor?.users as string[])?.includes(message.ownerId as string)) return;
       const sql = `
       INSERT INTO messages 
-      (msgId, roomId, sender, sender_name, receiver_id, type, text, translations, mediaId, isMe, status, timestamp, receipts, deletedFor, replyToMsgId, reactions, isEdit)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (msgId, roomId, ownerId, sender, sender_name, receiver_id, type, text, translations, mediaId, isMe, status, timestamp, receipts, deletedFor, replyToMsgId, reactions, isEdit)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
       const params = [
         message.msgId,
         message.roomId,
+        message.ownerId,
         message.sender,
         message.sender_name,
         message.receiver_id,
@@ -847,12 +851,13 @@ export class SqliteService {
     });
   }
 
-  saveAttachment(attachment: IAttachment) {
+  saveAttachment(attachment: IAttachment & { ownerId: string }) {
     return this.withOpState('saveAttachment', async () => {
-      const query = `INSERT INTO attachments (msgId,mediaId, type, fileName, mimeType, fileSize, caption, localUrl, cdnUrl)
-      VALUES(?,?,?,?,?,?,?,?,?) `;
+      const query = `INSERT INTO attachments (msgId,ownerId,mediaId, type, fileName, mimeType, fileSize, caption, localUrl, cdnUrl)
+      VALUES(?,?,?,?,?,?,?,?,?,?) `;
       await this.db.run(query, [
         attachment.msgId || '',
+        attachment.ownerId || '',
         attachment.mediaId || '',
         attachment.type || '',
         attachment.fileName || '',
@@ -864,42 +869,40 @@ export class SqliteService {
       ]);
     });
   }
-  
+
   updateAttachment(msgId: string, updates: Partial<IAttachment>) {
-  return this.withOpState('updateAttachment', async () => {
-    const fields = Object.keys(updates);
-    if (fields.length === 0) return;
+    return this.withOpState('updateAttachment', async () => {
+      const fields = Object.keys(updates);
+      if (fields.length === 0) return;
 
-    const setClause = fields.map(field => `${field} = ?`).join(', ');
-    const values = fields.map(field => (updates as any)[field]);
+      const setClause = fields.map((field) => `${field} = ?`).join(', ');
+      const values = fields.map((field) => (updates as any)[field]);
 
-    const query = `UPDATE attachments SET ${setClause} WHERE msgId = ?`;
+      const query = `UPDATE attachments SET ${setClause} WHERE msgId = ?`;
 
-    await this.db.run(query, [...values, msgId]);
-  });
-}
+      await this.db.run(query, [...values, msgId]);
+    });
+  }
 
-  async getAttachment(msgId : string): Promise<IAttachment | null>{
-     return this.withOpState(
-      `getAttachment`,
-      async() => {
-        const sql = `SELECT * FROM msgId WHERE attachments WHERE msgId = ?`
-        const res = await this.db.query(sql,[msgId])
-        return res.values?.[0] || null
-      }
-    );
+  async getAttachment(msgId: string): Promise<IAttachment | null> {
+    return this.withOpState(`getAttachment`, async () => {
+      const sql = `SELECT * FROM msgId WHERE attachments WHERE msgId = ?`;
+      const res = await this.db.query(sql, [msgId]);
+      return res.values?.[0] || null;
+    });
   }
 
   async getMessages(
     roomId: string,
+    ownerId: string,
     limit = 20,
     offset = 0
   ): Promise<IMessage[]> {
     return this.withOpState(
       'getMessages',
       async () => {
-        const sql = `SELECT * FROM messages WHERE roomId = ? ORDER BY timestamp DESC LIMIT ? OFFSET ?`;
-        const res = await this.db.query(sql, [roomId, limit, offset]);
+        const sql = `SELECT * FROM messages WHERE roomId = ? AND ownerId = ? ORDER BY timestamp DESC LIMIT ? OFFSET ?`;
+        const res = await this.db.query(sql, [roomId, ownerId, limit, offset]);
         const msgIds = res.values?.map((m) => m.msgId) || [];
         const placeholders = msgIds.map(() => '?').join(',');
 
@@ -908,10 +911,10 @@ export class SqliteService {
         const res2 = await this.db.query(attachQuery, msgIds);
         return (
           res.values?.reverse().map((msg) => {
-            const attachment = res2.values?.find(a=> a.msgId == msg.msgId)
+            const attachment = res2.values?.find((a) => a.msgId == msg.msgId);
             return {
               ...msg,
-              ...(attachment && {attachment}),
+              ...(attachment && { attachment }),
               receipts: JSON.parse(msg.receipts || '{}'),
               reactions: JSON.parse(msg.reactions || '[]'),
               deletedFor: JSON.parse(msg.deletedFor || '{}'),
@@ -959,7 +962,82 @@ export class SqliteService {
     });
   }
 
-  
+  async permanentlyDeleteMessages(msgIds: string[]) {
+    return this.withOpState('permanentlyDeleteMessages', async () => {
+      if (!msgIds.length) {
+        console.warn('⚠️ No messages selected for deletion');
+        return;
+      }
+
+      const placeholders = msgIds.map(() => '?').join(', ');
+
+      await this.db.run(
+        `DELETE FROM attachments WHERE msgId IN (${placeholders})`,
+        msgIds
+      );
+
+      await this.db.run(
+        `DELETE FROM messages WHERE msgId IN (${placeholders})`,
+        msgIds
+      );
+
+      console.log(
+        `✅ Permanently deleted ${msgIds.length} messages from local database`
+      );
+    });
+  }
+
+  async getLastMessage(roomId: string, ownerId: string) {
+  return this.withOpState(
+    'getLastMessage',
+    async () => {
+      // 1) Get latest message for this room + owner
+      const res = await this.db.query(
+        `
+        SELECT *
+        FROM messages
+        WHERE roomId = ?
+          AND ownerId = ?
+        ORDER BY timestamp DESC
+        LIMIT 1
+        `,
+        [roomId, ownerId]
+      );
+
+      const m = res.values?.[0];
+      if (!m) return null;
+
+      // 2) Get attachment (if any) for this message
+      let attachment: any | undefined = undefined;
+
+      if (m.msgId) {
+        const res2 = await this.db.query(
+          `SELECT * FROM attachments WHERE msgId = ?`,
+          [m.msgId]
+        );
+        attachment = res2.values?.[0];
+      }
+
+      // 3) Normalize & return (same style as getMessages)
+      return {
+        ...m,
+        ...(attachment && { attachment }),
+        receipts: JSON.parse(m.receipts || '{}'),
+        reactions: JSON.parse(m.reactions || '[]'),
+        deletedFor: JSON.parse(m.deletedFor || '{}'),
+        isMe: !!m.isMe,
+        isEdit: !!m.isEdit,
+        timestamp: this.toDate(m.timestamp),
+      };
+    },
+    null
+  );
+}
+
+
+  // async permanentlyDeleteMessage(msgId: string) {
+  //   return this.permanentlyDeleteMessages([msgId]);
+  // }
 
   async updateMessageDeletionStatus(
     msgId: string,
@@ -1005,34 +1083,36 @@ export class SqliteService {
 
   /** ----------------- UTILITIES ----------------- **/
   async resetDB() {
-  return this.withOpState('resetDB', async () => {
-    const tables = ['messages', 'attachments','conversations','users'];
-    
-    // console.log('🗑️ Starting database reset...');
-    
-    // Drop all tables
-    for (const table of tables) {
-      try {
-        await this.db.execute(`DROP TABLE IF EXISTS ${table}`);
-        console.log(`✅ Dropped table: ${table}`);
-      } catch (error) {
-        console.error(`❌ Error dropping table ${table}:`, error);
+    return this.withOpState('resetDB', async () => {
+      const tables = ['messages', 'attachments', 'conversations', 'users'];
+
+      // console.log('🗑️ Starting database reset...');
+
+      // Drop all tables
+      for (const table of tables) {
+        try {
+          await this.db.execute(`DROP TABLE IF EXISTS ${table}`);
+          console.log(`✅ Dropped table: ${table}`);
+        } catch (error) {
+          console.error(`❌ Error dropping table ${table}:`, error);
+        }
       }
-    }
-    
-    // Recreate all tables with fresh schemas
-    for (const [tableName, schema] of Object.entries(TABLE_SCHEMAS)) {
-      try {
-        await this.db.execute(schema);
-        console.log(`✅ Recreated table: ${tableName}`);
-      } catch (error) {
-        console.error(`❌ Error creating table ${tableName}:`, error);
+
+      // Recreate all tables with fresh schemas
+      for (const [tableName, schema] of Object.entries(TABLE_SCHEMAS)) {
+        try {
+          await this.db.execute(schema);
+          console.log(`✅ Recreated table: ${tableName}`);
+        } catch (error) {
+          console.error(`❌ Error creating table ${tableName}:`, error);
+        }
       }
-    }
-    
-    console.log('✅ Database reset complete - all tables cleared and recreated');
-  });
-}
+
+      console.log(
+        '✅ Database reset complete - all tables cleared and recreated'
+      );
+    });
+  }
 
   /**
    * Helper: Convert Blob → Base64 string

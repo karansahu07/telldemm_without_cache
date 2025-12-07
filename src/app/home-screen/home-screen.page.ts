@@ -155,7 +155,7 @@ receiver_name = '';
     this.isLoading = true;
 
     this.trackRouteChanges();
-    this.sqlite.getMessages('78_76', 100, 0).then(console.log).catch(console.error)
+    // this.sqlite.getMessages('78_76', 100, 0).then(console.log).catch(console.error)
 
   }
 
