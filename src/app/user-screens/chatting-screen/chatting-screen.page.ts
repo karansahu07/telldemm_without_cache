@@ -444,7 +444,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
       }
 
       // Handle scroll behavior based on context
-      await this.handleMessageUpdate(previousMessageCount, newMessageCount);
+      // await this.handleMessageUpdate(previousMessageCount, newMessageCount);  //this will imrove in future
     });
 
     // Setup presence subscription

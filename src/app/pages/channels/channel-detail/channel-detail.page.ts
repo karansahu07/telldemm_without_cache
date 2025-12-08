@@ -373,27 +373,28 @@ export class ChannelDetailPage implements OnInit {
     }
   }
 
-  /**
+   /**
    * View individual follower profile
    */
 viewFollowerProfile(userId: string) {
-  this.router.navigate(['/profile-screen'], {
-    queryParams: { receiverId: userId }
-  });
+   this.presentToast(`wip`);
+  // this.router.navigate(['/profile-screen'], {
+  //   queryParams: { receiverId: userId }
+  // });
 }
 
-  async messageUser(user: any) {
-
-  const userID = user.user_id;
-
-  await this.firebaseChatService.openChat(
-      { receiver: { userId: userID } },
-      true
-    );
-
-  this.router.navigate(['/chatting-screen'], {
-    queryParams: { receiverId: user.user_id }
-  });
+ async messageUser(user: any) {
+ this.presentToast(`wip`);
+  // const userID = user.user_id;
+ 
+  // await this.firebaseChatService.openChat(
+  //     { receiver: { userId: userID } },
+  //     true
+  //   );
+ 
+  // this.router.navigate(['/chatting-screen'], {
+  //   queryParams: { receiverId: user.user_id }
+  // });
 }
 
 
