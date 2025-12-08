@@ -3156,6 +3156,8 @@ export class FirebaseChatService {
         console.log('✅ Mark delivered triggered (receiver online)');
       }
 
+      await this.pushMessageToRoomChat({...messageToSave, ...(hasAttachment ? { attachment: { ...restAttachment, cdnUrl } } : {}),}, roomId)
+
       await this.sqliteService.saveMessage({
         ...messageToSave,
         ownerId: this.senderId,
@@ -3175,6 +3177,38 @@ export class FirebaseChatService {
     } catch (error) {
       console.error('❌ Error in sending forward message:', error);
       throw error;
+    }
+  }
+
+  pushMessageToRoomChat(msg:any, roomId : string){
+    try {
+      // console.log(msg.attachment)
+      const existing = new Map(this._messages$?.value || []);
+      const currentMessages =
+        existing.get(roomId as string) ;
+        if(!currentMessages) return;
+      const messageIdSet = new Set(currentMessages.map((m) => m.msgId));
+      if (messageIdSet.has(msg.msgId)) return;
+      currentMessages?.push({
+        ...msg,
+        attachment: msg?.attachment
+          ? {
+              ...msg.attachment,
+              cdnUrl: msg.attachment.cdnUrl.replace(/[?#].*$/, ''),
+            }
+          : null,
+        isMe: msg.sender === this.senderId,
+      });
+      existing.set(
+        this.currentChat?.roomId as string,
+        currentMessages as IMessage[]
+      );
+
+      console.log({ currentMessages });
+      // return
+      this._messages$.next(existing);
+    } catch (error) {
+      
     }
   }
 

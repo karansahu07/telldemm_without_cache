@@ -797,103 +797,91 @@ async function handleGroupNotification(
   messageId: string
 ) {
   try {
-    // ✅ Get group details
-    const groupSnapshot = await admin
-      .database()
-      .ref(`/groups/${roomId}`)
+    const groupId = roomId; // roomId = group_12345
+
+    // ✅ Fetch group root (for title, createdBy, adminIds, etc.)
+    const groupSnapshot = await admin.database()
+      .ref(`/groups/${groupId}`)
       .once("value");
- 
+
     const groupData = groupSnapshot.val();
     if (!groupData) {
-      console.log("❌ Group not found:", roomId);
+      console.log("❌ Group not found:", groupId);
       return;
     }
- 
-    //exclude sender
-    const members = groupData.members || {};
+
+    // 🔥 **Fetch members ONLY from /groups/groupId/members**
+    const membersSnapshot = await admin.database()
+      .ref(`/groups/${groupId}/members`)
+      .once("value");
+
+    const members = membersSnapshot.val() || {};
+
+    // 🔥 Exclude sender from member list
     const memberIds = Object.keys(members).filter(
       (memberId) => memberId !== messageData.sender
     );
- 
+
     if (memberIds.length === 0) {
-      console.log("📭 No members to notify in group:", roomId);
+      console.log("📭 No members to notify in group:", groupId);
       return;
     }
- 
-    // ✅ Log sender info for debugging
-    console.log(`🔍 Sender: ${messageData.sender}, Members to notify: ${memberIds.length}`);
- 
-    // ✅ Get FCM tokens for all members
+
+    console.log(`🔍 Members to notify: ${JSON.stringify(memberIds)}`);
+
+    // ✅ Get FCM tokens for group members
     const memberTokens: string[] = [];
     const tokenPromises = memberIds.map(async (memberId) => {
       try {
-        const tokenSnapshot = await admin
-          .database()
+        const tokenSnapshot = await admin.database()
           .ref(`/users/${memberId}/fcmToken`)
           .once("value");
- 
+
         const token = tokenSnapshot.val();
         if (token) {
           memberTokens.push(token);
-          console.log(`✅ Token found for member: ${memberId}`);
         } else {
-          console.log(`⚠️ No token for member: ${memberId}`);
+          console.log(`⚠️ Member has no token: ${memberId}`);
         }
-      } catch (error) {
-        console.error(`❌ Error getting token for member ${memberId}:`, error);
+      } catch (err) {
+        console.error(`❌ Error fetching token for ${memberId}:`, err);
       }
     });
- 
+
     await Promise.all(tokenPromises);
- 
+
     if (memberTokens.length === 0) {
-      console.log("📭 No valid FCM tokens found for group members");
+      console.log("📭 No valid FCM tokens found for group");
       return;
     }
- 
-    // ✅ Prepare message content
-    let messageBody = "New message";
+
+    // 🎯 Build notification body
     const groupName = groupData.title || "Group Chat";
     const senderName = messageData.sender_name || "Someone";
- 
+
+    let messageBody = "New message";
+
     if (messageData.text) {
-      const decryptedText = await decryptText(messageData.text);
+      const decrypted = await decryptText(messageData.text);
       messageBody =
-        decryptedText.length > 50
-          ? `${decryptedText.substring(0, 50)}...`
-          : decryptedText;
+        decrypted.length > 60 ? decrypted.substring(0, 60) + "…" : decrypted;
     }
- 
+
     if (messageData.attachment) {
       switch (messageData.attachment.type) {
-        case "image":
-          messageBody = "📷 sent an image";
-          break;
-        case "video":
-          messageBody = "🎥 sent a video";
-          break;
-        case "audio":
-          messageBody = "🎵 sent an audio";
-          break;
-        case "document":
-          messageBody = "📄 sent a document";
-          break;
-        default:
-          messageBody = "📎 sent an attachment";
+        case "image": messageBody = "📷 sent an image"; break;
+        case "video": messageBody = "🎥 sent a video"; break;
+        case "audio": messageBody = "🎵 sent an audio"; break;
+        case "document": messageBody = "📄 sent a document"; break;
+        default: messageBody = "📎 sent an attachment";
       }
     }
- 
-    // ✅ Send notifications to all group members
-    const notificationResults = {
-      successCount: 0,
-      failureCount: 0,
-      responses: [] as any[],
-    };
- 
-    const sendPromises = memberTokens.map(async (token) => {
+
+    // 🚀 Send notifications individually
+    const sendTasks = memberTokens.map(async (token) => {
       try {
-        const message = {
-          token: token,
+        await admin.messaging().send({
+          token,
           notification: {
             title: `${senderName} in ${groupName}`,
             body: messageBody,
@@ -903,65 +891,41 @@ async function handleGroupNotification(
               sound: "default",
               clickAction: "FCM_PLUGIN_ACTIVITY",
               icon: "ic_launcher",
-              tag: roomId,
+              tag: groupId,
             },
           },
           data: {
             payload: JSON.stringify({
-              roomId: String(roomId),
-              senderId: String(messageData.sender),  // ✅ Using 'sender' consistently
+              roomId: String(groupId),
+              senderId: String(messageData.sender),
               messageId: String(messageId),
               chatType: "group",
               groupName: String(groupName),
               timestamp: String(messageData.timestamp),
             }),
           },
-        };
- 
-        const response = await admin.messaging().send(message);
-        notificationResults.successCount++;
-        notificationResults.responses.push({
-          success: true,
-          messageId: response,
         });
-        console.log(
-          `✅ Group notification sent to token: ${token.substring(0, 10)}...`
-        );
-      } catch (error: any) {
-        notificationResults.failureCount++;
-        notificationResults.responses.push({
-          success: false,
-          error: error,
-          token: token,
-        });
-        console.error(
-          `❌ Failed to send group notification to token ${token.substring(
-            0,
-            10
-          )}...:`,
-          error.message
-        );
+
+        console.log(`✅ Notification sent to token: ${token.slice(0, 12)}…`);
+      } catch (err: any) {
+        console.error(`❌ Failed sending to token ${token}:`, err.message);
       }
     });
- 
-    await Promise.all(sendPromises);
- 
-    console.log("✅ Group notifications sent:", {
-      successCount: notificationResults.successCount,
-      failureCount: notificationResults.failureCount,
-      totalTokens: memberTokens.length,
-      senderExcluded: messageData.sender
-    });
- 
-    // ✅ Update message notification status
-    await admin
-      .database()
-      .ref(`/chats/${roomId}/${messageId}/notified`)
+
+    await Promise.all(sendTasks);
+
+    // Mark as notified
+    await admin.database()
+      .ref(`/chats/${groupId}/${messageId}/notified`)
       .set(true);
+
+    console.log("🎉 Group notifications completed.");
+
   } catch (error) {
     console.error("❌ Error sending group notification:", error);
   }
 }
+
 
 
 

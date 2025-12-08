@@ -207,8 +207,8 @@ async ionViewWillEnter() {
 
   get showNewChatPrompt(): boolean {
     return !this.isLoading &&
-      this.conversations.length === 0 &&
-      !this.searchText.trim();
+      this.firebaseChatService.currentConversations.length === 0
+      // !this.searchText.trim();
   }
 
   async verifyDeviceOnEnter(): Promise<boolean> {
