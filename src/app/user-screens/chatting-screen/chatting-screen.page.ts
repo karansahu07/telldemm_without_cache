@@ -73,6 +73,7 @@ import { resolve } from 'path';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { ImageCropperModalComponent } from 'src/app/components/image-cropper-modal/image-cropper-modal.component';
 import { EmojiPickerModalComponent } from 'src/app/components/emoji-picker-modal/emoji-picker-modal.component';
+import { FcmService } from 'src/app/services/fcm-service';
 
 interface ICurrentChat {
   roomId: string;
@@ -331,6 +332,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     private presence: PresenceService,
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
+    private fcmService : FcmService,
     private actionSheetCtrl: ActionSheetController // private toastCtrl: ToastController, // private modalCtrl: ModalController, // private firebaseChatService : FirebaseChatService
   ) {}
 
@@ -478,6 +480,11 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     this.receiverProfile =
       (currentChat as any).avatar || (currentChat as any).groupAvatar || null;
     this.chatTitle = currentChat?.title || null;
+
+     if (this.roomId) {
+    await this.fcmService.clearNotificationForRoom(this.roomId);
+    console.log('✅ Notifications cleared for room:', this.roomId);
+  }
 
     // ✅ Scroll to bottom after first load
     // setTimeout(() => this.scrollToBottomSmooth(), 100);

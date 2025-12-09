@@ -23,6 +23,8 @@ import { FirebaseChatService } from './firebase-chat.service';
 })
 export class FcmService {
   private fcmToken: string = '';
+  // ✅ Track active notifications by roomId
+  private activeNotifications = new Map<string, number>();
 
   constructor(
     private router: Router,
@@ -142,21 +144,38 @@ export class FcmService {
         console.error('❌ FCM registration error:', error);
       });
 
-      // 📩 Foreground push
+      // 📩 Foreground push - UPDATED with notification tracking
       PushNotifications.addListener(
         'pushNotificationReceived',
         async (notification: PushNotificationSchema) => {
-          //console.log('📩 Foreground push received:', notification);
+          console.log('📩 Foreground push received:', notification);
+          
+          // ✅ Extract roomId and store notification ID
+          let payload = notification.data?.payload;
+          if (payload) {
+            try {
+              const data = JSON.parse(payload);
+              if (data.roomId) {
+                // Store this notification ID for later removal
+                const notifId = Math.floor(Math.random() * 1000000);
+                this.activeNotifications.set(data.roomId, notifId);
+                console.log(`📌 Stored notification ID ${notifId} for room ${data.roomId}`);
+                
+                // Pass notification ID to local notification
+                await this.showLocalNotification(notification, notifId, data.roomId);
+                return;
+              }
+            } catch (e) {
+              console.error('Error parsing notification payload:', e);
+            }
+          }
+          
+          // Fallback if no roomId
           await this.showLocalNotification(notification);
         }
       );
 
       // 👉 CRITICAL: Background notification tapped
-      // PushNotifications.addListener('pushNotificationActionPerformed', (notification: ActionPerformed) => {
-      //   //console.log('👉 Background push action performed:', notification);
-      //   this.handleNotificationTap(notification.notification?.data || {});
-      // });
-
       PushNotifications.addListener(
         'pushNotificationActionPerformed',
         (notification: ActionPerformed) => {
@@ -178,11 +197,6 @@ export class FcmService {
       );
 
       // 👉 Local notification tapped (when shown in foreground)
-      // LocalNotifications.addListener('localNotificationActionPerformed', (evt: LocalNotificationActionPerformed) => {
-      //   //console.log('👉 Local notification tapped:', evt);
-      //   this.handleNotificationTap(evt.notification?.extra || {});
-      // });
-
       LocalNotifications.addListener(
         'localNotificationActionPerformed',
         (evt: LocalNotificationActionPerformed) => {
@@ -224,34 +238,6 @@ export class FcmService {
     }
   }
 
-  //  private handleNotificationTap(data: any) {
-  //    console.log('🎯 Handling notification tap with data:', data);
-
-  //    const userid = this.authService.authData?.userId;
-  //    //console.log("userid", userid);
-
-  //    if (!data || Object.keys(data).length === 0) {
-  //      //console.log('No notification data available, navigating to home');
-  //      this.router.navigate(['/home-screen']);
-  //      return;
-  //    }
-
-  //    const receiverId = data.receiverId;
-
-  //    if (receiverId) {
-  //      this.router.navigate(['/chatting-screen'], {
-  //        queryParams: { receiverId },
-  //        state: { fromNotification: true }
-  //      });
-
-  //      // Persist flag for later reloads
-  //      localStorage.setItem('fromNotification', 'true');
-  //    } else {
-  //      //console.log('Could not resolve receiverId, navigating to home');
-  //      this.router.navigate(['/home-screen']);
-  //    }
-  //  }
-
   private async handleNotificationTap(data: any) {
     console.log('🎯 Final Tap Data Received:', data);
 
@@ -265,9 +251,12 @@ export class FcmService {
       try {
         await this.firebaseChatService.openChat({ roomId });
 
-        await this.firebaseChatService.loadMessages(20, true);
+        // await this.firebaseChatService.loadMessages(20, true);
 
-        await this.firebaseChatService.syncMessagesWithServer();
+        // await this.firebaseChatService.syncMessagesWithServer();
+
+        // ✅ Clear notification when chat opens
+        await this.clearNotificationForRoom(roomId);
 
         this.router.navigate(['/chatting-screen'], {
           queryParams: { receiverId },
@@ -288,15 +277,60 @@ export class FcmService {
     this.router.navigate(['/home-screen']);
   }
 
+  // ⭐ UPDATED: Track pending notifications when app resumes
   private async checkForPendingNotifications() {
     try {
+      console.log('🔍 Checking for pending notifications on app resume...');
+      
+      // Track pending notifications when app opens from background
+      await this.trackPendingNotifications();
+      
       const delivered = await PushNotifications.getDeliveredNotifications?.();
+      console.log(`📬 App resumed with ${delivered?.notifications?.length || 0} push notifications`);
     } catch (error) {
       console.error('Error checking delivered notifications:', error);
     }
   }
 
-  private async showLocalNotification(notification: PushNotificationSchema) {
+  // ⭐ NEW: Track all pending notifications
+  async trackPendingNotifications(): Promise<void> {
+    try {
+      console.log('📊 Tracking pending notifications...');
+      
+      // Get all delivered push notifications
+      const pushDelivered = await PushNotifications.getDeliveredNotifications();
+      console.log(`📬 Found ${pushDelivered.notifications.length} pending push notifications`);
+      
+      if (pushDelivered.notifications.length > 0) {
+        console.log('📋 Pending notifications by room:');
+        
+        for (const notif of pushDelivered.notifications) {
+          try {
+            let payload = notif.data?.payload;
+            if (payload) {
+              const data = typeof payload === 'string' ? JSON.parse(payload) : payload;
+              if (data.roomId) {
+                console.log(`  📌 Room ${data.roomId}: ${notif.title || 'New message'}`);
+              }
+            }
+          } catch (e) {
+            console.error('Error parsing notification:', e);
+          }
+        }
+      } else {
+        console.log('✅ No pending notifications');
+      }
+    } catch (error) {
+      console.error('❌ Error tracking notifications:', error);
+    }
+  }
+
+  // ✅ UPDATED: Accept notification ID and roomId
+  private async showLocalNotification(
+    notification: PushNotificationSchema,
+    notificationId?: number,
+    roomId?: string
+  ) {
     try {
       const notificationData = notification.data || {};
       const title =
@@ -304,10 +338,17 @@ export class FcmService {
       const body =
         notificationData.body || notification.body || 'You have a new message';
 
+      const finalNotificationId = notificationId || Math.floor(Math.random() * 1000000);
+
+      // ✅ Store notification ID if roomId is available
+      if (roomId && !this.activeNotifications.has(roomId)) {
+        this.activeNotifications.set(roomId, finalNotificationId);
+      }
+
       await LocalNotifications.schedule({
         notifications: [
           {
-            id: Math.floor(Math.random() * 1000000),
+            id: finalNotificationId,
             title,
             body,
             extra: notificationData,
@@ -337,6 +378,181 @@ export class FcmService {
     } catch (error) {
       console.error('❌ Error scheduling local notification or toast:', error);
     }
+  }
+
+  // ✅ Clear notifications ONLY for specific roomId
+  async clearNotificationForRoom(roomId: string): Promise<void> {
+    try {
+      // console.log(`🧹 Attempting to clear notifications for room: ${roomId}`);
+      
+      // 1️⃣ Clear stored local notification ID (foreground notifications)
+      const storedNotificationId = this.activeNotifications.get(roomId);
+      
+      if (storedNotificationId) {
+        // console.log(`📌 Clearing stored local notification ${storedNotificationId} for room ${roomId}`);
+        
+        try {
+          await LocalNotifications.cancel({
+            notifications: [{ id: storedNotificationId }]
+          });
+          
+          this.activeNotifications.delete(roomId);
+          console.log(`✅ Stored local notification cleared for room ${roomId}`);
+        } catch (e) {
+          console.error('Error clearing stored notification:', e);
+        }
+      } else {
+        console.log(`⚠️ No stored notification ID for room ${roomId}`);
+      }
+      
+      // 2️⃣ Clear ALL delivered local notifications matching this roomId
+      try {
+        const delivered = await LocalNotifications.getDeliveredNotifications();
+        // console.log(`📬 Found ${delivered.notifications.length} total delivered local notifications`);
+        
+        if (delivered.notifications.length > 0) {
+          const notificationsToCancel: number[] = [];
+          
+          for (const notif of delivered.notifications) {
+            try {
+              let payload = notif.extra?.payload;
+              
+              if (payload) {
+                const data = typeof payload === 'string' ? JSON.parse(payload) : payload;
+                
+                if (data.roomId === roomId) {
+                  notificationsToCancel.push(notif.id);
+                  // console.log(`📍 Found local notification ${notif.id} matching room ${roomId}`);
+                }
+              }
+            } catch (e) {
+              console.error(`Error parsing notification ${notif.id}:`, e);
+            }
+          }
+          
+          if (notificationsToCancel.length > 0) {
+            await LocalNotifications.cancel({
+              notifications: notificationsToCancel.map(id => ({ id }))
+            });
+            console.log(`✅ Cleared ${notificationsToCancel.length} local notifications for room ${roomId}`);
+          } else {
+            console.log(`⚠️ No local notifications found matching room ${roomId}`);
+          }
+        }
+      } catch (e) {
+        console.error('❌ Error checking/clearing local notifications:', e);
+      }
+
+      try {
+        // Get all delivered push notifications
+        const pushDelivered = await PushNotifications.getDeliveredNotifications();
+        // console.log(`📬 Found ${pushDelivered.notifications.length} delivered push notifications`);
+        
+        if (pushDelivered.notifications.length > 0) {
+          const pushesToRemove: any[] = [];
+          
+          for (const notif of pushDelivered.notifications) {
+            // console.log("🔍 Full notification object:", notif);
+            // console.log("🔍 Notification data:", notif.data);
+            // console.log("🔍 Notification tag:", notif.tag);
+            
+            try {
+              let data: any = null;
+              
+              if (notif.data?.payload) {
+                const payload = notif.data.payload;
+                data = typeof payload === 'string' ? JSON.parse(payload) : payload;
+                // console.log("✅ Found payload in notif.data.payload:", data);
+              }
+              else if (notif.data) {
+                data = notif.data;
+                // console.log("✅ Using notif.data directly:", data);
+              }
+              else if (notif.tag && notif.tag.includes('FCM-Notification')) {
+                console.log("⚠️ No data found, using tag-based matching");
+              }
+              
+              // Check if we found roomId
+              if (notif.tag) {
+                // console.log(`🔍 Checking push notification:`, {
+                //   id: notif.id,
+                //   tag: notif.tag,
+                //   roomId: data.roomId,
+                //   targetRoomId: roomId,
+                //   matches: data.roomId === roomId
+                // });
+                
+                if (notif.tag === roomId) {
+                  pushesToRemove.push({
+                    id: notif.id,
+                    tag: notif.tag || '',
+                    data: notif.data || {}
+                  });
+                  console.log(`📍 Found push notification matching room ${roomId}`, notif.id);
+                }
+              } else {
+                console.log(`⚠️ No roomId found in notification ${notif.id}, skipping`);
+              }
+            } catch (e) {
+              console.error(`❌ Error parsing push notification ${notif.id}:`, e);
+            }
+          }
+          
+          // Remove only matching push notifications
+          if (pushesToRemove.length > 0) {
+            try {
+              // console.log(`🗑️ Attempting to remove ${pushesToRemove.length} notifications:`, pushesToRemove);
+              await PushNotifications.removeDeliveredNotifications({
+                notifications: pushesToRemove
+              });
+              // console.log(`✅ Cleared ${pushesToRemove.length} push notifications for room ${roomId}`);
+            } catch (e) {
+              console.error(`❌ Error removing push notifications:`, e);
+            }
+          } else {
+            console.log(`⚠️ No push notifications found matching room ${roomId}`);
+          }
+        }
+      } catch (e) {
+        console.error('❌ Error checking/clearing push notifications:', e);
+        console.warn('⚠️ Could not selectively clear push notifications - keeping all to avoid data loss');
+      }
+      
+      console.log(`✅ Notification clearing completed for room ${roomId}`);
+      
+    } catch (error) {
+      console.error('❌ Error in clearNotificationForRoom:', error);
+    }
+  }
+
+  // ✅ BONUS: Clear ALL notifications (for logout or app reset)
+  async clearAllNotifications(): Promise<void> {
+    try {
+      console.log('🧹 Clearing ALL notifications');
+      
+      // Clear all stored notification IDs
+      this.activeNotifications.clear();
+      
+      // Clear all local notifications
+      const delivered = await LocalNotifications.getDeliveredNotifications();
+      if (delivered.notifications.length > 0) {
+        await LocalNotifications.cancel({
+          notifications: delivered.notifications.map(n => ({ id: n.id }))
+        });
+      }
+      
+      // Clear all push notifications
+      await PushNotifications.removeAllDeliveredNotifications();
+      
+      console.log('✅ All notifications cleared');
+    } catch (error) {
+      console.error('❌ Error clearing all notifications:', error);
+    }
+  }
+
+  // ✅ Expose method to get stored notification ID (if needed)
+  getNotificationIdForRoom(roomId: string): number | undefined {
+    return this.activeNotifications.get(roomId);
   }
 
   async saveFcmTokenToDatabase(
