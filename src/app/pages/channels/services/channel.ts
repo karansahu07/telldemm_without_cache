@@ -35,6 +35,8 @@ export interface Channel {
   created_at?: string;
 
   followers_count?: number | null;
+  follower_count?: number | null;
+
   is_verified?: number | boolean | null;
 
   // optional fields from user endpoints
@@ -170,6 +172,11 @@ export interface ChannelFollowersResponse {
   message?: string;
 }
 
+export interface ChannelResponse {
+  status: boolean;
+  channel: Channel;
+}
+
 
 /* ---------- Service ---------- */
 
@@ -269,6 +276,10 @@ export class ChannelService {
         map(res => this.normalizeListResponse(res)),
         catchError(err => this.handleError(err))
       );
+  }
+
+  getChannel(channelId: number): Observable<ChannelResponse> {
+    return this.http.get<ChannelResponse>(`${this.baseUrl}/channels/${channelId}`);
   }
 
   getChannelById(channelId: number | string): Observable<ApiResponse & { channel?: Channel }> {

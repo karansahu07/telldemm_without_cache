@@ -6,13 +6,17 @@
 
     <ion-title>
       <div class="header-content">
-        <ion-avatar class="header-avatar">
-          <div class="avatar-placeholder">V</div>
+        <ion-avatar class="header-avatar" (click)="onHeaderClick()">
+          <img *ngIf="channel?.channel_dp" [src]="channel!.channel_dp" alt="Channel Avatar" />
+          <div *ngIf="!channel?.channel_dp" class="avatar-placeholder">{{ (channel?.channel_name || 'C')[0] }}</div>
         </ion-avatar>
 
         <div class="header-info">
-          <div class="channel-name">Volunteer Events</div>
-          <div class="channel-followers">56 followers</div>
+          <div class="channel-name" (click)="onHeaderClick()">
+            {{ channel?.channel_name || 'Loading...' }}
+            <span *ngIf="channel?.is_verified" class="verified-badge">✓</span>
+          </div>
+          <div class="channel-followers">{{ channel?.follower_count || 0 }} followers</div>
         </div>
       </div>
     </ion-title>
@@ -20,6 +24,10 @@
     <ion-buttons slot="end">
       <ion-button (click)="testAddPost()">
         <ion-icon slot="icon-only" name="link-outline"></ion-icon>
+      </ion-button>
+
+      <ion-button (click)="toggleMute()">
+        <ion-icon slot="icon-only" [name]="isMuted ? 'notifications-off-outline' : 'notifications-outline'"></ion-icon>
       </ion-button>
 
       <ion-button>
@@ -122,21 +130,42 @@
       <ion-icon name="attach-outline"></ion-icon>
     </ion-button>
 
+    <!-- Combined Preview + Input (NEW: Shows media preview with editable caption overlay) -->
+    <div *ngIf="selectedFile" class="combined-preview">
+      <!-- Media Preview -->
+      <div class="media-container">
+        <img *ngIf="isImage(selectedFile)" [src]="selectedImage" class="preview-image" alt="Media Preview" />
+        <video *ngIf="!isImage(selectedFile)" [src]="selectedImage" class="preview-video" controls></video>
+        <ion-button fill="clear" size="small" (click)="clearMedia()" class="remove-preview">
+          <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+      </div>
+
+      <!-- Editable Caption Overlay/Input -->
+      <div class="caption-input-wrapper">
+        <ion-input
+          class="caption-input"
+          [(ngModel)]="newMessage"
+          placeholder="Add a caption..."
+          [disabled]="isUploading"
+        ></ion-input>
+      </div>
+    </div>
+
+    <!-- Fallback: Plain Input (when no media selected) -->
     <ion-input
+      *ngIf="!selectedFile"
       class="chat-input"
       [(ngModel)]="newMessage"
       placeholder="Type a message"
     ></ion-input>
 
-    <!-- Media Preview -->
-    <div *ngIf="selectedImage" class="media-preview">
-      <img [src]="selectedImage" alt="Preview" class="preview-image" />
-      <ion-button fill="clear" size="small" (click)="clearMedia()" class="remove-preview">
-        <ion-icon name="close-outline" slot="icon-only"></ion-icon>
-      </ion-button>
-    </div>
-
-    <ion-button fill="clear" class="send-btn" (click)="sendPost()" [disabled]="isUploading">
+    <ion-button 
+      fill="clear" 
+      class="send-btn" 
+      (click)="sendPost()" 
+      [disabled]="isUploading || (!newMessage && !selectedFile)"
+    >
       <ion-icon name="send"></ion-icon>
     </ion-button>
   </div>

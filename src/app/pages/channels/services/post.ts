@@ -27,88 +27,163 @@ export class PostService {
   // ============================
   // 1️⃣ CREATE A POST (UPDATED WITH MEDIA UPLOAD)
   // ============================
-  async createPost(
-    channelId: string,
-    body: string,
-    file?: File,
-    senderId: number = 52,
-    progressCallback?: (progress: number) => void
-  ): Promise<void> {
-    let imageUrl: string | undefined;
+  // async createPost(
+  //   channelId: string,
+  //   body: string,
+  //   file?: File,
+  //   senderId: number = 52,
+  //   progressCallback?: (progress: number) => void
+  // ): Promise<void> {
+  //   let imageUrl: string | undefined;
 
-    if (file) {
-      try {
-        // Step 1: Get upload URL
-        const uploadPayload = {
-          channel_id: parseInt(channelId),
-          sender_id: senderId,
-          media_type: file.type.startsWith('image/') ? 'image' : 'video',
-          file_size: file.size,
-          content_type: file.type,
-          metadata: {
-            caption: body || 'Test post'
-          }
-        };
+  //   if (file) {
+  //     try {
+  //       // Step 1: Get upload URL
+  //       const uploadPayload = {
+  //         channel_id: parseInt(channelId),
+  //         sender_id: senderId,
+  //         media_type: file.type.startsWith('image/') ? 'image' : 'video',
+  //         file_size: file.size,
+  //         content_type: file.type,
+  //         metadata: {
+  //           caption: body || 'Test post'
+  //         }
+  //       };
 
-        const uploadResponse = await this.http.post<any>(UPLOAD_API, uploadPayload).toPromise();
+  //       const uploadResponse = await this.http.post<any>(UPLOAD_API, uploadPayload).toPromise();
 
-        if (!uploadResponse.status || !uploadResponse.media_id || !uploadResponse.upload_url) {
-          throw new Error('Failed to get upload URL');
-        }
+  //       if (!uploadResponse.status || !uploadResponse.media_id || !uploadResponse.upload_url) {
+  //         throw new Error('Failed to get upload URL');
+  //       }
 
-        const { media_id, upload_url } = uploadResponse;
+  //       const { media_id, upload_url } = uploadResponse;
 
-        // Step 2: Upload file to S3 signed URL with progress
-        await new Promise<void>((resolve, reject) => {
-          const subscription = this.http.put(upload_url, file, {
-            reportProgress: true,
-            observe: 'events'
-          }).subscribe({
-            next: (event: any) => {
-              if (event.type === HttpEventType.UploadProgress && progressCallback) {
-                const progress = Math.round(100 * event.loaded / (event.total || 1));
-                progressCallback(progress);
-              } else if (event.type === HttpEventType.Response) {
-                resolve();
-              }
-            },
-            error: (error) => {
-              reject(error);
+  //       // Step 2: Upload file to S3 signed URL with progress
+  //       await new Promise<void>((resolve, reject) => {
+  //         const subscription = this.http.put(upload_url, file, {
+  //           reportProgress: true,
+  //           observe: 'events'
+  //         }).subscribe({
+  //           next: (event: any) => {
+  //             if (event.type === HttpEventType.UploadProgress && progressCallback) {
+  //               const progress = Math.round(100 * event.loaded / (event.total || 1));
+  //               progressCallback(progress);
+  //             } else if (event.type === HttpEventType.Response) {
+  //               resolve();
+  //             }
+  //           },
+  //           error: (error) => {
+  //             reject(error);
+  //           }
+  //         });
+  //       });
+
+  //       // Step 3: Get download URL
+  //       const downloadResponse = await this.http.get<any>(
+  //         `${DOWNLOAD_API_BASE}/${media_id}`
+  //       ).toPromise();
+
+  //       if (!downloadResponse.status || !downloadResponse.downloadUrl) {
+  //         throw new Error('Failed to get download URL');
+  //       }
+
+  //       imageUrl = downloadResponse.downloadUrl;
+  //     } catch (error) {
+  //       console.error('Media upload failed:', error);
+  //       throw error; // Re-throw to handle in component
+  //     }
+  //   }
+
+  //   // Step 4: Store post in Firebase
+  //   const postsRef = ref(this.db, `channels/${channelId}/posts`);
+  //   const newPostRef = push(postsRef);
+
+  //   // Always store timestamp as a number (milliseconds since epoch)
+  //   await set(newPostRef, {
+  //     body,
+  //     image: imageUrl,
+  //     author: 'Volunteer Events',
+  //     verified: true,
+  //     isSent: true,
+  //     timestamp: Date.now(),       // numeric timestamp
+  //     reactions: {}
+  //   });
+  // }
+
+  // ============================
+// 1️⃣ CREATE POST (STORE ONLY media_id)
+// ============================
+async createPost(
+  channelId: string,
+  body: string,
+  file?: File,
+  senderId: number = 52,
+  progressCallback?: (progress: number) => void
+): Promise<void> {
+  let mediaId: string | null = null;
+
+  if (file) {
+    try {
+      // Step 1: Get upload URL
+      const uploadPayload = {
+        channel_id: parseInt(channelId),
+        sender_id: senderId,
+        media_type: file.type.startsWith('image/') ? 'image' : 'video',
+        file_size: file.size,
+        content_type: file.type,
+        metadata: { caption: body }
+      };
+
+      const uploadResponse = await this.http.post<any>(UPLOAD_API, uploadPayload).toPromise();
+      if (!uploadResponse.status) throw new Error('Failed to get upload URL');
+
+      mediaId = uploadResponse.media_id;
+
+      // Step 2: Upload to S3
+      await new Promise<void>((resolve, reject) => {
+        this.http.put(uploadResponse.upload_url, file, {
+          observe: 'events',
+          reportProgress: true
+        }).subscribe({
+          next: (event: any) => {
+            if (event.type === HttpEventType.UploadProgress && progressCallback) {
+              progressCallback(Math.round(100 * event.loaded / (event.total || 1)));
+            } else if (event.type === HttpEventType.Response) {
+              resolve();
             }
-          });
+          },
+          error: reject
         });
+      });
 
-        // Step 3: Get download URL
-        const downloadResponse = await this.http.get<any>(
-          `${DOWNLOAD_API_BASE}/${media_id}`
-        ).toPromise();
-
-        if (!downloadResponse.status || !downloadResponse.downloadUrl) {
-          throw new Error('Failed to get download URL');
-        }
-
-        imageUrl = downloadResponse.downloadUrl;
-      } catch (error) {
-        console.error('Media upload failed:', error);
-        throw error; // Re-throw to handle in component
-      }
+    } catch (err) {
+      console.error('Upload failed:', err);
+      throw err;
     }
-
-    // Step 4: Store post in Firebase
-    const postsRef = ref(this.db, `channels/${channelId}/posts`);
-    const newPostRef = push(postsRef);
-
-    // Always store timestamp as a number (milliseconds since epoch)
-    await set(newPostRef, {
-      body,
-      image: imageUrl,
-      author: 'Volunteer Events',
-      verified: true,
-      isSent: true,
-      timestamp: Date.now(),       // numeric timestamp
-      reactions: {}
-    });
   }
+
+  // Step 3: Store post with ONLY media_id
+  const postsRef = ref(this.db, `channels/${channelId}/posts`);
+  const newPostRef = push(postsRef);
+
+  await set(newPostRef, {
+    body,
+    media_id: mediaId, // ⭐ ONLY STORE MEDIA ID
+    author: 'Volunteer Events',
+    verified: true,
+    isSent: true,
+    timestamp: Date.now(),
+    reactions: {}
+  });
+}
+
+// ============================
+// 2️⃣ GET FRESH DOWNLOAD URL
+// ============================
+getFreshMediaUrl(mediaId: string) {
+  return this.http.get<any>(`${DOWNLOAD_API_BASE}/${mediaId}`);
+}
+
 
   // ============================
   // 2️⃣ GET POSTS REAL-TIME (OLDEST → NEWEST)
