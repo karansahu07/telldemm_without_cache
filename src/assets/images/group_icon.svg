@@ -1,0 +1,12 @@
+<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-label="Group Icon">
+  <!-- Background -->
+  <circle cx="24" cy="24" r="22" fill="#e5e5e5"/>
+
+  <!-- Left person -->
+  <circle cx="17" cy="20" r="5" fill="#555"/>
+  <path fill="#555" d="M10 34c0-5 4-8 7-8s7 3 7 8v2H10v-2z"/>
+
+  <!-- Right person -->
+  <circle cx="31" cy="20" r="5" fill="#555"/>
+  <path fill="#555" d="M24 34c0-5 4-8 7-8s7 3 7 8v2H24v-2z"/>
+</svg>

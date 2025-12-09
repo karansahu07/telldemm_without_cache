@@ -514,11 +514,6 @@ async dismissAdmin(member: any) {
       return;
     }
 
-    // const roomId = senderId < receiverId ? `${senderId}_${receiverId}` : `${receiverId}_${senderId}`;
-    // const receiverPhone = member.phone_number || member.phone;
-
-    // await this.firebaseChatService.openChat(chat);
-
     await this.firebaseChatService.openChat(
       { receiver: { userId: receiverId } },
       true

@@ -1154,6 +1154,7 @@ openImagePopup(chat: any) {
     const sel = this.selectedChats.filter((c) => c.type == 'group');
     console.log({sel})
     const chat = sel[0];
+    console.log({chat})
     if (!chat) return;
 
     const alert = await this.alertCtrl.create({
@@ -1405,7 +1406,7 @@ openImagePopup(chat: any) {
     if (roomIds.length === 0) return;
 
     for (const roomId of roomIds) {
-      await this.firebaseChatService.setUnreadCount(roomId, 1);
+      await this.firebaseChatService.markUnreadChat(roomId, 1);
     }
 
     this.clearChatSelection();

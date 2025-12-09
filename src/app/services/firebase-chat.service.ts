@@ -978,6 +978,34 @@ export class FirebaseChatService {
     }
     console.log(`✅ Unread count set to ${count} for ${targetRoomId}`);
   }
+  
+  async markUnreadChat(roomId: string | null = null, count: number = 0) {
+    const targetRoomId = roomId || this.currentChat?.roomId;
+    if (!targetRoomId || !this.senderId) return;
+
+    // const isActiveChat = await this.hasUserOpenedChat(
+    //   this.senderId,
+    //   targetRoomId
+    // );
+    // if (!isActiveChat && count !== 0) {
+    //   console.log('⚠️ Skipping unread count update - chat not active');
+    //   return;
+    // }
+
+    const metaRef = rtdbRef(
+      this.db,
+      `userchats/${this.senderId}/${targetRoomId}`
+    );
+
+    // 1. Check if node exists
+    const snap = await get(metaRef);
+
+    if (snap.exists()) {
+      // 2. Update only if exists
+      await rtdbUpdate(metaRef, { unreadCount: count });
+    }
+    console.log(`✅ Unread count set to ${count} for ${targetRoomId}`);
+  }
 
   async closeChat() {
     try {

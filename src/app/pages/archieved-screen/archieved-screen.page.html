@@ -1,25 +1,21 @@
 <ion-header [translucent]="true">
   <!-- Selection mode header -->
-  <ion-toolbar class="arch-toolbar" *ngIf="selected.length > 0; else normalHeader">
+  <ion-toolbar *ngIf="selected.length > 0; else normalHeader">
     <ion-buttons slot="start">
       <ion-button (click)="clearSelection()">
         <ion-icon name="arrow-back-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
-
     <ion-title>{{ selected.length }}</ion-title>
-
     <ion-buttons slot="end">
       <!-- Delete only when ONLY privates are selected -->
       <ion-button *ngIf="selectionMeta.onlyPrivates" (click)="deleteSelected()">
         <ion-icon name="trash-outline"></ion-icon>
       </ion-button>
-
       <!-- Unarchive is always available -->
       <ion-button (click)="unarchiveSelected()">
         <ion-icon name="archive-outline"></ion-icon>
       </ion-button>
-
       <ion-button (click)="openArchiveMenu($event)">
         <ion-icon name="ellipsis-vertical"></ion-icon>
       </ion-button>
@@ -28,20 +24,20 @@
 
   <!-- Normal header -->
   <ng-template #normalHeader>
-    <ion-toolbar class="arch-toolbar">
+    <ion-toolbar class="telldemm">
       <ion-buttons slot="start">
-        <ion-back-button defaultHref="/home"></ion-back-button>
+        <ion-back-button (click)="onBack()"></ion-back-button>
       </ion-buttons>
       <ion-title>Archived</ion-title>
       <ion-buttons slot="end">
         <ion-button (click)="openArchiveMenu($event)">
-          <ion-icon name="ellipsis-vertical"></ion-icon>
+          <i class="fa-solid fa-ellipsis-vertical homemainicons"></i>
         </ion-button>
       </ion-buttons>
     </ion-toolbar>
   </ng-template>
 
-  <!-- 🔴 Always-visible banner (moved outside the conditional headers) -->
+  <!-- Always-visible banner -->
   <ion-toolbar class="arch-banner">
     <div class="banner-text">
       These chats stay archived when new messages are received.
@@ -49,51 +45,113 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="arch-content">
-  <!-- Loader -->
-  <ion-list *ngIf="isLoading">
-    <ion-item *ngFor="let i of [1,2,3]">
+<ion-content [fullscreen]="true">
+  <!-- Loader skeleton -->
+  <ion-list *ngIf="isLoading" aria-busy="true" aria-live="polite">
+    <ion-item *ngFor="let i of [1,2,3,4,5,6,7,8,9]" class="for_top">
       <ion-avatar slot="start">
-        <ion-skeleton-text animated style="width:40px;height:40px;border-radius:50%"></ion-skeleton-text>
+        <ion-skeleton-text
+          animated
+          style="width: 40px; height: 40px; border-radius: 50%"
+        ></ion-skeleton-text>
       </ion-avatar>
       <ion-label>
-        <h3><ion-skeleton-text animated style="width:60%"></ion-skeleton-text></h3>
-        <p><ion-skeleton-text animated style="width:80%"></ion-skeleton-text></p>
+        <h3>
+          <ion-skeleton-text animated style="width: 60%"></ion-skeleton-text>
+        </h3>
+        <p>
+          <ion-skeleton-text animated style="width: 80%"></ion-skeleton-text>
+        </p>
       </ion-label>
     </ion-item>
   </ion-list>
 
-  <!-- List -->
+  <!-- Chat List -->
   <ion-list *ngIf="!isLoading">
-    <ion-item *ngFor="let it of items" [class.selected]="isSelected(it)" (click)="onRowClick(it, $event)"
-      (touchstart)="startLongPress(it)" (touchend)="cancelLongPress()" (touchmove)="cancelLongPress()">
-      <div class="chat-item">
-        <div slot="start" class="select-tick" *ngIf="selected.length > 0" (click)="toggleSelection(it, $event)">
-          <ion-icon [name]="isSelected(it) ? 'checkmark-circle' : 'ellipse-outline'"></ion-icon>
-        </div>
+    <ion-item
+      *ngFor="let it of items"
+      [class.selected]="isSelected(it)"
+      (click)="onRowClick(it, $event)"
+      (touchstart)="startLongPress(it)"
+      (touchend)="cancelLongPress()"
+      (touchmove)="cancelLongPress()"
+    >
+      <!-- Selection checkbox -->
+      <ion-checkbox
+        *ngIf="selected.length > 0"
+        slot="start"
+        [checked]="isSelected(it)"
+        (ionChange)="toggleSelection(it, $event)"
+      >
+      </ion-checkbox>
 
-        <ion-avatar (click)="selected.length ? toggleSelection(it, $event) : null">
-          <img *ngIf="it.avatar; else initials" [src]="it.avatar" alt="avatar" />
-          <ng-template #initials>
-            <div class="avatar-fallback">{{ (it.title||'?').slice(0,1) }}</div>
-          </ng-template>
-        </ion-avatar>
+      <!-- Avatar -->
+      <ion-avatar
+        slot="start"
+        (click)="selected.length ? toggleSelection(it, $event) : null; $event.stopPropagation()"
+      >
+        <ng-container *ngIf="it.avatar; else initialsTpl">
+          <img [src]="it.avatar" [alt]="it.title" />
+        </ng-container>
+        <ng-template #initialsTpl>
+          <div class="avatar">{{ it.title?.charAt(0) }}</div>
+        </ng-template>
+      </ion-avatar>
 
-        <ion-label>
-          <h3 class="name">{{ it.title }}</h3>
-          <p class="preview">{{ it.lastMessage }}</p>
-        </ion-label>
+      <ion-label>
+        <p
+          class="chat-message"
+          style="
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+          "
+        >
+          {{ it.title }}
+          
+          <!-- Archive badge -->
+          <ion-badge
+            color="medium"
+            style="margin-left: 4px; font-size: 10px"
+          >
+            Archived
+          </ion-badge>
+        </p>
 
-        <div class="meta">
-          <div class="time">{{ it.lastMessageAt | date: 'shortTime' }}</div>
-          <ion-badge *ngIf="(it?.unreadCount||0) > 0" color="danger">{{ it?.unreadCount }}</ion-badge>
+        <!-- Message preview -->
+        <p style="margin: 0; color: #666">
+          <span
+            style="
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            "
+          >
+            &nbsp;{{ it.lastMessage }}
+          </span>
+        </p>
+      </ion-label>
 
-        </div>
+      <div slot="end" class="chat-meta">
+        <p class="time">{{ it.lastMessageAt | date: 'shortTime' }}</p>
+
+        <ion-badge
+          *ngIf="(+ (it?.unreadCount ?? 0)) > 0"
+          color="danger"
+          class="unread-badge"
+        >
+          {{ it.unreadCount }}
+        </ion-badge>
       </div>
     </ion-item>
 
-    <ion-item *ngIf="!items.length" lines="none">
-      <ion-label class="empty">No archived chats</ion-label>
-    </ion-item>
+    <!-- Empty state -->
+    <div *ngIf="!items.length" class="no-chats-container">
+      <ion-icon name="archive-outline"></ion-icon>
+      <h2>No Archived Chats</h2>
+      <p>Your archived chats will appear here</p>
+    </div>
   </ion-list>
 </ion-content>

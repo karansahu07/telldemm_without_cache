@@ -500,8 +500,8 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   }
   async onBack() {
     await this.chatService.closeChat();
-    this.router.navigate(['/home-screen']);
-    // this.navCtrl.back();
+    // this.router.navigate(['/home-screen']);
+    this.navCtrl.back();
   }
 
   private computeMessageStatus(msg: IMessage): UIMessageStatus {
