@@ -47,7 +47,11 @@ export function initAuth(authService: AuthService) {
         deps: [HttpClient],
       },
     }),
-    IonicStorageModule.forRoot(),
+    // IonicStorageModule.forRoot(),
+    IonicStorageModule.forRoot({
+      name: '_telldemm_firedb',
+      driverOrder: ['indexeddb', 'sqlite', 'localstorage']
+    }),
 
     // ✅ Modular Firebase setup
     provideFirebaseApp(() => initializeApp(environment.firebase)),

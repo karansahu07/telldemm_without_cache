@@ -2,16 +2,22 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, ModalController, ActionSheetController } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
-// import { PostService } from '../../services/post'; // Adjusted path assuming services is at ../../services
-import { ChannelService, Channel } from '../services/channel'; // Import Channel from service
+import { ChannelService, Channel } from '../services/channel';
 import { forkJoin, firstValueFrom } from 'rxjs';
 import { PostService } from '../services/post';
+import { EmojiPickerModalComponent } from 'src/app/components/emoji-picker-modal/emoji-picker-modal.component';
+import { AuthService } from 'src/app/auth/auth.service';
 
 interface ReactionMap {
   [emoji: string]: number;
+}
+
+interface UserReaction {
+  emoji: string;
+  timestamp: number;
 }
 
 export interface Post {
@@ -21,6 +27,7 @@ export interface Post {
   media_id?: string;
   author?: string;
   reactions?: ReactionMap;
+  user_reactions?: { [userId: string]: UserReaction };
   timestamp?: number;
   verified?: boolean;
   isSent?: boolean;
@@ -40,28 +47,35 @@ export class ChannelFeedPage implements OnInit {
   newMessage: string = '';
   selectedImage: string | null = null;
   selectedFile: File | undefined = undefined;
-  // Upload progress
   uploadProgress: number = 0;
   isUploading: boolean = false;
-  // ⭐ NEW: Mute state
   isMuted: boolean = false;
+  
   // Reaction popup
   showReactionPopup: boolean = false;
   popupX = 0;
   popupY = 0;
   activePost!: Post;
+  
   // Double tap
   lastTapTime: number = 0;
+  
   // Multi-select
   selectionMode: boolean = false;
   selectedPosts: Set<string> = new Set();
+  
   // Long press detection
   private longPressTimer: any;
   private isLongPress: boolean = false;
   private touchStartX: number = 0;
   private touchStartY: number = 0;
-  // Cache for media URLs (media_id -> downloadUrl)
+  
+  // Cache for media URLs
   private mediaCache: Map<string, string> = new Map();
+  
+  // Current user ID (get from auth service)
+  // private currentUserId: number = 52;
+  private currentUserId!: any;
 
   constructor(
     private route: ActivatedRoute,
@@ -69,17 +83,21 @@ export class ChannelFeedPage implements OnInit {
     private channelService: ChannelService,
     private cdr: ChangeDetectorRef,
     private router: Router,
-  ) {}
+    private modalController: ModalController,
+    private actionSheetController: ActionSheetController,
+    private authService: AuthService
+  ) {
+     this.currentUserId = this.authService.authData?.userId || 0;  // ADD THIS
+    // this.currentUserId = "76";  // ADD THIS
+
+  }
 
   ngOnInit() {
- // Updated to fetch from query param 'channelId' instead of route param 'id'
     this.channelId = this.route.snapshot.queryParamMap.get('channelId') || '0';
     if (!this.channelId) return;
 
-    // Fetch channel details via service
     this.fetchChannelDetails();
 
-    // Listen to real-time posts
     this.postService.getPosts(this.channelId).subscribe((rawPosts) => {
       this.resolveMediaUrls(rawPosts).then((resolvedPosts) => {
         this.posts = resolvedPosts;
@@ -88,23 +106,196 @@ export class ChannelFeedPage implements OnInit {
     });
   }
 
+  // ============================
+  // REACTION MANAGEMENT
+  // ============================
+  
+  async openReactionPicker(post: Post) {
+    const modal = await this.modalController.create({
+      component: EmojiPickerModalComponent,
+      cssClass: 'emoji-picker-modal'
+    });
 
-  // ⭐ NEW: On header click, navigate to channel detail page
-  onHeaderClick() {
-    if (this.channel && this.channel.channel_id) {
-      this.router.navigate(['/channel-detail'], { queryParams: { channelId: this.channel.channel_id } });
+    await modal.present();
+    const result = await modal.onWillDismiss();
+
+    if (result?.data?.emoji) {
+      await this.addOrUpdateReaction(post, result.data.emoji);
     }
   }
 
-  // Fetch channel details via service
+  // Add or update reaction (one per user)
+  async addOrUpdateReaction(post: Post, emoji: string) {
+    if (!this.channelId) return;
+    
+    await this.postService.addOrUpdateReaction(
+      this.channelId, 
+      post.id, 
+      emoji, 
+      this.currentUserId
+    );
+    
+    this.showReactionPopup = false;
+  }
+
+  // Show all reactions modal/page
+  async showAllReactions(post: Post) {
+    // TODO: Implement a modal showing all users who reacted
+    // For now, show action sheet with basic info
+    const reactions = this.getAggregatedReactions(post);
+    const totalReactions = Object.values(reactions).reduce((sum, count) => sum + count, 0);
+    
+    const actionSheet = await this.actionSheetController.create({
+      header: `${totalReactions} Reaction${totalReactions !== 1 ? 's' : ''}`,
+      subHeader: 'Show all reactions',
+      buttons: [
+        ...Object.entries(reactions).map(([emoji, count]) => ({
+          text: `${emoji} ${count} ${count === 1 ? 'person' : 'people'}`,
+          icon: 'people-outline',
+          handler: () => {
+            // Navigate to detailed reactions page
+            console.log('Show users for reaction:', emoji);
+          }
+        })),
+        {
+          text: 'Cancel',
+          icon: 'close',
+          role: 'cancel'
+        }
+      ]
+    });
+
+    await actionSheet.present();
+  }
+
+  // Show action sheet for reaction management
+  async showReactionActionSheet(post: Post, emoji: string) {
+    const currentUserReaction = await this.postService.getUserReaction(
+      this.channelId!, 
+      post.id, 
+      this.currentUserId
+    );
+
+    const isMyReaction = currentUserReaction === emoji;
+
+    const actionSheet = await this.actionSheetController.create({
+      header: 'Manage Reaction',
+      buttons: [
+        {
+          text: isMyReaction ? 'Remove Reaction' : 'React with ' + emoji,
+          icon: isMyReaction ? 'trash-outline' : 'add-circle-outline',
+          handler: async () => {
+            if (isMyReaction) {
+              await this.removeReaction(post);
+            } else {
+              await this.addOrUpdateReaction(post, emoji);
+            }
+          }
+        },
+        {
+          text: 'See all reactions',
+          icon: 'people-outline',
+          handler: () => {
+            this.showAllReactions(post);
+          }
+        },
+        {
+          text: 'Cancel',
+          icon: 'close',
+          role: 'cancel'
+        }
+      ]
+    });
+
+    await actionSheet.present();
+  }
+
+  // Remove reaction
+  async removeReaction(post: Post) {
+    if (!this.channelId) return;
+    await this.postService.removeReaction(this.channelId, post.id, this.currentUserId);
+  }
+
+  // Get aggregated reactions for display
+  getAggregatedReactions(post: Post): ReactionMap {
+    return this.postService.aggregateReactions(post.user_reactions || null);
+  }
+
+  // Check if current user has reacted
+  async hasUserReacted(post: Post): Promise<boolean> {
+    if (!this.channelId) return false;
+    const reaction = await this.postService.getUserReaction(this.channelId, post.id, this.currentUserId);
+    return reaction !== null;
+  }
+
+  // ============================
+  // FORWARD FUNCTIONALITY
+  // ============================
+  
+  async forwardPost(post: Post) {
+    const actionSheet = await this.actionSheetController.create({
+      header: 'Forward to',
+      buttons: [
+        {
+          text: 'Forward to another channel',
+          icon: 'paper-plane-outline',
+          handler: () => {
+            // Navigate to channel selector
+            console.log('Forward to channel');
+          }
+        },
+        {
+          text: 'Share outside app',
+          icon: 'share-outline',
+          handler: () => {
+            // Use Share API
+            this.sharePost(post);
+          }
+        },
+        {
+          text: 'Cancel',
+          icon: 'close',
+          role: 'cancel'
+        }
+      ]
+    });
+
+    await actionSheet.present();
+  }
+
+  async sharePost(post: Post) {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: this.channel?.channel_name || 'Channel Post',
+          text: post.body,
+          url: post.image || ''
+        });
+      } catch (err) {
+        console.log('Share cancelled or failed:', err);
+      }
+    }
+  }
+
+  // ============================
+  // EXISTING METHODS
+  // ============================
+
+  onHeaderClick() {
+    if (this.channel && this.channel.channel_id) {
+      this.router.navigate(['/channel-detail'], { 
+        queryParams: { channelId: this.channel.channel_id } 
+      });
+    }
+  }
+
   private fetchChannelDetails() {
     if (!this.channelId) return;
     this.channelService.getChannel(Number(this.channelId)).subscribe({
       next: (response) => {
         if (response.status && response.channel) {
           this.channel = response.channel;
-          // ⭐ NEW: Initialize mute state (assume false or fetch from channel if available)
-          this.isMuted = false; // Or this.channel?.is_muted || false if added to interface
+          this.isMuted = false;
           this.cdr.detectChanges();
         }
       },
@@ -114,15 +305,11 @@ export class ChannelFeedPage implements OnInit {
     });
   }
 
-  // ⭐ NEW: Toggle mute/unmute notifications
   async toggleMute() {
-    
-      this.isMuted = !this.isMuted;
-      this.cdr.detectChanges();
-   
+    this.isMuted = !this.isMuted;
+    this.cdr.detectChanges();
   }
 
-  // Resolve media URLs for posts (with caching)
   private async resolveMediaUrls(rawPosts: Post[]): Promise<Post[]> {
     const postsWithMedia = rawPosts.filter(p => p.media_id && !this.mediaCache.has(p.media_id));
     const unresolvedMediaIds = postsWithMedia.map(p => p.media_id!);
@@ -153,21 +340,20 @@ export class ChannelFeedPage implements OnInit {
     }));
   }
 
-  // TEST POST (unchanged, no media)
   async testAddPost() {
     if (!this.channelId) return;
     try {
-      await this.postService.createPost(this.channelId, 'This is a test post', undefined, 52);
+      await this.postService.createPost(this.channelId, 'This is a test post', undefined, this.currentUserId);
     } catch (error) {
       console.error('Test post failed:', error);
     }
   }
 
-  // Media Picker (unchanged)
   selectMedia() {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
-    fileInput.accept = 'image/*,video/*';
+    // fileInput.accept = 'image/*,video/*';
+    fileInput.accept = 'image/*';
     fileInput.onchange = (event: any) => {
       const file = event.target.files[0];
       if (!file) return;
@@ -181,14 +367,12 @@ export class ChannelFeedPage implements OnInit {
     fileInput.click();
   }
 
-  // CLEAR MEDIA PREVIEW (unchanged)
   clearMedia() {
     this.selectedImage = null;
     this.selectedFile = undefined;
     this.newMessage = '';
   }
 
-  // LONG PRESS → OPEN REACTION POPUP (unchanged)
   onTouchStart(ev: TouchEvent, post: Post) {
     this.isLongPress = false;
     const touch = ev.touches[0];
@@ -223,14 +407,12 @@ export class ChannelFeedPage implements OnInit {
     this.activePost = post;
     const target = ev.target as HTMLElement;
     const postBubble = target.closest('.post-bubble') as HTMLElement;
-   
+
     if (postBubble) {
       const rect = postBubble.getBoundingClientRect();
-     
       this.popupX = rect.left + (rect.width / 2) - 140;
-     
       this.popupY = rect.top - 70;
-     
+
       if (this.popupX < 10) this.popupX = 10;
       if (this.popupX + 280 > window.innerWidth) {
         this.popupX = window.innerWidth - 290;
@@ -245,24 +427,19 @@ export class ChannelFeedPage implements OnInit {
     this.showReactionPopup = false;
   }
 
-  // ADD REACTION (unchanged)
   react(post: Post, emoji: string) {
-    if (!this.channelId) return;
-    this.postService.addReaction(this.channelId, post.id, emoji);
-    this.showReactionPopup = false;
+    this.addOrUpdateReaction(post, emoji);
   }
 
-  // DOUBLE TAP → ❤️ LIKE (unchanged)
   async onDoubleTap(post: Post) {
     const now = Date.now();
     if (now - this.lastTapTime < 300) {
       await Haptics.impact({ style: ImpactStyle.Light });
-      this.react(post, '❤️');
+      await this.addOrUpdateReaction(post, '❤️');
     }
     this.lastTapTime = now;
   }
 
-  // MULTI SELECT (unchanged)
   enableSelectMode(post: Post) {
     this.selectionMode = true;
     this.selectedPosts.add(post.id);
@@ -277,7 +454,6 @@ export class ChannelFeedPage implements OnInit {
     }
   }
 
-  // SEND POST (unchanged)
   async sendPost() {
     if (!this.channelId) return;
     if (!this.newMessage && !this.selectedFile) return;
@@ -288,7 +464,7 @@ export class ChannelFeedPage implements OnInit {
         this.channelId,
         this.newMessage,
         this.selectedFile,
-        52,
+        this.currentUserId,
         (progress: number) => {
           this.uploadProgress = progress;
         }
@@ -300,13 +476,11 @@ export class ChannelFeedPage implements OnInit {
       this.isUploading = false;
       this.uploadProgress = 0;
     }
-    // Clear form
     this.newMessage = '';
     this.selectedImage = null;
     this.selectedFile = undefined;
   }
 
-  // Helper to check if selected file is an image (for conditional rendering)
   isImage(file: File): boolean {
     return file && file.type.startsWith('image/');
   }

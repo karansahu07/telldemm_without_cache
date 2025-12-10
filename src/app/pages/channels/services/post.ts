@@ -8,185 +8,115 @@ import {
   onValue,
   query,
   orderByChild,
-  runTransaction
+  runTransaction,
+  remove,
+  onDisconnect,
+  get
 } from '@angular/fire/database';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { HttpEventType } from '@angular/common/http';
+import { environment } from 'src/environments/environment.prod';
+import { AuthService } from 'src/app/auth/auth.service';
 
-const UPLOAD_API = 'https://apps.ekarigar.com/backend/api/media/channel_media/upload-url';
-const DOWNLOAD_API_BASE = 'https://apps.ekarigar.com/backend/api/media/download-url';
+export interface UserReaction {
+  emoji: string;
+  timestamp: number;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class PostService {
+  // private currentUserId: number = 52; // Replace with actual auth user ID
+  private currentUserId!: any;
 
-  constructor(private db: Database, private http: HttpClient) {}
 
-  // ============================
-  // 1️⃣ CREATE A POST (UPDATED WITH MEDIA UPLOAD)
-  // ============================
-  // async createPost(
-  //   channelId: string,
-  //   body: string,
-  //   file?: File,
-  //   senderId: number = 52,
-  //   progressCallback?: (progress: number) => void
-  // ): Promise<void> {
-  //   let imageUrl: string | undefined;
+  constructor(private db: Database, private http: HttpClient,private authService: AuthService) {
+    this.currentUserId = this.authService.authData?.userId || 0;  // ADD THIS
+    // this.currentUserId = "76";  // ADD THIS
 
-  //   if (file) {
-  //     try {
-  //       // Step 1: Get upload URL
-  //       const uploadPayload = {
-  //         channel_id: parseInt(channelId),
-  //         sender_id: senderId,
-  //         media_type: file.type.startsWith('image/') ? 'image' : 'video',
-  //         file_size: file.size,
-  //         content_type: file.type,
-  //         metadata: {
-  //           caption: body || 'Test post'
-  //         }
-  //       };
-
-  //       const uploadResponse = await this.http.post<any>(UPLOAD_API, uploadPayload).toPromise();
-
-  //       if (!uploadResponse.status || !uploadResponse.media_id || !uploadResponse.upload_url) {
-  //         throw new Error('Failed to get upload URL');
-  //       }
-
-  //       const { media_id, upload_url } = uploadResponse;
-
-  //       // Step 2: Upload file to S3 signed URL with progress
-  //       await new Promise<void>((resolve, reject) => {
-  //         const subscription = this.http.put(upload_url, file, {
-  //           reportProgress: true,
-  //           observe: 'events'
-  //         }).subscribe({
-  //           next: (event: any) => {
-  //             if (event.type === HttpEventType.UploadProgress && progressCallback) {
-  //               const progress = Math.round(100 * event.loaded / (event.total || 1));
-  //               progressCallback(progress);
-  //             } else if (event.type === HttpEventType.Response) {
-  //               resolve();
-  //             }
-  //           },
-  //           error: (error) => {
-  //             reject(error);
-  //           }
-  //         });
-  //       });
-
-  //       // Step 3: Get download URL
-  //       const downloadResponse = await this.http.get<any>(
-  //         `${DOWNLOAD_API_BASE}/${media_id}`
-  //       ).toPromise();
-
-  //       if (!downloadResponse.status || !downloadResponse.downloadUrl) {
-  //         throw new Error('Failed to get download URL');
-  //       }
-
-  //       imageUrl = downloadResponse.downloadUrl;
-  //     } catch (error) {
-  //       console.error('Media upload failed:', error);
-  //       throw error; // Re-throw to handle in component
-  //     }
-  //   }
-
-  //   // Step 4: Store post in Firebase
-  //   const postsRef = ref(this.db, `channels/${channelId}/posts`);
-  //   const newPostRef = push(postsRef);
-
-  //   // Always store timestamp as a number (milliseconds since epoch)
-  //   await set(newPostRef, {
-  //     body,
-  //     image: imageUrl,
-  //     author: 'Volunteer Events',
-  //     verified: true,
-  //     isSent: true,
-  //     timestamp: Date.now(),       // numeric timestamp
-  //     reactions: {}
-  //   });
-  // }
-
-  // ============================
-// 1️⃣ CREATE POST (STORE ONLY media_id)
-// ============================
-async createPost(
-  channelId: string,
-  body: string,
-  file?: File,
-  senderId: number = 52,
-  progressCallback?: (progress: number) => void
-): Promise<void> {
-  let mediaId: string | null = null;
-
-  if (file) {
-    try {
-      // Step 1: Get upload URL
-      const uploadPayload = {
-        channel_id: parseInt(channelId),
-        sender_id: senderId,
-        media_type: file.type.startsWith('image/') ? 'image' : 'video',
-        file_size: file.size,
-        content_type: file.type,
-        metadata: { caption: body }
-      };
-
-      const uploadResponse = await this.http.post<any>(UPLOAD_API, uploadPayload).toPromise();
-      if (!uploadResponse.status) throw new Error('Failed to get upload URL');
-
-      mediaId = uploadResponse.media_id;
-
-      // Step 2: Upload to S3
-      await new Promise<void>((resolve, reject) => {
-        this.http.put(uploadResponse.upload_url, file, {
-          observe: 'events',
-          reportProgress: true
-        }).subscribe({
-          next: (event: any) => {
-            if (event.type === HttpEventType.UploadProgress && progressCallback) {
-              progressCallback(Math.round(100 * event.loaded / (event.total || 1)));
-            } else if (event.type === HttpEventType.Response) {
-              resolve();
-            }
-          },
-          error: reject
-        });
-      });
-
-    } catch (err) {
-      console.error('Upload failed:', err);
-      throw err;
-    }
+    // Firebase Realtime Database automatically enables offline persistence
+    // No additional configuration needed - it works out of the box
   }
 
-  // Step 3: Store post with ONLY media_id
-  const postsRef = ref(this.db, `channels/${channelId}/posts`);
-  const newPostRef = push(postsRef);
-
-  await set(newPostRef, {
-    body,
-    media_id: mediaId, // ⭐ ONLY STORE MEDIA ID
-    author: 'Volunteer Events',
-    verified: true,
-    isSent: true,
-    timestamp: Date.now(),
-    reactions: {}
-  });
-}
-
-// ============================
-// 2️⃣ GET FRESH DOWNLOAD URL
-// ============================
-getFreshMediaUrl(mediaId: string) {
-  return this.http.get<any>(`${DOWNLOAD_API_BASE}/${mediaId}`);
-}
-
+  private baseUrl = environment.apiBaseUrl;
+  private UPLOAD_API = `${this.baseUrl}/api/media/channel_media/upload-url`;
+  private DOWNLOAD_API_BASE = `${this.baseUrl}/api/media/download-url`;
 
   // ============================
-  // 2️⃣ GET POSTS REAL-TIME (OLDEST → NEWEST)
+  // 1️⃣ CREATE POST (STORE ONLY media_id)
+  // ============================
+  async createPost(
+    channelId: string,
+    body: string,
+    file?: File,
+    senderId?: number,
+    progressCallback?: (progress: number) => void
+  ): Promise<void> {
+    let mediaId: string | null = null;
+
+    if (file) {
+      try {
+        const uploadPayload = {
+          channel_id: parseInt(channelId),
+          sender_id: senderId,
+          media_type: file.type.startsWith('image/') ? 'image' : 'video',
+          file_size: file.size,
+          content_type: file.type,
+          metadata: { caption: body }
+        };
+
+        const uploadResponse = await this.http.post<any>(this.UPLOAD_API, uploadPayload).toPromise();
+        if (!uploadResponse.status) throw new Error('Failed to get upload URL');
+
+        mediaId = uploadResponse.media_id;
+
+        await new Promise<void>((resolve, reject) => {
+          this.http.put(uploadResponse.upload_url, file, {
+            observe: 'events',
+            reportProgress: true
+          }).subscribe({
+            next: (event: any) => {
+              if (event.type === HttpEventType.UploadProgress && progressCallback) {
+                progressCallback(Math.round(100 * event.loaded / (event.total || 1)));
+              } else if (event.type === HttpEventType.Response) {
+                resolve();
+              }
+            },
+            error: reject
+          });
+        });
+      } catch (err) {
+        console.error('Upload failed:', err);
+        throw err;
+      }
+    }
+
+    const postsRef = ref(this.db, `channels/${channelId}/posts`);
+    const newPostRef = push(postsRef);
+
+    await set(newPostRef, {
+      body,
+      media_id: mediaId,
+      author: 'Volunteer Events',
+      verified: true,
+      isSent: true,
+      timestamp: Date.now(),
+      reactions: {}, // Legacy counter (optional, for backward compatibility)
+      user_reactions: {} // New user-based reactions
+    });
+  }
+
+  // ============================
+  // 2️⃣ GET FRESH DOWNLOAD URL
+  // ============================
+  getFreshMediaUrl(mediaId: string) {
+    return this.http.get<any>(`${this.DOWNLOAD_API_BASE}/${mediaId}`);
+  }
+
+  // ============================
+  // 3️⃣ GET POSTS REAL-TIME (OLDEST → NEWEST)
   // ============================
   getPosts(channelId: string): Observable<any[]> {
     const postsRef = query(
@@ -200,7 +130,6 @@ getFreshMediaUrl(mediaId: string) {
 
         const posts = Object.keys(data)
           .map(id => ({ id, ...data[id] }))
-          // ✅ oldest first (11:00, 12:00, 13:00)
           .sort((a, b) => a.timestamp - b.timestamp);
 
         observer.next(posts);
@@ -209,7 +138,76 @@ getFreshMediaUrl(mediaId: string) {
   }
 
   // ============================
-  // 3️⃣ ADD REACTION (SAFE INCREMENT USING TRANSACTION)
+  // 4️⃣ ADD/UPDATE USER REACTION (One reaction per user)
+  // ============================
+  async addOrUpdateReaction(channelId: string, postId: string, emoji: string, userId?: number) {
+    const uid = userId || this.currentUserId;
+    const userReactionRef = ref(
+      this.db,
+      `channels/${channelId}/posts/${postId}/user_reactions/${uid}`
+    );
+
+    // Check if user already has a reaction
+    const snapshot = await get(userReactionRef);
+    const existingReaction = snapshot.val() as UserReaction | null;
+
+    if (existingReaction) {
+      // If same emoji, remove it (toggle off)
+      if (existingReaction.emoji === emoji) {
+        await this.removeReaction(channelId, postId, userId);
+        return;
+      }
+    }
+
+    // Set or update reaction
+    await set(userReactionRef, {
+      emoji,
+      timestamp: Date.now()
+    });
+  }
+
+  // ============================
+  // 5️⃣ REMOVE USER REACTION
+  // ============================
+  async removeReaction(channelId: string, postId: string, userId?: number) {
+    const uid = userId || this.currentUserId;
+    const userReactionRef = ref(
+      this.db,
+      `channels/${channelId}/posts/${postId}/user_reactions/${uid}`
+    );
+    await remove(userReactionRef);
+  }
+
+  // ============================
+  // 6️⃣ GET USER'S CURRENT REACTION FOR A POST
+  // ============================
+  async getUserReaction(channelId: string, postId: string, userId?: number): Promise<string | null> {
+    const uid = userId || this.currentUserId;
+    const userReactionRef = ref(
+      this.db,
+      `channels/${channelId}/posts/${postId}/user_reactions/${uid}`
+    );
+    const snapshot = await get(userReactionRef);
+    const reaction = snapshot.val() as UserReaction | null;
+    return reaction ? reaction.emoji : null;
+  }
+
+  // ============================
+  // 7️⃣ AGGREGATE REACTIONS FOR DISPLAY
+  // ============================
+  aggregateReactions(userReactions: { [userId: string]: UserReaction } | null): { [emoji: string]: number } {
+    if (!userReactions) return {};
+    
+    const aggregated: { [emoji: string]: number } = {};
+    Object.values(userReactions).forEach(reaction => {
+      aggregated[reaction.emoji] = (aggregated[reaction.emoji] || 0) + 1;
+    });
+    
+    return aggregated;
+  }
+
+  // ============================
+  // 8️⃣ LEGACY: Old counter-based reaction (if needed)
   // ============================
   async addReaction(channelId: string, postId: string, emoji: string) {
     const reactionRef = ref(

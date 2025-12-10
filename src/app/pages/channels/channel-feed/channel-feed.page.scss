@@ -1,5 +1,6 @@
-// channel-feed.page.scss
+// src/app/pages/channels/channel-feed/channel-feed.page.scss
 
+// Keep existing header styles
 ion-header {
   ion-toolbar {
     --background: var(--ion-toolbar-background);
@@ -64,6 +65,9 @@ ion-header {
   }
 }
 
+// ============================
+// CONTENT & POSTS
+// ============================
 .channel-content {
   --background: #f0ebe1;
 
@@ -80,7 +84,7 @@ ion-header {
   flex-direction: column;
   max-width: 90%;
 
-  // Default: Sent messages (right side)
+  // Sent messages (right side)
   &.sent {
     align-items: flex-end;
     margin-left: auto;
@@ -218,91 +222,7 @@ ion-header {
     }
   }
 
-  .reactions-bar {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    margin-top: -8px;
-    margin-bottom: 4px;
-    position: relative;
-    z-index: 2;
-
-    .reaction-item {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      min-width: 42px;
-      padding: 5px 10px;
-      background: #ffffff;
-      border-radius: 18px;
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12),
-                  0 1px 3px rgba(0, 0, 0, 0.08);
-      cursor: pointer;
-      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-      backdrop-filter: blur(10px);
-      animation: reactionBounceIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-
-      &:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15),
-                    0 2px 4px rgba(0, 0, 0, 0.1);
-      }
-
-      &:active {
-        transform: scale(0.92);
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-      }
-
-      .emoji {
-        font-size: 15px;
-        line-height: 1;
-        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
-      }
-
-      .count {
-        font-size: 13px;
-        font-weight: 600;
-        color: #3a3a3a;
-        line-height: 1;
-      }
-    }
-
-    .forward-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
-      padding: 0;
-      margin: 0;
-      background: #ffffff;
-      border-radius: 50%;
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12),
-                  0 1px 3px rgba(0, 0, 0, 0.08);
-      cursor: pointer;
-      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-      --color: #6b6b6b;
-
-      ion-icon {
-        font-size: 16px;
-      }
-
-      &:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      }
-
-      &:active {
-        transform: scale(0.92);
-        --color: var(--ion-color-primary);
-      }
-    }
-  }
-
-  // Animation
+  // Animations
   &.sent {
     animation: slideInRight 0.3s ease-out;
   }
@@ -312,62 +232,139 @@ ion-header {
   }
 }
 
-// Checkbox for multi-select
-.checkbox-container {
-  position: absolute;
-  left: -10px;
-  top: 10px;
-  z-index: 10;
-}
-
-// Date Divider
-.date-divider {
-  text-align: center;
-  margin: 16px 0;
+// ============================
+// REACTIONS BAR (ALWAYS VISIBLE)
+// ============================
+.reactions-bar {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 6px;
+  margin-top: -8px;
+  margin-bottom: 4px;
   position: relative;
+  z-index: 2;
+  max-width: 100%;
 
-  span {
-    background: rgba(188, 140, 44, 0.12);
-    color: #6b6b6b;
-    padding: 6px 16px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  .reactions-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    flex: 1;
+    min-width: 0; // Allow shrinking
+  }
+
+  .reactions-list {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .reaction-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 42px;
+    padding: 5px 10px;
+    background: #ffffff;
+    border-radius: 18px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12),
+                0 1px 3px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+    animation: reactionBounceIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15),
+                  0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    &:active {
+      transform: scale(0.92);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .emoji {
+      font-size: 15px;
+      line-height: 1;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+    }
+
+    .count {
+      font-size: 13px;
+      font-weight: 600;
+      color: #3a3a3a;
+      line-height: 1;
+    }
+  }
+
+  .show-all-reactions-btn {
+    background: transparent;
+    border: none;
+    color: var(--ion-color-primary);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 4px 8px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+
+    &:hover {
+      text-decoration: underline;
+      color: var(--ion-color-primary-shade);
+    }
+
+    &:active {
+      opacity: 0.7;
+    }
+  }
+
+  .forward-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    min-width: 32px; // Prevent shrinking
+    padding: 0;
+    margin: 0;
+    background: #ffffff;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12),
+                0 1px 3px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --color: #6b6b6b;
+    flex-shrink: 0; // Never shrink
+
+    ion-icon {
+      font-size: 16px;
+    }
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    &:active {
+      transform: scale(0.92);
+      --color: var(--ion-color-primary);
+    }
   }
 }
 
-// Chat Footer
-.chat-footer {
-  background: #fff;
-  padding-bottom: env(safe-area-inset-bottom);
-  border-top: 1px solid #ddd;
-}
-
-.input-row {
-  display: flex;
-  align-items: center;
-  padding: 8px;
-}
-
-.chat-input {
-  flex: 1;
-  margin: 0 8px;
-}
-
-.send-btn ion-icon {
-  font-size: 22px;
-  color: #3880ff;
-}
-
-.attach-btn ion-icon {
-  font-size: 22px;
-  color: #555;
-}
-
-// Reaction Popup
+// ============================
+// REACTION POPUP
+// ============================
 .reaction-backdrop {
   position: fixed;
   top: 0;
@@ -417,10 +414,189 @@ ion-header {
       transform: scale(1.5) rotate(-5deg);
       filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
     }
+
+    &.add-reaction {
+      ion-icon {
+        font-size: 28px;
+        color: #6b6b6b;
+      }
+    }
   }
 }
 
-// Animations
+// ============================
+// FOOTER INPUT
+// ============================
+.chat-footer {
+  background: #fff;
+  padding-bottom: env(safe-area-inset-bottom);
+  border-top: 1px solid #ddd;
+
+  .input-row {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .chat-input {
+    flex: 1;
+    margin: 0 8px;
+  }
+
+  .send-btn ion-icon {
+    font-size: 22px;
+    color: #3880ff;
+  }
+
+  .attach-btn ion-icon {
+    font-size: 22px;
+    color: #555;
+  }
+
+  .combined-preview {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    max-width: 60%;
+    margin-right: 10px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 8px;
+    position: relative;
+
+    .media-container {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      max-height: 200px;
+      margin-bottom: 4px;
+
+      .image-preview-wrapper {
+        .preview-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+      }
+
+      .video-preview-wrapper {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+
+        .preview-thumb,
+        .video-placeholder {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          background: #e0e0e0;
+        }
+
+        .video-placeholder {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-style: italic;
+          color: #999;
+        }
+
+        .play-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.3);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          opacity: 1;
+          transition: opacity 0.3s;
+
+          .play-icon {
+            font-size: 48px;
+            color: white;
+            z-index: 2;
+          }
+        }
+
+        .preview-video-player {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          border-radius: 8px;
+        }
+      }
+
+      .remove-preview {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        z-index: 10;
+        color: white;
+        --background: rgba(0, 0, 0, 0.6);
+      }
+    }
+
+    .caption-input-wrapper {
+      .caption-input {
+        --background: transparent;
+        --padding-start: 0;
+        --padding-end: 0;
+        border: none;
+        font-size: 0.9em;
+        color: #333;
+
+        &::placeholder {
+          color: #999;
+        }
+      }
+    }
+  }
+
+  .upload-progress {
+    height: 3px;
+  }
+}
+
+// ============================
+// MULTI-SELECT
+// ============================
+.checkbox-container {
+  position: absolute;
+  left: -10px;
+  top: 10px;
+  z-index: 10;
+}
+
+// ============================
+// DATE DIVIDER
+// ============================
+.date-divider {
+  text-align: center;
+  margin: 16px 0;
+  position: relative;
+
+  span {
+    background: rgba(188, 140, 44, 0.12);
+    color: #6b6b6b;
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  }
+}
+
+// ============================
+// ANIMATIONS
+// ============================
 @keyframes reactionBounceIn {
   0% {
     opacity: 0;
@@ -473,7 +649,9 @@ ion-header {
   }
 }
 
-// High Contrast Mode Support
+// ============================
+// ACCESSIBILITY
+// ============================
 body.accessibility-high-contrast {
   .channel-content {
     --background: #f5f5f5;
@@ -551,7 +729,9 @@ body.accessibility-high-contrast {
   }
 }
 
-// Responsive adjustments
+// ============================
+// RESPONSIVE
+// ============================
 @media (min-width: 768px) {
   .channel-content {
     .posts-container {
@@ -566,130 +746,6 @@ body.accessibility-high-contrast {
   }
 }
 
-
-/* Add to channel-feed.page.scss for better preview styling */
-
-/* Add/Update in channel-feed.page.scss for video preview support */
-
-// Combined Preview Styles (existing + video enhancements)
-.combined-preview {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  max-width: 60%;
-  margin-right: 10px;
-  background: #f8f9fa;
-  border-radius: 12px;
-  padding: 8px;
-  position: relative;
-
-  .media-container {
-    position: relative;
-    border-radius: 8px;
-    overflow: hidden;
-    max-height: 200px;
-    margin-bottom: 4px;
-
-    // Image-specific
-    .image-preview-wrapper {
-      .preview-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-      }
-    }
-
-    // Video-specific
-    .video-preview-wrapper {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      cursor: pointer;
-
-      .preview-thumb,
-      .video-placeholder {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-        background: #e0e0e0;
-      }
-
-      .video-placeholder {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-style: italic;
-        color: #999;
-      }
-
-      .play-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.3);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 1;
-        transition: opacity 0.3s;
-
-        .play-icon {
-          font-size: 48px;
-          color: white;
-          z-index: 2;
-        }
-      }
-
-      .preview-video-player {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 8px;
-      }
-    }
-
-    .remove-preview {
-      position: absolute;
-      top: 4px;
-      right: 4px;
-      z-index: 10;
-      color: white;
-      --background: rgba(0, 0, 0, 0.6);
-    }
-  }
-
-  .caption-input-wrapper {
-    .caption-input {
-      --background: transparent;
-      --padding-start: 0;
-      --padding-end: 0;
-      border: none;
-      font-size: 0.9em;
-      color: #333;
-
-      &::placeholder {
-        color: #999;
-      }
-    }
-  }
-}
-
-// Input row (existing)
-.input-row {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-
-  .chat-input {
-    flex: 1;
-  }
-}
-
-// Responsive (existing)
 @media (max-width: 480px) {
   .combined-preview {
     max-width: 50%;

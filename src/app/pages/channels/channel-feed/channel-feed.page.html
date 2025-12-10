@@ -41,43 +41,27 @@
   <div class="posts-container">
 
     <!-- BACKDROP -->
-    <div
-      *ngIf="showReactionPopup"
-      class="reaction-backdrop"
-      (click)="closePopup()"
-    ></div>
+    <div *ngIf="showReactionPopup" class="reaction-backdrop" (click)="closePopup()"></div>
 
     <!-- CUSTOM REACTION POPUP -->
-    <div
-      *ngIf="showReactionPopup"
-      class="reaction-popup"
-      [style.top.px]="popupY"
-      [style.left.px]="popupX"
-    >
+    <div *ngIf="showReactionPopup" class="reaction-popup" [style.top.px]="popupY" [style.left.px]="popupX">
       <span (click)="react(activePost, '👍')">👍</span>
       <span (click)="react(activePost, '❤️')">❤️</span>
       <span (click)="react(activePost, '😂')">😂</span>
       <span (click)="react(activePost, '🙏')">🙏</span>
       <span (click)="react(activePost, '🔥')">🔥</span>
+      <span class="add-reaction">
+        <ion-icon name="add-circle-outline" (click)="openReactionPicker(activePost)"></ion-icon>
+      </span>
     </div>
 
     <!-- POSTS -->
-    <div
-      *ngFor="let p of posts"
-      class="post-bubble"
-      [class.sent]="p.isSent"
-      [class.received]="!p.isSent"
-      (touchstart)="onTouchStart($event, p)"
-      (touchmove)="onTouchMove($event)"
-      (touchend)="onTouchEnd(p)"
-    >
+    <div *ngFor="let p of posts" class="post-bubble" [class.sent]="p.isSent" [class.received]="!p.isSent"
+      (touchstart)="onTouchStart($event, p)" (touchmove)="onTouchMove($event)" (touchend)="onTouchEnd(p)">
 
       <!-- Multi-select checkbox -->
       <div *ngIf="selectionMode" class="checkbox-container">
-        <ion-checkbox
-          [checked]="selectedPosts.has(p.id)"
-          (ionChange)="toggleSelect(p)"
-        ></ion-checkbox>
+        <ion-checkbox [checked]="selectedPosts.has(p.id)" (ionChange)="toggleSelect(p)"></ion-checkbox>
       </div>
 
       <!-- Author info for received messages -->
@@ -108,13 +92,34 @@
         </div>
       </div>
 
-      <div class="reactions-bar" *ngIf="p.reactions && (p.reactions | keyvalue).length > 0">
-        <div class="reaction-item" *ngFor="let r of p.reactions | keyvalue">
-          <span class="emoji">{{ r.key }}</span>
-          <span class="count">{{ r.value }}</span>
+      <!-- REACTIONS BAR WITH FORWARD (ALWAYS VISIBLE) -->
+      <div class="reactions-bar">
+        <!-- Show reactions if any exist -->
+        <div class="reactions-wrapper">
+          <div class="reactions-list" *ngIf="getAggregatedReactions(p) | keyvalue as reactions">
+            <div class="reaction-item" 
+                 *ngFor="let r of reactions" 
+                 (click)="showReactionActionSheet(p, r.key)">
+              <span class="emoji">{{ r.key }}</span>
+              <span class="count">{{ r.value }}</span>
+            </div>
+          </div>
+
+          <!-- "Show all reactions" text button (if reactions exist) -->
+          <!-- <button *ngIf="(getAggregatedReactions(p) | keyvalue)?.length > 0"  -->
+            <!-- <button *ngIf="(getAggregatedReactions(p) | keyvalue)?.length"
+                  class="show-all-reactions-btn"
+                  (click)="showAllReactions(p)">
+            Show all reactions
+          </button> -->
         </div>
-        <ion-button fill="clear" class="forward-btn" size="small">
-          <ion-icon name="arrow-redo-outline"></ion-icon>
+
+        <!-- Forward button (ALWAYS VISIBLE) -->
+        <ion-button fill="clear" 
+                    class="forward-btn" 
+                    size="small" 
+                    (click)="forwardPost(p)">
+          <ion-icon slot="icon-only" name="arrow-redo-outline"></ion-icon>
         </ion-button>
       </div>
 
@@ -130,9 +135,8 @@
       <ion-icon name="attach-outline"></ion-icon>
     </ion-button>
 
-    <!-- Combined Preview + Input (NEW: Shows media preview with editable caption overlay) -->
+    <!-- Combined Preview + Input -->
     <div *ngIf="selectedFile" class="combined-preview">
-      <!-- Media Preview -->
       <div class="media-container">
         <img *ngIf="isImage(selectedFile)" [src]="selectedImage" class="preview-image" alt="Media Preview" />
         <video *ngIf="!isImage(selectedFile)" [src]="selectedImage" class="preview-video" controls></video>
@@ -141,40 +145,23 @@
         </ion-button>
       </div>
 
-      <!-- Editable Caption Overlay/Input -->
       <div class="caption-input-wrapper">
-        <ion-input
-          class="caption-input"
-          [(ngModel)]="newMessage"
-          placeholder="Add a caption..."
-          [disabled]="isUploading"
-        ></ion-input>
+        <ion-input class="caption-input" [(ngModel)]="newMessage" placeholder="Add a caption..."
+          [disabled]="isUploading"></ion-input>
       </div>
     </div>
 
-    <!-- Fallback: Plain Input (when no media selected) -->
-    <ion-input
-      *ngIf="!selectedFile"
-      class="chat-input"
-      [(ngModel)]="newMessage"
-      placeholder="Type a message"
-    ></ion-input>
+    <!-- Fallback: Plain Input -->
+    <ion-input *ngIf="!selectedFile" class="chat-input" [(ngModel)]="newMessage"
+      placeholder="Type a message"></ion-input>
 
-    <ion-button 
-      fill="clear" 
-      class="send-btn" 
-      (click)="sendPost()" 
-      [disabled]="isUploading || (!newMessage && !selectedFile)"
-    >
+    <ion-button fill="clear" class="send-btn" (click)="sendPost()"
+      [disabled]="isUploading || (!newMessage && !selectedFile)">
       <ion-icon name="send"></ion-icon>
     </ion-button>
   </div>
 
   <!-- Upload Progress Bar -->
-  <ion-progress-bar
-    *ngIf="isUploading"
-    [value]="uploadProgress / 100"
-    color="primary"
-    class="upload-progress"
-  ></ion-progress-bar>
+  <ion-progress-bar *ngIf="isUploading" [value]="uploadProgress / 100" color="primary"
+    class="upload-progress"></ion-progress-bar>
 </ion-footer>
