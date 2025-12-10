@@ -14,9 +14,11 @@ import { Router } from '@angular/router';
 import { Platform, ToastController } from '@ionic/angular';
 import { App } from '@capacitor/app';
 import { AuthService } from '../auth/auth.service';
-import { PluginListenerHandle } from '@capacitor/core';
+import { Capacitor, PluginListenerHandle } from '@capacitor/core';
 import { ApiService } from './api/api.service';
 import { FirebaseChatService } from './firebase-chat.service';
+import { NativeSettings, AndroidSettings, IOSSettings } from 'capacitor-native-settings';
+
 
 @Injectable({
   providedIn: 'root',
@@ -554,6 +556,53 @@ export class FcmService {
   getNotificationIdForRoom(roomId: string): number | undefined {
     return this.activeNotifications.get(roomId);
   }
+
+// ✅ When user turns ON from toggle: ask permission + register FCM
+async askNotificationPermissionAndRegister(): Promise<boolean> {
+  try {
+    let permStatus = await PushNotifications.checkPermissions();
+    if (permStatus.receive !== 'granted') {
+      permStatus = await PushNotifications.requestPermissions();
+    }
+
+    if (permStatus.receive !== 'granted') {
+      console.warn('Push notification permission denied by user');
+      return false;
+    }
+
+    // Permission mil gayi → register for push
+    await PushNotifications.register();
+
+    // Local notifications (optional)
+    try {
+      const localPerm = await LocalNotifications.requestPermissions();
+      if (localPerm.display !== 'granted') {
+        console.warn('Local notification permission not granted');
+      }
+    } catch (e) {
+      console.warn('Local notification permission check failed', e);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('❌ Error while asking notification permission:', error);
+    return false;
+  }
+}
+
+// ✅ Open native app settings so user can turn notification OFF/ON there
+async openAppSettingsForNotifications(): Promise<void> {
+  try {
+    await NativeSettings.open({
+      optionAndroid: AndroidSettings.ApplicationDetails, // Android → App info screen
+      optionIOS: IOSSettings.AppNotification,           // iOS → App notification settings
+      // (older iOS versions ke liye fallback chahe to IOSSettings.App use kar sakte ho)
+    });
+  } catch (error) {
+    console.error('❌ Error opening native settings:', error);
+  }
+}
+
 
   async saveFcmTokenToDatabase(
     userId: string,
