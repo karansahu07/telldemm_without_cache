@@ -4,6 +4,11 @@
       <ion-back-button defaultHref="/"></ion-back-button>
     </ion-buttons>
 
+    <ion-chip slot="end" [color]="isOnline ? 'success' : 'warning'" *ngIf="!isOnline">
+      <ion-icon name="cloud-offline-outline"></ion-icon>
+      <ion-label>Offline</ion-label>
+    </ion-chip>
+
     <ion-title>
       <div class="header-content">
         <ion-avatar class="header-avatar" (click)="onHeaderClick()">
@@ -56,7 +61,10 @@
     </div>
 
     <!-- POSTS -->
-    <div *ngFor="let p of posts" class="post-bubble" [class.sent]="p.isSent" [class.received]="!p.isSent"
+    <!-- <div *ngFor="let p of posts" class="post-bubble" [class.sent]="p.isSent" [class.received]="!p.isSent" -->
+     <div *ngFor="let p of posts" class="post-bubble" 
+     [class.sent]="p.created_by === currentUserId" 
+     [class.received]="p.created_by !== currentUserId"
       (touchstart)="onTouchStart($event, p)" (touchmove)="onTouchMove($event)" (touchend)="onTouchEnd(p)">
 
       <!-- Multi-select checkbox -->
@@ -65,7 +73,7 @@
       </div>
 
       <!-- Author info for received messages -->
-      <div *ngIf="!p.isSent" class="author-info">
+      <!-- <div *ngIf="!p.isSent" class="author-info">
         <ion-avatar class="author-avatar">
           <div class="avatar-placeholder">
             {{ (p.author || 'U')[0] }}
@@ -74,6 +82,16 @@
         <div class="author-details">
           <span class="author-name">{{ p.author || 'Unknown' }}</span>
           <span *ngIf="p.verified" class="verified-badge">✓</span>
+        </div>
+      </div> -->
+      <div *ngIf="p.created_by !== currentUserId" class="author-info">
+        <ion-avatar class="author-avatar">
+          <div class="avatar-placeholder">
+            {{ getUserInitial(p.created_by) }}
+          </div>
+        </ion-avatar>
+        <div class="author-details">
+          <span class="author-name">{{ getUserName(p.created_by) }}</span>
         </div>
       </div>
 
@@ -87,7 +105,8 @@
             <span class="timestamp">
               {{ p.timestamp | date:'shortTime' }}
             </span>
-            <span *ngIf="p.isSent" class="read-status">✓✓</span>
+            <!-- <span *ngIf="p.isSent" class="read-status">✓✓</span> -->
+             <span *ngIf="p.created_by === currentUserId" class="read-status">✓✓</span>
           </div>
         </div>
       </div>
@@ -97,9 +116,7 @@
         <!-- Show reactions if any exist -->
         <div class="reactions-wrapper">
           <div class="reactions-list" *ngIf="getAggregatedReactions(p) | keyvalue as reactions">
-            <div class="reaction-item" 
-                 *ngFor="let r of reactions" 
-                 (click)="showReactionActionSheet(p, r.key)">
+            <div class="reaction-item" *ngFor="let r of reactions" (click)="showReactionActionSheet(p, r.key)">
               <span class="emoji">{{ r.key }}</span>
               <span class="count">{{ r.value }}</span>
             </div>
@@ -107,7 +124,7 @@
 
           <!-- "Show all reactions" text button (if reactions exist) -->
           <!-- <button *ngIf="(getAggregatedReactions(p) | keyvalue)?.length > 0"  -->
-            <!-- <button *ngIf="(getAggregatedReactions(p) | keyvalue)?.length"
+          <!-- <button *ngIf="(getAggregatedReactions(p) | keyvalue)?.length"
                   class="show-all-reactions-btn"
                   (click)="showAllReactions(p)">
             Show all reactions
@@ -115,10 +132,7 @@
         </div>
 
         <!-- Forward button (ALWAYS VISIBLE) -->
-        <ion-button fill="clear" 
-                    class="forward-btn" 
-                    size="small" 
-                    (click)="forwardPost(p)">
+        <ion-button fill="clear" class="forward-btn" size="small" (click)="forwardPost(p)">
           <ion-icon slot="icon-only" name="arrow-redo-outline"></ion-icon>
         </ion-button>
       </div>
@@ -126,10 +140,15 @@
     </div>
 
   </div>
+
+  <div *ngIf="!canCreatePost" class="read-only-banner">
+  <ion-icon name="eye-outline"></ion-icon>
+  <span>View only - You can react to posts</span>
+</div>
 </ion-content>
 
 <!-- INPUT BAR -->
-<ion-footer class="chat-footer">
+<ion-footer class="chat-footer" *ngIf="canCreatePost">
   <div class="input-row">
     <ion-button fill="clear" class="attach-btn" (click)="selectMedia()">
       <ion-icon name="attach-outline"></ion-icon>

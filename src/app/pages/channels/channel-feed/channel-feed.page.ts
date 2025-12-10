@@ -20,17 +20,27 @@ interface UserReaction {
   timestamp: number;
 }
 
+// export interface Post {
+//   id: string;
+//   body: string;
+//   image?: string;
+//   media_id?: string;
+//   author?: string;
+//   reactions?: ReactionMap;
+//   user_reactions?: { [userId: string]: UserReaction };
+//   timestamp?: number;
+//   verified?: boolean;
+//   isSent?: boolean;
+// }
+
 export interface Post {
   id: string;
   body: string;
   image?: string;
   media_id?: string;
-  author?: string;
-  reactions?: ReactionMap;
+  created_by: number;  // User ID who created the post
   user_reactions?: { [userId: string]: UserReaction };
   timestamp?: number;
-  verified?: boolean;
-  isSent?: boolean;
 }
 
 @Component({
@@ -50,32 +60,34 @@ export class ChannelFeedPage implements OnInit {
   uploadProgress: number = 0;
   isUploading: boolean = false;
   isMuted: boolean = false;
-  
+
   // Reaction popup
   showReactionPopup: boolean = false;
   popupX = 0;
   popupY = 0;
   activePost!: Post;
-  
+
   // Double tap
   lastTapTime: number = 0;
-  
+
   // Multi-select
   selectionMode: boolean = false;
   selectedPosts: Set<string> = new Set();
-  
+
   // Long press detection
   private longPressTimer: any;
   private isLongPress: boolean = false;
   private touchStartX: number = 0;
   private touchStartY: number = 0;
-  
+
   // Cache for media URLs
   private mediaCache: Map<string, string> = new Map();
-  
+
   // Current user ID (get from auth service)
   // private currentUserId: number = 52;
-  private currentUserId!: any;
+  // private currentUserId!: any;
+  currentUserId!: any;
+  canCreatePost: boolean = false;  // ADD THIS
 
   constructor(
     private route: ActivatedRoute,
@@ -87,11 +99,11 @@ export class ChannelFeedPage implements OnInit {
     private actionSheetController: ActionSheetController,
     private authService: AuthService
   ) {
-     this.currentUserId = this.authService.authData?.userId || 0;  // ADD THIS
+    this.currentUserId = this.authService.authData?.userId || 0;  // ADD THIS
     // this.currentUserId = "76";  // ADD THIS
 
   }
-
+  isOnline: boolean = true;
   ngOnInit() {
     this.channelId = this.route.snapshot.queryParamMap.get('channelId') || '0';
     if (!this.channelId) return;
@@ -104,12 +116,20 @@ export class ChannelFeedPage implements OnInit {
         this.cdr.detectChanges();
       });
     });
+
+
+    // Monitor connection status
+    this.postService.getConnectionStatus().subscribe(isConnected => {
+      this.isOnline = isConnected;
+      console.log('Connection status:', isConnected ? 'Online' : 'Offline');
+      this.cdr.detectChanges();
+    });
   }
 
   // ============================
   // REACTION MANAGEMENT
   // ============================
-  
+
   async openReactionPicker(post: Post) {
     const modal = await this.modalController.create({
       component: EmojiPickerModalComponent,
@@ -127,14 +147,14 @@ export class ChannelFeedPage implements OnInit {
   // Add or update reaction (one per user)
   async addOrUpdateReaction(post: Post, emoji: string) {
     if (!this.channelId) return;
-    
+
     await this.postService.addOrUpdateReaction(
-      this.channelId, 
-      post.id, 
-      emoji, 
+      this.channelId,
+      post.id,
+      emoji,
       this.currentUserId
     );
-    
+
     this.showReactionPopup = false;
   }
 
@@ -144,7 +164,7 @@ export class ChannelFeedPage implements OnInit {
     // For now, show action sheet with basic info
     const reactions = this.getAggregatedReactions(post);
     const totalReactions = Object.values(reactions).reduce((sum, count) => sum + count, 0);
-    
+
     const actionSheet = await this.actionSheetController.create({
       header: `${totalReactions} Reaction${totalReactions !== 1 ? 's' : ''}`,
       subHeader: 'Show all reactions',
@@ -171,8 +191,8 @@ export class ChannelFeedPage implements OnInit {
   // Show action sheet for reaction management
   async showReactionActionSheet(post: Post, emoji: string) {
     const currentUserReaction = await this.postService.getUserReaction(
-      this.channelId!, 
-      post.id, 
+      this.channelId!,
+      post.id,
       this.currentUserId
     );
 
@@ -231,7 +251,7 @@ export class ChannelFeedPage implements OnInit {
   // ============================
   // FORWARD FUNCTIONALITY
   // ============================
-  
+
   async forwardPost(post: Post) {
     const actionSheet = await this.actionSheetController.create({
       header: 'Forward to',
@@ -249,7 +269,8 @@ export class ChannelFeedPage implements OnInit {
           icon: 'share-outline',
           handler: () => {
             // Use Share API
-            this.sharePost(post);
+             console.log('Share to channel');
+            // this.sharePost(post);
           }
         },
         {
@@ -283,8 +304,8 @@ export class ChannelFeedPage implements OnInit {
 
   onHeaderClick() {
     if (this.channel && this.channel.channel_id) {
-      this.router.navigate(['/channel-detail'], { 
-        queryParams: { channelId: this.channel.channel_id } 
+      this.router.navigate(['/channel-detail'], {
+        queryParams: { channelId: this.channel.channel_id }
       });
     }
   }
@@ -295,6 +316,13 @@ export class ChannelFeedPage implements OnInit {
       next: (response) => {
         if (response.status && response.channel) {
           this.channel = response.channel;
+          console.log("channel createdby", this.channel.created_by);//channel createdby 52
+          // Check if current user is channel creator
+          this.canCreatePost = this.channel.created_by == this.currentUserId;
+
+           console.log('Channel created by:', this.channel.created_by);
+        console.log('Current user:', this.currentUserId);
+        console.log('Can create post:', this.canCreatePost);
           this.isMuted = false;
           this.cdr.detectChanges();
         }
@@ -483,5 +511,15 @@ export class ChannelFeedPage implements OnInit {
 
   isImage(file: File): boolean {
     return file && file.type.startsWith('image/');
+  }
+
+  getUserInitial(userId: number): string {
+    // You can fetch from user service or use channel name
+    return this.channel?.channel_name?.[0] || 'U';
+  }
+
+  getUserName(userId: number): string {
+    // You can fetch from user service or use channel name
+    return this.channel?.channel_name || 'Channel Admin';
   }
 }

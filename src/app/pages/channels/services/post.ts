@@ -32,7 +32,7 @@ export class PostService {
   private currentUserId!: any;
 
 
-  constructor(private db: Database, private http: HttpClient,private authService: AuthService) {
+  constructor(private db: Database, private http: HttpClient, private authService: AuthService) {
     this.currentUserId = this.authService.authData?.userId || 0;  // ADD THIS
     // this.currentUserId = "76";  // ADD THIS
 
@@ -96,15 +96,23 @@ export class PostService {
     const postsRef = ref(this.db, `channels/${channelId}/posts`);
     const newPostRef = push(postsRef);
 
+    // await set(newPostRef, {
+    //   body,
+    //   media_id: mediaId,
+    //   author: 'Volunteer Events',
+    //   verified: true,
+    //   isSent: true,
+    //   timestamp: Date.now(),
+    //   reactions: {}, // Legacy counter (optional, for backward compatibility)
+    //   user_reactions: {} // New user-based reactions
+    // });
+
     await set(newPostRef, {
       body,
       media_id: mediaId,
-      author: 'Volunteer Events',
-      verified: true,
-      isSent: true,
+      created_by: senderId,  // User ID who created the post
       timestamp: Date.now(),
-      reactions: {}, // Legacy counter (optional, for backward compatibility)
-      user_reactions: {} // New user-based reactions
+      user_reactions: {}
     });
   }
 
@@ -197,12 +205,12 @@ export class PostService {
   // ============================
   aggregateReactions(userReactions: { [userId: string]: UserReaction } | null): { [emoji: string]: number } {
     if (!userReactions) return {};
-    
+
     const aggregated: { [emoji: string]: number } = {};
     Object.values(userReactions).forEach(reaction => {
       aggregated[reaction.emoji] = (aggregated[reaction.emoji] || 0) + 1;
     });
-    
+
     return aggregated;
   }
 
@@ -217,6 +225,18 @@ export class PostService {
 
     return runTransaction(reactionRef, (currentValue) => {
       return (currentValue || 0) + 1;
+    });
+  }
+
+  // Add this method
+  getConnectionStatus(): Observable<boolean> {
+    const connectedRef = ref(this.db, '.info/connected');
+
+    return new Observable((observer) => {
+      onValue(connectedRef, (snapshot) => {
+        const isConnected = snapshot.val() === true;
+        observer.next(isConnected);
+      });
     });
   }
 }

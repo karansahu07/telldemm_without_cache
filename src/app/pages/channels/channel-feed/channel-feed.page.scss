@@ -751,3 +751,24 @@ body.accessibility-high-contrast {
     max-width: 50%;
   }
 }
+
+.read-only-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--ion-color-warning);
+  color: white;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 10;
+  
+  ion-icon {
+    font-size: 20px;
+  }
+}

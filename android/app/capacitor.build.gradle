@@ -28,6 +28,7 @@ dependencies {
     implementation project(':capacitor-storage')
     implementation project(':capawesome-capacitor-android-edge-to-edge-support')
     implementation project(':capawesome-capacitor-file-picker')
+    implementation project(':capacitor-native-settings')
     implementation project(':capacitor-secure-storage-plugin')
 
 }
