@@ -5,18 +5,11 @@
     </ion-title>
 
     <ion-buttons slot="end">
-      <!-- <ion-button
-        fill="clear"
-        [attr.aria-label]="'community.actions.qr' | translate"
-      >
-        <i class="fa-solid fa-qrcode homemainicons"></i>
-      </ion-button> -->
       <ion-button
         fill="clear"
         (click)="presentPopover($event)"
         [attr.aria-label]="'community.actions.menu' | translate"
       >
-        <!-- <ion-img src="assets/images/dots (1).svg" class="toolbar-icon"></ion-img> -->
         <i class="fa-solid fa-ellipsis-vertical homemainicons"></i>
       </ion-button>
     </ion-buttons>
@@ -24,6 +17,7 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
+  <!-- New Community button -->
   <ion-item
     lines="none"
     class="new-community"
@@ -31,7 +25,7 @@
     (click)="createCommunityPrompt()"
     [attr.aria-label]="'community.newCommunity' | translate"
   >
-    <ion-avatar slot="start">
+    <ion-avatar slot="start" class="new-community-avatar">
       <img src="assets/images/profile.png" />
       <ion-icon name="add-circle" class="add-icon"></ion-icon>
     </ion-avatar>
@@ -40,49 +34,105 @@
     </ion-label>
   </ion-item>
 
-  <ng-container *ngFor="let community of joinedCommunities">
-    <ion-item class="community-item">
-      <ion-avatar slot="start">
-        <img [src]="community.icon" />
-      </ion-avatar>
-      <ion-label>
-        <h2>{{ community.name }}</h2>
-      </ion-label>
-    </ion-item>
+  <!-- 🔹 Skeleton while loading -->
+  <ng-container *ngIf="loading; else communitiesContent">
+    <ion-list>
+      <ng-container *ngFor="let _ of skeletonCommunities">
+        <!-- community row skeleton -->
+        <ion-item class="community-item community-skeleton">
+          <ion-avatar slot="start">
+            <ion-skeleton-text
+              animated
+              style="width: 44px; height: 44px; border-radius: 50%"
+            ></ion-skeleton-text>
+          </ion-avatar>
+          <ion-label>
+            <h2>
+              <ion-skeleton-text animated style="width: 60%"></ion-skeleton-text>
+            </h2>
+          </ion-label>
+        </ion-item>
 
-    <ion-list lines="none" class="group-list">
-      <ion-item
-        *ngFor="let group of community.groups"
-        button
-        (click)="goToGroupChat(group.id)"
-      >
-        <ion-icon
-          slot="start"
-          [name]="group.type === 'announcement' ? 'megaphone-outline' : 'chatbox-outline'"
-        >
-        </ion-icon>
+        <!-- groups skeleton -->
+        <ion-list lines="none" class="group-list">
+          <ion-item *ngFor="let __ of [0,1,2]" class="group-item">
+            <div slot="start" class="group-icon-skeleton">
+              <ion-skeleton-text
+                animated
+                style="width: 32px; height: 32px; border-radius: 50%"
+              ></ion-skeleton-text>
+            </div>
+            <ion-label>
+              <h3>
+                <ion-skeleton-text
+                  animated
+                  style="width: 70%"
+                ></ion-skeleton-text>
+              </h3>
+            </ion-label>
+          </ion-item>
+        </ion-list>
+
+        <ion-item lines="none" class="view-all-item">
+          <ion-label>
+            <ion-skeleton-text
+              animated
+              style="width: 30%"
+            ></ion-skeleton-text>
+          </ion-label>
+        </ion-item>
+      </ng-container>
+    </ion-list>
+  </ng-container>
+
+  <!-- 🔹 Actual content -->
+  <ng-template #communitiesContent>
+    <ng-container *ngFor="let community of joinedCommunities">
+      <!-- community header row -->
+      <ion-item class="community-item">
+        <ion-avatar slot="start" class="community-avatar">
+          <img [src]="community.icon" />
+        </ion-avatar>
         <ion-label>
-          <h3>{{ group.name }}</h3>
-          <!-- <p>
-            {{ ('community.groupType.' + (group.type || 'normal')) | translate
-            }}
-          </p> -->
+          <h2 class="community-name">{{ community.name }}</h2>
         </ion-label>
       </ion-item>
-    </ion-list>
 
-    <ion-item
-      lines="none"
-      button
-      detail="false"
-      (click)="goToAddGroupCommunity(community)"
-      [attr.aria-label]="'community.viewAll' | translate"
-    >
-      <ion-label color="primary"
-        >{{ 'community.viewAll' | translate }}</ion-label
+      <!-- groups list (max 3 – displayGroups) -->
+      <ion-list lines="none" class="group-list">
+        <ion-item
+          *ngFor="let group of community.displayGroups"
+          button
+          class="group-item"
+          (click)="goToGroupChat(group.id)"
+        >
+          <div slot="start" class="group-icon-wrapper">
+            <ion-icon
+              [name]="getGroupIcon(group)"
+              class="group-icon"
+            ></ion-icon>
+          </div>
+          <ion-label>
+            <h3 class="group-name">{{ group.name }}</h3>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+
+      <!-- View all for this community -->
+      <ion-item
+        lines="none"
+        button
+        detail="false"
+        (click)="goToAddGroupCommunity(community)"
+        class="view-all-item"
+        [attr.aria-label]="'community.viewAll' | translate"
       >
-    </ion-item>
-  </ng-container>
+        <ion-label color="primary" class="view-all-label">
+          {{ 'community.viewAll' | translate }}
+        </ion-label>
+      </ion-item>
+    </ng-container>
+  </ng-template>
 </ion-content>
 
 <app-footer-tabs></app-footer-tabs>

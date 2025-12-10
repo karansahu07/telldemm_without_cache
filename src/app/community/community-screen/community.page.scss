@@ -1,302 +1,118 @@
-/* =========================================================
-   Community / Tools UI — tokenized, theme-aware enhancements
-   Depends on your base variables (primary, bg, text, border)
-   ========================================================= */
-
-/* Typography + smoothing (keeps your Montserrat but uses weight) */
 .tooler {
-  padding-top: 20px;
-  font-family: "Montserrat", sans-serif !important;
-  font-weight: 700; /* replaces Montserrat-bold */
-  box-shadow: none;
-}
-
-/* ---------- Info banner ---------- */
-.info-banner {
-  display: flex;
-  align-items: flex-start;
-  gap: 15px;
-  border: 1.5px solid var(--ion-border-color);
-  border-radius: 16px;
-  margin: 20px;
-  padding: 16px 20px;
-  background: var(--ion-card-background);
-  color: var(--ion-text-color);
-}
-
-.info-icon {
-  width: 36px;
-  height: 36px;
-  margin-top: 6px;
-  flex: 0 0 auto;
-}
-
-.info-text h3 {
-  font-size: 17px;
-  margin: 0 0 6px;
-  font-weight: 600;
-  color: var(--ion-text-color);
-}
-
-.info-text p {
-  font-size: 15px;
-  margin: 0;
-  line-height: 1.5;
-  color: color-mix(in srgb, var(--ion-text-color) 85%, transparent);
-}
-
-.highlight {
-  color: var(--ion-color-primary);
-  font-weight: 600;
-}
-
-/* ---------- Page wrapper / light theme hook ---------- */
-.light-theme {
-  --background: var(--ion-background-color);
-  color: var(--ion-text-color);
-}
-
-/* ---------- Rows (new-community / card / view-all) ---------- */
-.community-card,
-.view-all {
-  --background: var(--ion-item-background);
-  background: var(--background);
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--ion-border-color);
-}
-.new-community{
-  --background: var(--ion-item-background);
-  background: var(--background);
-  padding: 0px 0px;
-  border-bottom: 1px solid var(--ion-border-color);
-  margin: 12px 0px 0px 0px !important;
-}
-
-.new-community h2,
-.view-all h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--ion-text-color);
-}
-
-/* ---------- Community list card ---------- */
-.community-card {
-  --color: var(--ion-text-color);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  margin: 10px;
-  border: 1px solid var(--ion-border-color);
-  background: var(--ion-card-background);
-}
-
-.community-title {
-  font-size: 16px;
-  font-weight: 700;
-  margin: 0 0 4px;
-  color: var(--ion-text-color);
-}
-
-.announcement,
-.announcement-line {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  font-size: 14px;
-  color: color-mix(in srgb, var(--ion-text-color) 70%, transparent);
-}
-
-.icon-red,
-.icon-green { /* unify, then style via color tokens */
-  font-size: 18px;
-  line-height: 1;
-  color: color-mix(in srgb, var(--ion-text-color) 70%, transparent);
-}
-
-/* Status dot aligns with brand color */
-.dot-green {
-  color: var(--ion-color-primary);
-  font-size: 10px;
-  margin-left: 6px;
-}
-
-/* Timestamps & subtle text */
-.timestamp {
-  font-size: 12px;
-  color: color-mix(in srgb, var(--ion-text-color) 55%, transparent);
-  margin-bottom: 4px;
-}
-
-/* Right-side stacked meta */
-.right-content,
-.right-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 4px;
-  margin-left: auto;
-  font-size: 12px;
-  color: color-mix(in srgb, var(--ion-text-color) 70%, transparent);
-}
-
-/* ---------- Tools grid ---------- */
-.tool {
-  margin: 0 20px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 24px;
-  padding: 10px;
-  flex-wrap: wrap; /* responsive */
-}
-
-.tools {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  transition: background-color .2s ease, transform .1s ease;
-}
-
-.tools p {
-  color: var(--ion-text-color);
-  margin: 0;
-  font-family: "Montserrat", sans-serif;
-  font-weight: 500; /* replaces Montserrat-medium */
-  font-size: 13px;
-}
-
-.tools:hover {
-  background-color: color-mix(in srgb, var(--ion-color-primary) 10%, transparent);
-}
-
-.tools:active {
-  transform: translateY(1px);
-}
-
-/* ---------- Avatar + counters ---------- */
-.avatar-container {
-  position: relative;
-  width: 44px;
-  height: 44px;
-}
-
-ion-avatar {
-  width: 44px;
-  height: 44px;
-}
-
-.msg-count {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  transform: translate(0, 0);
-  background: var(--ion-color-primary);
-  color: var(--ion-color-primary-contrast);
-  font-size: 11px;
-  padding: 2px 6px;
-  border-radius: 999px;
-  font-weight: 700;
-  box-shadow: 0 2px 6px rgba(0,0,0,.12);
-}
-
-/* “add” icon on avatar; uses brand color and proper layering */
-.add-icon {
-  position: absolute;
-  bottom: 14px;
-  right: 16px;
-  color: var(--ion-color-primary);
-  font-size: 20px;
-  background: var(--ion-card-background);
-  border-radius: 50%;
-  padding: 2px;
-  border: 1px solid var(--ion-border-color);
-  z-index: 1;
-}
-
-/* Minor layout nits */
-.item { margin-left: 2px; }
-
-/* ---------- View all row ---------- */
-.view-all-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  background: transparent;
-}
-
-.view-all-icon {
-  font-size: 16px;
-  color: color-mix(in srgb, var(--ion-text-color) 55%, transparent);
-}
-
-.view-all-text {
-  font-size: 14px;
-  color: var(--ion-text-color);
-  font-weight: 600;
-}
-
-/* ---------- Toolbar section (uses token) ---------- */
-.toolbar-tool {
-  --background: var(--ion-toolbar-background);
-  background: var(--background);
-  color: var(--ion-toolbar-color);
-  padding: 12px 15px;
-  border-bottom: 1px solid var(--ion-border-color);
-}
-
-/* =========================================================
-   Accessibility & polish
-   ========================================================= */
-
-/* Focus styles (uses your shared focus ring) */
-:where(.info-banner, .tools, .community-card, .view-all-row, .toolbar-tool):focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-  border-radius: 12px;
-}
-
-/* Reduce motion preference */
-@media (prefers-reduced-motion: reduce) {
-  .tools { transition: none; }
-}
-
-/* Small screens: tighten paddings */
-@media (max-width: 400px) {
-  .info-banner { margin: 12px; padding: 14px; }
-  .community-card { margin: 8px; padding: 10px 12px; }
-  .tool { gap: 16px; }
-}
-
-/* High-contrast tweak (optional: bump borders slightly) */
-@media (prefers-contrast: more) {
-  .community-card,
-  .info-banner {
-    border-color: color-mix(in srgb, var(--ion-text-color) 25%, var(--ion-border-color));
+  --background: var(--ion-color-light);
+  .heading {
+    font-size: 20px;
+    font-weight: 700;
   }
 }
 
-.heading{
-  color: var(--ion-color-primary);
-  font-family: Montserrat-bold;
+.homemainicons {
   font-size: 20px;
 }
-.homemainicons {
-  color: white;
-  background: #bc8c2c;
-  font-size: 18px;
-  border-radius: 50px;
+
+/* New community row */
+.new-community {
+  --background: transparent;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+
+  ion-label h2 {
+    font-weight: 600;
+    font-size: 16px;
+  }
+}
+
+.new-community-avatar {
+  position: relative;
+
+  img {
+    border-radius: 50%;
+  }
+
+  .add-icon {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    font-size: 18px;
+    color: var(--ion-color-primary);
+    background: var(--ion-color-light);
+    border-radius: 50%;
+  }
+}
+
+/* Community row */
+.community-item {
+  --background: transparent;
+  padding: 8px 16px;
+
+  .community-avatar img {
+    border-radius: 50%;
+  }
+
+  .community-name {
+    font-size: 16px;
+    font-weight: 600;
+  }
+}
+
+/* Groups list */
+.group-list {
+  padding-left: 70px;
+  padding-right: 16px;
+
+  .group-item {
+    --background: transparent;
+    padding-left: 0;
+    min-height: 40px;
+
+    .group-name {
+      font-size: 14px;
+      font-weight: 500;
+    }
+  }
+}
+
+/* Group icon bubble */
+.group-icon-wrapper {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   display: flex;
-  justify-content: center;
   align-items: center;
-  height: 34px;
-  width: 34px;
+  justify-content: center;
+  margin-right: 12px;
+  background: rgba(var(--ion-color-primary-rgb), 0.08);
+}
+
+.group-icon {
+  font-size: 18px;
+  color: var(--ion-color-primary);
+}
+
+/* View all row */
+.view-all-item {
+  --background: transparent;
+  padding: 0 16px 12px 70px;
+
+  .view-all-label {
+    font-weight: 600;
+    font-size: 14px;
+  }
+}
+
+/* Skeleton styles – keep spacing same as real content */
+.community-skeleton {
+  margin-top: 4px;
+}
+
+.group-icon-skeleton {
+  width: 32px;
+  height: 32px;
+  margin-right: 12px;
+  border-radius: 50%;
+}
+
+/* Small tweak for content */
+ion-content {
+  --padding-bottom: 60px;
 }

@@ -3799,6 +3799,9 @@ export class FirebaseChatService {
       // User's chat list - general group
       updates[`/userchats/${createdBy}/${generalGroupId}`] = generalChatMeta;
 
+         // ✅ User's joined communities node
+      updates[`/usersInCommunity/${createdBy}/joinedCommunities/${communityId}`] = true;
+
       // 🔟 Apply all updates atomically
       await rtdbUpdate(rtdbRef(this.db, '/'), updates);
 
