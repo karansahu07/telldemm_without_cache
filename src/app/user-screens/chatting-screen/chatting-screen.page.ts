@@ -297,6 +297,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   private presenceSubscription?: Subscription;
   private typingTimeout: any;
   maxDate: string = new Date().toISOString();
+  backUrl = '/home-screen';
 
    private isUserScrolling = false;
   private isNearBottom = true;
@@ -351,6 +352,15 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
       nameFromQuery ||
       (await this.secureStorage.getItem('receiver_name')) || '';
       this.maxDate = new Date().toISOString();
+       this.route.queryParamMap.subscribe(params => {
+      const from = params.get('from');
+
+      if (from === 'archive') {
+        this.backUrl = '/archieved-screen';   // 👈 tumhara archived ka route
+      } else {
+        this.backUrl = '/home-screen';        // 👈 tumhara home ka route
+      }
+    });
   }
 
   onInputTyping() {
@@ -415,6 +425,15 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     // Load initial messages
     // await this.chatService.loadMessages(20, true);
     // this.chatService.syncMessagesWithServer();
+     this.route.queryParamMap.subscribe(params => {
+      const from = params.get('from');
+
+      if (from === 'archive') {
+        this.backUrl = '/archieved-screen';   // 👈 tumhara archived ka route
+      } else {
+        this.backUrl = '/home-screen';        // 👈 tumhara home ka route
+      }
+    });
     
     this.chatService.getMessages().subscribe(async (msgs: any) => {
       console.log({ msgs });
@@ -498,10 +517,15 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
       console.error('error in closing chat', error);
     }
   }
-  async onBack() {
+  // async onBack() {
+  //   await this.chatService.closeChat();
+  //   this.router.navigate(['/home-screen']);
+  //   // this.navCtrl.back();
+  // }
+
+    async onBack() {
     await this.chatService.closeChat();
-    // this.router.navigate(['/home-screen']);
-    this.navCtrl.back();
+    this.navCtrl.navigateBack(this.backUrl);
   }
 
   private computeMessageStatus(msg: IMessage): UIMessageStatus {

@@ -649,17 +649,17 @@ private openSelectedGroupInfo(): void {
         parts[parts.length - 1];
       console.log({ receiverId });
       this.router.navigate(['/chatting-screen'], {
-        queryParams: { receiverId: receiverId },
+        queryParams: { receiverId: receiverId, from: 'archive' },
       });
     } else if (item.type == 'community') {
       const receiverId = item.roomId;
       this.router.navigate(['/community-detail'], {
-        queryParams: { receiverId: receiverId },
+        queryParams: { receiverId: receiverId, from: 'archive' },
       });
     } else {
       const receiverId = item.roomId;
       this.router.navigate(['/chatting-screen'], {
-        queryParams: { receiverId: receiverId },
+        queryParams: { receiverId: receiverId, from: 'archive' },
       });
     }
     return;
@@ -762,7 +762,7 @@ private openSelectedGroupInfo(): void {
   }
   async onBack() {
     // await this.chatService.closeChat();
-    this.router.navigate(['/home-screen']);
+    // this.router.navigate(['/home-screen']);
     // this.navCtrl.back();
   }
 }

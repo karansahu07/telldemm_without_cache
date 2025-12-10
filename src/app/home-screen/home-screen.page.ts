@@ -1807,17 +1807,17 @@ openImagePopup(chat: any) {
         parts[parts.length - 1];
       console.log({ receiverId });
       this.router.navigate(['/chatting-screen'], {
-        queryParams: { receiverId: receiverId },
+        queryParams: { receiverId: receiverId, from: 'home' },
       });
     } else if (chat.type == 'community') {
       const receiverId = chat.roomId;
       this.router.navigate(['/community-detail'], {
-        queryParams: { receiverId: receiverId },
+        queryParams: { receiverId: receiverId, from: 'home' },
       });
     } else {
       const receiverId = chat.roomId;
       this.router.navigate(['/chatting-screen'], {
-        queryParams: { receiverId: receiverId },
+        queryParams: { receiverId: receiverId , from: 'home' },
       });
     }
     return;
