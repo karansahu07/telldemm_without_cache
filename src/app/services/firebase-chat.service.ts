@@ -5324,61 +5324,6 @@ export class FirebaseChatService {
     return userGroups;
   }
 
-  // async fetchGroupWithProfiles(
-  //   groupId: string
-  // ): Promise<{ groupName: string; groupMembers: any[] }> {
-  //   try {
-  //     const db = getDatabase();
-  //     const groupRef = ref(db, `groups/${groupId}`);
-  //     const snapshot = await get(groupRef);
-
-  //     if (!snapshot.exists()) {
-  //       return { groupName: 'Group', groupMembers: [] };
-  //     }
-
-  //     const groupData = snapshot.val();
-  //     const groupName = groupData.name || 'Group';
-
-  //     const rawMembers = groupData.members || {};
-  //     const members: any[] = Object.entries(rawMembers).map(
-  //       ([userId, userData]: [string, any]) => ({
-  //         user_id: userId,
-  //         phone_number: userData?.phone_number,
-  //         ...userData,
-  //       })
-  //     );
-
-  //     const membersWithProfiles = await Promise.all(
-  //       members.map(async (m) => {
-  //         try {
-  //           const res: any = await firstValueFrom(
-  //             this.service.getUserProfilebyId(String(m.user_id))
-  //           );
-  //           m.avatar =
-  //             res?.profile || m.avatar || 'assets/images/default-avatar.png';
-  //           m.name = m.name || res?.name || `User ${m.user_id}`;
-  //           m.publicKeyHex = res?.publicKeyHex || m.publicKeyHex || null;
-  //           m.phone_number =
-  //             m.phone_number || res?.phone_number || m.phone_number;
-  //         } catch (err) {
-  //           console.warn(
-  //             `fetchGroupWithProfiles: failed to fetch profile for ${m.user_id}`,
-  //             err
-  //           );
-  //           m.avatar = m.avatar || 'assets/images/default-avatar.png';
-  //           m.name = m.name || `User ${m.user_id}`;
-  //         }
-  //         return m;
-  //       })
-  //     );
-
-  //     return { groupName, groupMembers: membersWithProfiles };
-  //   } catch (err) {
-  //     console.error('fetchGroupWithProfiles error', err);
-  //     return { groupName: 'Group', groupMembers: [] };
-  //   }
-  // }
-
   async fetchGroupWithProfiles(groupId: string): Promise<{
     groupName: string;
     groupMembers: Array<{
@@ -5392,8 +5337,7 @@ export class FirebaseChatService {
       publicKeyHex?: string | null;
     }>;
   }> {
-    const db = getDatabase();
-    const groupRef = ref(db, `groups/${groupId}`);
+    const groupRef = ref(this.db, `groups/${groupId}`);
 
     try {
       const snapshot = await get(groupRef);
