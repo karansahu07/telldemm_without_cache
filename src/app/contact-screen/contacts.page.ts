@@ -49,6 +49,7 @@ export class ContactsPage implements OnInit {
   userProfile: any;
 
   isLoading = true;
+  private searchDebounce: any = null;
 
   constructor(
     private router: Router,
@@ -64,19 +65,17 @@ export class ContactsPage implements OnInit {
   ngOnInit() {
     this.loadDeviceMatchedContacts();
     const currentUserName = this.authService.authData?.name;
-    //console.log("username", currentUserName);
     const userId = this.authService.authData?.userId;
     if (!userId) return;
   }
+
   async loadDeviceMatchedContacts(): Promise<void> {
-    // current user phone from auth; fallback. to localStorage if authService not ready
     const currentUserPhone: string | undefined =
       this.authService?.authData?.phone_number ??
       localStorage.getItem('phone_number') ??
       undefined;
 
     this.allUsers = [];
-
     this.isLoading = true;
 
     try {
@@ -84,15 +83,12 @@ export class ContactsPage implements OnInit {
       console.log({ pfUsers });
       const deviceContacts = this.firebaseChatService.currentDeviceContacts;
 
-      // Extract phone numbers of platform users
       const pfUserPhones = pfUsers.map((pu) => pu.phoneNumber);
 
-      // Filter device contacts that are NOT on the platform
       const nonPfUsers = deviceContacts.filter(
         (dc) => !pfUserPhones.includes(dc.phoneNumber)
       );
 
-      // Build unified list of all users
       this.allUsers = [
         ...pfUsers.map(
           ({ phoneNumber, username, userId, avatar, isOnPlatform }) => ({
@@ -104,24 +100,83 @@ export class ContactsPage implements OnInit {
             selected: false,
           })
         ),
-        // ...nonPfUsers.map((dc) => ({
-        //   userId: dc.userId || '', // fallback if device contact has no userId
-        //   profile: dc.avatar || '',
-        //   phoneNumber: dc.phoneNumber as string,
-        //   name: dc.username || dc.phoneNumber,
-        //   isOnPlatform: false,
-        // })),
       ];
 
-      // Initialize filtered contacts
       this.filteredContacts = [...this.allUsers];
-
-      //  ...nonPfUser.map(({ phoneNumber, username }) => ({ userId: null, name: username, phoneNumber, isOnPlatform: false, profile: "" }))]
     } catch (error) {
       console.error('Error loading contacts');
     } finally {
       this.isLoading = false;
     }
+  }
+
+  /**
+   * Filter contacts based on search term
+   * - If numeric: search by phone number
+   * - If text: search by username
+   * - Mixed: search both username and phone
+   */
+  filterContacts() {
+    const term = this.searchTerm.trim().toLowerCase();
+
+    if (!term) {
+      this.filteredContacts = [...this.allUsers];
+      return;
+    }
+
+    const isNumeric = /^\d+$/.test(term);
+    const isMixed = /[a-zA-Z]/.test(term) && /\d/.test(term);
+
+    if (isNumeric) {
+      this.filteredContacts = this.allUsers.filter((contact) => {
+        const phoneNumber = contact.phoneNumber || '';
+        const cleanPhone = phoneNumber.replace(/\D/g, '');
+        return cleanPhone.includes(term);
+      });
+    } else if (isMixed) {
+      this.filteredContacts = this.allUsers.filter((contact) => {
+        const username = (contact.username || '').toLowerCase();
+        const phoneNumber = contact.phoneNumber || '';
+        const cleanPhone = phoneNumber.replace(/\D/g, '');
+        
+        return username.includes(term) || cleanPhone.includes(term);
+      });
+    } else {
+      this.filteredContacts = this.allUsers.filter((contact) => {
+        const username = (contact.username || '').toLowerCase();
+        return username.includes(term);
+      });
+    }
+
+    this.filteredContacts.sort((a, b) => {
+      const aUsername = (a.username || '').toLowerCase();
+      const bUsername = (b.username || '').toLowerCase();
+      
+      if (aUsername === term && bUsername !== term) return -1;
+      if (bUsername === term && aUsername !== term) return 1;
+      
+      if (aUsername.startsWith(term) && !bUsername.startsWith(term)) return -1;
+      if (bUsername.startsWith(term) && !aUsername.startsWith(term)) return 1;
+      
+      return aUsername.localeCompare(bUsername);
+    });
+
+    console.log(`🔍 Search results: ${this.filteredContacts.length} contacts found for "${this.searchTerm}"`);
+  }
+
+  filterContactsWithDebounce() {
+    if (this.searchDebounce) {
+      clearTimeout(this.searchDebounce);
+    }
+
+    this.searchDebounce = setTimeout(() => {
+      this.filterContacts();
+    }, 300);
+  }
+
+  clearSearch() {
+    this.searchTerm = '';
+    this.filteredContacts = [...this.allUsers];
   }
 
   async openContactChat(receiverId: any) {
@@ -223,7 +278,6 @@ export class ContactsPage implements OnInit {
               }
             }
 
-            // reset UI & navigate
             this.creatingGroup = false;
             this.newGroupName = '';
             this.allUsers.forEach((u: any) => (u.selected = false));
@@ -253,9 +307,11 @@ export class ContactsPage implements OnInit {
   toggleSearch() {
     this.showSearchBar = !this.showSearchBar;
     if (!this.showSearchBar) {
-      this.searchTerm = '';
-      this.keyboardType = 'text';
-      this.filterContacts();
+      this.clearSearch();
+    } else {
+      setTimeout(() => {
+        this.searchInput?.setFocus();
+      }, 300);
     }
   }
 
@@ -283,10 +339,6 @@ export class ContactsPage implements OnInit {
     });
     await popover.present();
     const { data } = await popover.onDidDismiss();
-  }
-
-  filterContacts() {
-    const term = this.searchTerm.toLowerCase();
   }
 
   goToCommunity() {

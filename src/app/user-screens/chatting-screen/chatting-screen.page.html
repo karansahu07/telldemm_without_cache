@@ -5,14 +5,14 @@
       <ion-buttons slot="end">
         <!-- ✅ Only 1 Text Message -->
         <ng-container *ngIf="isOnlyOneTextMessage()">
-          <ion-button (click)="onForward()">
-            <ion-icon name="arrow-redo-outline"></ion-icon>
+          <ion-button (click)="replyToMessages()">
+            <ion-icon name="return-up-back-outline"></ion-icon>
           </ion-button>
           <ion-button (click)="copySelectedMessages()">
             <ion-icon name="copy-outline"></ion-icon>
           </ion-button>
-          <ion-button (click)="replyToMessages()">
-            <ion-icon name="return-up-back-outline"></ion-icon>
+          <ion-button (click)="onForward()">
+            <ion-icon name="arrow-redo-outline"></ion-icon>
           </ion-button>
           <ion-button (click)="deleteSelectedMessages()">
             <ion-icon name="trash-outline"></ion-icon>
@@ -88,11 +88,7 @@
         <ion-buttons>
           <ion-item
             lines="none"
-            style="
-              --padding-start: 0;
-              --background: white;
-              color: black;
-            "
+            style="--padding-start: 0; --background: white; color: black"
             detail="false"
           >
             <ion-avatar style="margin-left: 10px" slot="start">
@@ -544,19 +540,21 @@
             <!-- 🟡 COMPACT REACTION BADGE (WhatsApp style) -->
             <div
               class="reaction-badges"
-              *ngIf="getReactionBadges(msg).length > 0"
+              *ngIf="msg.reactions && msg.reactions.length > 0 && getReactionsCount(msg) > 0"
               [class.right]="msg.sender === senderId"
               [class.left]="msg.sender !== senderId"
             >
-              <div
-                class="badge"
-                *ngFor="let b of msg.reactions"
-                [class.mine]="b.userId == senderId"
-                (click)="onReactionBadgeClick($event, msg, b)"
-              >
-                <span class="emoji">{{ b.emoji }}</span>
-              </div>
-              <span class="cnt" *ngIf="getReactionsCount(msg)>1">
+              <ng-container *ngFor="let b of msg.reactions">
+                <div
+                  *ngIf="b.emoji"
+                  class="badge"
+                  [class.mine]="b.userId == senderId"
+                  (click)="onReactionBadgeClick($event, msg, b)"
+                >
+                  <span class="emoji">{{ b.emoji }}</span>
+                </div>
+              </ng-container>
+              <span class="cnt" *ngIf="getReactionsCount(msg) > 1">
                 {{ getReactionsCount(msg) }}
               </span>
             </div>
@@ -564,21 +562,56 @@
 
           <!-- 🟢 FLOATING REACTION BAR -->
           <div
-  class="reaction-bar"
-  *ngIf="isQuickReactionOpen(msg)"
-  [class.right]="msg.sender === senderId"
-  [class.left]="msg.sender !== senderId"
-  (click)="$event.stopPropagation()"
-  style="z-index: 1000; position: relative;"
->
-  <button class="react-btn" (click)="addReaction(msg, '👍'); $event.stopPropagation()">👍</button>
-  <button class="react-btn" (click)="addReaction(msg, '❤️'); $event.stopPropagation()">❤️</button>
-  <button class="react-btn" (click)="addReaction(msg, '😂'); $event.stopPropagation()">😂</button>
-  <button class="react-btn" (click)="addReaction(msg, '😮'); $event.stopPropagation()">😮</button>
-  <button class="react-btn" (click)="addReaction(msg, '😢'); $event.stopPropagation()">😢</button>
-  <button class="react-btn" (click)="addReaction(msg, '🙏'); $event.stopPropagation()">🙏</button>
-  <button class="react-btn more" (click)="openEmojiKeyboard(msg); $event.stopPropagation()">＋</button>
-</div>
+            class="reaction-bar"
+            *ngIf="isQuickReactionOpen(msg)"
+            [class.right]="msg.sender === senderId"
+            [class.left]="msg.sender !== senderId"
+            (click)="$event.stopPropagation()"
+            style="z-index: 1000; position: relative"
+          >
+            <button
+              class="react-btn"
+              (click)="addReaction(msg, '👍'); $event.stopPropagation()"
+            >
+              👍
+            </button>
+            <button
+              class="react-btn"
+              (click)="addReaction(msg, '❤️'); $event.stopPropagation()"
+            >
+              ❤️
+            </button>
+            <button
+              class="react-btn"
+              (click)="addReaction(msg, '😂'); $event.stopPropagation()"
+            >
+              😂
+            </button>
+            <button
+              class="react-btn"
+              (click)="addReaction(msg, '😮'); $event.stopPropagation()"
+            >
+              😮
+            </button>
+            <button
+              class="react-btn"
+              (click)="addReaction(msg, '😢'); $event.stopPropagation()"
+            >
+              😢
+            </button>
+            <button
+              class="react-btn"
+              (click)="addReaction(msg, '🙏'); $event.stopPropagation()"
+            >
+              🙏
+            </button>
+            <button
+              class="react-btn more"
+              (click)="openEmojiKeyboard(msg); $event.stopPropagation()"
+            >
+              ＋
+            </button>
+          </div>
         </div>
       </ng-container>
     </div>
@@ -599,12 +632,12 @@
         <ion-buttons slot="end" class="pre-icons">
           <!-- Show pencil icon only for images -->
 
-          <img 
+          <img
             *ngIf="selectedAttachment?.type === 'image'"
-            src="assets/images/crop-simple-solid-full.svg" 
+            src="assets/images/crop-simple-solid-full.svg"
             alt="pencil"
             (click)="openCropperModal()"
-            style="cursor: pointer;"
+            style="cursor: pointer"
           />
         </ion-buttons>
       </ion-toolbar>
@@ -612,7 +645,10 @@
     <ion-content class="">
       <div class="pre-model">
         <div class="mine2">
-          <div *ngIf="selectedAttachment?.type === 'image'" class="cropped-image">
+          <div
+            *ngIf="selectedAttachment?.type === 'image'"
+            class="cropped-image"
+          >
             <img [src]="selectedAttachment?.previewUrl" class="preview-image" />
           </div>
           <div *ngIf="selectedAttachment?.type === 'video'">
@@ -653,7 +689,6 @@
     </ion-content>
   </ng-template>
 </ion-modal>
-
 
 <!-- ✅ Message Input Footer -->
 <!-- ========================= -->

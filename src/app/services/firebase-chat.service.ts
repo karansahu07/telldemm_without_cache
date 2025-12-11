@@ -2901,106 +2901,270 @@ export class FirebaseChatService {
     );
   }
 
+  // async sendMessage(msg: Partial<IMessage & { attachment?: any }>) {
+  //   try {
+  //     const { attachment, translations, ...message } = msg || {};
+  //     const { localUrl, ...restAttachment } = attachment || {
+  //       localUrl: undefined,
+  //     };
+
+  //     const roomId = this.currentChat?.roomId as string;
+  //     const members =
+  //       this.currentChat?.members || (roomId ? roomId.split('_') : []);
+
+  //     const encryptedText = await this.encryptionService.encrypt(
+  //       msg.text as string
+  //     );
+
+  //     const messageToSave: Partial<IMessage> = {
+  //       ...message,
+  //       status: 'sent',
+  //       roomId,
+  //       text: msg.text,
+  //       translations: translations || undefined,
+  //       receipts: {
+  //         read: { status: false, readBy: [] },
+  //         delivered: { status: false, deliveredTo: [] },
+  //       },
+  //     };
+
+  //     console.log({ messageToSave });
+
+  //     const meta: Partial<IChatMeta> = {
+  //       type: this.currentChat?.type || 'private',
+  //       lastmessageAt: message.timestamp as string,
+  //       lastmessageType: attachment ? restAttachment.type : 'text',
+  //       lastmessage: encryptedText || '',
+  //     };
+
+  //     // ✅ FIX: Check if receiver has chat open before incrementing unread
+  //     for (const member of members) {
+  //       const ref = rtdbRef(this.db, `userchats/${member}/${roomId}`);
+  //       const idxSnap = await rtdbGet(ref);
+
+  //       // Check if receiver is online AND has this chat open
+  //       const isReceiverOnline = !!this.membersPresence.get(member)?.isOnline;
+  //       const hasReceiverOpenedChat = await this.hasUserOpenedChat(
+  //         member,
+  //         roomId
+  //       );
+
+  //       // Only increment unread if:
+  //       // 1. Not the sender
+  //       // 2. Receiver doesn't have chat open OR is offline
+  //       const shouldIncrementUnread =
+  //         member !== this.senderId &&
+  //         (!hasReceiverOpenedChat || !isReceiverOnline);
+
+  //       if (!idxSnap.exists()) {
+  //         await rtdbSet(ref, {
+  //           ...meta,
+  //           isArhived: false,
+  //           isPinned: false,
+  //           isLocked: false,
+  //           unreadCount: shouldIncrementUnread ? 1 : 0,
+  //         });
+  //       } else {
+  //         await rtdbUpdate(ref, {
+  //           ...meta,
+  //           ...(shouldIncrementUnread && {
+  //             unreadCount: (idxSnap.val().unreadCount || 0) + 1,
+  //           }),
+  //         });
+  //       }
+  //     }
+
+  //     let cdnUrl = '';
+  //     let previewUrl: string | null = null;
+
+  //     const hasAttachment =
+  //       !!attachment && Object.keys(restAttachment || {}).length > 0;
+
+  //     if (hasAttachment) {
+  //       if (restAttachment.mediaId) {
+  //         const res: any = await firstValueFrom(
+  //           this.apiService.getDownloadUrl(restAttachment.mediaId)
+  //         );
+  //         cdnUrl = res?.status ? res.downloadUrl : '';
+  //       }
+
+  //       if (localUrl) {
+  //         previewUrl = await this.fileSystemService.getFilePreview(localUrl);
+  //       }
+  //     }
+
+  //     const messagesRef = ref(this.db, `chats/${roomId}/${message.msgId}`);
+  //     await rtdbSet(messagesRef, {
+  //       ...messageToSave,
+  //       ...(hasAttachment ? { attachment: { ...restAttachment, cdnUrl } } : {}),
+  //       text: encryptedText,
+  //       ...(translations ? { translations } : {}),
+  //     });
+
+  //     for (const member of members) {
+  //       if (member === this.senderId) continue;
+  //       const isReceiverOnline = !!this.membersPresence.get(member)?.isOnline;
+  //       if (isReceiverOnline) {
+  //         this.markAsDelivered(message.msgId as string, member);
+  //         console.log('Mark delivered triggered (receiver online)');
+  //       }
+  //     }
+
+  //     const uiMsg: Partial<IMessage> = {
+  //       ...messageToSave,
+  //       ...(hasAttachment && (localUrl || cdnUrl)
+  //         ? {
+  //             attachment: {
+  //               ...restAttachment,
+  //               localUrl: previewUrl || localUrl,
+  //               cdnUrl,
+  //             },
+  //           }
+  //         : {}),
+  //       isMe: true,
+  //     };
+  //     this.pushMsgToChat(uiMsg);
+
+  //     if (hasAttachment) {
+  //       this.sqliteService.saveAttachment({
+  //         ...restAttachment,
+  //         localUrl: previewUrl || localUrl,
+  //         cdnUrl,
+  //       });
+  //     }
+
+  //     this.sqliteService.saveMessage({
+  //       ...messageToSave,
+  //       ownerId: this.senderId,
+  //       isMe: true,
+  //     } as IMessage & { ownerId: string });
+  //   } catch (error) {
+  //     console.error('Error in sending message', error);
+  //   }
+  // }
+
   async sendMessage(msg: Partial<IMessage & { attachment?: any }>) {
-    try {
-      const { attachment, translations, ...message } = msg || {};
-      const { localUrl, ...restAttachment } = attachment || {
-        localUrl: undefined,
-      };
+  try {
+    const { attachment, translations, ...message } = msg || {};
+    const { localUrl, ...restAttachment } = attachment || {
+      localUrl: undefined,
+    };
 
-      const roomId = this.currentChat?.roomId as string;
-      const members =
-        this.currentChat?.members || (roomId ? roomId.split('_') : []);
+    const roomId = this.currentChat?.roomId as string;
+    const members =
+      this.currentChat?.members || (roomId ? roomId.split('_') : []);
 
-      const encryptedText = await this.encryptionService.encrypt(
-        msg.text as string
+    const encryptedText = await this.encryptionService.encrypt(
+      msg.text as string
+    );
+
+    // CHECK: Is sender and receiver the same (self-chat)?
+    const isSelfChat = this.currentChat?.type === 'private' && 
+                       members.length === 2 && 
+                       members.every(m => m === this.senderId);
+
+    const messageToSave: Partial<IMessage> = {
+      ...message,
+      status: isSelfChat ? 'read' : 'sent', // If self-chat, status is 'read'
+      roomId,
+      text: msg.text,
+      translations: translations || undefined,
+      receipts: isSelfChat ? {
+        // If self-chat, both delivered and read are true
+        read: { 
+          status: true, 
+          readBy: [{
+            userId: this.senderId!,
+            timestamp: Date.now()
+          }]
+        },
+        delivered: { 
+          status: true, 
+          deliveredTo: [{
+            userId: this.senderId!,
+            timestamp: Date.now()
+          }]
+        },
+      } : {
+        // Normal chat receipts
+        read: { status: false, readBy: [] },
+        delivered: { status: false, deliveredTo: [] },
+      },
+    };
+
+    console.log({ messageToSave });
+
+    const meta: Partial<IChatMeta> = {
+      type: this.currentChat?.type || 'private',
+      lastmessageAt: message.timestamp as string,
+      lastmessageType: attachment ? restAttachment.type : 'text',
+      lastmessage: encryptedText || '',
+    };
+
+    // FIX: Check if receiver has chat open before incrementing unread
+    for (const member of members) {
+      const ref = rtdbRef(this.db, `userchats/${member}/${roomId}`);
+      const idxSnap = await rtdbGet(ref);
+
+      // Check if receiver is online AND has this chat open
+      const isReceiverOnline = !!this.membersPresence.get(member)?.isOnline;
+      const hasReceiverOpenedChat = await this.hasUserOpenedChat(
+        member,
+        roomId
       );
 
-      const messageToSave: Partial<IMessage> = {
-        ...message,
-        status: 'sent',
-        roomId,
-        text: msg.text,
-        translations: translations || undefined,
-        receipts: {
-          read: { status: false, readBy: [] },
-          delivered: { status: false, deliveredTo: [] },
-        },
-      };
+      // For self-chat, unread count should always be 0
+      const shouldIncrementUnread = isSelfChat ? false :
+        (member !== this.senderId &&
+        (!hasReceiverOpenedChat || !isReceiverOnline));
 
-      console.log({ messageToSave });
+      if (!idxSnap.exists()) {
+        await rtdbSet(ref, {
+          ...meta,
+          isArhived: false,
+          isPinned: false,
+          isLocked: false,
+          unreadCount: shouldIncrementUnread ? 1 : 0,
+        });
+      } else {
+        await rtdbUpdate(ref, {
+          ...meta,
+          ...(shouldIncrementUnread && {
+            unreadCount: (idxSnap.val().unreadCount || 0) + 1,
+          }),
+        });
+      }
+    }
 
-      const meta: Partial<IChatMeta> = {
-        type: this.currentChat?.type || 'private',
-        lastmessageAt: message.timestamp as string,
-        lastmessageType: attachment ? restAttachment.type : 'text',
-        lastmessage: encryptedText || '',
-      };
+    let cdnUrl = '';
+    let previewUrl: string | null = null;
 
-      // ✅ FIX: Check if receiver has chat open before incrementing unread
-      for (const member of members) {
-        const ref = rtdbRef(this.db, `userchats/${member}/${roomId}`);
-        const idxSnap = await rtdbGet(ref);
+    const hasAttachment =
+      !!attachment && Object.keys(restAttachment || {}).length > 0;
 
-        // Check if receiver is online AND has this chat open
-        const isReceiverOnline = !!this.membersPresence.get(member)?.isOnline;
-        const hasReceiverOpenedChat = await this.hasUserOpenedChat(
-          member,
-          roomId
+    if (hasAttachment) {
+      if (restAttachment.mediaId) {
+        const res: any = await firstValueFrom(
+          this.apiService.getDownloadUrl(restAttachment.mediaId)
         );
-
-        // Only increment unread if:
-        // 1. Not the sender
-        // 2. Receiver doesn't have chat open OR is offline
-        const shouldIncrementUnread =
-          member !== this.senderId &&
-          (!hasReceiverOpenedChat || !isReceiverOnline);
-
-        if (!idxSnap.exists()) {
-          await rtdbSet(ref, {
-            ...meta,
-            isArhived: false,
-            isPinned: false,
-            isLocked: false,
-            unreadCount: shouldIncrementUnread ? 1 : 0,
-          });
-        } else {
-          await rtdbUpdate(ref, {
-            ...meta,
-            ...(shouldIncrementUnread && {
-              unreadCount: (idxSnap.val().unreadCount || 0) + 1,
-            }),
-          });
-        }
+        cdnUrl = res?.status ? res.downloadUrl : '';
       }
 
-      let cdnUrl = '';
-      let previewUrl: string | null = null;
-
-      const hasAttachment =
-        !!attachment && Object.keys(restAttachment || {}).length > 0;
-
-      if (hasAttachment) {
-        if (restAttachment.mediaId) {
-          const res: any = await firstValueFrom(
-            this.apiService.getDownloadUrl(restAttachment.mediaId)
-          );
-          cdnUrl = res?.status ? res.downloadUrl : '';
-        }
-
-        if (localUrl) {
-          previewUrl = await this.fileSystemService.getFilePreview(localUrl);
-        }
+      if (localUrl) {
+        previewUrl = await this.fileSystemService.getFilePreview(localUrl);
       }
+    }
 
-      const messagesRef = ref(this.db, `chats/${roomId}/${message.msgId}`);
-      await rtdbSet(messagesRef, {
-        ...messageToSave,
-        ...(hasAttachment ? { attachment: { ...restAttachment, cdnUrl } } : {}),
-        text: encryptedText,
-        ...(translations ? { translations } : {}),
-      });
+    const messagesRef = ref(this.db, `chats/${roomId}/${message.msgId}`);
+    await rtdbSet(messagesRef, {
+      ...messageToSave,
+      ...(hasAttachment ? { attachment: { ...restAttachment, cdnUrl } } : {}),
+      text: encryptedText,
+      ...(translations ? { translations } : {}),
+    });
 
+    // For self-chat, no need to mark delivered for others
+    if (!isSelfChat) {
       for (const member of members) {
         if (member === this.senderId) continue;
         const isReceiverOnline = !!this.membersPresence.get(member)?.isOnline;
@@ -3009,39 +3173,40 @@ export class FirebaseChatService {
           console.log('Mark delivered triggered (receiver online)');
         }
       }
-
-      const uiMsg: Partial<IMessage> = {
-        ...messageToSave,
-        ...(hasAttachment && (localUrl || cdnUrl)
-          ? {
-              attachment: {
-                ...restAttachment,
-                localUrl: previewUrl || localUrl,
-                cdnUrl,
-              },
-            }
-          : {}),
-        isMe: true,
-      };
-      this.pushMsgToChat(uiMsg);
-
-      if (hasAttachment) {
-        this.sqliteService.saveAttachment({
-          ...restAttachment,
-          localUrl: previewUrl || localUrl,
-          cdnUrl,
-        });
-      }
-
-      this.sqliteService.saveMessage({
-        ...messageToSave,
-        ownerId: this.senderId,
-        isMe: true,
-      } as IMessage & { ownerId: string });
-    } catch (error) {
-      console.error('Error in sending message', error);
     }
+
+    const uiMsg: Partial<IMessage> = {
+      ...messageToSave,
+      ...(hasAttachment && (localUrl || cdnUrl)
+        ? {
+            attachment: {
+              ...restAttachment,
+              localUrl: previewUrl || localUrl,
+              cdnUrl,
+            },
+          }
+        : {}),
+      isMe: true,
+    };
+    this.pushMsgToChat(uiMsg);
+
+    if (hasAttachment) {
+      this.sqliteService.saveAttachment({
+        ...restAttachment,
+        localUrl: previewUrl || localUrl,
+        cdnUrl,
+      });
+    }
+
+    this.sqliteService.saveMessage({
+      ...messageToSave,
+      ownerId: this.senderId,
+      isMe: true,
+    } as IMessage & { ownerId: string });
+  } catch (error) {
+    console.error('Error in sending message', error);
   }
+}
 
   /**
    * Check if a user currently has a specific chat open

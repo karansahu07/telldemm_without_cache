@@ -269,19 +269,19 @@ ion-modal.custom-blur-modal::part(content) {
 }
 
 .user-name {
-    position: absolute;
-    top: calc(50% - 174px);
-    left: calc(50% - 150px);
-    z-index: 10;
-    color: white;
-    font-size: 18px;
-    font-weight: 600;
-    margin: 0;
-    padding: 0px 4px;
-    background: gray;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    width: 300px;
+  position: absolute;
+  top: calc(50% - 174px);
+  left: calc(50% - 150px);
+  z-index: 10;
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  padding: 0px 4px;
+  background: gray;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  width: 300px;
 }
 
 .popup-image {
@@ -321,7 +321,7 @@ ion-modal.custom-blur-modal::part(content) {
   .icon-row {
     background-color: rgba(30, 30, 30, 0.95);
   }
-  
+
   ion-modal.custom-blur-modal::part(backdrop) {
     background: rgba(0, 0, 0, 0.6);
   }
@@ -615,8 +615,8 @@ ion-modal .pre-model {
   height: 56px;
   width: 56px;
   border-radius: 50%;
-    background: var(--ion-color-primary);
-    box-shadow: 0 2px 8px rgba(var(--ion-color-primary-rgb), 0.4);
+  background: var(--ion-color-primary);
+  box-shadow: 0 2px 8px rgba(var(--ion-color-primary-rgb), 0.4);
 }
 
 .sendbtn p {
@@ -626,16 +626,15 @@ ion-modal .pre-model {
 /* Send Icon */
 .mediasend {
   font-size: 24px;
-    color: var(--ion-color-primary-contrast);
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center; 
-    cursor: pointer;
-    transition: all 0.2s ease;
+  color: var(--ion-color-primary-contrast);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
-
 
 .mediasend:active {
   transform: scale(0.95);
@@ -648,7 +647,7 @@ ion-modal .pre-model {
 }
 
 .mediasend.sending::after {
-  content: '';
+  content: "";
   position: absolute;
   width: 20px;
   height: 20px;
@@ -662,4 +661,11 @@ ion-modal .pre-model {
   to {
     transform: rotate(360deg);
   }
+}
+
+.self-you {
+  font-weight: bold;
+  color: black;
+  font-size: 16px;
+  margin-left: 4px;
 }

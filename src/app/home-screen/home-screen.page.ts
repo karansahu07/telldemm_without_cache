@@ -109,16 +109,17 @@ export class HomeScreenPage implements OnInit, OnDestroy {
   conversations: (IConversation & {
     isTyping: boolean;
     isSelected: boolean;
+    isSelfChat?: boolean;
   })[] = [];
   archievedCount: number = 0;
 
   selectedAttachment: any = null;
-showPreviewModal: boolean = false;
-messageText = '';
-isSending = false;
-receiver_name = '';
+  showPreviewModal: boolean = false;
+  messageText = '';
+  isSending = false;
+  receiver_name = '';
 
- private readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  private readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   private readonly ALLOWED_IMAGE_TYPES = [
     'image/jpeg',
     'image/png',
@@ -126,7 +127,7 @@ receiver_name = '';
   ];
 
   isChatsLoaded: boolean = false;
-   selectedChat: any = null;
+  selectedChat: any = null;
 
   constructor(
     private router: Router,
@@ -146,8 +147,8 @@ receiver_name = '';
     private sqlite: SqliteService,
     private toastCtrl: ToastController,
     private modalController: ModalController,
-    private loadingController: LoadingController,
-  ) { }
+    private loadingController: LoadingController
+  ) {}
 
   async ngOnInit() {
     this.currUserId = this.authService.authData?.phone_number || '';
@@ -156,11 +157,10 @@ receiver_name = '';
 
     this.trackRouteChanges();
     // this.sqlite.getMessages('78_76', 100, 0).then(console.log).catch(console.error)
-
   }
 
   // 1) First check server for force-logout decision every time user revisits home
-async ionViewWillEnter() {
+  async ionViewWillEnter() {
     try {
       // await this.initApp()
 
@@ -179,10 +179,11 @@ async ionViewWillEnter() {
             isTyping: false,
             isSelected: false,
             lastMessage: c.lastMessage ?? 'hello this is last message', // use actual lastMessage if available
+            isSelfChat: this.isSelfChat(c),
           }))
           .filter((c) => !c.isLocked && !c.isArchived);
 
-          this.isChatsLoaded = true
+        this.isChatsLoaded = true;
         console.log('Conversations updated:', convs);
         console.log('this.conversations:', this.conversations);
       });
@@ -204,11 +205,33 @@ async ionViewWillEnter() {
     await this.sqlite.printAllTables();
   }
 
+  isSelfChat(chat: any): boolean {
+    // Only check for private chats
+    if (chat.type !== 'private') {
+      return false;
+    }
+
+    if (!chat.roomId || !this.senderUserId) {
+      return false;
+    }
+
+    // Split roomId (format: userId1_userId2)
+    const parts = chat.roomId.split('_');
+
+    // Check if both parts are the same user
+    return (
+      parts.length === 2 &&
+      parts[0] === this.senderUserId &&
+      parts[1] === this.senderUserId
+    );
+  }
 
   get showNewChatPrompt(): boolean {
-    return !this.isLoading &&
+    return (
+      !this.isLoading &&
       this.firebaseChatService.currentConversations.length === 0
-      // !this.searchText.trim();
+    );
+    // !this.searchText.trim();
   }
 
   async verifyDeviceOnEnter(): Promise<boolean> {
@@ -287,7 +310,7 @@ async ionViewWillEnter() {
 
       if (res.device_mismatch) {
         const backButtonHandler = (ev: any) =>
-          ev.detail.register(10000, () => { });
+          ev.detail.register(10000, () => {});
         document.addEventListener('ionBackButton', backButtonHandler);
 
         const alert = await this.alertCtrl.create({
@@ -346,7 +369,7 @@ async ionViewWillEnter() {
                   handler: () => {
                     try {
                       this.resetapp.resetApp();
-                    } catch { }
+                    } catch {}
                   },
                 },
               ],
@@ -354,9 +377,9 @@ async ionViewWillEnter() {
             await alert.present();
           }
         },
-        error: () => { },
+        error: () => {},
       });
-    } catch { }
+    } catch {}
   }
 
   private clearChatData() {
@@ -367,7 +390,7 @@ async ionViewWillEnter() {
     this.typingUnsubs.forEach((unsub) => {
       try {
         unsub();
-      } catch (e) { }
+      } catch (e) {}
     });
     this.typingUnsubs.clear();
 
@@ -380,156 +403,156 @@ async ionViewWillEnter() {
     this.typingUnsubs.forEach((unsub) => {
       try {
         unsub();
-      } catch (e) { }
+      } catch (e) {}
     });
     this.typingUnsubs.clear();
 
     try {
       this.pinUnsub?.();
-    } catch { }
+    } catch {}
     this.pinUnsub = null;
 
     try {
       this.archiveUnsub?.();
-    } catch { }
+    } catch {}
     this.archiveUnsub = null;
   }
 
-  goToUserAbout() {  
-  this.showPopup = false;
-  
-  setTimeout(async () => {
-    try {
-      const chat = this.selectedChat;
+  goToUserAbout() {
+    this.showPopup = false;
 
-      if (!chat) {
-        console.error("❌ No chat selected");
+    setTimeout(async () => {
+      try {
+        const chat = this.selectedChat;
+
+        if (!chat) {
+          console.error('❌ No chat selected');
+          const toast = await this.toastCtrl.create({
+            message: 'Chat not found',
+            duration: 2000,
+            color: 'warning',
+          });
+          await toast.present();
+          return;
+        }
+
+        if (!chat.roomId) {
+          console.error('❌ Chat missing roomId');
+          const toast = await this.toastCtrl.create({
+            message: 'Invalid chat data',
+            duration: 2000,
+            color: 'warning',
+          });
+          await toast.present();
+          return;
+        }
+
+        await this.firebaseChatService.openChat(chat);
+
+        let receiverId: string;
+
+        if (chat.type === 'private') {
+          const parts = chat.roomId.split('_');
+          receiverId =
+            parts.find((p: string) => p !== this.senderUserId) ??
+            parts[parts.length - 1];
+        } else if (chat.type === 'group') {
+          receiverId = chat.roomId;
+        } else if (chat.type === 'community') {
+          receiverId = chat.roomId;
+        } else {
+          console.error('❌ Unknown chat type:', chat.type);
+          return;
+        }
+
+        const queryParams: any = {
+          receiverId: receiverId,
+          isGroup: chat.type === 'group',
+        };
+
+        this.router.navigate(['/profile-screen'], { queryParams });
+
+        this.selectedChat = null;
+        this.selectedImage = null;
+      } catch (error) {
+        console.error('❌ Error opening profile:', error);
+
         const toast = await this.toastCtrl.create({
-          message: 'Chat not found',
+          message: 'Failed to open profile',
           duration: 2000,
-          color: 'warning',
+          color: 'danger',
         });
         await toast.present();
-        return;
       }
+    }, 100);
+  }
 
-      if (!chat.roomId) {
-        console.error("❌ Chat missing roomId");
+  async goToUserchat() {
+    this.showPopup = false;
+
+    setTimeout(async () => {
+      try {
+        const chat = this.selectedChat;
+
+        if (!chat) {
+          console.error('❌ No chat selected');
+          const toast = await this.toastCtrl.create({
+            message: 'Chat not found',
+            duration: 2000,
+            color: 'warning',
+          });
+          await toast.present();
+          return;
+        }
+
+        if (!chat.roomId) {
+          console.error('❌ Chat missing roomId');
+          const toast = await this.toastCtrl.create({
+            message: 'Invalid chat data',
+            duration: 2000,
+            color: 'warning',
+          });
+          await toast.present();
+          return;
+        }
+
+        await this.firebaseChatService.openChat(chat);
+
+        if (chat.type === 'private') {
+          const parts = chat.roomId.split('_');
+          const receiverId =
+            parts.find((p: string) => p !== this.senderUserId) ??
+            parts[parts.length - 1];
+
+          this.router.navigate(['/chatting-screen'], {
+            queryParams: { receiverId: receiverId },
+          });
+        } else if (chat.type === 'group') {
+          this.router.navigate(['/chatting-screen'], {
+            queryParams: { receiverId: chat.roomId },
+          });
+        } else if (chat.type === 'community') {
+          this.router.navigate(['/community-detail'], {
+            queryParams: { receiverId: chat.roomId },
+          });
+        } else {
+          console.warn('⚠️ Unknown chat type:', chat.type);
+        }
+
+        this.selectedChat = null;
+        this.selectedImage = null;
+      } catch (error) {
+        console.error('❌ Error opening chat:', error);
+
         const toast = await this.toastCtrl.create({
-          message: 'Invalid chat data',
+          message: 'Failed to open chat',
           duration: 2000,
-          color: 'warning',
+          color: 'danger',
         });
         await toast.present();
-        return;
       }
-
-      await this.firebaseChatService.openChat(chat);
-
-      let receiverId: string;
-
-      if (chat.type === 'private') {
-        const parts = chat.roomId.split('_');
-        receiverId = parts.find((p: string) => p !== this.senderUserId) 
-          ?? parts[parts.length - 1];
-      } else if (chat.type === 'group') {
-        receiverId = chat.roomId;
-      } else if (chat.type === 'community') {
-        receiverId = chat.roomId;
-      } else {
-        console.error("❌ Unknown chat type:", chat.type);
-        return;
-      }
-
-      const queryParams: any = {
-        receiverId: receiverId,
-        isGroup: chat.type === 'group',
-      };
-
-      this.router.navigate(['/profile-screen'], { queryParams });
-
-      this.selectedChat = null;
-      this.selectedImage = null;
-
-    } catch (error) {
-      console.error('❌ Error opening profile:', error);
-      
-      const toast = await this.toastCtrl.create({
-        message: 'Failed to open profile',
-        duration: 2000,
-        color: 'danger',
-      });
-      await toast.present();
-    }
-  }, 100);
-}
-
-async goToUserchat() {  
-  this.showPopup = false;
-  
-  setTimeout(async () => {
-    try {
-      const chat = this.selectedChat;
-
-      if (!chat) {
-        console.error("❌ No chat selected");
-        const toast = await this.toastCtrl.create({
-          message: 'Chat not found',
-          duration: 2000,
-          color: 'warning',
-        });
-        await toast.present();
-        return;
-      }
-
-      if (!chat.roomId) {
-        console.error("❌ Chat missing roomId");
-        const toast = await this.toastCtrl.create({
-          message: 'Invalid chat data',
-          duration: 2000,
-          color: 'warning',
-        });
-        await toast.present();
-        return;
-      }
-
-      await this.firebaseChatService.openChat(chat);
-
-      if (chat.type === 'private') {
-        const parts = chat.roomId.split('_');
-        const receiverId = parts.find((p: string) => p !== this.senderUserId) 
-          ?? parts[parts.length - 1];
-        
-        this.router.navigate(['/chatting-screen'], {
-          queryParams: { receiverId: receiverId },
-        });
-      } else if (chat.type === 'group') {        
-        this.router.navigate(['/chatting-screen'], {
-          queryParams: { receiverId: chat.roomId },
-        });
-      } else if (chat.type === 'community') {        
-        this.router.navigate(['/community-detail'], {
-          queryParams: { receiverId: chat.roomId },
-        });
-      } else {
-        console.warn("⚠️ Unknown chat type:", chat.type);
-      }
-
-      this.selectedChat = null;
-      this.selectedImage = null;
-      
-    } catch (error) {
-      console.error('❌ Error opening chat:', error);
-      
-      const toast = await this.toastCtrl.create({
-        message: 'Failed to open chat',
-        duration: 2000,
-        color: 'danger',
-      });
-      await toast.present();
-    }
-  }, 100);
-}
+    }, 100);
+  }
 
   goToUsercall() {
     this.showPopup = false;
@@ -545,37 +568,40 @@ async goToUserchat() {
     }, 100);
   }
 
-openImagePopup(chat: any) {
+  openImagePopup(chat: any) {
+    if (!chat) {
+      console.error('❌ No chat object provided');
+      this.toastCtrl
+        .create({
+          message: 'Unable to open chat details',
+          duration: 2000,
+          color: 'warning',
+        })
+        .then((t) => t.present());
+      return;
+    }
 
-  if (!chat) {
-    console.error("❌ No chat object provided");
-    this.toastCtrl.create({
-      message: 'Unable to open chat details',
-      duration: 2000,
-      color: 'warning'
-    }).then(t => t.present());
-    return;
+    if (!chat.roomId) {
+      console.error('❌ Chat missing roomId:', chat);
+      this.toastCtrl
+        .create({
+          message: 'Invalid chat data',
+          duration: 2000,
+          color: 'warning',
+        })
+        .then((t) => t.present());
+      return;
+    }
+
+    this.selectedChat = chat;
+    this.selectedImage = chat.avatar || 'assets/images/user.jfif';
+
+    this.showPopup = true;
   }
-
-  if (!chat.roomId) {
-    console.error("❌ Chat missing roomId:", chat);
-    this.toastCtrl.create({
-      message: 'Invalid chat data',
-      duration: 2000,
-      color: 'warning'
-    }).then(t => t.present());
-    return;
-  }
-
-  this.selectedChat = chat;
-  this.selectedImage = chat.avatar || 'assets/images/user.jfif';
-  
-  this.showPopup = true;
-}
 
   closeImagePopup() {
     this.selectedImage = null;
-     this.selectedChat = null;
+    this.selectedChat = null;
     this.showPopup = false;
   }
 
@@ -811,10 +837,10 @@ openImagePopup(chat: any) {
   // delete chat code start
 
   async deleteMultipleChats() {
-    console.log("multiple delete selected");
+    console.log('multiple delete selected');
     try {
       const result = await this.firebaseChatService.deleteChats(
-        this.selectedChats.map((c) => c.roomId),
+        this.selectedChats.map((c) => c.roomId)
       );
     } catch (error) {
       console.error('Error deleting chats:', error);
@@ -1117,7 +1143,7 @@ openImagePopup(chat: any) {
 
     const queryParams: any = {
       receiverId: chat.roomId,
-      isGroup: chat.type === "group",
+      isGroup: chat.type === 'group',
     };
 
     this.router.navigate(['/profile-screen'], { queryParams });
@@ -1152,15 +1178,14 @@ openImagePopup(chat: any) {
   /** Exit ONE selected group (with confirm) */
   private async confirmAndExitSingleSelectedGroup(): Promise<void> {
     const sel = this.selectedChats.filter((c) => c.type == 'group');
-    console.log({sel})
+    console.log({ sel });
     const chat = sel[0];
-    console.log({chat})
+    console.log({ chat });
     if (!chat) return;
 
     const alert = await this.alertCtrl.create({
       header: 'Exit Group',
-      message: `Are you sure you want to exit "${chat.title
-        }"?`,
+      message: `Are you sure you want to exit "${chat.title}"?`,
       buttons: [
         { text: 'Cancel', role: 'cancel' },
         {
@@ -1284,14 +1309,16 @@ openImagePopup(chat: any) {
       (async () => {
         try {
           await update(rtdbRef(this.db, memberPath), { status: 'inactive' });
-        } catch { }
+        } catch {}
         await remove(rtdbRef(this.db, memberPath));
       })(),
     ]);
 
     // 🔹 If I was admin, check if any admins remain
     if (wasAdmin) {
-      const membersSnap = await get(rtdbRef(this.db, `groups/${groupId}/members`));
+      const membersSnap = await get(
+        rtdbRef(this.db, `groups/${groupId}/members`)
+      );
       if (membersSnap.exists()) {
         const members = membersSnap.val() || {};
         const remainingIds: string[] = Object.keys(members).filter(
@@ -1333,29 +1360,25 @@ openImagePopup(chat: any) {
   }
 
   async markRoomAsRead() {
-    console.log("message object is called 1")
+    console.log('message object is called 1');
     const me = this.senderUserId || this.authService.authData?.userId || '';
     if (!me) return;
 
     const selected = this.selectedChats || [];
-    const roomIds = selected
-      .filter((c) => !c.isCommunity)
-      .map((c) =>
-        c.roomId
-      );
+    const roomIds = selected.filter((c) => !c.isCommunity).map((c) => c.roomId);
 
     // optimistic UI
     selected.forEach((c) => {
       c.unreadCount = 0;
       c.unread = false;
     });
-    console.log("message object is called 2", roomIds)
+    console.log('message object is called 2', roomIds);
 
     for (const roomId of roomIds) {
       try {
         const metaPath = `userchats/${me}/${roomId}`;
         const meta = await this.firebaseChatService.fetchOnce(metaPath);
-        console.log("message object is called 3")
+        console.log('message object is called 3');
 
         const unreadCount = Number((meta && meta.unreadCount) || 0);
         if (!unreadCount) continue;
@@ -1375,13 +1398,8 @@ openImagePopup(chat: any) {
           .sort((a, b) => a.timestamp - b.timestamp);
 
         for (const m of messages) {
-
-          if (m.msgId)
-            console.log("message object is called")
-          await this.firebaseChatService.markAsRead(
-            m.msgId,
-            roomId as string
-          );
+          if (m.msgId) console.log('message object is called');
+          await this.firebaseChatService.markAsRead(m.msgId, roomId as string);
         }
         this.firebaseChatService.setUnreadCount(roomId);
       } catch (err) {
@@ -1398,10 +1416,7 @@ openImagePopup(chat: any) {
     // Build roomIds for selected chats (ignore communities)
     const roomIds = (this.selectedChats || [])
       .filter((c) => !c.isCommunity)
-      .map(
-        (c) =>
-          c.roomId
-      );
+      .map((c) => c.roomId);
 
     if (roomIds.length === 0) return;
 
@@ -1433,8 +1448,8 @@ openImagePopup(chat: any) {
         deviceName && deviceName !== 'Unknown'
           ? deviceName
           : backendPhoneRaw
-            ? backendPhoneRaw
-            : backendName || 'Unknown';
+          ? backendPhoneRaw
+          : backendName || 'Unknown';
 
       if (isGroup) {
         await this.secureStorage.setItem(
@@ -1469,7 +1484,7 @@ openImagePopup(chat: any) {
    */
 
   getChatAvatarUrl(chat: any): string | null {
-    console.log("display chat from home page", chat)
+    console.log('display chat from home page', chat);
     const id = chat.group ? chat.receiver_Id : chat.receiver_Id;
     if (id && this.avatarErrorIds.has(String(id))) return null;
 
@@ -1508,7 +1523,7 @@ openImagePopup(chat: any) {
         unsubscribe() {
           try {
             unsub();
-          } catch (e) { }
+          } catch (e) {}
         },
       };
     });
@@ -1561,7 +1576,6 @@ openImagePopup(chat: any) {
     }
   }
 
-
   formatTimestamp(timestamp: string): string {
     const date = new Date(timestamp);
     const now = new Date();
@@ -1590,18 +1604,18 @@ openImagePopup(chat: any) {
 
   getTimeStamp(lastMessageAt: string | Date | undefined): string {
     if (!lastMessageAt) return '';
- 
+
     const date = new Date(lastMessageAt);
     const now = new Date();
- 
+
     // Check if the date is today
     const isToday = date.toDateString() === now.toDateString();
- 
+
     // Check if the date is yesterday
     const yesterday = new Date();
     yesterday.setDate(now.getDate() - 1);
     const isYesterday = date.toDateString() === yesterday.toDateString();
- 
+
     if (isToday) {
       // Return only time (e.g., "02:00 PM")
       return date.toLocaleTimeString([], {
@@ -1613,13 +1627,13 @@ openImagePopup(chat: any) {
       return this.translate.instant('home.time.yesterday');
     } else if (date.getFullYear() === now.getFullYear()) {
       return date.toLocaleDateString([], {
-        day: 'numeric', 
-        month: 'short' 
+        day: 'numeric',
+        month: 'short',
       });
     } else {
       return date.toLocaleDateString();
     }
-}
+  }
 
   private async getPreviewFromMessages(
     messages: any[]
@@ -1731,7 +1745,7 @@ openImagePopup(chat: any) {
   get filteredChats() {
     // console.log("visible.length",this.chatList)
     let filtered = this.conversations;
-    console.log({filtered})
+    console.log({ filtered });
     // console.log("this.selectedFilter", this.selectedFilter);
 
     filtered = filtered.filter((chat) => {
@@ -1762,8 +1776,7 @@ openImagePopup(chat: any) {
     if (this.searchText.trim() !== '') {
       const q = this.searchText.toLowerCase();
       filtered = filtered.filter(
-        (chat) =>
-          (chat.title || '').toLowerCase().includes(q)
+        (chat) => (chat.title || '').toLowerCase().includes(q)
         // (chat.message || '').toLowerCase().includes(q)
       );
     }
@@ -1787,7 +1800,7 @@ openImagePopup(chat: any) {
 
   get totalUnreadCount(): number {
     return this.conversations.reduce(
-      (sum, chat) => sum + ((chat?.unreadCount || 0) > 0 ? 1:0),
+      (sum, chat) => sum + ((chat?.unreadCount || 0) > 0 ? 1 : 0),
       0
     );
   }
@@ -1801,28 +1814,28 @@ openImagePopup(chat: any) {
     await this.firebaseChatService.openChat(chat);
     try {
       if (chat.type == 'private') {
-      const parts = chat.roomId.split('_');
-      const receiverId =
-        parts.find((p: string | null) => p !== this.senderUserId) ??
-        parts[parts.length - 1];
-      console.log({ receiverId });
-      this.router.navigate(['/chatting-screen'], {
-        queryParams: { receiverId: receiverId, from: 'home' },
-      });
-    } else if (chat.type == 'community') {
-      const receiverId = chat.roomId;
-      this.router.navigate(['/community-detail'], {
-        queryParams: { receiverId: receiverId, from: 'home' },
-      });
-    } else {
-      const receiverId = chat.roomId;
-      this.router.navigate(['/chatting-screen'], {
-        queryParams: { receiverId: receiverId , from: 'home' },
-      });
-    }
-    return;
+        const parts = chat.roomId.split('_');
+        const receiverId =
+          parts.find((p: string | null) => p !== this.senderUserId) ??
+          parts[parts.length - 1];
+        console.log({ receiverId });
+        this.router.navigate(['/chatting-screen'], {
+          queryParams: { receiverId: receiverId, from: 'home' },
+        });
+      } else if (chat.type == 'community') {
+        const receiverId = chat.roomId;
+        this.router.navigate(['/community-detail'], {
+          queryParams: { receiverId: receiverId, from: 'home' },
+        });
+      } else {
+        const receiverId = chat.roomId;
+        this.router.navigate(['/chatting-screen'], {
+          queryParams: { receiverId: receiverId, from: 'home' },
+        });
+      }
+      return;
     } catch (error) {
-      console.error("chat not open", error)
+      console.error('chat not open', error);
     }
   }
 
@@ -2056,7 +2069,7 @@ openImagePopup(chat: any) {
     this.router.navigate(['/contact-screen']);
   }
 
-/**
+  /**
    * Open camera and handle image cropping
    */
   // async openCamera() {
@@ -2104,7 +2117,7 @@ openImagePopup(chat: any) {
 
   //   } catch (error) {
   //     console.error('Camera error:', error);
-      
+
   //     const toast = await this.toastCtrl.create({
   //       message: 'Failed to capture photo. Please try again.',
   //       duration: 2000,
@@ -2114,7 +2127,7 @@ openImagePopup(chat: any) {
   //   }
   // }
 
-async openCamera() {
+  async openCamera() {
     try {
       // Capture photo from camera
       const image = await Camera.getPhoto({
@@ -2148,7 +2161,7 @@ async openCamera() {
         fileSize: blob.size,
         previewUrl: previewUrl,
       };
-      console.log("this selected attachment", this.selectedAttachment);
+      console.log('this selected attachment', this.selectedAttachment);
 
       // Show preview modal (same as pickAttachment)
       this.showPreviewModal = true;
@@ -2164,169 +2177,166 @@ async openCamera() {
     }
   }
 
-/**
- * 🖼️ Open cropper modal for image editing
- */
-async openCropperModal(attachment: any) {
-  if (!attachment || attachment.type !== 'image') {
-    console.warn('⚠️ No image attachment to crop');
-    return;
-  }
-
-  try {
-    const modal = await this.modalController.create({
-      component: ImageCropperModalComponent,
-      componentProps: {
-        imageUrl: attachment.previewUrl,
-        aspectRatio: 0, // Free aspect ratio (set to 1 for square, 16/9 for landscape)
-        cropQuality: 0.9
-      },
-      cssClass: 'image-cropper-modal',
-      backdropDismiss: false, // Prevent accidental dismissal
-    });
-
-    await modal.present();
-
-    const { data } = await modal.onDidDismiss<CropResult>();
-
-    if (data && data.success && data.originalBlob) {
-      // ✅ Revoke old preview URL to free memory
-      if (attachment.previewUrl) {
-        try {
-          URL.revokeObjectURL(attachment.previewUrl);
-        } catch (e) {
-          console.warn('Failed to revoke old preview URL:', e);
-        }
-      }
-
-      // ✅ Create new preview URL from cropped blob
-      const newPreviewUrl = URL.createObjectURL(data.originalBlob);
-
-      // ✅ Generate new filename with timestamp
-      const timestamp = Date.now();
-      const fileExtension = attachment.fileName.split('.').pop() || 'jpg';
-      const newFileName = `cropped_${timestamp}.${fileExtension}`;
-
-      // ✅ Update selectedAttachment with cropped image data
-      this.selectedAttachment = {
-        ...attachment,
-        blob: data.originalBlob,
-        previewUrl: newPreviewUrl,
-        fileName: newFileName,
-        fileSize: data.originalBlob.size,
-        mimeType: data.originalBlob.type || attachment.mimeType,
-        caption: '' // Initialize empty caption
-      };
-
-      console.log('✅ Cropped attachment ready:', this.selectedAttachment);
-
-      // ✅ Store in Firebase service for cross-page access
-      this.firebaseChatService.setSelectedAttachment(this.selectedAttachment);
-
-      // ✅ Show preview modal
-      this.showPreviewModal = true;
-
-      // ✅ Show success toast
-      const toast = await this.toastCtrl.create({
-        message: 'Image cropped successfully',
-        duration: 1500,
-        color: 'success'
-      });
-      await toast.present();
-
-    } else if (data && data.cancelled) {
-      // User cancelled cropping - clean up
-      console.log('🚫 Cropping cancelled by user');
-      
-      if (attachment.previewUrl) {
-        try {
-          URL.revokeObjectURL(attachment.previewUrl);
-        } catch (e) {
-          console.warn('Failed to revoke preview URL:', e);
-        }
-      }
-      
-    } else if (data && data.error) {
-      // Show error toast
-      const toast = await this.toastCtrl.create({
-        message: data.error,
-        duration: 2000,
-        color: 'danger'
-      });
-      await toast.present();
+  /**
+   * 🖼️ Open cropper modal for image editing
+   */
+  async openCropperModal(attachment: any) {
+    if (!attachment || attachment.type !== 'image') {
+      console.warn('⚠️ No image attachment to crop');
+      return;
     }
 
-  } catch (error) {
-    console.error('❌ Error opening cropper modal:', error);
-    
-    const toast = await this.toastCtrl.create({
-      message: 'Failed to open image editor',
-      duration: 2000,
-      color: 'danger'
-    });
-    await toast.present();
-  }
-}
-
-/**
- * ❌ Cancel attachment and close preview modal
- */
-cancelAttachment() {
-  // Revoke object URL to prevent memory leaks
-  if (this.selectedAttachment?.previewUrl) {
     try {
-      URL.revokeObjectURL(this.selectedAttachment.previewUrl);
-    } catch (e) {
-      console.warn('Failed to revoke preview URL:', e);
+      const modal = await this.modalController.create({
+        component: ImageCropperModalComponent,
+        componentProps: {
+          imageUrl: attachment.previewUrl,
+          aspectRatio: 0, // Free aspect ratio (set to 1 for square, 16/9 for landscape)
+          cropQuality: 0.9,
+        },
+        cssClass: 'image-cropper-modal',
+        backdropDismiss: false, // Prevent accidental dismissal
+      });
+
+      await modal.present();
+
+      const { data } = await modal.onDidDismiss<CropResult>();
+
+      if (data && data.success && data.originalBlob) {
+        // ✅ Revoke old preview URL to free memory
+        if (attachment.previewUrl) {
+          try {
+            URL.revokeObjectURL(attachment.previewUrl);
+          } catch (e) {
+            console.warn('Failed to revoke old preview URL:', e);
+          }
+        }
+
+        // ✅ Create new preview URL from cropped blob
+        const newPreviewUrl = URL.createObjectURL(data.originalBlob);
+
+        // ✅ Generate new filename with timestamp
+        const timestamp = Date.now();
+        const fileExtension = attachment.fileName.split('.').pop() || 'jpg';
+        const newFileName = `cropped_${timestamp}.${fileExtension}`;
+
+        // ✅ Update selectedAttachment with cropped image data
+        this.selectedAttachment = {
+          ...attachment,
+          blob: data.originalBlob,
+          previewUrl: newPreviewUrl,
+          fileName: newFileName,
+          fileSize: data.originalBlob.size,
+          mimeType: data.originalBlob.type || attachment.mimeType,
+          caption: '', // Initialize empty caption
+        };
+
+        console.log('✅ Cropped attachment ready:', this.selectedAttachment);
+
+        // ✅ Store in Firebase service for cross-page access
+        this.firebaseChatService.setSelectedAttachment(this.selectedAttachment);
+
+        // ✅ Show preview modal
+        this.showPreviewModal = true;
+
+        // ✅ Show success toast
+        const toast = await this.toastCtrl.create({
+          message: 'Image cropped successfully',
+          duration: 1500,
+          color: 'success',
+        });
+        await toast.present();
+      } else if (data && data.cancelled) {
+        // User cancelled cropping - clean up
+        console.log('🚫 Cropping cancelled by user');
+
+        if (attachment.previewUrl) {
+          try {
+            URL.revokeObjectURL(attachment.previewUrl);
+          } catch (e) {
+            console.warn('Failed to revoke preview URL:', e);
+          }
+        }
+      } else if (data && data.error) {
+        // Show error toast
+        const toast = await this.toastCtrl.create({
+          message: data.error,
+          duration: 2000,
+          color: 'danger',
+        });
+        await toast.present();
+      }
+    } catch (error) {
+      console.error('❌ Error opening cropper modal:', error);
+
+      const toast = await this.toastCtrl.create({
+        message: 'Failed to open image editor',
+        duration: 2000,
+        color: 'danger',
+      });
+      await toast.present();
     }
   }
 
-  this.selectedAttachment = null;
-  this.showPreviewModal = false;
-  this.messageText = '';
-  
-  console.log('🗑️ Attachment cancelled');
-}
+  /**
+   * ❌ Cancel attachment and close preview modal
+   */
+  cancelAttachment() {
+    // Revoke object URL to prevent memory leaks
+    if (this.selectedAttachment?.previewUrl) {
+      try {
+        URL.revokeObjectURL(this.selectedAttachment.previewUrl);
+      } catch (e) {
+        console.warn('Failed to revoke preview URL:', e);
+      }
+    }
 
-/**
- * 📤 Navigate to contact list with attachment and caption
- */
-async goToContactList() {
-  if (!this.selectedAttachment) {
-    const toast = await this.toastCtrl.create({
-      message: 'No attachment to send',
-      duration: 2000,
-      color: 'warning'
-    });
-    await toast.present();
-    return;
+    this.selectedAttachment = null;
+    this.showPreviewModal = false;
+    this.messageText = '';
+
+    console.log('🗑️ Attachment cancelled');
   }
 
-  console.log('📤 Navigating to contact list with attachment');
-  
-  // ✅ Add caption to attachment object
-  this.selectedAttachment.caption = this.messageText.trim();
-  
-  // ✅ Update in Firebase service
-  this.firebaseChatService.setSelectedAttachment(this.selectedAttachment);
-  
-  // ✅ Close preview modal
-  this.showPreviewModal = false;
-  
-  // ✅ Navigate with state
-  setTimeout(() => {
-    this.router.navigate(['/select-contact-list'], {
-      state: {
-        attachmentData: this.selectedAttachment,
-        caption: this.messageText.trim(),
-        fromCamera: true
-      }
-    });
-    
-    // ✅ Clear local state after navigation
-    this.messageText = '';
-  }, 100);
-}
+  /**
+   * 📤 Navigate to contact list with attachment and caption
+   */
+  async goToContactList() {
+    if (!this.selectedAttachment) {
+      const toast = await this.toastCtrl.create({
+        message: 'No attachment to send',
+        duration: 2000,
+        color: 'warning',
+      });
+      await toast.present();
+      return;
+    }
+
+    console.log('📤 Navigating to contact list with attachment');
+
+    // ✅ Add caption to attachment object
+    this.selectedAttachment.caption = this.messageText.trim();
+
+    // ✅ Update in Firebase service
+    this.firebaseChatService.setSelectedAttachment(this.selectedAttachment);
+
+    // ✅ Close preview modal
+    this.showPreviewModal = false;
+
+    // ✅ Navigate with state
+    setTimeout(() => {
+      this.router.navigate(['/select-contact-list'], {
+        state: {
+          attachmentData: this.selectedAttachment,
+          caption: this.messageText.trim(),
+          fromCamera: true,
+        },
+      });
+
+      // ✅ Clear local state after navigation
+      this.messageText = '';
+    }, 100);
+  }
 
   /**
    * Convert blob to data URL
@@ -2344,8 +2354,8 @@ async goToContactList() {
    * Open image cropper modal for camera images
    */
   private async openImageCropperForCamera(
-    imageUrl: string, 
-    originalBlob: Blob, 
+    imageUrl: string,
+    originalBlob: Blob,
     format: string
   ) {
     const modal = await this.modalController.create({
@@ -2393,7 +2403,6 @@ async goToContactList() {
         color: 'success',
       });
       await toast.present();
-
     } else if (data?.error) {
       // Show error toast
       const toast = await this.toastCtrl.create({
@@ -2417,7 +2426,7 @@ async goToContactList() {
   //       console.warn('Failed to revoke preview URL:', e);
   //     }
   //   }
-    
+
   //   this.selectedAttachment = null;
   //   this.showPreviewModal = false;
   //   this.messageText = '';
@@ -2428,9 +2437,9 @@ async goToContactList() {
   //  */
   // async goToContactList() {
   //   console.log('Navigating to contact list with attachment');
-    
+
   //   this.showPreviewModal = false;
-    
+
   //   setTimeout(() => {
   //     this.router.navigate(['/select-contact-list'], {
   //       state: {
@@ -2456,7 +2465,6 @@ async goToContactList() {
     //   await BarcodeScanner.prepare();
     //   await BarcodeScanner.hideBackground();
     //   document.body.classList.add('scanner-active');
-
     //   const result = await BarcodeScanner.startScan();
     //   if (result?.hasContent) {
     //     this.scannedText = result.content;
@@ -2512,8 +2520,8 @@ async goToContactList() {
           const isTyping = entry
             ? !!entry.typing
             : Object.keys(val).length === 0
-              ? false
-              : !!val;
+            ? false
+            : !!val;
 
           chat.isTyping = !!isTyping;
           chat.typingText = isTyping ? chat.name || 'typing...' : null;
@@ -2564,10 +2572,10 @@ async goToContactList() {
       if (unsub) {
         try {
           unsub();
-        } catch (e) { }
+        } catch (e) {}
         this.typingUnsubs.delete(roomId);
       }
-    } catch (err) { }
+    } catch (err) {}
   }
 
   // try to lookup member name from loaded group members (if available)

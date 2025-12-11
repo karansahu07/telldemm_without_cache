@@ -16,11 +16,14 @@
 
     <ion-buttons class="btn-main-icon" slot="end">
       <ion-button class="custom-search-icon" (click)="focusSearchBar()">
-        <ion-icon slot="icon-only" name="search-outline"></ion-icon>
+        <i class="fa-solid fa-magnifying-glass homemainicons"></i>
       </ion-button>
-      <ion-button (click)="presentContactMenu($event)" class="all-icon-btn">
-        <ion-icon name="ellipsis-vertical" class="call-dout-icon"></ion-icon>
-      </ion-button>
+      <ion-button
+          (click)="presentContactMenu($event)"
+        >
+          <!-- <img src="assets/images/dots (1).svg" alt="" /> -->
+          <i class="fa-solid fa-ellipsis-vertical homemainicons"></i>
+        </ion-button>
     </ion-buttons>
   </ion-toolbar>
 

@@ -135,7 +135,7 @@ ion-input.custom-search-input .native-input {
 
 /* Pill toolbar that holds the search bar (optional) */
 .custom-search-toolbar {
-  border-radius: 77px;
+  // border-radius: 77px;
   height: auto;
   width: 97%;
   margin: 4px 0 0 7px;
@@ -169,4 +169,82 @@ ion-avatar img{
 /* Dark-mode polish */
 @media (prefers-color-scheme: dark) {
   .custom-search-container { box-shadow: 0 1px 2px rgba(0,0,0,.18); }
+}
+
+.homemainicons {
+  color: white;
+  background: #bc8c2c;
+  font-size: 18px;
+  border-radius: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 34px;
+  width: 34px;
+}
+
+/* Search Toolbar Holder */
+.custom-search-toolbar {
+  --background: var(--ion-toolbar-background, var(--ion-background-color));
+  padding: 6px 10px;
+  box-shadow: none;
+  border-bottom: 1px solid var(--ion-border-color);
+}
+
+/* Search Container */
+.custom-search-container {
+  display: flex;
+  align-items: center;
+  // width: 100%;
+  // height: 46px;
+  background: var(--ion-item-background);
+  border-radius: 25px;
+  padding: 0 12px;
+  border: 1px solid var(--ion-border-color);
+  box-shadow: 0 1px 3px rgba(0,0,0,.08);
+}
+
+/* Back Icon */
+.search-back-icon {
+  font-size: 23px;
+  margin-right: 8px;
+  color: var(--ion-text-color);
+}
+
+/* Search Input */
+.custom-search-input {
+  flex: 1;
+  height: 100%;
+  --padding-start: 0;
+  --padding-end: 0;
+  --background: transparent;
+  color: var(--ion-text-color);
+  font-size: 15px;
+}
+
+.custom-search-input .native-input {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  height: 100% !important;
+}
+
+/* Keyboard Toggle Icon */
+.search-keyboard-icon {
+  font-size: 23px;
+  margin-left: 8px;
+  color: var(--ion-text-color);
+}
+
+/* Extra: Hover effects (nice polish) */
+.search-back-icon:active,
+.search-keyboard-icon:active {
+  transform: scale(0.88);
+  opacity: 0.7;
+}
+
+/* Dark-mode */
+@media (prefers-color-scheme: dark) {
+  .custom-search-container {
+    box-shadow: 0 1px 2px rgba(0,0,0,.25);
+  }
 }
