@@ -3098,7 +3098,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
         message: `Reaction added: ${data.emoji}`,
         duration: 1500,
         color: 'success',
-        position: 'bottom',
+        position: 'top',
       });
       await toast.present();
     }
@@ -3478,6 +3478,8 @@ async openCropperModal() {
   // // ============================================
 
   showTranslationOptions = false;
+  // ✅ NEW: Flag to track if send is in progress
+isSendingFromTranslationCard = false;
   myLangCode = 'en';
   receiverLangCode = 'hi';
   myLangLabel = 'English';
@@ -3611,14 +3613,30 @@ async openCropperModal() {
   //   return this.languageMap[code] || code;
   // }
 
-  languageName(code: string): string {
-    const full = this.languageMap[code] || code;
+  // languageName(code: string): string {
+  //   const full = this.languageMap[code] || code;
 
-    // Remove anything inside parentheses: (India), (Mexico), etc.
-    const cleaned = full.replace(/\s*\(.*?\)/g, '');
+  //   // Remove anything inside parentheses: (India), (Mexico), etc.
+  //   const cleaned = full.replace(/\s*\(.*?\)/g, '');
 
-    return cleaned.trim();
-  }
+  //   return cleaned.trim();
+  // }
+
+  
+/**
+ * ✅ UPDATED: languageName method - removes country codes in parentheses
+ */
+/**
+ * ✅ UPDATED: languageName method - removes country codes in parentheses
+ */
+languageName(code: string): string {
+  const full = this.languageMap[code] || code;
+  
+  // Remove anything inside parentheses: (India), (Mexico), etc.
+  const cleaned = full.replace(/\s*\(.*?\)/g, '');
+  
+  return cleaned.trim();
+}
 
   apiLanguageCode(localeCode: string): string {
     const specialCases: Record<string, string> = {
@@ -3931,33 +3949,250 @@ async openCropperModal() {
   /**
    * ✅ UPDATED: Fetch custom language translation + receiver language (parallel)
    */
-  async fetchCustomTranslation(
-    mode: 'translateCustom',
-    originalText: string,
-    targetCode: string,
-    targetLabel: string,
-    targetApiLang: string
-  ) {
-    const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
+  // async fetchCustomTranslation(
+  //   mode: 'translateCustom',
+  //   originalText: string,
+  //   targetCode: string,
+  //   targetLabel: string,
+  //   targetApiLang: string
+  // ) {
+  //   const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
+
+  //   const promises: Promise<any>[] = [];
+
+  //   // ✅ Fetch custom language translation
+  //   const customParams = new HttpParams()
+  //     .set('text', originalText)
+  //     .set('to', targetApiLang);
+
+  //   promises.push(
+  //     this.http
+  //       .get(this.translationApiBase, {
+  //         params: customParams,
+  //         responseType: 'json',
+  //       })
+  //       .toPromise()
+  //   );
+
+  //   // ✅ Fetch receiver language translation (if different from custom selected)
+  //   if (recvApiLang !== targetApiLang) {
+  //     const recvParams = new HttpParams()
+  //       .set('text', originalText)
+  //       .set('to', recvApiLang);
+
+  //     promises.push(
+  //       this.http
+  //         .get(this.translationApiBase, {
+  //           params: recvParams,
+  //           responseType: 'json',
+  //         })
+  //         .toPromise()
+  //     );
+  //   }
+
+  //   try {
+  //     const results = await Promise.all(promises);
+
+  //     const customResponse = results[0];
+  //     const receiverResponse = results[1]; // undefined if same language
+
+  //     if (customResponse?.success && customResponse.translatedText) {
+  //       const detectedLang = customResponse.detectedSource || 'unknown';
+  //       const detectedLabel =
+  //         this.languageName(this.normalizeLocaleCode(detectedLang)) ||
+  //         detectedLang;
+
+  //       let receiverTranslation = null;
+  //       if (receiverResponse?.success && receiverResponse.translatedText) {
+  //         receiverTranslation = receiverResponse.translatedText;
+  //       }
+
+  //       this.showCustomTranslationCard(
+  //         mode,
+  //         originalText,
+  //         targetCode,
+  //         targetLabel,
+  //         customResponse.translatedText,
+  //         detectedLang,
+  //         detectedLabel,
+  //         receiverTranslation
+  //       );
+  //     } else {
+  //       this.showToast('Translation failed', 'warning');
+  //     }
+
+  //     this.isTranslatingCustom = false;
+  //   } catch (err) {
+  //     console.error('Translation error', err);
+  //     this.showToast('Translation failed', 'danger');
+  //     this.isTranslatingCustom = false;
+  //   }
+  // }
+
+
+  // ========================================
+  // 🎨 SHOW CUSTOM TRANSLATION CARD
+  // ========================================
+/**
+ * ✅ UPDATED: Fetch custom language translation + receiver language (parallel)
+ * Prevents translation when source and target are the same
+ */
+// async fetchCustomTranslation(
+//   mode: 'translateCustom',
+//   originalText: string,
+//   targetCode: string,
+//   targetLabel: string,
+//   targetApiLang: string
+// ) {
+//   const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
+
+//   // First, detect source language
+//   const detectParams = new HttpParams()
+//     .set('text', originalText)
+//     .set('to', targetApiLang);
+
+//   try {
+//     const detectResponse: any = await this.http
+//       .get(this.translationApiBase, {
+//         params: detectParams,
+//         responseType: 'json',
+//       })
+//       .toPromise();
+
+//     if (!detectResponse?.success) {
+//       this.showToast('Translation failed', 'warning');
+//       this.isTranslatingCustom = false;
+//       return;
+//     }
+
+//     const detectedLang = detectResponse.detectedSource || 'unknown';
+//     const detectedApiLang = this.apiLanguageCode(detectedLang);
+//     const detectedLabel =
+//       this.languageName(this.normalizeLocaleCode(detectedLang)) || detectedLang;
+
+//     // ✅ Check if source and target are the same
+//     if (detectedApiLang === targetApiLang) {
+//       this.showToast(
+//         `Already in ${targetLabel}. No translation needed.`,
+//         'warning'
+//       );
+//       this.isTranslatingCustom = false;
+//       return;
+//     }
+
+//     const promises: Promise<any>[] = [];
+//     let needsReceiverTranslation = false;
+
+//     // ✅ Custom language translation (already fetched above)
+//     const customTranslation = detectResponse.translatedText;
+
+//     // ✅ Fetch receiver language translation only if different from both source and custom
+//     if (
+//       recvApiLang !== targetApiLang &&
+//       recvApiLang !== detectedApiLang
+//     ) {
+//       needsReceiverTranslation = true;
+//       const recvParams = new HttpParams()
+//         .set('text', originalText)
+//         .set('to', recvApiLang);
+
+//       promises.push(
+//         this.http
+//           .get(this.translationApiBase, {
+//             params: recvParams,
+//             responseType: 'json',
+//           })
+//           .toPromise()
+//       );
+//     }
+
+//     let receiverTranslation = null;
+//     if (needsReceiverTranslation) {
+//       const results = await Promise.all(promises);
+//       const receiverResponse = results[0];
+//       if (receiverResponse?.success && receiverResponse.translatedText) {
+//         receiverTranslation = receiverResponse.translatedText;
+//       }
+//     }
+
+//     this.showCustomTranslationCard(
+//       mode,
+//       originalText,
+//       targetCode,
+//       targetLabel,
+//       customTranslation,
+//       detectedLang,
+//       detectedLabel,
+//       receiverTranslation
+//     );
+
+//     this.isTranslatingCustom = false;
+//   } catch (err) {
+//     console.error('Translation error', err);
+//     this.showToast('Translation failed', 'danger');
+//     this.isTranslatingCustom = false;
+//   }
+// }
+
+/**
+ * ✅ UPDATED: Fetch custom language translation + receiver language (parallel)
+ * Prevents translation when source and target are the same
+ */
+async fetchCustomTranslation(
+  mode: 'translateCustom',
+  originalText: string,
+  targetCode: string,
+  targetLabel: string,
+  targetApiLang: string
+) {
+  const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
+
+  // First, detect source language
+  const detectParams = new HttpParams()
+    .set('text', originalText)
+    .set('to', targetApiLang);
+
+  try {
+    const detectResponse: any = await this.http
+      .get(this.translationApiBase, {
+        params: detectParams,
+        responseType: 'json',
+      })
+      .toPromise();
+
+    if (!detectResponse?.success) {
+      this.showToast('Translation failed', 'warning');
+      this.isTranslatingCustom = false;
+      return;
+    }
+
+    const detectedLang = detectResponse.detectedSource || 'unknown';
+    const detectedApiLang = this.apiLanguageCode(detectedLang);
+    const detectedLabel =
+      this.languageName(this.normalizeLocaleCode(detectedLang)) || detectedLang;
+
+    // ✅ Check if source and target are the same
+    if (detectedApiLang === targetApiLang) {
+      this.showToast(
+        `Already in ${targetLabel}. No translation needed.`,
+        'warning'
+      );
+      this.isTranslatingCustom = false;
+      return;
+    }
 
     const promises: Promise<any>[] = [];
+    let needsReceiverTranslation = false;
 
-    // ✅ Fetch custom language translation
-    const customParams = new HttpParams()
-      .set('text', originalText)
-      .set('to', targetApiLang);
+    // ✅ Custom language translation (already fetched above)
+    const customTranslation = detectResponse.translatedText;
 
-    promises.push(
-      this.http
-        .get(this.translationApiBase, {
-          params: customParams,
-          responseType: 'json',
-        })
-        .toPromise()
-    );
-
-    // ✅ Fetch receiver language translation (if different from custom selected)
-    if (recvApiLang !== targetApiLang) {
+    // ✅ Fetch receiver language translation only if different from both source and custom
+    if (
+      recvApiLang !== targetApiLang &&
+      recvApiLang !== detectedApiLang
+    ) {
+      needsReceiverTranslation = true;
       const recvParams = new HttpParams()
         .set('text', originalText)
         .set('to', recvApiLang);
@@ -3972,50 +4207,33 @@ async openCropperModal() {
       );
     }
 
-    try {
+    let receiverTranslation = null;
+    if (needsReceiverTranslation) {
       const results = await Promise.all(promises);
-
-      const customResponse = results[0];
-      const receiverResponse = results[1]; // undefined if same language
-
-      if (customResponse?.success && customResponse.translatedText) {
-        const detectedLang = customResponse.detectedSource || 'unknown';
-        const detectedLabel =
-          this.languageName(this.normalizeLocaleCode(detectedLang)) ||
-          detectedLang;
-
-        let receiverTranslation = null;
-        if (receiverResponse?.success && receiverResponse.translatedText) {
-          receiverTranslation = receiverResponse.translatedText;
-        }
-
-        this.showCustomTranslationCard(
-          mode,
-          originalText,
-          targetCode,
-          targetLabel,
-          customResponse.translatedText,
-          detectedLang,
-          detectedLabel,
-          receiverTranslation
-        );
-      } else {
-        this.showToast('Translation failed', 'warning');
+      const receiverResponse = results[0];
+      if (receiverResponse?.success && receiverResponse.translatedText) {
+        receiverTranslation = receiverResponse.translatedText;
       }
-
-      this.isTranslatingCustom = false;
-    } catch (err) {
-      console.error('Translation error', err);
-      this.showToast('Translation failed', 'danger');
-      this.isTranslatingCustom = false;
     }
+
+    this.showCustomTranslationCard(
+      mode,
+      originalText,
+      targetCode,
+      targetLabel,
+      customTranslation,
+      detectedLang,
+      detectedLabel,
+      receiverTranslation
+    );
+
+    this.isTranslatingCustom = false;
+  } catch (err) {
+    console.error('Translation error', err);
+    this.showToast('Translation failed', 'danger');
+    this.isTranslatingCustom = false;
   }
-
-
-  // ========================================
-  // 🎨 SHOW CUSTOM TRANSLATION CARD
-  // ========================================
-
+}
   showCustomTranslationCard(
     mode: 'translateCustom',
     originalText: string,
@@ -4093,51 +4311,107 @@ async openCropperModal() {
   /**
    * Fetch ONLY receiver translation (with auto-detect)
    */
-  async fetchReceiverTranslationOnly(
-    mode: 'translateToReceiver',
-    originalText: string,
-    recvApiLang: string
-  ) {
-    // ✅ Auto-detect source language
-    const params = new HttpParams()
-      .set('text', originalText)
-      .set('to', recvApiLang);
+  // async fetchReceiverTranslationOnly(
+  //   mode: 'translateToReceiver',
+  //   originalText: string,
+  //   recvApiLang: string
+  // ) {
+  //   // ✅ Auto-detect source language
+  //   const params = new HttpParams()
+  //     .set('text', originalText)
+  //     .set('to', recvApiLang);
 
-    this.http
-      .get(this.translationApiBase, { params, responseType: 'json' })
-      .subscribe({
-        next: (response: any) => {
-          if (response.success && response.translatedText) {
-            const detectedLang = response.detectedSource || 'unknown';
-            const detectedLabel =
-              this.languageName(this.normalizeLocaleCode(detectedLang)) ||
-              detectedLang;
+  //   this.http
+  //     .get(this.translationApiBase, { params, responseType: 'json' })
+  //     .subscribe({
+  //       next: (response: any) => {
+  //         if (response.success && response.translatedText) {
+  //           const detectedLang = response.detectedSource || 'unknown';
+  //           const detectedLabel =
+  //             this.languageName(this.normalizeLocaleCode(detectedLang)) ||
+  //             detectedLang;
 
-            this.showReceiverOnlyCard(
-              mode,
-              originalText,
-              response.translatedText,
-              detectedLang,
-              detectedLabel
-            );
-          } else {
-            this.showToast('Translation failed', 'warning');
-          }
+  //           this.showReceiverOnlyCard(
+  //             mode,
+  //             originalText,
+  //             response.translatedText,
+  //             detectedLang,
+  //             detectedLabel
+  //           );
+  //         } else {
+  //           this.showToast('Translation failed', 'warning');
+  //         }
 
-          this.isTranslatingToReceiver = false;
-        },
-        error: (err) => {
-          console.error('Translation error', err);
-          this.showToast('Translation failed', 'danger');
-          this.isTranslatingToReceiver = false;
-        },
-      });
-  }
+  //         this.isTranslatingToReceiver = false;
+  //       },
+  //       error: (err) => {
+  //         console.error('Translation error', err);
+  //         this.showToast('Translation failed', 'danger');
+  //         this.isTranslatingToReceiver = false;
+  //       },
+  //     });
+  // }
 
   // ========================================
   // 🎨 SHOW RECEIVER ONLY CARD
   // ========================================
+/**
+ * ✅ UPDATED: Fetch ONLY receiver translation (with source check)
+ */
 
+/**
+ * ✅ UPDATED: Fetch ONLY receiver translation (with source check)
+ */
+async fetchReceiverTranslationOnly(
+  mode: 'translateToReceiver',
+  originalText: string,
+  recvApiLang: string
+) {
+  const params = new HttpParams()
+    .set('text', originalText)
+    .set('to', recvApiLang);
+
+  this.http
+    .get(this.translationApiBase, { params, responseType: 'json' })
+    .subscribe({
+      next: (response: any) => {
+        if (response.success && response.translatedText) {
+          const detectedLang = response.detectedSource || 'unknown';
+          const detectedApiLang = this.apiLanguageCode(detectedLang);
+          const detectedLabel =
+            this.languageName(this.normalizeLocaleCode(detectedLang)) ||
+            detectedLang;
+
+          // ✅ Check if source and target are the same
+          if (detectedApiLang === recvApiLang) {
+            this.showToast(
+              `Already in ${this.receiverLangLabel}. No translation needed.`,
+              'warning'
+            );
+            this.isTranslatingToReceiver = false;
+            return;
+          }
+
+          this.showReceiverOnlyCard(
+            mode,
+            originalText,
+            response.translatedText,
+            detectedLang,
+            detectedLabel
+          );
+        } else {
+          this.showToast('Translation failed', 'warning');
+        }
+
+        this.isTranslatingToReceiver = false;
+      },
+      error: (err) => {
+        console.error('Translation error', err);
+        this.showToast('Translation failed', 'danger');
+        this.isTranslatingToReceiver = false;
+      },
+    });
+}
   showReceiverOnlyCard(
     mode: 'translateToReceiver',
     originalText: string,
@@ -4229,70 +4503,145 @@ async openCropperModal() {
   /**
    * Send Original with auto-translation (with auto-detect)
    */
-  async sendOriginalWithTranslation() {
-    const text = this.messageText?.trim();
-    if (!text) {
-      this.showToast('Type something to send', 'warning');
-      return;
-    }
+  // async sendOriginalWithTranslation() {
+  //   const text = this.messageText?.trim();
+  //   if (!text) {
+  //     this.showToast('Type something to send', 'warning');
+  //     return;
+  //   }
 
-    const allowed = await this.ensureTranslationConsent();
-    if (!allowed) return;
+  //   const allowed = await this.ensureTranslationConsent();
+  //   if (!allowed) return;
 
-    this.isTranslatingOriginal = true;
+  //   this.isTranslatingOriginal = true;
 
-    const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
+  //   const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
 
-    // ✅ Auto-detect source language
-    const params = new HttpParams().set('text', text).set('to', recvApiLang);
+  //   // ✅ Auto-detect source language
+  //   const params = new HttpParams().set('text', text).set('to', recvApiLang);
 
-    this.http
-      .get(this.translationApiBase, { params, responseType: 'json' })
-      .subscribe({
-        next: (response: any) => {
-          if (response.success && response.translatedText) {
-            const detectedLang = response.detectedSource || 'unknown';
-            const detectedLabel =
-              this.languageName(this.normalizeLocaleCode(detectedLang)) ||
-              detectedLang;
+  //   this.http
+  //     .get(this.translationApiBase, { params, responseType: 'json' })
+  //     .subscribe({
+  //       next: (response: any) => {
+  //         if (response.success && response.translatedText) {
+  //           const detectedLang = response.detectedSource || 'unknown';
+  //           const detectedLabel =
+  //             this.languageName(this.normalizeLocaleCode(detectedLang)) ||
+  //             detectedLang;
 
-            const items: TranslationItem[] = [
-              {
-                code: detectedLang,
-                label: detectedLabel + ' (Original)',
-                text: text,
-              },
-              {
-                code: this.receiverLangCode,
-                label:
-                  this.languageName(this.receiverLangCode) +
-                  ' (Receiver will see)',
-                text: response.translatedText,
-              },
-            ];
+  //           const items: TranslationItem[] = [
+  //             {
+  //               code: detectedLang,
+  //               label: detectedLabel + ' (Original)',
+  //               text: text,
+  //             },
+  //             {
+  //               code: this.receiverLangCode,
+  //               label:
+  //                 this.languageName(this.receiverLangCode) +
+  //                 ' (Receiver will see)',
+  //               text: response.translatedText,
+  //             },
+  //           ];
 
-            this.translationCard = {
-              visible: true,
-              mode: 'sendOriginal',
-              items,
-              createdAt: new Date(),
-            };
+  //           this.translationCard = {
+  //             visible: true,
+  //             mode: 'sendOriginal',
+  //             items,
+  //             createdAt: new Date(),
+  //           };
 
-            this.showToast('Preview ready', 'success');
-          } else {
-            this.showToast('Translation failed', 'warning');
-          }
+  //           this.showToast('Preview ready', 'success');
+  //         } else {
+  //           this.showToast('Translation failed', 'warning');
+  //         }
 
-          this.isTranslatingOriginal = false;
-        },
-        error: (err) => {
-          console.error('Translation error', err);
-          this.showToast('Translation failed', 'danger');
-          this.isTranslatingOriginal = false;
-        },
-      });
+  //         this.isTranslatingOriginal = false;
+  //       },
+  //       error: (err) => {
+  //         console.error('Translation error', err);
+  //         this.showToast('Translation failed', 'danger');
+  //         this.isTranslatingOriginal = false;
+  //       },
+  //     });
+  // }
+/**
+ * ✅ UPDATED: Send Original with auto-translation (with source check)
+ */
+/**
+ * ✅ UPDATED: Send Original with auto-translation (with source check)
+ */
+async sendOriginalWithTranslation() {
+  const text = this.messageText?.trim();
+  if (!text) {
+    this.showToast('Type something to send', 'warning');
+    return;
   }
 
+  const allowed = await this.ensureTranslationConsent();
+  if (!allowed) return;
+
+  this.isTranslatingOriginal = true;
+
+  const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
+
+  const params = new HttpParams().set('text', text).set('to', recvApiLang);
+
+  this.http
+    .get(this.translationApiBase, { params, responseType: 'json' })
+    .subscribe({
+      next: (response: any) => {
+        if (response.success && response.translatedText) {
+          const detectedLang = response.detectedSource || 'unknown';
+          const detectedApiLang = this.apiLanguageCode(detectedLang);
+          const detectedLabel =
+            this.languageName(this.normalizeLocaleCode(detectedLang)) ||
+            detectedLang;
+
+          // ✅ Check if source and target are the same
+          if (detectedApiLang === recvApiLang) {
+            // Same language - just send without translation card
+            this.messageText = text;
+            this.sendMessage(); // Call your existing sendMessage method
+            this.isTranslatingOriginal = false;
+            return;
+          }
+
+          const items: TranslationItem[] = [
+            {
+              code: detectedLang,
+              label: detectedLabel,
+              text: text,
+            },
+            {
+              code: this.receiverLangCode,
+              label: this.languageName(this.receiverLangCode) + ' (Receiver)',
+              text: response.translatedText,
+            },
+          ];
+
+          this.translationCard = {
+            visible: true,
+            mode: 'sendOriginal',
+            items,
+            createdAt: new Date(),
+          };
+
+          this.showToast('Preview ready', 'success');
+        } else {
+          this.showToast('Translation failed', 'warning');
+        }
+
+        this.isTranslatingOriginal = false;
+      },
+      error: (err) => {
+        console.error('Translation error', err);
+        this.showToast('Translation failed', 'danger');
+        this.isTranslatingOriginal = false;
+      },
+    });
+}
 
   async sendFromTranslationCard() {
     if (!this.translationCard) return;
@@ -4505,7 +4854,7 @@ async openCropperModal() {
       message: message,
       duration: duration,
       color: color,
-      position: 'bottom',
+      position: 'top',
     });
 
     await toast.present();
@@ -4520,7 +4869,7 @@ async openCropperModal() {
       message: message,
       duration: 2000,
       color: color,
-      position: 'bottom',
+      position: 'top',
       icon: icon,
       buttons: [
         {
