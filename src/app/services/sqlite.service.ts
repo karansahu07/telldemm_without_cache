@@ -174,6 +174,7 @@ export interface IGroup {
   members?: Record<string, IGroupMember>;
   adminIds?: string[];
   createdBy: string;
+  createdByName : string;
   createdAt?: Date | string | number;
   updatedAt?: Date | string | number;
   lastMessage?: string;

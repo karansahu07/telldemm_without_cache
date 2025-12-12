@@ -132,6 +132,7 @@ export class FirebaseChatService {
     presence: null as any | null,
     typing: null as any | null,
   };
+  senderName = '';
 
   constructor(
     private cache: CacheService,
@@ -814,61 +815,12 @@ export class FirebaseChatService {
         });
       };
 
-      // ✅ Setup real-time message listener
-      // this._roomMessageListner = this.listenRoomStream(conv?.roomId as string, {
-      //   onAdd: async (msgKey, data, isNew) => {
-      //     if (!this.currentChat || this.currentChat.roomId !== conv.roomId) {
-      //       console.log('⚠️ Message received but chat is closed, ignoring');
-      //       return;
-      //     }
-      //     if (isNew && data.sender !== this.senderId) {
-      //       try {
-      //         const decryptedText = await this.encryptionService.decrypt(
-      //           data.text as string
-      //         );
-
-      //         const { attachment, ...msg } = data;
-
-      //         console.log('📨 New message received from:', data.sender);
-
-      //         // ✅ Push to UI
-      //         this.pushMsgToChat({
-      //           msgId: msgKey,
-      //           ...msg,
-      //           text: decryptedText,
-      //           attachment: attachment ? { ...attachment } : undefined,
-      //         });
-
-      //         // ✅ Save to SQLite
-      //         await this.sqliteService.saveMessage({
-      //           ...msg,
-      //           msgId: msgKey,
-      //           text: decryptedText,
-      //         });
-
-      //         if (attachment) {
-      //           await this.sqliteService.saveAttachment({
-      //             ...attachment,
-      //             localUrl: '',
-      //             msgId: msgKey,
-      //           });
-      //         }
-
-      //         // ✅ Mark as delivered
-      //         await this.markAsDelivered(msgKey, null, conv.roomId);
-      //       } catch (err) {
-      //         console.error('❌ Error processing new message:', err);
-      //       }
-      //     }
-      //   },
-      //   onChange: async (msgKey, data) => {
-      //     await this.updateMessageLocally({ ...data, msgId: msgKey });
-      //   },
-      //   onRemove(msgKey) {
-      //     console.log(`Message removed: ${msgKey}`);
-      //   },
-      // });
       await this.loadMessages(20, true);
+      console.log("this currrent type", this.currentChat.type)
+      if(this.currentChat.type == 'group'){
+        console.log("called the current chat type sadffffffffffffff")
+        if(!memberIds.includes(this.senderId as string)) return;
+      }
       await this.syncMessagesWithServer();
       if (!this.networkService.isOnline.value) return;
       this._roomMessageListner = this.listenRoomStream(conv?.roomId as string, {
@@ -1010,6 +962,7 @@ export class FirebaseChatService {
   async closeChat() {
     try {
       console.log('🔴 Closing chat:', this.currentChat?.roomId);
+      console.log('🔴 Closing chat sender id is:', this.senderId);
 
       if (this.senderId && this.currentChat?.roomId) {
         await this.clearActiveChat(this.senderId);
@@ -3582,6 +3535,7 @@ export class FirebaseChatService {
   }) {
     try {
       if (!this.senderId) throw new Error('createGroup: senderId not set');
+      this.senderName = this.authService.authData?.name || ''
       const now = Date.now();
       const membersObj: Record<string, IGroupMember> = {};
       const memberIds = members.map((m) => m.userId);
@@ -3605,6 +3559,7 @@ export class FirebaseChatService {
         description: 'Hey I am using Telldemm',
         adminIds: [this.senderId],
         createdBy: this.senderId,
+        createdByName : this.senderName, 
         createdAt: now,
         members: membersObj,
         type: 'group',
@@ -3885,7 +3840,8 @@ export class FirebaseChatService {
         isArchived: false,
         isPinned: false,
         isLocked: false,
-        communityId, // Link to parent community
+        communityId,
+        createdByName: this.senderName
       };
 
       // 5️⃣ General Group structure
@@ -3904,7 +3860,8 @@ export class FirebaseChatService {
         isArchived: false,
         isPinned: false,
         isLocked: false,
-        communityId, // Link to parent community
+        communityId,
+        createdByName: this.senderName
       };
 
       // 6️⃣ Chat metadata for userchats (community entry)

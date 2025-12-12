@@ -76,8 +76,14 @@
     <!-- 🔁 Default Chat Header -->
     <ng-template #defaultHeader>
       <ion-buttons *ngIf="!showSearchBar" slot="start" style="color: black; width: 8%">
-        <ion-back-button [defaultHref]="backUrl"></ion-back-button>
+        <!-- <ion-back-button [defaultHref]="backUrl"></ion-back-button> -->
         <!-- <ion-icon name="arrow-back-outline" class="back-icon"></ion-icon> -->
+         <ion-icon 
+  name="arrow-back-outline" 
+  class="back-icon" 
+  (click)="onBack()"
+  style="font-size: 24px; cursor: pointer;">
+</ion-icon>
       </ion-buttons>
 
       <ng-container *ngIf="!showSearchBar; else searchBar">
@@ -463,7 +469,14 @@
 <!-- Message Input Footer (updated) -->
 <div class="footer-fixed">
   <!-- Normal footer: typing indicator, reply preview, input row -->
-  <div *ngIf="!iBlocked">
+
+    <div *ngIf="!isCurrentUserMember()" style="padding: 16px; text-align: center; background: #f5f5f5; border-top: 1px solid #ddd;">
+    <ion-text color="medium">
+      <p style="margin: 0;">You are not a member of this group</p>
+    </ion-text>
+  </div>
+
+  <div *ngIf="isCurrentUserMember() && !iBlocked">
     <!-- ✅ UPDATED: Typing indicator (above keyboard) -->
     <div class="typing-indicator-wrapper" *ngIf="isReceiverTyping || typingCount > 0">
       <!-- PRIVATE CHAT layout -->

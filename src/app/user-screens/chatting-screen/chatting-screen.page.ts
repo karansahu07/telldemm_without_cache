@@ -299,12 +299,15 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   maxDate: string = new Date().toISOString();
   backUrl = '/home-screen';
 
-   private isUserScrolling = false;
+  private isUserScrolling = false;
   private isNearBottom = true;
   private scrollThreshold = 150; // Distance from bottom to consider "near bottom"
   private isInitialLoad = true;
   private lastScrollTop = 0;
   private scrollDebounceTimer: any;
+
+  private groupMembershipRef: any = null;
+  private groupMembershipUnsubscribe: (() => void) | null = null;
 
   constructor(
     private chatService: FirebaseChatService,
@@ -333,7 +336,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     private presence: PresenceService,
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
-    private fcmService : FcmService,
+    private fcmService: FcmService,
     private actionSheetCtrl: ActionSheetController // private toastCtrl: ToastController, // private modalCtrl: ModalController, // private firebaseChatService : FirebaseChatService
   ) {}
 
@@ -350,15 +353,16 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     this.receiverId = this.route.snapshot.queryParamMap.get('receiverId') || '';
     this.receiver_name =
       nameFromQuery ||
-      (await this.secureStorage.getItem('receiver_name')) || '';
-      this.maxDate = new Date().toISOString();
-       this.route.queryParamMap.subscribe(params => {
+      (await this.secureStorage.getItem('receiver_name')) ||
+      '';
+    this.maxDate = new Date().toISOString();
+    this.route.queryParamMap.subscribe((params) => {
       const from = params.get('from');
 
       if (from === 'archive') {
-        this.backUrl = '/archieved-screen';   // 👈 tumhara archived ka route
+        this.backUrl = '/archieved-screen'; // 👈 tumhara archived ka route
       } else {
-        this.backUrl = '/home-screen';        // 👈 tumhara home ka route
+        this.backUrl = '/home-screen'; // 👈 tumhara home ka route
       }
     });
   }
@@ -402,7 +406,6 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-
   // async ionViewWillEnter() {
   //   await this.chatService.loadMessages(20, true);
   //   this.chatService.syncMessagesWithServer();
@@ -421,37 +424,39 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   //     }
   //   });
 
-   async ionViewWillEnter() {
+  async ionViewWillEnter() {
     // Load initial messages
     // await this.chatService.loadMessages(20, true);
     // this.chatService.syncMessagesWithServer();
-     this.route.queryParamMap.subscribe(params => {
+    this.route.queryParamMap.subscribe((params) => {
       const from = params.get('from');
 
       if (from === 'archive') {
-        this.backUrl = '/archieved-screen';   // 👈 tumhara archived ka route
+        this.backUrl = '/archieved-screen'; // 👈 tumhara archived ka route
       } else {
-        this.backUrl = '/home-screen';        // 👈 tumhara home ka route
+        this.backUrl = '/home-screen'; // 👈 tumhara home ka route
       }
     });
-    
+
     this.chatService.getMessages().subscribe(async (msgs: any) => {
       console.log({ msgs });
-      
+
       if (!msgs || msgs.length === 0) {
         this.groupedMessages = [];
         this.allMessage = [];
         return;
       }
-      
+
       const previousMessageCount = this.groupedMessages.reduce(
         (count, group) => count + group.messages.length,
         0
       );
 
-      this.groupedMessages = (await this.groupMessagesByDate(msgs as any[])) as any[];
+      this.groupedMessages = (await this.groupMessagesByDate(
+        msgs as any[]
+      )) as any[];
       this.allMessage = msgs as IMessage[];
-      
+
       const newMessageCount = this.groupedMessages.reduce(
         (count, group) => count + group.messages.length,
         0
@@ -495,37 +500,124 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
         parts[parts.length - 1];
     } else {
       this.receiverId = currentChat?.roomId || '';
+      this.setupGroupMembershipListener();
     }
     this.receiverProfile =
       (currentChat as any).avatar || (currentChat as any).groupAvatar || null;
     this.chatTitle = currentChat?.title || null;
 
-     if (this.roomId) {
-    await this.fcmService.clearNotificationForRoom(this.roomId);
-    console.log('✅ Notifications cleared for room:', this.roomId);
-  }
+    if (this.roomId) {
+      await this.fcmService.clearNotificationForRoom(this.roomId);
+      console.log('✅ Notifications cleared for room:', this.roomId);
+    }
 
     // ✅ Scroll to bottom after first load
     // setTimeout(() => this.scrollToBottomSmooth(), 100);
+  }
+
+  setupGroupMembershipListener() {
+    if (!this.roomId || this.chatType !== 'group') return;
+
+    const db = getDatabase();
+
+    // Clean up old listener if exists
+    if (this.groupMembershipUnsubscribe) {
+      this.groupMembershipUnsubscribe();
+    }
+
+    // Listen to the members node of this group
+    this.groupMembershipRef = ref(db, `groups/${this.roomId}/members`);
+
+    this.groupMembershipUnsubscribe = onValue(
+      this.groupMembershipRef,
+      (snapshot) => {
+        this.zone.run(() => {
+          const members = snapshot.val() || {};
+
+          // Check if current user is still a member
+          const wasCurrentUserMember = this.isCurrentUserMember();
+          const isStillMember = !!members[this.senderId];
+
+          console.log('🔄 Real-time membership check:', {
+            senderId: this.senderId,
+            wasCurrentUserMember,
+            isStillMember,
+            currentMembers: Object.keys(members),
+          });
+
+          // Update currentConv.members to trigger isCurrentUserMember() change
+          if (this.currentConv) {
+            this.currentConv.members = Object.keys(members);
+          }
+
+          // If membership status changed from member to non-member
+          if (wasCurrentUserMember && !isStillMember) {
+            console.log('⚠️ User removed from group - hiding keyboard');
+
+            // Show toast notification
+            // this.zone.run(async () => {
+            //   const toast = await this.toastCtrl.create({
+            //     message: 'You are no longer a member of this group',
+            //     duration: 3000,
+            //     color: 'warning',
+            //     position: 'top',
+            //   });
+            //   await toast.present();
+            // });
+
+            // Force UI update
+            try {
+              this.cdr.detectChanges();
+            } catch (e) {
+              console.warn('detectChanges error:', e);
+            }
+          }
+        });
+      },
+      (error) => {
+        console.error('❌ Error listening to group membership:', error);
+      }
+    );
+  }
+
+  isCurrentUserMember(): boolean {
+    if (this.chatType !== 'group') {
+      return true;
+    }
+
+    if (
+      !this.currentConv?.members ||
+      !Array.isArray(this.currentConv.members)
+    ) {
+      return false;
+    }
+    return this.currentConv.members.includes(this.senderId);
   }
 
   async ionViewWillLeave() {
     try {
       // await this.chatService.closeChat();
       console.log('Chat is closed');
+
+      // ✅ NEW: Clean up group membership listener when leaving page
+      if (this.groupMembershipUnsubscribe) {
+        this.groupMembershipUnsubscribe();
+        this.groupMembershipUnsubscribe = null;
+      }
     } catch (error) {
       console.error('error in closing chat', error);
     }
   }
-  // async onBack() {
-  //   await this.chatService.closeChat();
-  //   this.router.navigate(['/home-screen']);
-  //   // this.navCtrl.back();
-  // }
 
-    async onBack() {
-    await this.chatService.closeChat();
-    this.navCtrl.navigateBack(this.backUrl);
+  async onBack() {
+    try {
+      await this.chatService.closeChat();
+      console.log('✅ Chat closed from onBack()');
+    } catch (error) {
+      console.error('❌ Error in onBack():', error);
+    } finally {
+      this.navCtrl.navigateBack(this.backUrl);
+    }
   }
 
   private computeMessageStatus(msg: IMessage): UIMessageStatus {
@@ -1221,10 +1313,10 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   //   }, 300);
   // }
 
-   onDateSelected(event: any) {
+  onDateSelected(event: any) {
     const selectedDateObj = new Date(event.detail.value);
     const today = new Date();
-    
+
     // ✅ Additional validation: Prevent future dates
     if (selectedDateObj > today) {
       console.warn('Future date selected, ignoring');
@@ -1252,7 +1344,6 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
       }
     }, 300);
   }
-
 
   openDatePicker() {
     this.showDateModal = true;
@@ -1612,7 +1703,9 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
               });
 
               // Now apply deletions to server/db for each selected message
-              const isLastMessageUpdateNeeded = this.selectedMessages.some(m=> m.isLast)
+              const isLastMessageUpdateNeeded = this.selectedMessages.some(
+                (m) => m.isLast
+              );
               for (const msg of [...this.selectedMessages]) {
                 const key = msg.msgId;
                 if (!key) continue;
@@ -1630,15 +1723,18 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
                 // DELETE FOR EVERYONE: attempt for all messages (not restricted to sender)
                 if (doForEveryone) {
                   try {
-                   await this.chatService.deleteMessage(key, true);
+                    await this.chatService.deleteMessage(key, true);
                   } catch (err) {
                     console.warn('deleteForEveryone failed for key', key, err);
                   }
                 }
               }
 
-              if(isLastMessageUpdateNeeded){
-                const lastMessage = await this.sqliteService.getLastMessage(this.roomId, currentUserId);
+              if (isLastMessageUpdateNeeded) {
+                const lastMessage = await this.sqliteService.getLastMessage(
+                  this.roomId,
+                  currentUserId
+                );
                 await this.chatService.updateLastMessageInMeta(lastMessage);
               }
 
@@ -2074,10 +2170,8 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     return message.msgId;
   }
 
- 
-
   //new this method used in pagination
-    async ngAfterViewInit() {
+  async ngAfterViewInit() {
     // Setup scroll listener for pagination
     if (this.ionContent) {
       this.ionContent.ionScroll.subscribe(async (event: any) => {
@@ -2103,17 +2197,21 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
    */
   async handleScroll(event: any) {
     const scrollTop = event.detail.scrollTop;
-    
+
     // Calculate if user is near bottom
     const scrollElement = await this.ionContent.getScrollElement();
     const scrollHeight = scrollElement.scrollHeight;
     const clientHeight = scrollElement.clientHeight;
     const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
-    
+
     this.isNearBottom = distanceFromBottom < this.scrollThreshold;
 
     // Load older messages when scrolling near top
-    if (scrollTop < 100 && !this.isLoadingMore && this.chatService.hasMoreMessages) {
+    if (
+      scrollTop < 100 &&
+      !this.isLoadingMore &&
+      this.chatService.hasMoreMessages
+    ) {
       await this.loadOlderMessages();
     }
   }
@@ -2153,7 +2251,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
       await this.chatService.loadMessages();
 
       // Wait for DOM to update
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Calculate new scroll position to maintain user's view
       const newScrollHeight = scrollElement.scrollHeight;
@@ -2192,7 +2290,9 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
         this.scrollToBottomSmooth();
       } else {
         // User is reading older messages - don't disturb
-        console.log('📨 New message received but user is scrolling up - not auto-scrolling');
+        console.log(
+          '📨 New message received but user is scrolling up - not auto-scrolling'
+        );
       }
     }
   }
@@ -2231,7 +2331,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
    * 🎯 Wait for DOM to update
    */
   private waitForDOM(): Promise<void> {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       requestAnimationFrame(() => {
         setTimeout(() => resolve(), 50);
       });
@@ -2368,8 +2468,6 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   //     const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
   //     (msg as any).time = `${formattedHours}:${formattedMinutes} ${ampm}`;
 
-     
-
   //     const isToday =
   //       timestamp.getDate() === today.getDate() &&
   //       timestamp.getMonth() === today.getMonth() &&
@@ -2404,63 +2502,63 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   //   }));
   // }
 
-// async groupMessagesByDate(messages: Message[]) {
-//   const grouped: { [date: string]: any[] } = {};
-//   const today = new Date();
-//   const yesterday = new Date();
-//   yesterday.setDate(today.getDate() - 1);
+  // async groupMessagesByDate(messages: Message[]) {
+  //   const grouped: { [date: string]: any[] } = {};
+  //   const today = new Date();
+  //   const yesterday = new Date();
+  //   yesterday.setDate(today.getDate() - 1);
 
-//   if (!messages || messages.length === 0) {
-//     return [];
-//   }
+  //   if (!messages || messages.length === 0) {
+  //     return [];
+  //   }
 
-//   const visibleMessages = messages.filter(msg => !this.isMessageHiddenForUser(msg));
+  //   const visibleMessages = messages.filter(msg => !this.isMessageHiddenForUser(msg));
 
-//   for (const msg of visibleMessages) {
-//     const timestamp = new Date(msg.timestamp);
+  //   for (const msg of visibleMessages) {
+  //     const timestamp = new Date(msg.timestamp);
 
-//     const hours = timestamp.getHours();
-//     const minutes = timestamp.getMinutes();
-//     const ampm = hours >= 12 ? 'PM' : 'AM';
-//     const formattedHours = hours % 12 || 12;
-//     const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
-//     (msg as any).time = `${formattedHours}:${formattedMinutes} ${ampm}`;
+  //     const hours = timestamp.getHours();
+  //     const minutes = timestamp.getMinutes();
+  //     const ampm = hours >= 12 ? 'PM' : 'AM';
+  //     const formattedHours = hours % 12 || 12;
+  //     const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
+  //     (msg as any).time = `${formattedHours}:${formattedMinutes} ${ampm}`;
 
-//     const isToday =
-//       timestamp.getDate() === today.getDate() &&
-//       timestamp.getMonth() === today.getMonth() &&
-//       timestamp.getFullYear() === today.getFullYear();
+  //     const isToday =
+  //       timestamp.getDate() === today.getDate() &&
+  //       timestamp.getMonth() === today.getMonth() &&
+  //       timestamp.getFullYear() === today.getFullYear();
 
-//     const isYesterday =
-//       timestamp.getDate() === yesterday.getDate() &&
-//       timestamp.getMonth() === yesterday.getMonth() &&
-//       timestamp.getFullYear() === yesterday.getFullYear();
+  //     const isYesterday =
+  //       timestamp.getDate() === yesterday.getDate() &&
+  //       timestamp.getMonth() === yesterday.getMonth() &&
+  //       timestamp.getFullYear() === yesterday.getFullYear();
 
-//     let label = '';
-//     if (isToday) {
-//       label = 'Today';
-//     } else if (isYesterday) {
-//       label = 'Yesterday';
-//     } else {
-//       const dd = timestamp.getDate().toString().padStart(2, '0');
-//       const mm = (timestamp.getMonth() + 1).toString().padStart(2, '0');
-//       const yyyy = timestamp.getFullYear();
-//       label = `${dd}/${mm}/${yyyy}`;
-//     }
+  //     let label = '';
+  //     if (isToday) {
+  //       label = 'Today';
+  //     } else if (isYesterday) {
+  //       label = 'Yesterday';
+  //     } else {
+  //       const dd = timestamp.getDate().toString().padStart(2, '0');
+  //       const mm = (timestamp.getMonth() + 1).toString().padStart(2, '0');
+  //       const yyyy = timestamp.getFullYear();
+  //       label = `${dd}/${mm}/${yyyy}`;
+  //     }
 
-//     if (!grouped[label]) {
-//       grouped[label] = [];
-//     }
-//     grouped[label].push(msg);
-//   }
+  //     if (!grouped[label]) {
+  //       grouped[label] = [];
+  //     }
+  //     grouped[label].push(msg);
+  //   }
 
-//   return Object.keys(grouped)
-//     .filter(date => grouped[date].length > 0)
-//     .map((date) => ({
-//       date,
-//       messages: grouped[date],
-//     }));
-// }
+  //   return Object.keys(grouped)
+  //     .filter(date => grouped[date].length > 0)
+  //     .map((date) => ({
+  //       date,
+  //       messages: grouped[date],
+  //     }));
+  // }
 
   isLoadingIndicatorVisible(): boolean {
     return this.isLoadingMore;
@@ -2634,7 +2732,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     this.replyToMessage = message;
   }
 
-   /**
+  /**
    * 🎯 Send message with smart scroll
    */
   async sendMessage() {
@@ -2683,8 +2781,10 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
       // Handle attachment if present
       if (this.selectedAttachment) {
         try {
-          const mediaId = await this.uploadAttachmentToS3(this.selectedAttachment);
-          
+          const mediaId = await this.uploadAttachmentToS3(
+            this.selectedAttachment
+          );
+
           localMessage.attachment = {
             type: this.selectedAttachment.type,
             msgId,
@@ -2695,10 +2795,11 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
             caption: plainText || '',
           };
 
-          localMessage.attachment.localUrl = await this.FileService.saveFileToSent(
-            this.selectedAttachment.fileName,
-            this.selectedAttachment.blob
-          );
+          localMessage.attachment.localUrl =
+            await this.FileService.saveFileToSent(
+              this.selectedAttachment.fileName,
+              this.selectedAttachment.blob
+            );
         } catch (error) {
           console.error('Failed to upload attachment:', error);
           const toast = await this.toastCtrl.create({
@@ -2721,13 +2822,13 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
       this.selectedAttachment = null;
       this.showPreviewModal = false;
       this.replyToMessage = null;
-      
+
       await this.stopTypingSignal();
-      
+
       // Always scroll to bottom after sending
       await this.waitForDOM();
       this.scrollToBottomSmooth();
-      
+
       this.chatService.setTypingStatus(false);
       if (this.typingTimeout) {
         clearTimeout(this.typingTimeout);
@@ -2759,7 +2860,9 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // Filter out hidden messages
-    const visibleMessages = messages.filter(msg => !this.isMessageHiddenForUser(msg));
+    const visibleMessages = messages.filter(
+      (msg) => !this.isMessageHiddenForUser(msg)
+    );
 
     for (const msg of visibleMessages) {
       const timestamp = new Date(msg.timestamp);
@@ -2800,7 +2903,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     }
 
     return Object.keys(grouped)
-      .filter(date => grouped[date].length > 0)
+      .filter((date) => grouped[date].length > 0)
       .map((date) => ({
         date,
         messages: grouped[date],
@@ -2858,11 +2961,9 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
       : null;
   }
 
-    isEmptyObject(obj: any): boolean {
-  return obj && Object.keys(obj).length === 0;
-}
-
- 
+  isEmptyObject(obj: any): boolean {
+    return obj && Object.keys(obj).length === 0;
+  }
 
   private async uploadAttachmentToS3(attachment: any): Promise<string> {
     try {
@@ -2909,26 +3010,24 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     // console.log("this msg is show in preview modal", msg);
 
     try {
-     
       let localUrl = msg.attachment.localUrl;
 
       if (!localUrl) {
-     
-
-          if (!msg.isMe) {
-           const relativePath = await this.downloadAndSaveLocally(
-              this.escapeUrl(msg.attachment.cdnUrl),
-              msg.attachment.fileName
+        if (!msg.isMe) {
+          const relativePath = await this.downloadAndSaveLocally(
+            this.escapeUrl(msg.attachment.cdnUrl),
+            msg.attachment.fileName
+          );
+          if (relativePath) {
+            localUrl = await this.FileService.getFilePreview(
+              relativePath as string
             );
-            if(relativePath){
-              localUrl = await this.FileService.getFilePreview(relativePath as string)
-              // attachmentUrl = localUrl;
-              this.sqliteService.updateAttachment(msg.msgId, {localUrl})
-           }
+            // attachmentUrl = localUrl;
+            this.sqliteService.updateAttachment(msg.msgId, { localUrl });
           }
+        }
         // }
       }
-      
 
       const modal = await this.modalCtrl.create({
         component: AttachmentPreviewModalComponent,
@@ -2944,7 +3043,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
 
       await modal.present();
       const { data } = await modal.onDidDismiss();
-      console.log({data})
+      console.log({ data });
 
       if (data && data.action === 'reply') {
         this.setReplyToMessage(data.message);
@@ -3071,48 +3170,48 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async openEmojiKeyboard(msg: IMessage) {
-  try {
-    const modal = await this.modalCtrl.create({
-      component: EmojiPickerModalComponent,
-      cssClass: 'emoji-picker-modal',
-      breakpoints: [0, 0.5, 0.75, 1],
-      initialBreakpoint: 0.75,
-      backdropDismiss: true,
-    });
+    try {
+      const modal = await this.modalCtrl.create({
+        component: EmojiPickerModalComponent,
+        cssClass: 'emoji-picker-modal',
+        breakpoints: [0, 0.5, 0.75, 1],
+        initialBreakpoint: 0.75,
+        backdropDismiss: true,
+      });
 
-    await modal.present();
+      await modal.present();
 
-    const { data } = await modal.onDidDismiss();
+      const { data } = await modal.onDidDismiss();
 
-    if (data && data.selected && data.emoji) {
-      console.log('✅ Emoji selected:', data.emoji);
-      
-      // Add reaction to the message
-      await this.addReaction(msg, data.emoji);
-      
-      // Clear selection
-      this.selectedMessages = [];
-      
-      // Show success toast
+      if (data && data.selected && data.emoji) {
+        console.log('✅ Emoji selected:', data.emoji);
+
+        // Add reaction to the message
+        await this.addReaction(msg, data.emoji);
+
+        // Clear selection
+        this.selectedMessages = [];
+
+        // Show success toast
+        const toast = await this.toastCtrl.create({
+          message: `Reaction added: ${data.emoji}`,
+          duration: 1500,
+          color: 'success',
+          position: 'top',
+        });
+        await toast.present();
+      }
+    } catch (error) {
+      console.error('❌ Error opening emoji picker:', error);
+
       const toast = await this.toastCtrl.create({
-        message: `Reaction added: ${data.emoji}`,
-        duration: 1500,
-        color: 'success',
-        position: 'top',
+        message: 'Failed to open emoji picker',
+        duration: 2000,
+        color: 'danger',
       });
       await toast.present();
     }
-  } catch (error) {
-    console.error('❌ Error opening emoji picker:', error);
-    
-    const toast = await this.toastCtrl.create({
-      message: 'Failed to open emoji picker',
-      duration: 2000,
-      color: 'danger',
-    });
-    await toast.present();
   }
-}
 
   onEmojiPicked(ev: CustomEvent) {
     const val = (ev.detail as any)?.value || '';
@@ -3167,28 +3266,31 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async onReactionBadgeClick(
-  ev: Event,
-  msg: IMessage,
-  badge: { emoji: string | null; userId: string }
-) {
-  ev.stopPropagation();
-  
-  const currentUserId = this.senderId;
-  
-  // If user clicks any reaction badge, toggle their reaction with same emoji
-  const currentReaction = msg.reactions?.find((r) => r.userId === currentUserId);
-  const newEmoji = currentReaction?.emoji === badge.emoji ? null : badge.emoji;
-  
-  try {
-    await this.chatService.setQuickReaction({
-      msgId: msg.msgId,
-      userId: currentUserId,
-      emoji: newEmoji,
-    });
-  } catch (error) {
-    console.error('Failed to update reaction:', error);
+    ev: Event,
+    msg: IMessage,
+    badge: { emoji: string | null; userId: string }
+  ) {
+    ev.stopPropagation();
+
+    const currentUserId = this.senderId;
+
+    // If user clicks any reaction badge, toggle their reaction with same emoji
+    const currentReaction = msg.reactions?.find(
+      (r) => r.userId === currentUserId
+    );
+    const newEmoji =
+      currentReaction?.emoji === badge.emoji ? null : badge.emoji;
+
+    try {
+      await this.chatService.setQuickReaction({
+        msgId: msg.msgId,
+        userId: currentUserId,
+        emoji: newEmoji,
+      });
+    } catch (error) {
+      console.error('Failed to update reaction:', error);
+    }
   }
-}
 
   goToProfile() {
     // const isGroup = this.chatType === 'group';
@@ -3232,7 +3334,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
 
   goToCallingScreen() {
     // this.router.navigate(['/calling-screen']);
-    console.log("will work in future")
+    console.log('will work in future');
   }
 
   async openCamera() {
@@ -3268,7 +3370,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
         fileSize: blob.size,
         previewUrl: previewUrl,
       };
-      console.log("this selected attachment", this.selectedAttachment);
+      console.log('this selected attachment', this.selectedAttachment);
 
       // Show preview modal
       this.showPreviewModal = true;
@@ -3285,83 +3387,82 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // ========================================
-// 📸 CROPPER MODAL INTEGRATION
-// ========================================
+  // 📸 CROPPER MODAL INTEGRATION
+  // ========================================
 
-async openCropperModal() {
-  if (!this.selectedAttachment || this.selectedAttachment.type !== 'image') {
-    return;
-  }
+  async openCropperModal() {
+    if (!this.selectedAttachment || this.selectedAttachment.type !== 'image') {
+      return;
+    }
 
-  try {
-    const modal = await this.modalCtrl.create({
-      component: ImageCropperModalComponent,
-      componentProps: {
-        imageUrl: this.selectedAttachment.previewUrl,
-        aspectRatio: 0, // Free aspect ratio
-        cropQuality: 0.9
-      },
-      cssClass: 'image-cropper-modal'
-    });
-
-    await modal.present();
-
-    const { data } = await modal.onDidDismiss();
-
-    if (data && data.success && data.originalBlob) {
-      if (this.selectedAttachment.previewUrl) {
-        URL.revokeObjectURL(this.selectedAttachment.previewUrl);
-      }
-
-      // ✅ Create new preview URL from cropped blob
-      const newPreviewUrl = URL.createObjectURL(data.originalBlob);
-
-      // ✅ Generate new filename with timestamp
-      const timestamp = Date.now();
-      const fileExtension = this.selectedAttachment.fileName.split('.').pop() || 'jpg';
-      const newFileName = `cropped_${timestamp}.${fileExtension}`;
-
-      // ✅ Update selectedAttachment with cropped image data
-      this.selectedAttachment = {
-        ...this.selectedAttachment,
-        blob: data.originalBlob,
-        previewUrl: newPreviewUrl,
-        fileName: newFileName,
-        fileSize: data.originalBlob.size,
-        mimeType: data.originalBlob.type || this.selectedAttachment.mimeType
-      };
-
-      // ✅ Show success toast
-      const toast = await this.toastCtrl.create({
-        message: 'Image cropped successfully',
-        duration: 1500,
-        color: 'success'
+    try {
+      const modal = await this.modalCtrl.create({
+        component: ImageCropperModalComponent,
+        componentProps: {
+          imageUrl: this.selectedAttachment.previewUrl,
+          aspectRatio: 0, // Free aspect ratio
+          cropQuality: 0.9,
+        },
+        cssClass: 'image-cropper-modal',
       });
-      await toast.present();
 
-    } else if (data && data.cancelled) {
-      // User cancelled cropping
-      console.log('Cropping cancelled by user');
-    } else if (data && data.error) {
-      // Show error toast
+      await modal.present();
+
+      const { data } = await modal.onDidDismiss();
+
+      if (data && data.success && data.originalBlob) {
+        if (this.selectedAttachment.previewUrl) {
+          URL.revokeObjectURL(this.selectedAttachment.previewUrl);
+        }
+
+        // ✅ Create new preview URL from cropped blob
+        const newPreviewUrl = URL.createObjectURL(data.originalBlob);
+
+        // ✅ Generate new filename with timestamp
+        const timestamp = Date.now();
+        const fileExtension =
+          this.selectedAttachment.fileName.split('.').pop() || 'jpg';
+        const newFileName = `cropped_${timestamp}.${fileExtension}`;
+
+        // ✅ Update selectedAttachment with cropped image data
+        this.selectedAttachment = {
+          ...this.selectedAttachment,
+          blob: data.originalBlob,
+          previewUrl: newPreviewUrl,
+          fileName: newFileName,
+          fileSize: data.originalBlob.size,
+          mimeType: data.originalBlob.type || this.selectedAttachment.mimeType,
+        };
+
+        // ✅ Show success toast
+        const toast = await this.toastCtrl.create({
+          message: 'Image cropped successfully',
+          duration: 1500,
+          color: 'success',
+        });
+        await toast.present();
+      } else if (data && data.cancelled) {
+        // User cancelled cropping
+        console.log('Cropping cancelled by user');
+      } else if (data && data.error) {
+        // Show error toast
+        const toast = await this.toastCtrl.create({
+          message: data.error,
+          duration: 2000,
+          color: 'danger',
+        });
+        await toast.present();
+      }
+    } catch (error) {
+      console.error('Error opening cropper modal:', error);
       const toast = await this.toastCtrl.create({
-        message: data.error,
+        message: 'Failed to open image editor',
         duration: 2000,
-        color: 'danger'
+        color: 'danger',
       });
       await toast.present();
     }
-
-  } catch (error) {
-    console.error('Error opening cropper modal:', error);
-    const toast = await this.toastCtrl.create({
-      message: 'Failed to open image editor',
-      duration: 2000,
-      color: 'danger'
-    });
-    await toast.present();
   }
-}
 
   openKeyboard() {
     setTimeout(() => {
@@ -3391,6 +3492,11 @@ async openCropperModal() {
     window.removeEventListener('resize', this.resizeHandler);
     if ((this as any)._ro) {
       (this as any)._ro.disconnect();
+    }
+
+    if (this.groupMembershipUnsubscribe) {
+      this.groupMembershipUnsubscribe();
+      this.groupMembershipUnsubscribe = null;
     }
 
     try {
@@ -3467,8 +3573,8 @@ async openCropperModal() {
   }
 
   //for removing query params from local or cdn url
-  escapeUrl(url : any){
-    return url.replace(/[?#].*$/, '')
+  escapeUrl(url: any) {
+    return url.replace(/[?#].*$/, '');
   }
 
   // --------------------------translation module added on 1 nov-----
@@ -3479,7 +3585,7 @@ async openCropperModal() {
 
   showTranslationOptions = false;
   // ✅ NEW: Flag to track if send is in progress
-isSendingFromTranslationCard = false;
+  isSendingFromTranslationCard = false;
   myLangCode = 'en';
   receiverLangCode = 'hi';
   myLangLabel = 'English';
@@ -3568,7 +3674,7 @@ isSendingFromTranslationCard = false;
     // 'https://script.google.com/macros/s/AKfycbyxnbC6LBpbtdMw2rLVqCRvqbHkT97CPQo9Ta9by1QpCMBH25BE6edivkNj5_dYp1qj/exec';
     // 'https://script.google.com/macros/s/AKfycbxpr7MVGsJNzDTZoBWa_IuTd8z5C9ZDfM3iENhuqBN01hgKiU2fF-Hc3DZ1c0u9KzHZ/exec';
     'https://script.google.com/macros/s/AKfycbz069QioIcP8CO2ly7j29cyQPQjzQKywYcrDicxqG35_bQ3Ch_fcuVORsMAdAWu5-uh/exec';
-    
+
   languageMap: Record<string, string> = {
     'ar-EG': 'Arabic (Egypt)',
     'ar-SA': 'Arabic (Saudi Arabia)',
@@ -3622,21 +3728,20 @@ isSendingFromTranslationCard = false;
   //   return cleaned.trim();
   // }
 
-  
-/**
- * ✅ UPDATED: languageName method - removes country codes in parentheses
- */
-/**
- * ✅ UPDATED: languageName method - removes country codes in parentheses
- */
-languageName(code: string): string {
-  const full = this.languageMap[code] || code;
-  
-  // Remove anything inside parentheses: (India), (Mexico), etc.
-  const cleaned = full.replace(/\s*\(.*?\)/g, '');
-  
-  return cleaned.trim();
-}
+  /**
+   * ✅ UPDATED: languageName method - removes country codes in parentheses
+   */
+  /**
+   * ✅ UPDATED: languageName method - removes country codes in parentheses
+   */
+  languageName(code: string): string {
+    const full = this.languageMap[code] || code;
+
+    // Remove anything inside parentheses: (India), (Mexico), etc.
+    const cleaned = full.replace(/\s*\(.*?\)/g, '');
+
+    return cleaned.trim();
+  }
 
   apiLanguageCode(localeCode: string): string {
     const specialCases: Record<string, string> = {
@@ -4029,211 +4134,208 @@ languageName(code: string): string {
   //   }
   // }
 
-
   // ========================================
   // 🎨 SHOW CUSTOM TRANSLATION CARD
   // ========================================
-/**
- * ✅ UPDATED: Fetch custom language translation + receiver language (parallel)
- * Prevents translation when source and target are the same
- */
-// async fetchCustomTranslation(
-//   mode: 'translateCustom',
-//   originalText: string,
-//   targetCode: string,
-//   targetLabel: string,
-//   targetApiLang: string
-// ) {
-//   const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
+  /**
+   * ✅ UPDATED: Fetch custom language translation + receiver language (parallel)
+   * Prevents translation when source and target are the same
+   */
+  // async fetchCustomTranslation(
+  //   mode: 'translateCustom',
+  //   originalText: string,
+  //   targetCode: string,
+  //   targetLabel: string,
+  //   targetApiLang: string
+  // ) {
+  //   const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
 
-//   // First, detect source language
-//   const detectParams = new HttpParams()
-//     .set('text', originalText)
-//     .set('to', targetApiLang);
+  //   // First, detect source language
+  //   const detectParams = new HttpParams()
+  //     .set('text', originalText)
+  //     .set('to', targetApiLang);
 
-//   try {
-//     const detectResponse: any = await this.http
-//       .get(this.translationApiBase, {
-//         params: detectParams,
-//         responseType: 'json',
-//       })
-//       .toPromise();
+  //   try {
+  //     const detectResponse: any = await this.http
+  //       .get(this.translationApiBase, {
+  //         params: detectParams,
+  //         responseType: 'json',
+  //       })
+  //       .toPromise();
 
-//     if (!detectResponse?.success) {
-//       this.showToast('Translation failed', 'warning');
-//       this.isTranslatingCustom = false;
-//       return;
-//     }
+  //     if (!detectResponse?.success) {
+  //       this.showToast('Translation failed', 'warning');
+  //       this.isTranslatingCustom = false;
+  //       return;
+  //     }
 
-//     const detectedLang = detectResponse.detectedSource || 'unknown';
-//     const detectedApiLang = this.apiLanguageCode(detectedLang);
-//     const detectedLabel =
-//       this.languageName(this.normalizeLocaleCode(detectedLang)) || detectedLang;
+  //     const detectedLang = detectResponse.detectedSource || 'unknown';
+  //     const detectedApiLang = this.apiLanguageCode(detectedLang);
+  //     const detectedLabel =
+  //       this.languageName(this.normalizeLocaleCode(detectedLang)) || detectedLang;
 
-//     // ✅ Check if source and target are the same
-//     if (detectedApiLang === targetApiLang) {
-//       this.showToast(
-//         `Already in ${targetLabel}. No translation needed.`,
-//         'warning'
-//       );
-//       this.isTranslatingCustom = false;
-//       return;
-//     }
+  //     // ✅ Check if source and target are the same
+  //     if (detectedApiLang === targetApiLang) {
+  //       this.showToast(
+  //         `Already in ${targetLabel}. No translation needed.`,
+  //         'warning'
+  //       );
+  //       this.isTranslatingCustom = false;
+  //       return;
+  //     }
 
-//     const promises: Promise<any>[] = [];
-//     let needsReceiverTranslation = false;
+  //     const promises: Promise<any>[] = [];
+  //     let needsReceiverTranslation = false;
 
-//     // ✅ Custom language translation (already fetched above)
-//     const customTranslation = detectResponse.translatedText;
+  //     // ✅ Custom language translation (already fetched above)
+  //     const customTranslation = detectResponse.translatedText;
 
-//     // ✅ Fetch receiver language translation only if different from both source and custom
-//     if (
-//       recvApiLang !== targetApiLang &&
-//       recvApiLang !== detectedApiLang
-//     ) {
-//       needsReceiverTranslation = true;
-//       const recvParams = new HttpParams()
-//         .set('text', originalText)
-//         .set('to', recvApiLang);
+  //     // ✅ Fetch receiver language translation only if different from both source and custom
+  //     if (
+  //       recvApiLang !== targetApiLang &&
+  //       recvApiLang !== detectedApiLang
+  //     ) {
+  //       needsReceiverTranslation = true;
+  //       const recvParams = new HttpParams()
+  //         .set('text', originalText)
+  //         .set('to', recvApiLang);
 
-//       promises.push(
-//         this.http
-//           .get(this.translationApiBase, {
-//             params: recvParams,
-//             responseType: 'json',
-//           })
-//           .toPromise()
-//       );
-//     }
+  //       promises.push(
+  //         this.http
+  //           .get(this.translationApiBase, {
+  //             params: recvParams,
+  //             responseType: 'json',
+  //           })
+  //           .toPromise()
+  //       );
+  //     }
 
-//     let receiverTranslation = null;
-//     if (needsReceiverTranslation) {
-//       const results = await Promise.all(promises);
-//       const receiverResponse = results[0];
-//       if (receiverResponse?.success && receiverResponse.translatedText) {
-//         receiverTranslation = receiverResponse.translatedText;
-//       }
-//     }
+  //     let receiverTranslation = null;
+  //     if (needsReceiverTranslation) {
+  //       const results = await Promise.all(promises);
+  //       const receiverResponse = results[0];
+  //       if (receiverResponse?.success && receiverResponse.translatedText) {
+  //         receiverTranslation = receiverResponse.translatedText;
+  //       }
+  //     }
 
-//     this.showCustomTranslationCard(
-//       mode,
-//       originalText,
-//       targetCode,
-//       targetLabel,
-//       customTranslation,
-//       detectedLang,
-//       detectedLabel,
-//       receiverTranslation
-//     );
+  //     this.showCustomTranslationCard(
+  //       mode,
+  //       originalText,
+  //       targetCode,
+  //       targetLabel,
+  //       customTranslation,
+  //       detectedLang,
+  //       detectedLabel,
+  //       receiverTranslation
+  //     );
 
-//     this.isTranslatingCustom = false;
-//   } catch (err) {
-//     console.error('Translation error', err);
-//     this.showToast('Translation failed', 'danger');
-//     this.isTranslatingCustom = false;
-//   }
-// }
+  //     this.isTranslatingCustom = false;
+  //   } catch (err) {
+  //     console.error('Translation error', err);
+  //     this.showToast('Translation failed', 'danger');
+  //     this.isTranslatingCustom = false;
+  //   }
+  // }
 
-/**
- * ✅ UPDATED: Fetch custom language translation + receiver language (parallel)
- * Prevents translation when source and target are the same
- */
-async fetchCustomTranslation(
-  mode: 'translateCustom',
-  originalText: string,
-  targetCode: string,
-  targetLabel: string,
-  targetApiLang: string
-) {
-  const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
+  /**
+   * ✅ UPDATED: Fetch custom language translation + receiver language (parallel)
+   * Prevents translation when source and target are the same
+   */
+  async fetchCustomTranslation(
+    mode: 'translateCustom',
+    originalText: string,
+    targetCode: string,
+    targetLabel: string,
+    targetApiLang: string
+  ) {
+    const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
 
-  // First, detect source language
-  const detectParams = new HttpParams()
-    .set('text', originalText)
-    .set('to', targetApiLang);
+    // First, detect source language
+    const detectParams = new HttpParams()
+      .set('text', originalText)
+      .set('to', targetApiLang);
 
-  try {
-    const detectResponse: any = await this.http
-      .get(this.translationApiBase, {
-        params: detectParams,
-        responseType: 'json',
-      })
-      .toPromise();
+    try {
+      const detectResponse: any = await this.http
+        .get(this.translationApiBase, {
+          params: detectParams,
+          responseType: 'json',
+        })
+        .toPromise();
 
-    if (!detectResponse?.success) {
-      this.showToast('Translation failed', 'warning');
-      this.isTranslatingCustom = false;
-      return;
-    }
-
-    const detectedLang = detectResponse.detectedSource || 'unknown';
-    const detectedApiLang = this.apiLanguageCode(detectedLang);
-    const detectedLabel =
-      this.languageName(this.normalizeLocaleCode(detectedLang)) || detectedLang;
-
-    // ✅ Check if source and target are the same
-    if (detectedApiLang === targetApiLang) {
-      this.showToast(
-        `Already in ${targetLabel}. No translation needed.`,
-        'warning'
-      );
-      this.isTranslatingCustom = false;
-      return;
-    }
-
-    const promises: Promise<any>[] = [];
-    let needsReceiverTranslation = false;
-
-    // ✅ Custom language translation (already fetched above)
-    const customTranslation = detectResponse.translatedText;
-
-    // ✅ Fetch receiver language translation only if different from both source and custom
-    if (
-      recvApiLang !== targetApiLang &&
-      recvApiLang !== detectedApiLang
-    ) {
-      needsReceiverTranslation = true;
-      const recvParams = new HttpParams()
-        .set('text', originalText)
-        .set('to', recvApiLang);
-
-      promises.push(
-        this.http
-          .get(this.translationApiBase, {
-            params: recvParams,
-            responseType: 'json',
-          })
-          .toPromise()
-      );
-    }
-
-    let receiverTranslation = null;
-    if (needsReceiverTranslation) {
-      const results = await Promise.all(promises);
-      const receiverResponse = results[0];
-      if (receiverResponse?.success && receiverResponse.translatedText) {
-        receiverTranslation = receiverResponse.translatedText;
+      if (!detectResponse?.success) {
+        this.showToast('Translation failed', 'warning');
+        this.isTranslatingCustom = false;
+        return;
       }
+
+      const detectedLang = detectResponse.detectedSource || 'unknown';
+      const detectedApiLang = this.apiLanguageCode(detectedLang);
+      const detectedLabel =
+        this.languageName(this.normalizeLocaleCode(detectedLang)) ||
+        detectedLang;
+
+      // ✅ Check if source and target are the same
+      if (detectedApiLang === targetApiLang) {
+        this.showToast(
+          `Already in ${targetLabel}. No translation needed.`,
+          'warning'
+        );
+        this.isTranslatingCustom = false;
+        return;
+      }
+
+      const promises: Promise<any>[] = [];
+      let needsReceiverTranslation = false;
+
+      // ✅ Custom language translation (already fetched above)
+      const customTranslation = detectResponse.translatedText;
+
+      // ✅ Fetch receiver language translation only if different from both source and custom
+      if (recvApiLang !== targetApiLang && recvApiLang !== detectedApiLang) {
+        needsReceiverTranslation = true;
+        const recvParams = new HttpParams()
+          .set('text', originalText)
+          .set('to', recvApiLang);
+
+        promises.push(
+          this.http
+            .get(this.translationApiBase, {
+              params: recvParams,
+              responseType: 'json',
+            })
+            .toPromise()
+        );
+      }
+
+      let receiverTranslation = null;
+      if (needsReceiverTranslation) {
+        const results = await Promise.all(promises);
+        const receiverResponse = results[0];
+        if (receiverResponse?.success && receiverResponse.translatedText) {
+          receiverTranslation = receiverResponse.translatedText;
+        }
+      }
+
+      this.showCustomTranslationCard(
+        mode,
+        originalText,
+        targetCode,
+        targetLabel,
+        customTranslation,
+        detectedLang,
+        detectedLabel,
+        receiverTranslation
+      );
+
+      this.isTranslatingCustom = false;
+    } catch (err) {
+      console.error('Translation error', err);
+      this.showToast('Translation failed', 'danger');
+      this.isTranslatingCustom = false;
     }
-
-    this.showCustomTranslationCard(
-      mode,
-      originalText,
-      targetCode,
-      targetLabel,
-      customTranslation,
-      detectedLang,
-      detectedLabel,
-      receiverTranslation
-    );
-
-    this.isTranslatingCustom = false;
-  } catch (err) {
-    console.error('Translation error', err);
-    this.showToast('Translation failed', 'danger');
-    this.isTranslatingCustom = false;
   }
-}
   showCustomTranslationCard(
     mode: 'translateCustom',
     originalText: string,
@@ -4355,63 +4457,63 @@ async fetchCustomTranslation(
   // ========================================
   // 🎨 SHOW RECEIVER ONLY CARD
   // ========================================
-/**
- * ✅ UPDATED: Fetch ONLY receiver translation (with source check)
- */
+  /**
+   * ✅ UPDATED: Fetch ONLY receiver translation (with source check)
+   */
 
-/**
- * ✅ UPDATED: Fetch ONLY receiver translation (with source check)
- */
-async fetchReceiverTranslationOnly(
-  mode: 'translateToReceiver',
-  originalText: string,
-  recvApiLang: string
-) {
-  const params = new HttpParams()
-    .set('text', originalText)
-    .set('to', recvApiLang);
+  /**
+   * ✅ UPDATED: Fetch ONLY receiver translation (with source check)
+   */
+  async fetchReceiverTranslationOnly(
+    mode: 'translateToReceiver',
+    originalText: string,
+    recvApiLang: string
+  ) {
+    const params = new HttpParams()
+      .set('text', originalText)
+      .set('to', recvApiLang);
 
-  this.http
-    .get(this.translationApiBase, { params, responseType: 'json' })
-    .subscribe({
-      next: (response: any) => {
-        if (response.success && response.translatedText) {
-          const detectedLang = response.detectedSource || 'unknown';
-          const detectedApiLang = this.apiLanguageCode(detectedLang);
-          const detectedLabel =
-            this.languageName(this.normalizeLocaleCode(detectedLang)) ||
-            detectedLang;
+    this.http
+      .get(this.translationApiBase, { params, responseType: 'json' })
+      .subscribe({
+        next: (response: any) => {
+          if (response.success && response.translatedText) {
+            const detectedLang = response.detectedSource || 'unknown';
+            const detectedApiLang = this.apiLanguageCode(detectedLang);
+            const detectedLabel =
+              this.languageName(this.normalizeLocaleCode(detectedLang)) ||
+              detectedLang;
 
-          // ✅ Check if source and target are the same
-          if (detectedApiLang === recvApiLang) {
-            this.showToast(
-              `Already in ${this.receiverLangLabel}. No translation needed.`,
-              'warning'
+            // ✅ Check if source and target are the same
+            if (detectedApiLang === recvApiLang) {
+              this.showToast(
+                `Already in ${this.receiverLangLabel}. No translation needed.`,
+                'warning'
+              );
+              this.isTranslatingToReceiver = false;
+              return;
+            }
+
+            this.showReceiverOnlyCard(
+              mode,
+              originalText,
+              response.translatedText,
+              detectedLang,
+              detectedLabel
             );
-            this.isTranslatingToReceiver = false;
-            return;
+          } else {
+            this.showToast('Translation failed', 'warning');
           }
 
-          this.showReceiverOnlyCard(
-            mode,
-            originalText,
-            response.translatedText,
-            detectedLang,
-            detectedLabel
-          );
-        } else {
-          this.showToast('Translation failed', 'warning');
-        }
-
-        this.isTranslatingToReceiver = false;
-      },
-      error: (err) => {
-        console.error('Translation error', err);
-        this.showToast('Translation failed', 'danger');
-        this.isTranslatingToReceiver = false;
-      },
-    });
-}
+          this.isTranslatingToReceiver = false;
+        },
+        error: (err) => {
+          console.error('Translation error', err);
+          this.showToast('Translation failed', 'danger');
+          this.isTranslatingToReceiver = false;
+        },
+      });
+  }
   showReceiverOnlyCard(
     mode: 'translateToReceiver',
     originalText: string,
@@ -4566,82 +4668,82 @@ async fetchReceiverTranslationOnly(
   //       },
   //     });
   // }
-/**
- * ✅ UPDATED: Send Original with auto-translation (with source check)
- */
-/**
- * ✅ UPDATED: Send Original with auto-translation (with source check)
- */
-async sendOriginalWithTranslation() {
-  const text = this.messageText?.trim();
-  if (!text) {
-    this.showToast('Type something to send', 'warning');
-    return;
-  }
+  /**
+   * ✅ UPDATED: Send Original with auto-translation (with source check)
+   */
+  /**
+   * ✅ UPDATED: Send Original with auto-translation (with source check)
+   */
+  async sendOriginalWithTranslation() {
+    const text = this.messageText?.trim();
+    if (!text) {
+      this.showToast('Type something to send', 'warning');
+      return;
+    }
 
-  const allowed = await this.ensureTranslationConsent();
-  if (!allowed) return;
+    const allowed = await this.ensureTranslationConsent();
+    if (!allowed) return;
 
-  this.isTranslatingOriginal = true;
+    this.isTranslatingOriginal = true;
 
-  const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
+    const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
 
-  const params = new HttpParams().set('text', text).set('to', recvApiLang);
+    const params = new HttpParams().set('text', text).set('to', recvApiLang);
 
-  this.http
-    .get(this.translationApiBase, { params, responseType: 'json' })
-    .subscribe({
-      next: (response: any) => {
-        if (response.success && response.translatedText) {
-          const detectedLang = response.detectedSource || 'unknown';
-          const detectedApiLang = this.apiLanguageCode(detectedLang);
-          const detectedLabel =
-            this.languageName(this.normalizeLocaleCode(detectedLang)) ||
-            detectedLang;
+    this.http
+      .get(this.translationApiBase, { params, responseType: 'json' })
+      .subscribe({
+        next: (response: any) => {
+          if (response.success && response.translatedText) {
+            const detectedLang = response.detectedSource || 'unknown';
+            const detectedApiLang = this.apiLanguageCode(detectedLang);
+            const detectedLabel =
+              this.languageName(this.normalizeLocaleCode(detectedLang)) ||
+              detectedLang;
 
-          // ✅ Check if source and target are the same
-          if (detectedApiLang === recvApiLang) {
-            // Same language - just send without translation card
-            this.messageText = text;
-            this.sendMessage(); // Call your existing sendMessage method
-            this.isTranslatingOriginal = false;
-            return;
+            // ✅ Check if source and target are the same
+            if (detectedApiLang === recvApiLang) {
+              // Same language - just send without translation card
+              this.messageText = text;
+              this.sendMessage(); // Call your existing sendMessage method
+              this.isTranslatingOriginal = false;
+              return;
+            }
+
+            const items: TranslationItem[] = [
+              {
+                code: detectedLang,
+                label: detectedLabel,
+                text: text,
+              },
+              {
+                code: this.receiverLangCode,
+                label: this.languageName(this.receiverLangCode) + ' (Receiver)',
+                text: response.translatedText,
+              },
+            ];
+
+            this.translationCard = {
+              visible: true,
+              mode: 'sendOriginal',
+              items,
+              createdAt: new Date(),
+            };
+
+            this.showToast('Preview ready', 'success');
+          } else {
+            this.showToast('Translation failed', 'warning');
           }
 
-          const items: TranslationItem[] = [
-            {
-              code: detectedLang,
-              label: detectedLabel,
-              text: text,
-            },
-            {
-              code: this.receiverLangCode,
-              label: this.languageName(this.receiverLangCode) + ' (Receiver)',
-              text: response.translatedText,
-            },
-          ];
-
-          this.translationCard = {
-            visible: true,
-            mode: 'sendOriginal',
-            items,
-            createdAt: new Date(),
-          };
-
-          this.showToast('Preview ready', 'success');
-        } else {
-          this.showToast('Translation failed', 'warning');
-        }
-
-        this.isTranslatingOriginal = false;
-      },
-      error: (err) => {
-        console.error('Translation error', err);
-        this.showToast('Translation failed', 'danger');
-        this.isTranslatingOriginal = false;
-      },
-    });
-}
+          this.isTranslatingOriginal = false;
+        },
+        error: (err) => {
+          console.error('Translation error', err);
+          this.showToast('Translation failed', 'danger');
+          this.isTranslatingOriginal = false;
+        },
+      });
+  }
 
   async sendFromTranslationCard() {
     if (!this.translationCard) return;
@@ -4751,9 +4853,9 @@ async sendOriginalWithTranslation() {
     // ✅ Build final message
     const localMessage: Partial<IMessage & { attachment?: any }> = {
       sender: this.senderId,
-      sender_name : this.sender_name,
+      sender_name: this.sender_name,
       text: visibleTextForSender,
-      receiver_id : this.receiverId,
+      receiver_id: this.receiverId,
       translations: translationsPayload,
       timestamp,
       msgId,

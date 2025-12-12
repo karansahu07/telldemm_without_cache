@@ -97,6 +97,9 @@ export class UseraboutPage implements OnInit {
   communityId: string = '';
   isCurrentUserMember: boolean = true;
 
+  private groupMembershipRef: any = null;
+private groupMembershipUnsubscribe: (() => void) | null = null;
+
   constructor(
     private router: Router,
     private route: ActivatedRoute,
@@ -152,60 +155,162 @@ export class UseraboutPage implements OnInit {
   }
 
   async ionViewWillEnter() {
-    this.route.queryParams.subscribe((params) => {
-      this.receiverId = params['receiverId'] || null;
-      const isGroupParam = params['isGroup'];
-      this.chatType = isGroupParam === 'true' ? 'group' : 'private';
-      console.log('this chatType', this.chatType);
-      console.log('Receiver ID:', this.receiverId);
-    });
+  this.route.queryParams.subscribe((params) => {
+    this.receiverId = params['receiverId'] || null;
+    const isGroupParam = params['isGroup'];
+    this.chatType = isGroupParam === 'true' ? 'group' : 'private';
+    console.log('this chatType', this.chatType);
+    console.log('Receiver ID:', this.receiverId);
+  });
 
-    this.loadReceiverProfile();
-    this.checkForPastMembers();
+  this.loadReceiverProfile();
+  this.checkForPastMembers();
 
-    const currentChat = this.firebaseChatService.currentChat;
-    this.receiverProfile =
-      (currentChat as any).avatar || (currentChat as any).groupAvatar || null;
-    this.chatTitle = currentChat?.title || null;
+  const currentChat = this.firebaseChatService.currentChat;
+  this.receiverProfile =
+    (currentChat as any).avatar || (currentChat as any).groupAvatar || null;
+  this.chatTitle = currentChat?.title || null;
 
-    if (this.chatType === 'group') {
-      try {
-        const { groupName, groupMembers } =
-          await this.firebaseChatService.fetchGroupWithProfiles(
-            this.receiverId
-          );
-        this.groupName = groupName;
-        this.groupMembers = groupMembers;
+  if (this.chatType === 'group') {
+    // ✅ Set up real-time membership listener
+    this.setupGroupMembershipListener();
+    
+    try {
+      const { groupName, groupMembers } =
+        await this.firebaseChatService.fetchGroupWithProfiles(
+          this.receiverId
+        );
+      this.groupName = groupName;
+      this.groupMembers = groupMembers;
 
-        this.isCurrentUserMember = this.groupMembers.some(
+      console.log("group members", this.groupMembers);
+      this.currentUserId = this.authService.authData?.userId || '';
+
+      this.isCurrentUserMember = this.groupMembers.some(
         member => String(member.user_id) === String(this.currentUserId)
       );
       
       console.log('Is current user member:', this.isCurrentUserMember);
 
-        // Load admin IDs
-        this.adminIds = await this.firebaseChatService.getGroupAdminIds(
-          this.receiverId
-        );
-        console.log('Loaded admin IDs:', this.adminIds);
-        console.log('Group members:', this.groupMembers);
-      } catch (err) {
-        console.warn('Failed to fetch group with profiles', err);
-        this.groupName = 'Group';
-        this.groupMembers = [];
-        this.adminIds = [];
-      }
-
-      await this.fetchGroupMeta(this.receiverId);
+      // Load admin IDs
+      this.adminIds = await this.firebaseChatService.getGroupAdminIds(
+        this.receiverId
+      );
+      console.log('Loaded admin IDs:', this.adminIds);
+      console.log('Group members:', this.groupMembers);
+    } catch (err) {
+      console.warn('Failed to fetch group with profiles', err);
+      this.groupName = 'Group';
+      this.groupMembers = [];
+      this.adminIds = [];
     }
 
-    this.groupId = this.receiverId || '';
-
-    if (!this.groupId) {
-      console.warn('No groupId found in route');
-      return;
-    }
+    await this.fetchGroupMeta(this.receiverId);
   }
+
+  this.groupId = this.receiverId || '';
+
+  if (!this.groupId) {
+    console.warn('No groupId found in route');
+    return;
+  }
+}
+
+// ✅ NEW: Setup real-time listener for group membership
+setupGroupMembershipListener() {
+  if (!this.receiverId) return;
+
+  const db = getDatabase();
+  
+  // Clean up old listener if exists
+  if (this.groupMembershipUnsubscribe) {
+    this.groupMembershipUnsubscribe();
+  }
+
+  // Listen to the members node of this group
+  this.groupMembershipRef = ref(db, `groups/${this.receiverId}/members`);
+  
+  this.groupMembershipUnsubscribe = onValue(
+    this.groupMembershipRef,
+    (snapshot) => {
+      this.zone.run(async () => {
+        const members = snapshot.val() || {};
+        this.currentUserId = this.authService.authData?.userId || '';
+        
+        // Check if current user is still a member
+        const wasCurrentUserMember = this.isCurrentUserMember;
+        this.isCurrentUserMember = !!members[this.currentUserId];
+        
+        console.log('Real-time membership check:', {
+          currentUserId: this.currentUserId,
+          isCurrentUserMember: this.isCurrentUserMember,
+          wasCurrentUserMember,
+          members: Object.keys(members)
+        });
+
+        // If membership status changed, update the UI
+        if (wasCurrentUserMember !== this.isCurrentUserMember) {
+          // Refresh group members list
+          try {
+            const { groupName, groupMembers } =
+              await this.firebaseChatService.fetchGroupWithProfiles(
+                this.receiverId
+              );
+            this.groupName = groupName;
+            this.groupMembers = groupMembers;
+            
+            // console.log('✅ Membership status changed - UI updated');
+            
+            // Show toast notification
+            // if (!this.isCurrentUserMember) {
+            //   const toast = await this.toastCtrl.create({
+            //     message: 'You are no longer a member of this group',
+            //     duration: 3000,
+            //     color: 'warning',
+            //     position: 'top'
+            //   });
+            //   await toast.present();
+            // }
+          } catch (err) {
+            console.warn('Failed to refresh group members', err);
+          }
+        }
+      });
+    },
+    (error) => {
+      console.error('Error listening to group membership:', error);
+    }
+  );
+}
+
+ionViewWillLeave() {
+  // Clean up real-time listener
+  if (this.groupMembershipUnsubscribe) {
+    this.groupMembershipUnsubscribe();
+    this.groupMembershipUnsubscribe = null;
+  }
+  
+  // Clean up block listeners
+  try {
+    if (this.iBlockedRef) off(this.iBlockedRef);
+    if (this.theyBlockedRef) off(this.theyBlockedRef);
+  } catch (e) {
+    /* ignore */
+  }
+}
+
+ngOnDestroy() {
+  if (this.groupMembershipUnsubscribe) {
+    this.groupMembershipUnsubscribe();
+  }
+  
+  try {
+    if (this.iBlockedRef) off(this.iBlockedRef);
+    if (this.theyBlockedRef) off(this.theyBlockedRef);
+  } catch (e) {
+    /* ignore */
+  }
+}
 
   loadReceiverProfile() {
     if (!this.receiverId) return;
@@ -789,6 +894,7 @@ export class UseraboutPage implements OnInit {
       const snapshot = await get(groupRef);
       if (snapshot.exists()) {
         const groupData = snapshot.val();
+        console.log("group data ", groupData)
         this.groupDescription =
           groupData.description || 'No group description.';
         this.groupCreatedBy = groupData.createdByName || 'Unknown';
