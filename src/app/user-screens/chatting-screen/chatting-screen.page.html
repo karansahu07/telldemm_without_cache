@@ -533,7 +533,7 @@
       </div>
     </div>
 
-    <!-- INPUT ROW -->
+ 
     <!-- INPUT ROW -->
     <ion-row class="footer-row" style="align-items: center">
       <ion-col class="message-input-container" style="
@@ -548,6 +548,13 @@
           <ion-textarea [disabled]="iBlocked" [autoGrow]="true" [(ngModel)]="messageText" placeholder="Message"
             (ionInput)="onMessageInput($event)" (ionFocus)="onInputFocus()" (ionBlur)="onInputBlur()"
             (keyup.enter)="sendMessage()" class="message-input"></ion-textarea>
+            <ion-icon 
+  name="language-outline"
+  class="icon-left"
+  (click)="toggleTranslationOptions()"
+  style="font-size: 22px;">
+</ion-icon>
+
 
           <ion-icon name="attach-outline" (click)="pickAttachment()" class="icon-right" [hidden]="iBlocked"></ion-icon>
           <ion-icon name="camera-outline" class="icon-right" (click)="openCamera()" [hidden]="iBlocked"></ion-icon>
@@ -687,26 +694,35 @@
             </ion-button>
 
             <!-- ✅ UPDATED: Send Button with Loader Animation -->
-            <ion-button size="small" color="primary" (click)="sendFromTranslationCard()"
-              [disabled]="isSendingFromTranslationCard"
-              style="--padding-start: 12px; --padding-end: 12px; position: relative">
-              <!-- Loader Animation -->
-              <div *ngIf="isSendingFromTranslationCard" style="
-              display: flex; 
-              align-items: center; 
-              gap: 6px;
-              animation: pulse 1.5s ease-in-out infinite;
-            ">
-                <ion-spinner name="crescent" style="width: 16px; height: 16px"></ion-spinner>
-                <span>Sending...</span>
-              </div>
+           <ion-button 
+  size="small" 
+  color="primary"
+  (click)="sendFromTranslationCard()"
+  [disabled]="isSendingFromTranslationCard"
+  style="--padding-start: 12px; --padding-end: 12px">
 
-              <!-- Normal State -->
-              <div *ngIf="!isSendingFromTranslationCard" style="display: flex; align-items: center; gap: 4px">
-                <ion-icon name="send-outline" style="font-size: 16px"></ion-icon>
-                <span>Send</span>
-              </div>
-            </ion-button>
+  <!-- LOADING STATE -->
+  <ng-container *ngIf="isSendingFromTranslationCard">
+    <div style="
+      display: flex; 
+      align-items: center; 
+      gap: 6px;
+      animation: pulse 1.5s ease-in-out infinite;
+    ">
+      <ion-spinner name="crescent" style="width: 16px; height: 16px"></ion-spinner>
+      <span>Sending...</span>
+    </div>
+  </ng-container>
+
+  <!-- NORMAL STATE -->
+  <ng-container *ngIf="!isSendingFromTranslationCard">
+    <div style="display: flex; align-items: center; gap: 4px">
+      <ion-icon name="send-outline" style="font-size: 16px"></ion-icon>
+      <span>Send</span>
+    </div>
+  </ng-container>
+
+</ion-button>
           </div>
         </div>
       </ion-col>

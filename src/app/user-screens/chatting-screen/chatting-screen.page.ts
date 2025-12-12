@@ -340,7 +340,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     private fcmService: FcmService,
     private animationCtrl: AnimationController,
     private actionSheetCtrl: ActionSheetController // private toastCtrl: ToastController, // private modalCtrl: ModalController, // private firebaseChatService : FirebaseChatService
-  ) {}
+  ) { }
 
   async ngOnInit() {
     Keyboard.setScroll({ isDisabled: false });
@@ -1141,12 +1141,12 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     this.onValueUnsubs.push(() => {
       try {
         unsubA();
-      } catch (e) {}
+      } catch (e) { }
     });
     this.onValueUnsubs.push(() => {
       try {
         unsubB();
-      } catch (e) {}
+      } catch (e) { }
     });
   }
 
@@ -2074,7 +2074,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
 
       try {
         if (this.typingUnsubscribe) this.typingUnsubscribe();
-      } catch (e) {}
+      } catch (e) { }
 
       const unsubscribe = onValue(
         dbRef(db, `typing/${this.roomId}`),
@@ -2159,7 +2159,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
       this.typingUnsubscribe = () => {
         try {
           unsubscribe();
-        } catch (e) {}
+        } catch (e) { }
       };
       this.onValueUnsubs.push(this.typingUnsubscribe);
     } catch (err) {
@@ -2658,8 +2658,8 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
       const type = mimeType?.startsWith('image')
         ? 'image'
         : mimeType?.startsWith('video')
-        ? 'video'
-        : 'file';
+          ? 'video'
+          : 'file';
 
       let blob = file.blob as Blob;
 
@@ -3483,12 +3483,12 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     if (this.pinnedMessageSubscription) {
       try {
         this.pinnedMessageSubscription();
-      } catch (e) {}
+      } catch (e) { }
     }
     this.typingRxSubs.forEach((s) => s.unsubscribe());
     try {
       if (this.typingUnsubscribe) this.typingUnsubscribe();
-    } catch (e) {}
+    } catch (e) { }
     this.stopTypingSignal();
 
     window.removeEventListener('resize', this.resizeHandler);
@@ -3505,12 +3505,12 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
       if (this.iBlockedRef) off(this.iBlockedRef);
       if (this.theyBlockedRef) off(this.theyBlockedRef);
       clearTimeout(this.blockBubbleTimeout);
-    } catch (e) {}
+    } catch (e) { }
 
     this.onValueUnsubs.forEach((fn) => {
       try {
         fn();
-      } catch (e) {}
+      } catch (e) { }
     });
     this.onValueUnsubs = [];
     this.statusPollSub?.unsubscribe();
@@ -3635,7 +3635,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
             handler: () => {
               try {
                 localStorage.setItem(this.TRANSLATION_CONSENT_KEY, 'denied');
-              } catch {}
+              } catch { }
               this.showToast('Translation declined', 'medium');
               resolve(false);
             },
@@ -3645,7 +3645,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
             handler: () => {
               try {
                 localStorage.setItem(this.TRANSLATION_CONSENT_KEY, 'granted');
-              } catch {}
+              } catch { }
               this.showToast('Translation allowed', 'success');
               resolve(true);
             },
@@ -3673,8 +3673,6 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   isTranslatingCustom = false; // ✅ NEW: For custom language selection
 
   translationApiBase =
-    // 'https://script.google.com/macros/s/AKfycbyxnbC6LBpbtdMw2rLVqCRvqbHkT97CPQo9Ta9by1QpCMBH25BE6edivkNj5_dYp1qj/exec';
-    // 'https://script.google.com/macros/s/AKfycbxpr7MVGsJNzDTZoBWa_IuTd8z5C9ZDfM3iENhuqBN01hgKiU2fF-Hc3DZ1c0u9KzHZ/exec';
     'https://script.google.com/macros/s/AKfycbz069QioIcP8CO2ly7j29cyQPQjzQKywYcrDicxqG35_bQ3Ch_fcuVORsMAdAWu5-uh/exec';
 
   languageMap: Record<string, string> = {
@@ -3717,22 +3715,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     }));
   }
 
-  // languageName(code: string): string {
-  //   return this.languageMap[code] || code;
-  // }
 
-  // languageName(code: string): string {
-  //   const full = this.languageMap[code] || code;
-
-  //   // Remove anything inside parentheses: (India), (Mexico), etc.
-  //   const cleaned = full.replace(/\s*\(.*?\)/g, '');
-
-  //   return cleaned.trim();
-  // }
-
-  /**
-   * ✅ UPDATED: languageName method - removes country codes in parentheses
-   */
   /**
    * ✅ UPDATED: languageName method - removes country codes in parentheses
    */
@@ -3974,8 +3957,8 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     return found
       ? found.label
       : st.activeCode === 'original'
-      ? 'English (Original)'
-      : null;
+        ? 'English (Original)'
+        : null;
   }
 
   getActiveTranslationShortCode(msg: any) {
@@ -4053,192 +4036,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
-  /**
-   * ✅ UPDATED: Fetch custom language translation + receiver language (parallel)
-   */
-  // async fetchCustomTranslation(
-  //   mode: 'translateCustom',
-  //   originalText: string,
-  //   targetCode: string,
-  //   targetLabel: string,
-  //   targetApiLang: string
-  // ) {
-  //   const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
 
-  //   const promises: Promise<any>[] = [];
-
-  //   // ✅ Fetch custom language translation
-  //   const customParams = new HttpParams()
-  //     .set('text', originalText)
-  //     .set('to', targetApiLang);
-
-  //   promises.push(
-  //     this.http
-  //       .get(this.translationApiBase, {
-  //         params: customParams,
-  //         responseType: 'json',
-  //       })
-  //       .toPromise()
-  //   );
-
-  //   // ✅ Fetch receiver language translation (if different from custom selected)
-  //   if (recvApiLang !== targetApiLang) {
-  //     const recvParams = new HttpParams()
-  //       .set('text', originalText)
-  //       .set('to', recvApiLang);
-
-  //     promises.push(
-  //       this.http
-  //         .get(this.translationApiBase, {
-  //           params: recvParams,
-  //           responseType: 'json',
-  //         })
-  //         .toPromise()
-  //     );
-  //   }
-
-  //   try {
-  //     const results = await Promise.all(promises);
-
-  //     const customResponse = results[0];
-  //     const receiverResponse = results[1]; // undefined if same language
-
-  //     if (customResponse?.success && customResponse.translatedText) {
-  //       const detectedLang = customResponse.detectedSource || 'unknown';
-  //       const detectedLabel =
-  //         this.languageName(this.normalizeLocaleCode(detectedLang)) ||
-  //         detectedLang;
-
-  //       let receiverTranslation = null;
-  //       if (receiverResponse?.success && receiverResponse.translatedText) {
-  //         receiverTranslation = receiverResponse.translatedText;
-  //       }
-
-  //       this.showCustomTranslationCard(
-  //         mode,
-  //         originalText,
-  //         targetCode,
-  //         targetLabel,
-  //         customResponse.translatedText,
-  //         detectedLang,
-  //         detectedLabel,
-  //         receiverTranslation
-  //       );
-  //     } else {
-  //       this.showToast('Translation failed', 'warning');
-  //     }
-
-  //     this.isTranslatingCustom = false;
-  //   } catch (err) {
-  //     console.error('Translation error', err);
-  //     this.showToast('Translation failed', 'danger');
-  //     this.isTranslatingCustom = false;
-  //   }
-  // }
-
-  // ========================================
-  // 🎨 SHOW CUSTOM TRANSLATION CARD
-  // ========================================
-  /**
-   * ✅ UPDATED: Fetch custom language translation + receiver language (parallel)
-   * Prevents translation when source and target are the same
-   */
-  // async fetchCustomTranslation(
-  //   mode: 'translateCustom',
-  //   originalText: string,
-  //   targetCode: string,
-  //   targetLabel: string,
-  //   targetApiLang: string
-  // ) {
-  //   const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
-
-  //   // First, detect source language
-  //   const detectParams = new HttpParams()
-  //     .set('text', originalText)
-  //     .set('to', targetApiLang);
-
-  //   try {
-  //     const detectResponse: any = await this.http
-  //       .get(this.translationApiBase, {
-  //         params: detectParams,
-  //         responseType: 'json',
-  //       })
-  //       .toPromise();
-
-  //     if (!detectResponse?.success) {
-  //       this.showToast('Translation failed', 'warning');
-  //       this.isTranslatingCustom = false;
-  //       return;
-  //     }
-
-  //     const detectedLang = detectResponse.detectedSource || 'unknown';
-  //     const detectedApiLang = this.apiLanguageCode(detectedLang);
-  //     const detectedLabel =
-  //       this.languageName(this.normalizeLocaleCode(detectedLang)) || detectedLang;
-
-  //     // ✅ Check if source and target are the same
-  //     if (detectedApiLang === targetApiLang) {
-  //       this.showToast(
-  //         `Already in ${targetLabel}. No translation needed.`,
-  //         'warning'
-  //       );
-  //       this.isTranslatingCustom = false;
-  //       return;
-  //     }
-
-  //     const promises: Promise<any>[] = [];
-  //     let needsReceiverTranslation = false;
-
-  //     // ✅ Custom language translation (already fetched above)
-  //     const customTranslation = detectResponse.translatedText;
-
-  //     // ✅ Fetch receiver language translation only if different from both source and custom
-  //     if (
-  //       recvApiLang !== targetApiLang &&
-  //       recvApiLang !== detectedApiLang
-  //     ) {
-  //       needsReceiverTranslation = true;
-  //       const recvParams = new HttpParams()
-  //         .set('text', originalText)
-  //         .set('to', recvApiLang);
-
-  //       promises.push(
-  //         this.http
-  //           .get(this.translationApiBase, {
-  //             params: recvParams,
-  //             responseType: 'json',
-  //           })
-  //           .toPromise()
-  //       );
-  //     }
-
-  //     let receiverTranslation = null;
-  //     if (needsReceiverTranslation) {
-  //       const results = await Promise.all(promises);
-  //       const receiverResponse = results[0];
-  //       if (receiverResponse?.success && receiverResponse.translatedText) {
-  //         receiverTranslation = receiverResponse.translatedText;
-  //       }
-  //     }
-
-  //     this.showCustomTranslationCard(
-  //       mode,
-  //       originalText,
-  //       targetCode,
-  //       targetLabel,
-  //       customTranslation,
-  //       detectedLang,
-  //       detectedLabel,
-  //       receiverTranslation
-  //     );
-
-  //     this.isTranslatingCustom = false;
-  //   } catch (err) {
-  //     console.error('Translation error', err);
-  //     this.showToast('Translation failed', 'danger');
-  //     this.isTranslatingCustom = false;
-  //   }
-  // }
 
   /**
    * ✅ UPDATED: Fetch custom language translation + receiver language (parallel)
@@ -4385,7 +4183,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     this.showToast('Translation ready', 'success');
     try {
       this.cdr.detectChanges();
-    } catch {}
+    } catch { }
   }
 
   /**
@@ -4412,49 +4210,6 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
-  /**
-   * Fetch ONLY receiver translation (with auto-detect)
-   */
-  // async fetchReceiverTranslationOnly(
-  //   mode: 'translateToReceiver',
-  //   originalText: string,
-  //   recvApiLang: string
-  // ) {
-  //   // ✅ Auto-detect source language
-  //   const params = new HttpParams()
-  //     .set('text', originalText)
-  //     .set('to', recvApiLang);
-
-  //   this.http
-  //     .get(this.translationApiBase, { params, responseType: 'json' })
-  //     .subscribe({
-  //       next: (response: any) => {
-  //         if (response.success && response.translatedText) {
-  //           const detectedLang = response.detectedSource || 'unknown';
-  //           const detectedLabel =
-  //             this.languageName(this.normalizeLocaleCode(detectedLang)) ||
-  //             detectedLang;
-
-  //           this.showReceiverOnlyCard(
-  //             mode,
-  //             originalText,
-  //             response.translatedText,
-  //             detectedLang,
-  //             detectedLabel
-  //           );
-  //         } else {
-  //           this.showToast('Translation failed', 'warning');
-  //         }
-
-  //         this.isTranslatingToReceiver = false;
-  //       },
-  //       error: (err) => {
-  //         console.error('Translation error', err);
-  //         this.showToast('Translation failed', 'danger');
-  //         this.isTranslatingToReceiver = false;
-  //       },
-  //     });
-  // }
 
   // ========================================
   // 🎨 SHOW RECEIVER ONLY CARD
@@ -4551,7 +4306,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     this.showToast('Translation ready', 'success');
     try {
       this.cdr.detectChanges();
-    } catch {}
+    } catch { }
   }
 
   // ========================================
@@ -4590,89 +4345,13 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     this.showToast('Preview ready', 'success');
     try {
       this.cdr.detectChanges();
-    } catch {}
+    } catch { }
   }
 
   // ========================================
   // 🔧 HELPER: CLOSE TRANSLATION CARD
   // ========================================
 
-  // closeTranslationCard() {
-  //   if (this.translationCard) {
-  //     this.translationCard.visible = false;
-  //     this.translationCard = null;
-  //   }
-  // }
-
-  /**
-   * Send Original with auto-translation (with auto-detect)
-   */
-  // async sendOriginalWithTranslation() {
-  //   const text = this.messageText?.trim();
-  //   if (!text) {
-  //     this.showToast('Type something to send', 'warning');
-  //     return;
-  //   }
-
-  //   const allowed = await this.ensureTranslationConsent();
-  //   if (!allowed) return;
-
-  //   this.isTranslatingOriginal = true;
-
-  //   const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
-
-  //   // ✅ Auto-detect source language
-  //   const params = new HttpParams().set('text', text).set('to', recvApiLang);
-
-  //   this.http
-  //     .get(this.translationApiBase, { params, responseType: 'json' })
-  //     .subscribe({
-  //       next: (response: any) => {
-  //         if (response.success && response.translatedText) {
-  //           const detectedLang = response.detectedSource || 'unknown';
-  //           const detectedLabel =
-  //             this.languageName(this.normalizeLocaleCode(detectedLang)) ||
-  //             detectedLang;
-
-  //           const items: TranslationItem[] = [
-  //             {
-  //               code: detectedLang,
-  //               label: detectedLabel + ' (Original)',
-  //               text: text,
-  //             },
-  //             {
-  //               code: this.receiverLangCode,
-  //               label:
-  //                 this.languageName(this.receiverLangCode) +
-  //                 ' (Receiver will see)',
-  //               text: response.translatedText,
-  //             },
-  //           ];
-
-  //           this.translationCard = {
-  //             visible: true,
-  //             mode: 'sendOriginal',
-  //             items,
-  //             createdAt: new Date(),
-  //           };
-
-  //           this.showToast('Preview ready', 'success');
-  //         } else {
-  //           this.showToast('Translation failed', 'warning');
-  //         }
-
-  //         this.isTranslatingOriginal = false;
-  //       },
-  //       error: (err) => {
-  //         console.error('Translation error', err);
-  //         this.showToast('Translation failed', 'danger');
-  //         this.isTranslatingOriginal = false;
-  //       },
-  //     });
-  // }
-  /**
-   * ✅ UPDATED: Send Original with auto-translation (with source check)
-   */
   /**
    * ✅ UPDATED: Send Original with auto-translation (with source check)
    */
@@ -4748,6 +4427,11 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async sendFromTranslationCard() {
+
+    // ✅ Loading flag ON
+    if (this.isSendingFromTranslationCard) return;
+    this.isSendingFromTranslationCard = true;
+
     if (!this.translationCard) return;
 
     console.log('📋 Translation Card:', this.translationCard);
@@ -4885,7 +4569,14 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     try {
       this.stopTypingSignal();
       this.scrollToBottom();
-    } catch {}
+    } catch { }
+
+
+    // ✅ Loading flag OFF (always executed)
+    finally {
+      this.isSendingFromTranslationCard = false;
+      try { this.cdr.detectChanges(); } catch { }
+    }
   }
 
   async sendDirectMessage(senderText: string, receiverText: string) {
@@ -4926,89 +4617,99 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     this.showSendButton = false;
     this.showToast('Message sent', 'success');
   }
+  // showTranslationOptions = false;
 
 
-async showToast(
-  message: string,
-  color: 'success' | 'warning' | 'error' | 'info' | 'primary' | 'secondary' | 'medium' = 'info',
-  position: 'top' | 'middle' | 'bottom' = 'top',
-  duration: number = 2000
-) {
-  const toast = await this.toastController.create({
-    message: message,  // Keep it simple - just the message
-    duration,
-    position,
-    cssClass: `md-toast ${color} toast-with-dust`,  // Add extra class
-    enterAnimation: (el) => this.getToastAnimation(el),
-    leaveAnimation: (el) => this.getToastLeaveAnimation(el),
-    buttons: [
-      {
-        text: 'Dismiss',
-        role: 'cancel',
-      },
-    ],
-  });
+  toggleTranslationOptions() {
+    this.showTranslationOptions = !this.showTranslationOptions;
+    // // For quick test, run this in component init or console:
+    // this.isSendingFromTranslationCard = true;
+    // setTimeout(() => this.isSendingFromTranslationCard = false, 3000);
 
-  await toast.present();
-}
+  }
 
-async showToastSimple(
-  message: string,
-  color: 'success' | 'warning' | 'error' | 'info' = 'info',
-  duration: number = 1500
-) {
-  const toast = await this.toastController.create({
-    message: message,
-    duration,
-    position: 'top',
-    cssClass: `md-toast ${color} toast-with-dust`,
-    enterAnimation: (el) => this.getToastAnimation(el),
-    leaveAnimation: (el) => this.getToastLeaveAnimation(el),
-  });
 
-  await toast.present();
-}
+  async showToast(
+    message: string,
+    color: 'success' | 'warning' | 'error' | 'info' | 'primary' | 'secondary' | 'medium' = 'info',
+    position: 'top' | 'middle' | 'bottom' = 'top',
+    duration: number = 2000
+  ) {
+    const toast = await this.toastController.create({
+      message: message,  // Keep it simple - just the message
+      duration,
+      position,
+      cssClass: `md-toast ${color} toast-with-dust`,  // Add extra class
+      enterAnimation: (el) => this.getToastAnimation(el),
+      leaveAnimation: (el) => this.getToastLeaveAnimation(el),
+      buttons: [
+        {
+          text: 'Dismiss',
+          role: 'cancel',
+        },
+      ],
+    });
 
-async showToastWithIcon(
-  message: string,
-  color: 'success' | 'warning' | 'error' | 'info' | 'primary' = 'success',
-  icon: string = 'checkmark-circle'
-) {
-  const toast = await this.toastController.create({
-    message: message,
-    duration: 2000,
-    position: 'top',
-    icon,
-    cssClass: `md-toast ${color} toast-with-dust`,
-    enterAnimation: (el) => this.getToastAnimation(el),
-    leaveAnimation: (el) => this.getToastLeaveAnimation(el),
-    buttons: [{ text: 'OK', role: 'cancel' }],
-  });
+    await toast.present();
+  }
 
-  await toast.present();
-}
+  async showToastSimple(
+    message: string,
+    color: 'success' | 'warning' | 'error' | 'info' = 'info',
+    duration: number = 1500
+  ) {
+    const toast = await this.toastController.create({
+      message: message,
+      duration,
+      position: 'top',
+      cssClass: `md-toast ${color} toast-with-dust`,
+      enterAnimation: (el) => this.getToastAnimation(el),
+      leaveAnimation: (el) => this.getToastLeaveAnimation(el),
+    });
 
-getToastAnimation(baseEl: HTMLElement) {
-  const wrapper = baseEl.shadowRoot?.querySelector('.toast-wrapper');
+    await toast.present();
+  }
 
-  return this.animationCtrl
-    .create()
-    .addElement(wrapper!)
-    .duration(280)
-    .easing('cubic-bezier(0.32, 0.72, 0, 1)')
-    .fromTo('transform', 'translateY(-16px)', 'translateY(0)')
-    .fromTo('opacity', '0', '1');
-}
+  async showToastWithIcon(
+    message: string,
+    color: 'success' | 'warning' | 'error' | 'info' | 'primary' = 'success',
+    icon: string = 'checkmark-circle'
+  ) {
+    const toast = await this.toastController.create({
+      message: message,
+      duration: 2000,
+      position: 'top',
+      icon,
+      cssClass: `md-toast ${color} toast-with-dust`,
+      enterAnimation: (el) => this.getToastAnimation(el),
+      leaveAnimation: (el) => this.getToastLeaveAnimation(el),
+      buttons: [{ text: 'OK', role: 'cancel' }],
+    });
 
-getToastLeaveAnimation(baseEl: HTMLElement) {
-  const wrapper = baseEl.shadowRoot?.querySelector('.toast-wrapper');
+    await toast.present();
+  }
 
-  return this.animationCtrl
-    .create()
-    .addElement(wrapper!)
-    .duration(200)
-    .easing('cubic-bezier(0.4, 0, 1, 1)')
-    .fromTo('opacity', '1', '0')
-    .fromTo('transform', 'translateY(0)', 'translateY(-10px)');
-}
+  getToastAnimation(baseEl: HTMLElement) {
+    const wrapper = baseEl.shadowRoot?.querySelector('.toast-wrapper');
+
+    return this.animationCtrl
+      .create()
+      .addElement(wrapper!)
+      .duration(280)
+      .easing('cubic-bezier(0.32, 0.72, 0, 1)')
+      .fromTo('transform', 'translateY(-16px)', 'translateY(0)')
+      .fromTo('opacity', '0', '1');
+  }
+
+  getToastLeaveAnimation(baseEl: HTMLElement) {
+    const wrapper = baseEl.shadowRoot?.querySelector('.toast-wrapper');
+
+    return this.animationCtrl
+      .create()
+      .addElement(wrapper!)
+      .duration(200)
+      .easing('cubic-bezier(0.4, 0, 1, 1)')
+      .fromTo('opacity', '1', '0')
+      .fromTo('transform', 'translateY(0)', 'translateY(-10px)');
+  }
 }

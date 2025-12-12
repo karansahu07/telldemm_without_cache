@@ -918,6 +918,45 @@ ion-tab-bar,
   }
 }
 
+/* animation keyframes */
+@keyframes pulse {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.65; transform: scale(0.98); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* when the button has .sending class, show loader and animate it */
+ion-button.sending {
+  pointer-events: none; /* disable clicks */
+  opacity: 0.95;        /* slightly dim */
+}
+
+/* loader layout */
+ion-button .loader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: pulse 1.2s ease-in-out infinite !important; /* important to override other rules */
+}
+
+/* reduce spinner size */
+ion-button .tiny-spinner {
+  width: 16px !important;
+  height: 16px !important;
+  --spinner-width: 16px;
+  --spinner-height: 16px;
+}
+
+/* hide normal content when sending (defensive - Angular *ngIf already hides it but keep for CSS fallback) */
+ion-button.sending .normal { display: none !important; }
+
+/* ensure loader text matches button look */
+ion-button .loader-text {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+
 // /* ========================================
 //    TELEGRAM-STYLE PARTICLE DISINTEGRATION
 //    ======================================== */
@@ -1995,29 +2034,29 @@ ion-toolbar {
   }
 }
 
-  @keyframes pulse {
+  // @keyframes pulse {
 
-        0%,
-        100% {
-          opacity: 1;
-        }
+  //       0%,
+  //       100% {
+  //         opacity: 1;
+  //       }
 
-        50% {
-          opacity: 0.6;
-        }
-      }
+  //       50% {
+  //         opacity: 0.6;
+  //       }
+  //     }
 
-      /* Optional: Add a subtle scale animation */
-      @keyframes sending {
-        0% {
-          transform: scale(1);
-        }
+  //     /* Optional: Add a subtle scale animation */
+  //     @keyframes sending {
+  //       0% {
+  //         transform: scale(1);
+  //       }
 
-        50% {
-          transform: scale(0.95);
-        }
+  //       50% {
+  //         transform: scale(0.95);
+  //       }
 
-        100% {
-          transform: scale(1);
-        }
-      }
+  //       100% {
+  //         transform: scale(1);
+  //       }
+  //     }
