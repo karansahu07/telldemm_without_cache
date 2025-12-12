@@ -37,6 +37,7 @@ import {
   ToastController,
   IonDatetime,
   ActionSheetController,
+  AnimationController,
 } from '@ionic/angular';
 import { firstValueFrom, Subscription, timer } from 'rxjs';
 import { Keyboard } from '@capacitor/keyboard';
@@ -337,6 +338,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
     private fcmService: FcmService,
+    private animationCtrl: AnimationController,
     private actionSheetCtrl: ActionSheetController // private toastCtrl: ToastController, // private modalCtrl: ModalController, // private firebaseChatService : FirebaseChatService
   ) {}
 
@@ -4332,7 +4334,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
       this.isTranslatingCustom = false;
     } catch (err) {
       console.error('Translation error', err);
-      this.showToast('Translation failed', 'danger');
+      this.showToast('Translation failed', 'error');
       this.isTranslatingCustom = false;
     }
   }
@@ -4509,7 +4511,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
         },
         error: (err) => {
           console.error('Translation error', err);
-          this.showToast('Translation failed', 'danger');
+          this.showToast('Translation failed', 'error');
           this.isTranslatingToReceiver = false;
         },
       });
@@ -4739,7 +4741,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
         },
         error: (err) => {
           console.error('Translation error', err);
-          this.showToast('Translation failed', 'danger');
+          this.showToast('Translation failed', 'error');
           this.isTranslatingOriginal = false;
         },
       });
@@ -4925,62 +4927,88 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     this.showToast('Message sent', 'success');
   }
 
-  async showToast(
-    message: string,
-    color: string = 'medium',
-    duration: number = 2000,
-    position: 'top' | 'middle' | 'bottom' = 'bottom'
-  ) {
-    const toast = await this.toastController.create({
-      message: message,
-      duration: duration,
-      color: color,
-      position: position,
-      buttons: [
-        {
-          text: 'Dismiss',
-          role: 'cancel',
-        },
-      ],
-    });
 
-    await toast.present();
-  }
+async showToast(
+  message: string,
+  color: 'success' | 'warning' | 'error' | 'info' | 'primary' | 'secondary' | 'medium' = 'info',
+  position: 'top' | 'middle' | 'bottom' = 'top',
+  duration: number = 2000
+) {
+  const toast = await this.toastController.create({
+    message: message,  // Keep it simple - just the message
+    duration,
+    position,
+    cssClass: `md-toast ${color} toast-with-dust`,  // Add extra class
+    enterAnimation: (el) => this.getToastAnimation(el),
+    leaveAnimation: (el) => this.getToastLeaveAnimation(el),
+    buttons: [
+      {
+        text: 'Dismiss',
+        role: 'cancel',
+      },
+    ],
+  });
 
-  async showToastSimple(
-    message: string,
-    color: string = 'medium',
-    duration: number = 1500
-  ) {
-    const toast = await this.toastController.create({
-      message: message,
-      duration: duration,
-      color: color,
-      position: 'top',
-    });
+  await toast.present();
+}
 
-    await toast.present();
-  }
+async showToastSimple(
+  message: string,
+  color: 'success' | 'warning' | 'error' | 'info' = 'info',
+  duration: number = 1500
+) {
+  const toast = await this.toastController.create({
+    message: message,
+    duration,
+    position: 'top',
+    cssClass: `md-toast ${color} toast-with-dust`,
+    enterAnimation: (el) => this.getToastAnimation(el),
+    leaveAnimation: (el) => this.getToastLeaveAnimation(el),
+  });
 
-  async showToastWithIcon(
-    message: string,
-    color: string = 'success',
-    icon: string = 'checkmark-circle'
-  ) {
-    const toast = await this.toastController.create({
-      message: message,
-      duration: 2000,
-      color: color,
-      position: 'top',
-      icon: icon,
-      buttons: [
-        {
-          text: 'OK',
-          role: 'cancel',
-        },
-      ],
-    });
+  await toast.present();
+}
 
-    await toast.present();
-  }
+async showToastWithIcon(
+  message: string,
+  color: 'success' | 'warning' | 'error' | 'info' | 'primary' = 'success',
+  icon: string = 'checkmark-circle'
+) {
+  const toast = await this.toastController.create({
+    message: message,
+    duration: 2000,
+    position: 'top',
+    icon,
+    cssClass: `md-toast ${color} toast-with-dust`,
+    enterAnimation: (el) => this.getToastAnimation(el),
+    leaveAnimation: (el) => this.getToastLeaveAnimation(el),
+    buttons: [{ text: 'OK', role: 'cancel' }],
+  });
+
+  await toast.present();
+}
+
+getToastAnimation(baseEl: HTMLElement) {
+  const wrapper = baseEl.shadowRoot?.querySelector('.toast-wrapper');
+
+  return this.animationCtrl
+    .create()
+    .addElement(wrapper!)
+    .duration(280)
+    .easing('cubic-bezier(0.32, 0.72, 0, 1)')
+    .fromTo('transform', 'translateY(-16px)', 'translateY(0)')
+    .fromTo('opacity', '0', '1');
+}
+
+getToastLeaveAnimation(baseEl: HTMLElement) {
+  const wrapper = baseEl.shadowRoot?.querySelector('.toast-wrapper');
+
+  return this.animationCtrl
+    .create()
+    .addElement(wrapper!)
+    .duration(200)
+    .easing('cubic-bezier(0.4, 0, 1, 1)')
+    .fromTo('opacity', '1', '0')
+    .fromTo('transform', 'translateY(0)', 'translateY(-10px)');
+}
 }
