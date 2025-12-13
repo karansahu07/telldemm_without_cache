@@ -893,42 +893,106 @@ export class SqliteService {
     });
   }
 
+  // async getMessages(
+  //   roomId: string,
+  //   ownerId: string,
+  //   limit = 20,
+  //   offset = 0
+  // ): Promise<IMessage[]> {
+  //   return this.withOpState(
+  //     'getMessages',
+  //     async () => {
+  //       const sql = `SELECT * FROM messages WHERE roomId = ? AND ownerId = ? ORDER BY timestamp DESC LIMIT ? OFFSET ?`;
+  //       const res = await this.db.query(sql, [roomId, ownerId, limit, offset]);
+  //       const msgIds = res.values?.map((m) => m.msgId) || [];
+  //       const placeholders = msgIds.map(() => '?').join(',');
+
+  //       const attachQuery = `SELECT * FROM attachments WHERE msgId IN (${placeholders})`;
+
+  //       const res2 = await this.db.query(attachQuery, msgIds);
+  //       return (
+  //         res.values?.reverse().map((msg) => {
+  //           const attachment = res2.values?.find((a) => a.msgId == msg.msgId);
+  //           return {
+  //             ...msg,
+  //             ...(attachment && { attachment }),
+  //             receipts: JSON.parse(msg.receipts || '{}'),
+  //             reactions: JSON.parse(msg.reactions || '[]'),
+  //             deletedFor: JSON.parse(msg.deletedFor || '{}'),
+  //             isMe: !!msg.isMe,
+  //             isEdit: !!msg.isEdit,
+  //             timestamp: this.toDate(msg.timestamp),
+  //           };
+  //         }) ?? []
+  //       );
+  //     },
+  //     []
+  //   );
+  // }
+
   async getMessages(
-    roomId: string,
-    ownerId: string,
-    limit = 20,
-    offset = 0
-  ): Promise<IMessage[]> {
-    return this.withOpState(
-      'getMessages',
-      async () => {
-        const sql = `SELECT * FROM messages WHERE roomId = ? AND ownerId = ? ORDER BY timestamp DESC LIMIT ? OFFSET ?`;
-        const res = await this.db.query(sql, [roomId, ownerId, limit, offset]);
-        const msgIds = res.values?.map((m) => m.msgId) || [];
+  roomId: string,
+  ownerId: string,
+  limit = 20,
+  offset = 0
+): Promise<IMessage[]> {
+  return this.withOpState(
+    'getMessages',
+    async () => {
+      // Step 1: Get messages
+      const sql = `
+        SELECT * FROM messages 
+        WHERE roomId = ? AND ownerId = ? 
+        ORDER BY timestamp DESC 
+        LIMIT ? OFFSET ?
+      `;
+      const res = await this.db.query(sql, [roomId, ownerId, limit, offset]);
+
+      if (!res.values || res.values.length === 0) {
+        return [];
+      }
+
+      // Step 2: Get msgIds for attachment query
+      const msgIds = res.values.map((m) => m.msgId);
+      
+      // Step 3: Get attachments only if msgIds exist
+      let attachmentsMap: Map<string, any> = new Map();
+      
+      if (msgIds.length > 0) {
         const placeholders = msgIds.map(() => '?').join(',');
-
         const attachQuery = `SELECT * FROM attachments WHERE msgId IN (${placeholders})`;
+        
+        const attachRes = await this.db.query(attachQuery, msgIds);
+        
+        // Create a map for quick lookup
+        if (attachRes.values) {
+          attachRes.values.forEach((attachment) => {
+            attachmentsMap.set(attachment.msgId, attachment);
+          });
+        }
+      }
 
-        const res2 = await this.db.query(attachQuery, msgIds);
-        return (
-          res.values?.reverse().map((msg) => {
-            const attachment = res2.values?.find((a) => a.msgId == msg.msgId);
-            return {
-              ...msg,
-              ...(attachment && { attachment }),
-              receipts: JSON.parse(msg.receipts || '{}'),
-              reactions: JSON.parse(msg.reactions || '[]'),
-              deletedFor: JSON.parse(msg.deletedFor || '{}'),
-              isMe: !!msg.isMe,
-              isEdit: !!msg.isEdit,
-              timestamp: this.toDate(msg.timestamp),
-            };
-          }) ?? []
-        );
-      },
-      []
-    );
-  }
+      // Step 4: Combine messages with attachments and parse JSON fields
+      return res.values.reverse().map((msg) => {
+        const attachment = attachmentsMap.get(msg.msgId);
+        
+        return {
+          ...msg,
+          ...(attachment && { attachment }),
+          // Parse translations if it exists
+          translations: msg.translations ? JSON.parse(msg.translations) : null,
+          receipts: JSON.parse(msg.receipts || '{}'),
+          reactions: JSON.parse(msg.reactions || '[]'),
+          deletedFor: JSON.parse(msg.deletedFor || '{}'),
+          isMe: !!msg.isMe,
+          isEdit: !!msg.isEdit,
+          timestamp: msg.timestamp, // Keep as string or convert based on your need
+        };
+      });
+    },
+    []
+  );
+}
 
   async getMessage(msgId: string): Promise<IMessage | null> {
     return this.withOpState(

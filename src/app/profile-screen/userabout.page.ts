@@ -691,6 +691,8 @@ ngOnDestroy() {
         member.user_id,
       ]);
 
+      await this.firebaseChatService.removeMemberFromConvLocal(this.receiverId, this.currentUserId);
+
       const backendGroupId = await this.firebaseChatService.getBackendGroupId(
         groupId
       );
@@ -786,6 +788,7 @@ ngOnDestroy() {
       this.currentUserId = this.authService.authData?.userId || '';
       console.log('this.currentUserId', this.currentUserId);
       this.firebaseChatService.exitGroup(this.receiverId, [this.currentUserId]);
+      this.firebaseChatService.removeMemberFromConvLocal(this.receiverId, this.currentUserId);
       const toast = await this.toastCtrl.create({
         message: this.translateText(
           'userabout.exitSuccess',

@@ -818,12 +818,13 @@ export class FirebaseChatService {
       await this.loadMessages(20, true);
       console.log("this currrent type", this.currentChat.type)
       if(this.currentChat.type == 'group'){
-        console.log("called the current chat type sadffffffffffffff")
+        console.log("called the current chat type sadffffffffffffff", memberIds)
         if(!memberIds.includes(this.senderId as string)) return;
       }
+      console.log("continue flow in openchat");
       await this.syncMessagesWithServer();
       if (!this.networkService.isOnline.value) return;
-      this._roomMessageListner = this.listenRoomStream(conv?.roomId as string, {
+      this._roomMessageListner = await this.listenRoomStream(conv?.roomId as string, {
         onAdd: async (msgKey, data, isNew) => {
           if (!this.currentChat || this.currentChat.roomId !== conv.roomId) {
             console.log('⚠️ Message received but chat is closed, ignoring');
@@ -900,6 +901,15 @@ export class FirebaseChatService {
     } catch (error) {
       console.error('❌ Error in openChat:', error);
       throw error; // Re-throw so caller can handle
+    }
+  }
+
+  async stopRoomListener(){
+    try {
+      console.log("this is stop room listener")
+      await this._roomMessageListner();
+    } catch (error) {
+      console.error("#911",error)
     }
   }
 
@@ -1036,6 +1046,86 @@ export class FirebaseChatService {
       this.presenceCleanUp = null;
     }
   }
+
+  /**
+ * ✅ Close chat and cleanup all listeners
+ */
+async forceCloseChat(): Promise<void> {
+  try {
+    console.log('🔴 Force closing chat due to group removal');
+    
+    // Clear typing status
+    if (this.senderId && this.currentChat?.roomId) {
+      try {
+        const typingRef = ref(this.db, `typing/${this.currentChat.roomId}/${this.senderId}`);
+        await set(typingRef, false);
+      } catch (error) {
+        console.warn('⚠️ Failed to clear typing status:', error);
+      }
+    }
+
+    // Remove message listener
+    if (this._roomMessageListner) {
+      try {
+        this._roomMessageListner();
+        console.log('✅ Message listener removed');
+      } catch (error) {
+        console.warn('⚠️ Failed to remove message listener:', error);
+      }
+      this._roomMessageListner = null;
+    }
+
+    // Remove presence listeners
+    if (this.presenceCleanUp) {
+      try {
+        this.presenceCleanUp();
+        console.log('✅ Presence listeners removed');
+      } catch (error) {
+        console.warn('⚠️ Failed to remove presence listeners:', error);
+      }
+      this.presenceCleanUp = null;
+    }
+
+    // Clear typing status map
+    if (this.currentChat?.roomId) {
+      const typingMap = new Map(this._typingStatus$.value);
+      const memberIds = this.currentChat.members || [];
+
+      memberIds.forEach((memberId) => {
+        if (memberId !== this.senderId) {
+          typingMap.delete(memberId);
+        }
+      });
+
+      this._typingStatus$.next(typingMap);
+    }
+
+    // Clear presence data
+    if (this.currentChat?.members) {
+      this.currentChat.members.forEach((memberId) => {
+        if (memberId !== this.senderId) {
+          this.membersPresence.delete(memberId);
+        }
+      });
+      this._presenceSubject$.next(new Map(this.membersPresence));
+    }
+
+    // Clear active chat
+    if (this.senderId) {
+      await this.clearActiveChat(this.senderId);
+    }
+
+    const closedChatId = this.currentChat?.roomId;
+    this.currentChat = null;
+
+    console.log(`✅ Chat force closed successfully: ${closedChatId}`);
+  } catch (error) {
+    console.error('❌ Error force closing chat:', error);
+    this.currentChat = null;
+    this._roomMessageListner = null;
+    this.presenceCleanUp = null;
+  }
+}
 
   async initApp(rootUserId?: string) {
     try {
@@ -1440,6 +1530,14 @@ export class FirebaseChatService {
     }
     rtdbSet(messageRef, reactions);
     // rtdbUpdate(messageRef,reactions)
+  }
+
+  //update conversation locally _conversations when member removed from group
+  removeMemberFromConvLocal=(roomId : string, userId : string)=>{
+    const convs = this._conversations$.value
+    const idx = convs.findIndex(c=>c.roomId===roomId)
+    convs[idx].members = convs[idx].members?.filter(uid=>uid!==userId)
+    this._conversations$.next([...convs])
   }
 
   async loadConversations() {
@@ -2746,56 +2844,119 @@ export class FirebaseChatService {
   // Methods that attach realtime listeners (return unsubscribe handles or Observables)
   // =====================
 
+  // async listenRoomStream(
+  //   roomId: string,
+  //   handlers: {
+  //     onAdd?: (msgKey: string, data: any, isNew: boolean) => void;
+  //     onChange?: (msgKey: string, data: any) => void;
+  //     onRemove?: (msgKey: string) => void;
+  //   }
+  // ) {
+  //   const roomRef = ref(this.db, `chats/${roomId}`);
+
+  //   const snapshot = await get(roomRef);
+  //   const existing = snapshot.val() || {};
+
+  //   if (handlers.onAdd) {
+  //     const items = Object.entries(existing).map(([k, v]: any) => ({
+  //       key: k,
+  //       val: v,
+  //     }));
+  //     // console.log("handlers in onAdd", items)
+  //     items.sort((a, b) => (a.val.timestamp || 0) - (b.val.timestamp || 0));
+  //     items.forEach((i) => handlers.onAdd!(i.key, i.val, false));
+  //   }
+
+  //   const addedHandler = onChildAdded(roomRef, (snap) => {
+  //     const key = snap.key!;
+  //     const val = snap.val();
+  //     const currentMessagesMap = new Map(this._messages$.value);
+  //     const existingMessages = currentMessagesMap.get(roomId) || [];
+  //     const existingKeys = new Set(existingMessages.map((m) => m.msgId));
+  //     if (existingKeys.has(key)) {
+  //       return;
+  //     }
+  //     console.log('new message added');
+  //     handlers.onAdd?.(key, val, true); // isNew = true
+  //   });
+
+  //   const changedHandler = onChildChanged(roomRef, (snap) => {
+  //     handlers.onChange?.(snap.key!, snap.val());
+  //   });
+
+  //   const removedHandler = onChildRemoved(roomRef, (snap) => {
+  //     handlers.onRemove?.(snap.key!);
+  //   });
+
+  //   return () => {
+  //     off(roomRef, 'child_added', addedHandler);
+  //     off(roomRef, 'child_changed', changedHandler);
+  //     off(roomRef, 'child_removed', removedHandler);
+  //   };
+  // }
+
   async listenRoomStream(
-    roomId: string,
-    handlers: {
-      onAdd?: (msgKey: string, data: any, isNew: boolean) => void;
-      onChange?: (msgKey: string, data: any) => void;
-      onRemove?: (msgKey: string) => void;
-    }
-  ) {
-    const roomRef = ref(this.db, `chats/${roomId}`);
-
-    const snapshot = await get(roomRef);
-    const existing = snapshot.val() || {};
-
-    if (handlers.onAdd) {
-      const items = Object.entries(existing).map(([k, v]: any) => ({
-        key: k,
-        val: v,
-      }));
-      // console.log("handlers in onAdd", items)
-      items.sort((a, b) => (a.val.timestamp || 0) - (b.val.timestamp || 0));
-      items.forEach((i) => handlers.onAdd!(i.key, i.val, false));
-    }
-
-    const addedHandler = onChildAdded(roomRef, (snap) => {
-      const key = snap.key!;
-      const val = snap.val();
-      const currentMessagesMap = new Map(this._messages$.value);
-      const existingMessages = currentMessagesMap.get(roomId) || [];
-      const existingKeys = new Set(existingMessages.map((m) => m.msgId));
-      if (existingKeys.has(key)) {
-        return;
-      }
-      console.log('new message added');
-      handlers.onAdd?.(key, val, true); // isNew = true
-    });
-
-    const changedHandler = onChildChanged(roomRef, (snap) => {
-      handlers.onChange?.(snap.key!, snap.val());
-    });
-
-    const removedHandler = onChildRemoved(roomRef, (snap) => {
-      handlers.onRemove?.(snap.key!);
-    });
-
-    return () => {
-      off(roomRef, 'child_added', addedHandler);
-      off(roomRef, 'child_changed', changedHandler);
-      off(roomRef, 'child_removed', removedHandler);
-    };
+  roomId: string,
+  handlers: {
+    onAdd?: (msgKey: string, data: any, isNew: boolean) => void;
+    onChange?: (msgKey: string, data: any) => void;
+    onRemove?: (msgKey: string) => void;
   }
+) {
+  const roomRef = ref(this.db, `chats/${roomId}`);
+
+  const snapshot = await get(roomRef);
+  const existing = snapshot.val() || {};
+
+  if (handlers.onAdd) {
+    const items = Object.entries(existing).map(([k, v]: any) => ({
+      key: k,
+      val: v,
+    }));
+    items.sort((a, b) => (a.val.timestamp || 0) - (b.val.timestamp || 0));
+    items.forEach((i) => handlers.onAdd!(i.key, i.val, false));
+  }
+
+  // --- create and store handler references (IMPORTANT) ---
+  const addedHandler = (snap: any) => {
+    const key = snap.key!;
+    const val = snap.val();
+
+    // make sure we don't emit duplicate adds (your original logic)
+    const currentMessagesMap = new Map(this._messages$.value);
+    const existingMessages = currentMessagesMap.get(roomId) || [];
+    const existingKeys = new Set(existingMessages.map((m: any) => m.msgId));
+    if (existingKeys.has(key)) return;
+
+    console.log('new message added');
+    handlers.onAdd?.(key, val, true);
+  };
+
+  const changedHandler = (snap: any) => {
+    handlers.onChange?.(snap.key!, snap.val());
+  };
+
+  const removedHandler = (snap: any) => {
+    handlers.onRemove?.(snap.key!);
+  };
+
+  // --- attach using the named handlers ---
+  onChildAdded(roomRef, addedHandler);
+  onChildChanged(roomRef, changedHandler);
+  onChildRemoved(roomRef, removedHandler);
+
+  // --- cleanup function ---
+  return () => {
+    // remove specific listeners:
+    // off(roomRef, 'child_added', addedHandler);
+    // off(roomRef, 'child_changed', changedHandler);
+    // off(roomRef, 'child_removed', removedHandler);
+
+    // OR if you prefer: remove ALL listeners on the ref
+    off(roomRef);
+  };
+}
+
 
   /** Listen to messages in a room as an Observable of message arrays */
   listenForMessages(roomId: string): Observable<any[]> {

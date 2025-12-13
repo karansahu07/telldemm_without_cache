@@ -533,12 +533,13 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     this.groupMembershipUnsubscribe = onValue(
       this.groupMembershipRef,
       (snapshot) => {
-        this.zone.run(() => {
+        this.zone.run(async () => {
           const members = snapshot.val() || {};
 
           // Check if current user is still a member
           const wasCurrentUserMember = this.isCurrentUserMember();
           const isStillMember = !!members[this.senderId];
+          
 
           console.log('🔄 Real-time membership check:', {
             senderId: this.senderId,
@@ -570,6 +571,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
             // Force UI update
             try {
               this.cdr.detectChanges();
+              await this.chatService.stopRoomListener();
             } catch (e) {
               console.warn('detectChanges error:', e);
             }
