@@ -467,7 +467,7 @@
 <!-- ✅ Message Input Footer -->
 <!-- ========================= -->
 <!-- Message Input Footer (updated) -->
-<div class="footer-fixed">
+<div class="footer-fixed" [class.typing-state]="showCompressedActions">
   <!-- Normal footer: typing indicator, reply preview, input row -->
 
     <div *ngIf="!isCurrentUserMember()" style="padding: 16px; text-align: center; background: #f5f5f5; border-top: 1px solid #ddd;">
@@ -545,19 +545,47 @@
         <div style="display: flex; align-items: center; gap: 8px">
           <ion-icon name="document-text-outline" class="icon-left" (click)="openKeyboard()"></ion-icon>
 
-          <ion-textarea [disabled]="iBlocked" [autoGrow]="true" [(ngModel)]="messageText" placeholder="Message"
+          <!-- <ion-textarea [disabled]="iBlocked" [autoGrow]="true" [(ngModel)]="messageText" placeholder="Message"
             (ionInput)="onMessageInput($event)" (ionFocus)="onInputFocus()" (ionBlur)="onInputBlur()"
-            (keyup.enter)="sendMessage()" class="message-input"></ion-textarea>
+            (keyup.enter)="sendMessage()" class="message-input" labelPlacement="fixed"></ion-textarea> -->
+            <ion-textarea
+  class="message-input"
+  [(ngModel)]="messageText"
+  placeholder="Message"
+  [autoGrow]="true"
+  rows="1"
+  labelPlacement="fixed"
+  (ionInput)="onMessageInput($event)"
+  (ionFocus)="onInputFocus()"
+  (ionBlur)="onInputBlur()"
+  (keyup.enter)="sendMessage()"
+  [disabled]="iBlocked"
+  style="
+    --padding-top: 10px;
+    --padding-bottom: 10px;
+    --padding-start: 0px;
+    --padding-end: 0px;
+    --line-height: 20px;
+    min-height: 44px;
+  ">
+</ion-textarea>
+
             <ion-icon 
   name="language-outline"
-  class="icon-left"
+  class="icon-left action-icon"
   (click)="toggleTranslationOptions()"
   style="font-size: 22px;">
 </ion-icon>
 
 
-          <ion-icon name="attach-outline" (click)="pickAttachment()" class="icon-right" [hidden]="iBlocked"></ion-icon>
-          <ion-icon name="camera-outline" class="icon-right" (click)="openCamera()" [hidden]="iBlocked"></ion-icon>
+          <ion-icon name="attach-outline" (click)="pickAttachment()" class="icon-right action-icon" [hidden]="iBlocked"></ion-icon>
+          <ion-icon name="camera-outline" class="icon-right action-icon" (click)="openCamera()" [hidden]="iBlocked"></ion-icon>
+           <!-- COMPRESSED ICON (TYPING STATE) -->
+    <ion-icon
+      name="ellipsis-horizontal-outline"
+      class="compressed-menu-icon"
+      (click)="openMoreActions()">
+    </ion-icon>
         </div>
 
         <!-- 🌐 Translation Options -->

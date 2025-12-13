@@ -339,6 +339,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private fcmService: FcmService,
     private animationCtrl: AnimationController,
+    
     private actionSheetCtrl: ActionSheetController // private toastCtrl: ToastController, // private modalCtrl: ModalController, // private firebaseChatService : FirebaseChatService
   ) { }
 
@@ -747,32 +748,88 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
 
     this.typingCount = typingCount;
   }
+showCompressedActions = false;
+// showSendButton = false;
+// typingTimeout: any;
+// messageText = '';
 
   // 🆕 Call this when user types in the input
-  onMessageInput(event: any) {
-    const text = event.target.value || '';
+  // onMessageInput(event: any) {
+  //   const text = event.target.value || '';
 
-    // Show/hide send button based on input
-    this.showSendButton = text.trim().length > 0;
+  //   // Show/hide send button based on input
+  //   this.showSendButton = text.trim().length > 0;
 
-    this.showTranslationOptions = this.messageText.trim().length > 0;
+  //   // this.showTranslationOptions = this.messageText.trim().length > 0;
 
-    if (text.trim().length > 0) {
-      this.chatService.setTypingStatus(true);
+  //   if (text.trim().length > 0) {
+  //     this.chatService.setTypingStatus(true);
 
-      // Reset timeout
-      if (this.typingTimeout) {
-        clearTimeout(this.typingTimeout);
-      }
+  //     // Reset timeout
+  //     if (this.typingTimeout) {
+  //       clearTimeout(this.typingTimeout);
+  //     }
 
-      // Auto-clear after 2 seconds of no typing
-      this.typingTimeout = setTimeout(() => {
-        this.chatService.setTypingStatus(false);
-      }, 2000);
-    } else {
-      this.chatService.setTypingStatus(false);
+  //     // Auto-clear after 2 seconds of no typing
+  //     this.typingTimeout = setTimeout(() => {
+  //       this.chatService.setTypingStatus(false);
+  //     }, 2000);
+  //   } else {
+  //     this.chatService.setTypingStatus(false);
+  //   }
+  // }
+ onMessageInput(event: any) {
+  const text = event.target.value || '';
+  this.messageText = text;
+
+  const isTyping = text.trim().length > 0;
+
+  // Toggle send button
+  this.showSendButton = isTyping;
+
+  // 🔥 Compress icons while typing
+  this.showCompressedActions = isTyping;
+  console.log("this.showCompressedActions",this.showCompressedActions);
+
+  // Optional: typing status logic
+  if (isTyping) {
+    if (this.typingTimeout) {
+      clearTimeout(this.typingTimeout);
     }
+
+    this.typingTimeout = setTimeout(() => {
+      // user stopped typing
+    }, 2000);
   }
+}
+
+async openMoreActions() {
+  const sheet = await this.actionSheetCtrl.create({
+    buttons: [
+      {
+        text: 'Attachment',
+        icon: 'attach',
+        handler: () => this.pickAttachment(),
+      },
+      {
+        text: 'Camera',
+        icon: 'camera',
+        handler: () => this.openCamera(),
+      },
+      {
+        text: 'Translate',
+        icon: 'language',
+        handler: () => this.toggleTranslationOptions(),
+      },
+      {
+        text: 'Cancel',
+        role: 'cancel',
+      },
+    ],
+  });
+
+  await sheet.present();
+}
 
   formatLastSeen(timestamp: number): string {
     const now = Date.now();
