@@ -326,8 +326,8 @@
 
                 <!-- VISIBLE TEXT (active translation) -->
                 <ion-text class="message-text" (click)="$event.stopPropagation()">
-                  {{ getDisplayedText(msg) }}
-                </ion-text>
+  {{ msg.translations ? getDisplayedText(msg) : msg.text }}
+</ion-text>
               </ng-container>
 
               <!-- <ng-container *ngIf="msg.attachment"> -->

@@ -1,6 +1,7 @@
 import { IMessage } from 'src/app/services/sqlite.service';
 
 export interface Message {
+  msgId: string;
   sender_id: string;
   key?: any;
   text: string | null;
@@ -266,4 +267,5 @@ export interface IChatMeta {
   isArchived : boolean;
   isPinned : boolean;
   isLocked : boolean;
+  removedOrLeftAt? : string;
 }

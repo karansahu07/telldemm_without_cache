@@ -1975,48 +1975,102 @@ async openMoreActions() {
     }
   }
 
+  // async editMessage(message: IMessage) {
+  //   const alert = await this.alertCtrl.create({
+  //     header: 'Edit Message',
+  //     inputs: [
+  //       {
+  //         name: 'text',
+  //         type: 'text',
+  //         value: message.text,
+  //       },
+  //     ],
+  //     buttons: [
+  //       {
+  //         text: 'Cancel',
+  //         role: 'cancel',
+  //       },
+  //       {
+  //         text: 'Save',
+  //         handler: async (data: any) => {
+  //           const newText = data.text?.trim();
+  //           if (!newText) return;
+
+  //           try {
+  //             await this.chatService.editMessage(
+  //               this.roomId,
+  //               message.msgId,
+  //               newText
+  //             );
+
+  //             message.text = newText;
+  //             message.isEdit = true;
+  //             this.lastPressedMessage = { ...message };
+  //             this.lastPressedMessage = [];
+  //           } catch (err) {
+  //             console.error('Failed to edit message:', err);
+  //           }
+  //         },
+  //       },
+  //     ],
+  //   });
+
+  //   await alert.present();
+  // }
+
   async editMessage(message: IMessage) {
-    const alert = await this.alertCtrl.create({
-      header: 'Edit Message',
-      inputs: [
-        {
-          name: 'text',
-          type: 'text',
-          value: message.text,
-        },
-      ],
-      buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel',
-        },
-        {
-          text: 'Save',
-          handler: async (data: any) => {
-            const newText = data.text?.trim();
-            if (!newText) return;
+  const alert = await this.alertCtrl.create({
+    header: 'Edit Message',
+    inputs: [
+      {
+        name: 'text',
+        type: 'text',
+        value: message.translations?.original?.text || message.text,
+      },
+    ],
+    buttons: [
+      {
+        text: 'Cancel',
+        role: 'cancel',
+      },
+      {
+        text: 'Save',
+        handler: async (data: any) => {
+          const newText = data.text?.trim();
+          if (!newText) return;
 
-            try {
-              await this.chatService.editMessage(
-                this.roomId,
-                message.msgId,
-                newText
-              );
+          try {
+            await this.chatService.editMessage(
+              this.roomId,
+              message.msgId,
+              newText
+            );
 
-              message.text = newText;
-              message.isEdit = true;
-              this.lastPressedMessage = { ...message };
-              this.lastPressedMessage = [];
-            } catch (err) {
-              console.error('Failed to edit message:', err);
+            message.text = newText;
+            message.isEdit = true;
+            // message.editedAt = Date.now();
+
+            if (message.translations?.original) {
+              message.translations.original.text = newText;
             }
-          },
-        },
-      ],
-    });
 
-    await alert.present();
-  }
+            this.cdr.detectChanges();
+            
+            this.selectedMessages = [];
+            this.lastPressedMessage = null;
+            
+            this.showToast('Message edited successfully', 'success');
+          } catch (err) {
+            console.error('Failed to edit message:', err);
+            this.showToast('Failed to edit message', 'error');
+          }
+        },
+      },
+    ],
+  });
+
+  await alert.present();
+}
 
   async copyMessage() {
     if (this.lastPressedMessage?.text) {
@@ -4032,17 +4086,37 @@ async openMoreActions() {
     return st.activeCode !== 'original';
   }
 
+  // getDisplayedText(msg: any) {
+  //   this.ensureToggleState(msg);
+  //   const st = this.messageToggleMap.get(msg.msgId)!;
+  //   if (!msg.translations) return msg.text || '';
+  //   const all = this.getAllTranslationsArray(msg);
+  //   const found = all.find((x) => x.code === st.activeCode);
+  //   if (found) return found.text;
+  //   if (st.activeCode === 'original' && msg.translations.original)
+  //     return msg.translations.original.text;
+  //   return msg.text || '';
+  // }
+
   getDisplayedText(msg: any) {
-    this.ensureToggleState(msg);
-    const st = this.messageToggleMap.get(msg.msgId)!;
-    if (!msg.translations) return msg.text || '';
-    const all = this.getAllTranslationsArray(msg);
-    const found = all.find((x) => x.code === st.activeCode);
-    if (found) return found.text;
-    if (st.activeCode === 'original' && msg.translations.original)
-      return msg.translations.original.text;
+  this.ensureToggleState(msg);
+  const st = this.messageToggleMap.get(msg.msgId)!;
+  
+  if (!msg.translations) {
     return msg.text || '';
   }
+  
+  const all = this.getAllTranslationsArray(msg);
+  const found = all.find((x) => x.code === st.activeCode);
+  
+  if (found) return found.text;
+  
+  if (st.activeCode === 'original' && msg.translations.original) {
+    return msg.translations.original.text;
+  }
+  
+  return msg.text || '';
+}
 
   cycleTranslation(msg: any) {
     if (!msg.translations) return;
