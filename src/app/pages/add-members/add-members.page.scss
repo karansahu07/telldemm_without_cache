@@ -1,19 +1,27 @@
+// Selected Chips Container - Wrapping enabled
 .selected-chip-row {
   display: flex;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  padding: 8px 0;
+  flex-wrap: wrap; // Changed from nowrap to wrap
   gap: 8px;
-
-  /* subtle scrollbar */
-  &::-webkit-scrollbar { height: 8px; }
+  padding: 8px 0;
+  max-height: 200px; // Optional: limit height
+  overflow-y: auto; // Vertical scroll if needed
+  
+  // Subtle scrollbar styling
+  &::-webkit-scrollbar { 
+    width: 6px;
+    height: 6px;
+  }
   &::-webkit-scrollbar-thumb {
     background: color-mix(in srgb, var(--ion-text-color) 14%, transparent);
     border-radius: 999px;
   }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
 }
 
-/* Chip tokenization */
+// Chip styling with cross button always visible
 ion-chip {
   --background: color-mix(in srgb, var(--ion-color-primary) 12%, var(--ion-item-background));
   --color: var(--ion-text-color);
@@ -22,32 +30,49 @@ ion-chip {
   border: 1px solid var(--border-color);
   cursor: pointer;
   transition: transform .12s ease, background-color .12s ease, border-color .12s ease;
-
+  flex-shrink: 0; // Prevent chips from shrinking
+  
   &:hover {
     --background: color-mix(in srgb, var(--ion-color-primary) 16%, var(--ion-item-background));
+    transform: scale(1.02);
   }
+  
+  &:active {
+    transform: scale(0.98);
+  }
+  
   &:focus-visible {
     outline: none;
-    box-shadow: var(--focus-ring);
+    box-shadow: 0 0 0 2px var(--ion-color-primary);
     border-radius: 999px;
+  }
+  
+  // Ensure close icon is always visible
+  ion-icon[name="close-circle"] {
+    margin-left: 4px;
+    font-size: 20px;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+    
+    &:hover {
+      opacity: 1;
+      color: var(--ion-color-danger);
+    }
   }
 }
 
-/* De-emphasize already-added members */
-.already-member { opacity: .55; }
+// De-emphasize already-added members
+.already-member { 
+  opacity: .55; 
+}
+
 .already-text {
   font-style: italic;
   color: color-mix(in srgb, var(--ion-text-color) 60%, transparent);
 }
 
-/* Add button: keep your gradient but brand-tint it */
+// Add Button - Original gradient style
 .add-btn {
-  /* If you prefer solid brand, uncomment next three lines and remove gradient */
-  /* --background: var(--ion-color-primary);
-     --background-hover: var(--ion-color-primary-shade);
-     --color: var(--ion-color-primary-contrast); */
-
-  /* Gradient version (adapts to primary for consistency) */
   --color: var(--ion-color-primary-contrast, #fff);
   --border-radius: 999px;
   font-weight: 700;
@@ -55,31 +80,79 @@ ion-chip {
   font-size: 16px;
   padding: 5px 50px;
   height: 48px;
-
-  /* gradient derived from primary tone */
-  background:
-    linear-gradient(
-      175deg,
-      color-mix(in srgb, var(--ion-color-primary) 55%, #ffffff) 0%,
-      color-mix(in srgb, var(--ion-color-primary) 95%, #000000) 50%
-    );
+  margin: 8px 16px;
+  
+  // Original gradient derived from primary tone
+  background: linear-gradient(
+    175deg,
+    color-mix(in srgb, var(--ion-color-primary) 55%, #ffffff) 0%,
+    color-mix(in srgb, var(--ion-color-primary) 95%, #ffffff) 50%
+  );
+  
   color: var(--color);
   box-shadow: 0 6px 16px color-mix(in srgb, var(--ion-color-primary) 20%, transparent);
-
-  &:focus-visible { box-shadow: var(--focus-ring); }
+  
+  transition: all 0.3s ease;
+  
+  &:hover:not([disabled]) {
+    box-shadow: 0 8px 20px color-mix(in srgb, var(--ion-color-primary) 25%, transparent);
+    transform: translateY(-2px);
+  }
+  
+  &:active:not([disabled]) {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--ion-color-primary) 20%, transparent);
+  }
+  
+  &[disabled] {
+    opacity: 0.4;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+  
+  &:focus-visible {
+    outline: 2px solid var(--ion-color-primary);
+    outline-offset: 2px;
+  }
 }
 
-/* Footer spacing + no shadow */
-ion-footer{
+// Footer styling
+ion-footer {
   padding-bottom: env(safe-area-inset-bottom, 20px);
-  box-shadow: none !important;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05) !important;
   --background: var(--ion-toolbar-background, var(--ion-background-color));
   --color: var(--ion-toolbar-color, var(--ion-text-color));
 }
 
-/* Dark-mode polish */
+// Dark mode adjustments
 @media (prefers-color-scheme: dark) {
   .selected-chip-row::-webkit-scrollbar-thumb {
     background: color-mix(in srgb, var(--ion-text-color) 24%, transparent);
+  }
+  
+  ion-footer {
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3) !important;
+  }
+}
+
+// Loading spinner centering
+ion-spinner[name="dots"] {
+  display: block;
+  margin: 40px auto;
+  --color: var(--ion-color-primary);
+}
+
+// Search bar spacing
+ion-searchbar {
+  padding-bottom: 8px;
+}
+
+// List item hover effect
+ion-item {
+  --transition: background-color 0.2s ease;
+  cursor: pointer;
+  
+  &:hover {
+    --background: color-mix(in srgb, var(--ion-color-primary) 5%, var(--ion-item-background));
   }
 }

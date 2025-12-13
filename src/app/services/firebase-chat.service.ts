@@ -6592,6 +6592,7 @@ async forceCloseChat(): Promise<void> {
     }
   }
 
+
   async clearChatForUser(roomId?: string): Promise<void> {
     try {
       const targetRoomId = roomId || this.currentChat?.roomId;
@@ -6635,6 +6636,10 @@ async forceCloseChat(): Promise<void> {
       if (Object.keys(updates).length > 0) {
         await rtdbUpdate(rtdbRef(this.db), updates);
       }
+
+      const messageMap = new Map(this._messages$.value)
+      messageMap.set(roomId as string,[])
+      this._messages$.next(messageMap)
 
       console.log(
         `✅ Chat cleared for user ${this.senderId} in room ${targetRoomId}`

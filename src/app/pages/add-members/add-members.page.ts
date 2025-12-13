@@ -49,6 +49,10 @@ export class AddMembersPage implements OnInit {
   toast.present();
 }
 
+// async ionViewWillEnter(){
+  
+// }
+
 async loadDeviceMatchedContacts(): Promise<void> {
   const currentUserPhone = this.authService.authData?.phone_number;
   this.allUsers = [];
@@ -56,6 +60,8 @@ async loadDeviceMatchedContacts(): Promise<void> {
 
   try {
     const pfUsers = this.firebaseChatService.currentUsers || [];
+    const currentChatMember = this.firebaseChatService.currentChat?.members
+    console.log({currentChatMember})
     const deviceContacts = this.firebaseChatService.currentDeviceContacts || [];
 
     // Extract platform user phone numbers for reference
@@ -68,7 +74,7 @@ async loadDeviceMatchedContacts(): Promise<void> {
 
     // Normalize platform users to match your HTML structure
     this.allUsers = [
-      ...pfUsers.map((u: any) => ({
+      ...pfUsers.filter((u : any) => !currentChatMember?.includes(String(u.userId ?? u.user_id ?? ''))).map((u: any) => ({
         user_id: String(u.userId ?? u.user_id ?? ''), // backend ID
         name: u.username ?? u.name ?? u.phoneNumber ?? 'Unknown',
         image: u.avatar ?? u.profile ?? 'assets/images/user.jfif',
@@ -77,6 +83,7 @@ async loadDeviceMatchedContacts(): Promise<void> {
         selected: false,
       })),
     ];
+    console.log("all users ", this.allUsers)
 
     // Initialize filtered list for search
     this.filteredContacts = [...this.allUsers];
@@ -87,6 +94,9 @@ async loadDeviceMatchedContacts(): Promise<void> {
   }
 }
 
+onBack(){
+  this.navCtrl.back();
+}
 
 //pfUsers
 

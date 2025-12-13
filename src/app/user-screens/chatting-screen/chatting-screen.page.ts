@@ -572,6 +572,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
             // Force UI update
             try {
               this.cdr.detectChanges();
+              await this.chatService.removeMemberFromConvLocal(this.roomId, this.senderId)
               await this.chatService.stopRoomListener();
             } catch (e) {
               console.warn('detectChanges error:', e);
@@ -1109,7 +1110,7 @@ async openMoreActions() {
   }
 
   // ✅ Clear Chat Implementation (Soft Delete)
-  private async clearChatMessages(userId: string) {
+  private async clearChatMessages(userId: string) {    //this is for private
     try {
       const roomId =
         this.chatType === 'group'
