@@ -80,8 +80,6 @@
         slot="start"
         style="color: black; width: 8%"
       >
-        <!-- <ion-back-button [defaultHref]="backUrl"></ion-back-button> -->
-        <!-- <ion-icon name="arrow-back-outline" class="back-icon"></ion-icon> -->
         <ion-icon
           name="arrow-back-outline"
           class="back-icon"
@@ -159,9 +157,9 @@
                   </ng-template>
                 </ng-container>
 
-                <!-- Group Chat -->
+               
                 <ng-container *ngIf="currentConv?.type === 'group'">
-                  <!-- 🆕 Show typing count if anyone is typing -->
+                
                   <ng-container
                     *ngIf="typingCount > 0; else groupPresenceBlock"
                   >
@@ -171,7 +169,7 @@
                     </span>
                   </ng-container>
 
-                  <!-- Otherwise show member count -->
+                
                   <ng-template #groupPresenceBlock>
                     <span style="color: var(--ion-color-medium)">
                       {{ currentConv?.members?.length || 0 }} members

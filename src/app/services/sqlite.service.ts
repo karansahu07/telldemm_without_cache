@@ -1015,6 +1015,12 @@ export class SqliteService {
     );
   }
 
+  async clearRoomChat(roomId : string){
+    return this.withOpState('clearRoomChat', async () =>{
+      await this.db.run('DELETE FROM messages WHERE roomId = ?',[roomId])
+    })
+  }
+
   async deleteMessages(msgIds: string[]) {
     return this.withOpState('deleteMessages', async () => {
       if (msgIds.length > 0) {

@@ -6637,9 +6637,13 @@ async forceCloseChat(): Promise<void> {
         await rtdbUpdate(rtdbRef(this.db), updates);
       }
 
+      //update locally
       const messageMap = new Map(this._messages$.value)
       messageMap.set(roomId as string,[])
       this._messages$.next(messageMap)
+
+      //clear this chat messages from sqlite
+      await this.sqliteService.clearRoomChat(roomId as string);
 
       console.log(
         `✅ Chat cleared for user ${this.senderId} in room ${targetRoomId}`
