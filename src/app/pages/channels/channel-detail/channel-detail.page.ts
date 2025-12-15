@@ -105,7 +105,7 @@ export class ChannelDetailPage implements OnInit {
         this.isLoadingChannel = false;
         if (res?.status && res.channel) {
           this.channel = res.channel;
-          console.log('channels all', this.channel);
+          // console.log('channels all', this.channel);
 
           // Format date
           if (this.channel?.created_at) {
@@ -539,7 +539,7 @@ viewFollowerProfile(userId: string) {
   }
 
   openPost(post: any) {
-    console.log('Opening post:', post);
+    // console.log('Opening post:', post);
   }
 
   async presentToast(msg: string) {

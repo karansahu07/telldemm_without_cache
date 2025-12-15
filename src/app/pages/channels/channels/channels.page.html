@@ -1,7 +1,7 @@
 <ion-header translucent>
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/"></ion-back-button>
+      <ion-back-button defaultHref="/status-screen"></ion-back-button>
     </ion-buttons>
 
     <!-- Channels → MegaTells -->
@@ -66,7 +66,7 @@
         </ion-item>
 
         <ion-list>
-          <ion-item class="megatell-item" *ngFor="let ch of group.channels">
+          <ion-item class="megatell-item" *ngFor="let ch of group.channels" (click)="openChannelDetail(ch)">
             <ion-avatar slot="start">
               <img [src]="ch.avatar || placeholderAvatar" alt="megatell" />
             </ion-avatar>
@@ -120,7 +120,7 @@
     </ion-item>
 
     <ion-list>
-      <ion-item *ngFor="let ch of categoryChannels">
+      <ion-item *ngFor="let ch of categoryChannels" (click)="openChannelDetail(ch)">
         <ion-avatar slot="start">
           <img [src]="ch.avatar || placeholderAvatar" alt="megatell" />
         </ion-avatar>

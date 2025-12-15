@@ -176,6 +176,27 @@ export class ChannelsPage implements OnInit {
       // });
       const mapped: UIChannel[] = backendChannels
         .filter((c: any) => {
+          // console.log("c", c);
+          //           {
+          //     "channel_id": 30,
+          //     "channel_name": "test new channels",
+          //     "description": "new channels description",
+          //     "created_by": 52,
+          //     "creator_name": "",
+          //     "channel_dp": null,
+          //     "is_public": 1,
+          //     "max_members": 100,
+          //     "firebase_channel_id": "firebase_1764139578674",
+          //     "category_id": 36,
+          //     "category_name": "Books & Literature",
+          //     "region_id": 2,
+          //     "region_name": "Afghanistan",
+          //     "created_at": "2025-11-26T06:46:18.000Z",
+          //     "followers_count": 11,
+          //     "is_verified": null,
+          //     "role_id": null,
+          //     "is_following": null
+          // }
           const channelId = `c${c.channel_id}`;
           const isOwned = c.created_by === this.userId;
           const isFollowed = this.followedChannelIds.has(channelId);
@@ -184,8 +205,13 @@ export class ChannelsPage implements OnInit {
           return !isOwned && !isFollowed;
         })
         .map((c: any) => {
-          const rawFollowers = (c as any).follower_count ?? 0;
+          // const rawFollowers = (c as any).follower_count ?? 0;
+          // const followersNum = Number(rawFollowers) || 0;
+          // const rawFollowers = (c as any).follower_count ?? (c as any).followers ?? 0;
+          // console.log("rawFollowers",rawFollowers);
+          const rawFollowers = (c as any).followers_count ?? (c as any).follower_count ?? (c as any).followers ?? 0;
           const followersNum = Number(rawFollowers) || 0;
+          // const followersNum = Number(rawFollowers) || 0;
           const channelId = `c${c.channel_id}`;
 
           return {
@@ -388,17 +414,17 @@ export class ChannelsPage implements OnInit {
   }
 
   private removeChannelFromExploreViews(channelId: string) {
-  // Remove from main grouped categories
-  this.allGroupedCategories.forEach(group => {
-    group.channels = group.channels.filter(ch => ch.id !== channelId);
-  });
-  this.pagedGroupedCategories.forEach(group => {
-    group.channels = group.channels.filter(ch => ch.id !== channelId);
-  });
+    // Remove from main grouped categories
+    this.allGroupedCategories.forEach(group => {
+      group.channels = group.channels.filter(ch => ch.id !== channelId);
+    });
+    this.pagedGroupedCategories.forEach(group => {
+      group.channels = group.channels.filter(ch => ch.id !== channelId);
+    });
 
-  // Remove from full category view
-  this.categoryChannels = this.categoryChannels.filter(ch => ch.id !== channelId);
-}
+    // Remove from full category view
+    this.categoryChannels = this.categoryChannels.filter(ch => ch.id !== channelId);
+  }
   // ADD THIS HELPER – updates channel in all lists (main + full view)
   private updateChannelInAllLists(channelId: string, updates: Partial<UIChannel>) {
     const id = `c${channelId}`;
@@ -552,8 +578,13 @@ export class ChannelsPage implements OnInit {
       // });
 
       const mapped: UIChannel[] = filtered.map((c: any) => {
-        const rawFollowers = (c as any).follower_count ?? 0;
+        // const rawFollowers = (c as any).follower_count ?? 0;
+        // const followersNum = Number(rawFollowers) || 0;
+        // const rawFollowers = (c as any).follower_count ?? (c as any).followers ?? 0;
+        // const followersNum = Number(rawFollowers) || 0;
+        const rawFollowers = (c as any).followers_count ?? (c as any).follower_count ?? (c as any).followers ?? 0;
         const followersNum = Number(rawFollowers) || 0;
+        // console.log(followersNum);
         const channelId = `c${c.channel_id}`;
 
         const isFollowing = this.followedChannelIds.has(channelId);
@@ -591,6 +622,21 @@ export class ChannelsPage implements OnInit {
       }
     }
   }
+
+ async openChannelDetail(channel: UIChannel) {
+  const channelId = channel._meta.channel_id;  // Numeric ID from backend (e.g., 34)
+  
+  // Navigate to /channel-feed with channelId as query param
+  this.router.navigate(['/channel-feed'], { 
+    queryParams: { channelId: channelId } 
+  });
+  
+  // Optional: Add haptics for smooth UX (as in toggleFollow)
+  try {
+    const { Haptics, ImpactStyle } = await import('@capacitor/haptics');
+    Haptics.impact({ style: ImpactStyle.Medium });
+  } catch (e) { /* No haptics on web */ }
+}
 
   loadMoreCategoryChannels(event: any) {
     setTimeout(() => {

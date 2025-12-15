@@ -36,7 +36,7 @@ export class MenuPopoverComponent implements OnInit {
       ];
     } else if (this.currentUrl.includes('/status')) {
       this.menuOptions = [
-        { labelKey: 'menu.createChannels' },
+        // { labelKey: 'menu.createChannels' },
         // { labelKey: 'menu.statusPrivacy' },
         // { labelKey: 'menu.starred' },
         { labelKey: 'menu.settings', route: '/setting-screen' }

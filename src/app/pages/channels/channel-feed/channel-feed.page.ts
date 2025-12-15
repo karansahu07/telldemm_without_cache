@@ -121,7 +121,7 @@ export class ChannelFeedPage implements OnInit {
     // Monitor connection status
     this.postService.getConnectionStatus().subscribe(isConnected => {
       this.isOnline = isConnected;
-      console.log('Connection status:', isConnected ? 'Online' : 'Offline');
+      // console.log('Connection status:', isConnected ? 'Online' : 'Offline');
       this.cdr.detectChanges();
     });
   }
@@ -174,7 +174,7 @@ export class ChannelFeedPage implements OnInit {
           icon: 'people-outline',
           handler: () => {
             // Navigate to detailed reactions page
-            console.log('Show users for reaction:', emoji);
+            // console.log('Show users for reaction:', emoji);
           }
         })),
         {
@@ -261,7 +261,7 @@ export class ChannelFeedPage implements OnInit {
           icon: 'paper-plane-outline',
           handler: () => {
             // Navigate to channel selector
-            console.log('Forward to channel');
+            // console.log('Forward to channel');
           }
         },
         {
@@ -269,7 +269,7 @@ export class ChannelFeedPage implements OnInit {
           icon: 'share-outline',
           handler: () => {
             // Use Share API
-             console.log('Share to channel');
+            //  console.log('Share to channel');
             // this.sharePost(post);
           }
         },
@@ -293,7 +293,7 @@ export class ChannelFeedPage implements OnInit {
           url: post.image || ''
         });
       } catch (err) {
-        console.log('Share cancelled or failed:', err);
+        // console.log('Share cancelled or failed:', err);
       }
     }
   }
@@ -316,13 +316,13 @@ export class ChannelFeedPage implements OnInit {
       next: (response) => {
         if (response.status && response.channel) {
           this.channel = response.channel;
-          console.log("channel createdby", this.channel.created_by);//channel createdby 52
+          // console.log("channel createdby", this.channel.created_by);//channel createdby 52
           // Check if current user is channel creator
           this.canCreatePost = this.channel.created_by == this.currentUserId;
 
-           console.log('Channel created by:', this.channel.created_by);
-        console.log('Current user:', this.currentUserId);
-        console.log('Can create post:', this.canCreatePost);
+          //  console.log('Channel created by:', this.channel.created_by);
+        // console.log('Current user:', this.currentUserId);
+        // console.log('Can create post:', this.canCreatePost);
           this.isMuted = false;
           this.cdr.detectChanges();
         }
