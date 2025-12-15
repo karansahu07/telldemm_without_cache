@@ -66,8 +66,8 @@
         </ion-item>
 
         <ion-list>
-          <ion-item class="megatell-item" *ngFor="let ch of group.channels" (click)="openChannelDetail(ch)">
-            <ion-avatar slot="start">
+          <ion-item class="megatell-item" *ngFor="let ch of group.channels" >
+            <ion-avatar slot="start" (click)="openChannelDetail(ch)">
               <img [src]="ch.avatar || placeholderAvatar" alt="megatell" />
             </ion-avatar>
 
@@ -120,8 +120,8 @@
     </ion-item>
 
     <ion-list>
-      <ion-item *ngFor="let ch of categoryChannels" (click)="openChannelDetail(ch)">
-        <ion-avatar slot="start">
+      <ion-item *ngFor="let ch of categoryChannels" >
+        <ion-avatar slot="start" (click)="openChannelDetail(ch)">
           <img [src]="ch.avatar || placeholderAvatar" alt="megatell" />
         </ion-avatar>
 

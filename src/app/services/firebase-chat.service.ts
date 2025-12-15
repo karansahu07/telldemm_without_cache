@@ -1573,7 +1573,7 @@ async forceCloseChat(): Promise<void> {
           this.senderId as string
         )) || [];
       this._conversations$.next([...convs]);
-      await this.syncConversationWithServer();
+       this.syncConversationWithServer();
       return convs;
     } catch (err) {
       console.error('loadConversations', err);

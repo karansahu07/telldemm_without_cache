@@ -8,8 +8,8 @@ android {
         applicationId "com.ekarigar.telldemm"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 20
-        versionName "16.4"
+        versionCode 21
+        versionName "16.5"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -19,7 +19,7 @@ android {
     }
   signingConfigs {
     release {
-      storeFile file("D://6nov//Telldemm_offline//telldemm-release-key.jks")  // fixed path with forward slashes
+      storeFile file("D:/9_dec_telldemm/telldemm_without_cache/telldemm-release-key.jks")  // fixed path with forward slashes
       
       storePassword "telldemm123"                                  // your actual keystore password
       keyAlias "telldemm-key-alias"                                       // your key alias
