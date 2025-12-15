@@ -266,6 +266,7 @@ export interface IChatMeta {
   unreadCount: number | string;
   isArchived : boolean;
   isPinned : boolean;
+  pinnedAt?: number | "";
   isLocked : boolean;
   removedOrLeftAt? : string;
 }

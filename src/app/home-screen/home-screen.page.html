@@ -1,98 +1,129 @@
 <ion-header [translucent]="true">
   <!-- ✅ Selection Mode Header -->
   <ion-toolbar *ngIf="isSelectionMode; else normalHomeHeader">
-    <ion-buttons slot="start">
-      <ion-button (click)="clearChatSelection()">
-        <ion-icon name="arrow-back-outline"></ion-icon>
+  <ion-buttons slot="start">
+    <ion-button (click)="clearChatSelection()">
+      <ion-icon name="arrow-back-outline"></ion-icon>
+    </ion-button>
+  </ion-buttons>
+
+  <ion-title>{{ selectedChats.length }}</ion-title>
+
+  <ion-buttons slot="end">
+    <!-- ✅ Single PINNED Private Chat -->
+    <ng-container *ngIf="selectionMeta.isSinglePrivatePinned">
+      <ion-button (click)="onUnpinSelected()">
+        <ion-icon name="pin"></ion-icon>
       </ion-button>
-    </ion-buttons>
+      <ion-button (click)="onDeleteSelected()">
+        <ion-icon name="trash-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="onArchievedSelected()">
+        <ion-icon name="download-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="onMoreSelected($event)">
+        <ion-icon name="ellipsis-vertical-outline"></ion-icon>
+      </ion-button>
+    </ng-container>
 
-    <ion-title>{{ selectedChats.length }}</ion-title>
+    <!-- ✅ Single UNPINNED Private Chat -->
+    <ng-container *ngIf="selectionMeta.isSinglePrivateUnpinned">
+      <ion-button (click)="onPinSelected()">
+        <ion-icon name="pin-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="onDeleteSelected()">
+        <ion-icon name="trash-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="onArchievedSelected()">
+        <ion-icon name="download-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="onMoreSelected($event)">
+        <ion-icon name="ellipsis-vertical-outline"></ion-icon>
+      </ion-button>
+    </ng-container>
 
-    <ion-buttons slot="end">
-      <!-- Single pinned user -->
-      <ng-container *ngIf="selectionMeta.isSinglePinned">
-        <ion-button (click)="onUnpinSelected()">
-          <ion-icon name="pin"></ion-icon>
-        </ion-button>
-        <ion-button (click)="onDeleteSelected()">
-          <ion-icon name="trash-outline"></ion-icon>
-        </ion-button>
-        <ion-button (click)="onArchievedSelected()">
-          <ion-icon name="download-outline"></ion-icon>
-        </ion-button>
-        <ion-button (click)="onMoreSelected($event)">
-          <ion-icon name="ellipsis-vertical-outline"></ion-icon>
-        </ion-button>
-      </ng-container>
+    <!-- ✅ Single PINNED Group Chat -->
+    <ng-container *ngIf="selectionMeta.isSingleGroupPinned">
+      <ion-button (click)="onUnpinSelected()">
+        <ion-icon name="pin"></ion-icon>
+      </ion-button>
+      <ion-button (click)="onArchievedSelected()">
+        <ion-icon name="download-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="onMoreSelected($event)">
+        <ion-icon name="ellipsis-vertical-outline"></ion-icon>
+      </ion-button>
+    </ng-container>
 
-      <!-- Single user (regular) -->
-      <ng-container *ngIf="selectionMeta.isSingleUser">
-        <ion-button (click)="onPinSelected()">
-          <ion-icon name="pin-outline"></ion-icon>
-        </ion-button>
-        <ion-button (click)="deleteMultipleChats()">
-          <ion-icon name="trash-outline"></ion-icon>
-        </ion-button>
-        <!-- <ion-button (click)="onMuteSelected()">
-          <ion-icon name="notifications-off-outline"></ion-icon>
-        </ion-button> -->
-        <ion-button (click)="onArchievedSelected()">
-          <ion-icon name="download-outline"></ion-icon>
-        </ion-button>
-        <ion-button (click)="onMoreSelected($event)">
-          <ion-icon name="ellipsis-vertical-outline"></ion-icon>
-        </ion-button>
-      </ng-container>
+    <!-- ✅ Single UNPINNED Group Chat -->
+    <ng-container *ngIf="selectionMeta.isSingleGroupUnpinned">
+      <ion-button (click)="onPinSelected()">
+        <ion-icon name="pin-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="onArchievedSelected()">
+        <ion-icon name="download-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="onMoreSelected($event)">
+        <ion-icon name="ellipsis-vertical-outline"></ion-icon>
+      </ion-button>
+    </ng-container>
 
-      <!-- Multiple users only -->
-      <ng-container *ngIf="selectionMeta.isMultiUsersOnly">
-        <ion-button (click)="onPinSelected()">
-          <ion-icon name="pin-outline"></ion-icon>
-        </ion-button>
-        <ion-button (click)="deleteMultipleChats()">
-          <ion-icon name="trash-outline"></ion-icon>
-        </ion-button>
-        <ion-button (click)="onArchievedSelected()">
-          <ion-icon name="download-outline"></ion-icon>
-        </ion-button>
-        <ion-button (click)="onMoreSelected($event)">
-          <ion-icon name="ellipsis-vertical-outline"></ion-icon>
-        </ion-button>
-      </ng-container>
+    <!-- ✅ Multiple Private Chats -->
+    <ng-container *ngIf="selectionMeta.isMultiPrivateOnly">
+      <ion-button (click)="onPinSelected()">
+        <ion-icon name="pin-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="deleteMultipleChats()">
+        <ion-icon name="trash-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="onArchievedSelected()">
+        <ion-icon name="download-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="onMoreSelected($event)">
+        <ion-icon name="ellipsis-vertical-outline"></ion-icon>
+      </ion-button>
+    </ng-container>
 
-      <!-- Includes any group (no delete/mute) -->
-      <ng-container
-        *ngIf="selectionMeta.includesGroup && !selectionMeta.includesCommunity"
-      >
-        <ion-button (click)="onPinSelected()">
-          <ion-icon name="pin-outline"></ion-icon>
-        </ion-button>
-        <!-- <ion-button (click)="onMuteSelected()">
-          <ion-icon name="notifications-off-outline"></ion-icon>
-        </ion-button> -->
-        <ion-button (click)="onArchievedSelected()">
-          <ion-icon name="download-outline"></ion-icon>
-        </ion-button>
-        <ion-button (click)="onMoreSelected($event)">
-          <ion-icon name="ellipsis-vertical-outline"></ion-icon>
-        </ion-button>
-      </ng-container>
+    <!-- ✅ Multiple Groups -->
+    <ng-container *ngIf="selectionMeta.isMultiGroupsOnly">
+      <ion-button (click)="onPinSelected()">
+        <ion-icon name="pin-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="onArchievedSelected()">
+        <ion-icon name="download-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="onMoreSelected($event)">
+        <ion-icon name="ellipsis-vertical-outline"></ion-icon>
+      </ion-button>
+    </ng-container>
 
-      <!-- Any community selected -->
-      <ng-container *ngIf="selectionMeta.includesCommunity">
-        <ion-button (click)="onPinSelected()">
-          <ion-icon name="pin-outline"></ion-icon>
-        </ion-button>
-        <ion-button (click)="onArchievedSelected()">
-          <ion-icon name="download-outline"></ion-icon>
-        </ion-button>
-        <ion-button (click)="onMoreSelected($event)">
-          <ion-icon name="ellipsis-vertical-outline"></ion-icon>
-        </ion-button>
-      </ng-container>
-    </ion-buttons>
-  </ion-toolbar>
+    <!-- ✅ Mixed: Private + Groups -->
+    <ng-container *ngIf="selectionMeta.isMixedPrivateAndGroups">
+      <ion-button (click)="onPinSelected()">
+        <ion-icon name="pin-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="onArchievedSelected()">
+        <ion-icon name="download-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="onMoreSelected($event)">
+        <ion-icon name="ellipsis-vertical-outline"></ion-icon>
+      </ion-button>
+    </ng-container>
+
+    <!-- ✅ Community (Pin only, no delete) -->
+    <ng-container *ngIf="selectionMeta.includesCommunity">
+      <ion-button (click)="onPinSelected()">
+        <ion-icon name="pin-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="onArchievedSelected()">
+        <ion-icon name="download-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="onMoreSelected($event)">
+        <ion-icon name="ellipsis-vertical-outline"></ion-icon>
+      </ion-button>
+    </ng-container>
+  </ion-buttons>
+</ion-toolbar>
 
   <!-- 🔁 Normal header -->
   <ng-template #normalHomeHeader>
@@ -235,8 +266,8 @@
     </ion-item>
   </ion-list>
 
-  <!-- <div *ngIf="showNewChatPrompt" class="no-chats-container"> -->
-  <div *ngIf="isLoading" class="no-chat-container">
+  <div *ngIf="showNewChatPrompt" class="no-chats-container">
+  <!-- <div *ngIf="isLoading" class="no-chat-container"> -->
     <ion-icon name="chatbubbles-outline"></ion-icon>
     <h2>No chats Yet</h2>
     <p>start new chat click on start button</p>

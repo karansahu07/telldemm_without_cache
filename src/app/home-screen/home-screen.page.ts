@@ -775,64 +775,168 @@ export class HomeScreenPage implements OnInit, OnDestroy {
   //   };
   // }
 
-  get selectionMeta() {
-    const sel = this.selectedChats || [];
-    const count = sel.length;
+get selectionMeta() {
+  const sel = this.selectedChats || [];
+  const count = sel.length;
+  
+  // Debug logging
+  // if (count > 0) {
+  //   console.log('Selected Chat:', sel[0]);
+  //   console.log('isPinned value:', sel[0]?.isPinned);
+  //   console.log('isPinned type:', typeof sel[0]?.isPinned);
+  //   console.log('Chat type:', sel[0]?.type);
+  // }
 
-    // ✅ Check for types directly
-    const includesCommunity = sel.some((c) => c.type === 'community');
-    const includesGroup = sel.some((c) => c.type === 'group');
-    const includesUser = sel.some((c) => c.type === 'private');
+  // ✅ Check for types
+  const includesCommunity = sel.some((c) => c.type === 'community');
+  const includesGroup = sel.some((c) => c.type === 'group');
+  const includesPrivate = sel.some((c) => c.type === 'private');
 
-    // ✅ Only users selected
-    const onlyUsers =
-      includesUser &&
-      !includesGroup &&
-      !includesCommunity &&
-      sel.every((c) => c.type === 'private');
+  // ✅ Check if single selection exists and is pinned
+  const isSingleSelection = count === 1;
+  const singleChat = isSingleSelection ? sel[0] : null;
+  const isChatPinned = singleChat?.isPinned === true;
 
-    return {
-      count,
-      includesCommunity,
-      includesGroup,
-      includesUser,
+  // ✅ Single chat categories
+  const isSinglePrivate = isSingleSelection && singleChat?.type === 'private';
+  const isSingleGroup = isSingleSelection && singleChat?.type === 'group';
 
-      // ✅ Single non-pinned user chat
-      isSingleUser: count === 1 && onlyUsers && !(sel[0]?.isPinned === true),
+  // ✅ Multiple private chats only (no groups/communities)
+  const isMultiPrivateOnly = 
+    count > 1 && 
+    includesPrivate && 
+    !includesGroup && 
+    !includesCommunity &&
+    sel.every((c) => c.type === 'private');
 
-      // ✅ Single pinned user chat
-      isSinglePinned: count === 1 && onlyUsers && sel[0]?.isPinned === true,
+  // ✅ Multiple groups only (no private/communities)
+  const isMultiGroupsOnly = 
+    count > 1 && 
+    includesGroup && 
+    !includesPrivate && 
+    !includesCommunity &&
+    sel.every((c) => c.type === 'group');
 
-      // ✅ Multiple user chats (no groups/communities)
-      isMultiUsersOnly: count > 1 && onlyUsers,
-    };
-  }
+  // ✅ Mixed selection (private + groups, no communities)
+  const isMixedPrivateAndGroups = 
+    count > 1 &&
+    includesPrivate && 
+    includesGroup && 
+    !includesCommunity;
+
+  // console.log('Selection Analysis:', {
+  //   isSingleSelection,
+  //   isChatPinned,
+  //   isSinglePrivate,
+  //   isSingleGroup,
+  //   isMultiPrivateOnly,
+  //   isMultiGroupsOnly,
+  //   isMixedPrivateAndGroups
+  // });
+
+  return {
+    count,
+    includesCommunity,
+    includesGroup,
+    includesPrivate,
+
+    // ✅ Single private chat - PINNED
+    isSinglePrivatePinned: isSinglePrivate && isChatPinned,
+    
+    // ✅ Single private chat - NOT PINNED
+    isSinglePrivateUnpinned: isSinglePrivate && !isChatPinned,
+
+    // ✅ Single group chat - PINNED
+    isSingleGroupPinned: isSingleGroup && isChatPinned,
+    
+    // ✅ Single group chat - NOT PINNED
+    isSingleGroupUnpinned: isSingleGroup && !isChatPinned,
+
+    // ✅ Multiple private chats only
+    isMultiPrivateOnly,
+
+    // ✅ Multiple groups only
+    isMultiGroupsOnly,
+
+    // ✅ Mixed private and groups
+    isMixedPrivateAndGroups,
+
+    // ✅ Legacy properties (kept for backward compatibility)
+    isSingleUser: isSinglePrivate && !isChatPinned,
+    isSinglePinned: (isSinglePrivate || isSingleGroup) && isChatPinned,
+    isMultiUsersOnly: isMultiPrivateOnly,
+  };
+}
+
+  // async onPinSelected() {
+  //   const userId = this.senderUserId || this.authService.authData?.userId || '';
+  //   if (!userId) {
+  //     this.clearChatSelection();
+  //     return;
+  //   }
+  //   await this.firebaseChatService.setPinConversation(
+  //     this.selectedChats.map((c) => c.roomId)
+  //   );
+  //   this.clearChatSelection();
+  // }
 
   async onPinSelected() {
-    const userId = this.senderUserId || this.authService.authData?.userId || '';
-    if (!userId) {
-      this.clearChatSelection();
-      return;
-    }
-    await this.firebaseChatService.setPinConversation(
-      this.selectedChats.map((c) => c.roomId)
-    );
+    console.log("this unpin function called pin chat function")
+  const userId = this.senderUserId || this.authService.authData?.userId || '';
+  if (!userId) {
     this.clearChatSelection();
+    return;
   }
 
-  async onUnpinSelected() {
-    // console.log("the unpin function is selected")
-    const userId = this.senderUserId || this.authService.authData?.userId || '';
-    if (!userId) {
-      this.clearChatSelection();
-      return;
-    }
-    await this.firebaseChatService.setPinConversation(
-      this.selectedChats.map((c) => c.roomId),
-      false
-    );
-    this.clearChatSelection();
+  // ✅ Call with error handling
+  const result = await this.firebaseChatService.setPinConversation(
+    this.selectedChats.map((c) => c.roomId),
+    true // pin = true
+  );
+
+  // ✅ Show error message if pin limit exceeded
+  if (!result.success && result.message) {
+    const alert = await this.alertCtrl.create({
+      header: 'Cannot Pin',
+      message: result.message,
+      buttons: ['OK'],
+    });
+    await alert.present();
   }
+
+  this.clearChatSelection();
+}
+
+  // async onUnpinSelected() {
+  //   // console.log("the unpin function is selected")
+  //   const userId = this.senderUserId || this.authService.authData?.userId || '';
+  //   if (!userId) {
+  //     this.clearChatSelection();
+  //     return;
+  //   }
+  //   await this.firebaseChatService.setPinConversation(
+  //     this.selectedChats.map((c) => c.roomId),
+  //     false
+  //   );
+  //   this.clearChatSelection();
+  // }
+
+  async onUnpinSelected() {
+    console.log("this unpin function called")
+  const userId = this.senderUserId || this.authService.authData?.userId || '';
+  if (!userId) {
+    this.clearChatSelection();
+    return;
+  }
+
+  // ✅ Call unpin (pin = false)
+  await this.firebaseChatService.setPinConversation(
+    this.selectedChats.map((c) => c.roomId),
+    false // pin = false
+  );
+
+  this.clearChatSelection();
+}
 
   // delete chat code start
 
@@ -1738,65 +1842,70 @@ export class HomeScreenPage implements OnInit, OnDestroy {
 
   //     const ta = a.timestamp ? new Date(a.timestamp).getTime() : 0;
   //     const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-  //     return tb - ta; // newest activity first
+  //     return tb - ta;
   //   });
   // }
 
-  get filteredChats() {
-    // console.log("visible.length",this.chatList)
-    let filtered = this.conversations;
-    console.log({ filtered });
-    // console.log("this.selectedFilter", this.selectedFilter);
+get filteredChats() {
+  let filtered = this.conversations;
 
-    filtered = filtered.filter((chat) => {
-      if (chat.type === 'group') {
-        const roomId = chat.roomId || '';
-        const title = (chat.title || '').toLowerCase();
-
-        if (
-          roomId.includes('_announcement') ||
-          roomId.includes('_general') ||
-          title === 'announcements' ||
-          title === 'general'
-        ) {
-          return false;
-        }
-      }
-      return true;
-    });
-
-    if (this.selectedFilter === 'read') {
-      filtered = filtered.filter((chat) => chat.unreadCount === 0);
-    } else if (this.selectedFilter === 'unread') {
-      filtered = filtered.filter((chat) => (chat.unreadCount as number) > 0);
-    } else if (this.selectedFilter === 'groups') {
-      filtered = filtered.filter((chat) => chat.type === 'group');
-    }
-
-    if (this.searchText.trim() !== '') {
-      const q = this.searchText.toLowerCase();
-      filtered = filtered.filter(
-        (chat) => (chat.title || '').toLowerCase().includes(q)
-        // (chat.message || '').toLowerCase().includes(q)
-      );
-    }
-
-    return [...filtered].sort((a: any, b: any) => {
-      const ap = a.pinned ? 1 : 0;
-      const bp = b.pinned ? 1 : 0;
-      if (ap !== bp) return bp - ap;
-
-      if (ap === 1 && bp === 1) {
-        const pa = Number(a.pinnedAt || 0);
-        const pb = Number(b.pinnedAt || 0);
-        if (pa !== pb) return pb - pa;
-      }
-
-      const ta = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-      const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-      return tb - ta;
-    });
+  // Filter by type
+  if (this.selectedFilter === 'read') {
+    filtered = filtered.filter((chat) => chat.unreadCount === 0);
+  } else if (this.selectedFilter === 'unread') {
+    filtered = filtered.filter((chat) => (chat.unreadCount as number) > 0);
+  } else if (this.selectedFilter === 'groups') {
+    filtered = filtered.filter((chat) => chat.type === 'group');
   }
+
+  // Search filter
+  if (this.searchText.trim() !== '') {
+    const q = this.searchText.toLowerCase();
+    filtered = filtered.filter(
+      (chat) => (chat.title || '').toLowerCase().includes(q)
+    );
+  }
+
+  // ✅ Sort: Pinned chats first (by pinnedAt DESC), then unpinned (by lastMessageAt DESC)
+  return [...filtered].sort((a: any, b: any) => {
+    const aPinned = a.isPinned ? 1 : 0;
+    const bPinned = b.isPinned ? 1 : 0;
+
+    // If both are pinned or both are unpinned
+    if (aPinned === bPinned) {
+      if (aPinned === 1) {
+        // Both pinned: Sort by pinnedAt (newest first)
+        const pinnedAtA = Number(a.pinnedAt || 0);
+        const pinnedAtB = Number(b.pinnedAt || 0);
+        return pinnedAtB - pinnedAtA; // ✅ Newest pin first
+      } else {
+        // Both unpinned: Sort by lastMessageAt (newest first)
+        const timeA = a.lastMessageAt 
+          ? new Date(a.lastMessageAt).getTime() 
+          : 0;
+        const timeB = b.lastMessageAt 
+          ? new Date(b.lastMessageAt).getTime() 
+          : 0;
+        return timeB - timeA;
+      }
+    }
+
+    // Pinned chats always come first
+    return bPinned - aPinned;
+  });
+}
+
+get pinnedChatsCount(): number {
+  return this.conversations.filter(c => c.isPinned).length;
+}
+
+get canPinMore(): boolean {
+  return this.pinnedChatsCount < 3;
+}
+
+get remainingPinSlots(): number {
+  return Math.max(0, 3 - this.pinnedChatsCount);
+}
 
   get totalUnreadCount(): number {
     return this.conversations.reduce(

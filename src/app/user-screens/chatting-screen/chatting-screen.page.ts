@@ -805,28 +805,34 @@ showCompressedActions = false;
 }
 
 async openMoreActions() {
+  const buttons: any[] = [
+    {
+      text: 'Attachment',
+      icon: 'attach',
+      handler: () => this.pickAttachment(),
+    },
+    {
+      text: 'Camera',
+      icon: 'camera',
+      handler: () => this.openCamera(),
+    },
+  ];
+
+  if (this.currentConv?.type !== 'group') {
+    buttons.push({
+      text: 'Translate',
+      icon: 'language',
+      handler: () => this.toggleTranslationOptions(),
+    });
+  }
+
+  buttons.push({
+    text: 'Cancel',
+    role: 'cancel',
+  });
+
   const sheet = await this.actionSheetCtrl.create({
-    buttons: [
-      {
-        text: 'Attachment',
-        icon: 'attach',
-        handler: () => this.pickAttachment(),
-      },
-      {
-        text: 'Camera',
-        icon: 'camera',
-        handler: () => this.openCamera(),
-      },
-      {
-        text: 'Translate',
-        icon: 'language',
-        handler: () => this.toggleTranslationOptions(),
-      },
-      {
-        text: 'Cancel',
-        role: 'cancel',
-      },
-    ],
+    buttons: buttons,
   });
 
   await sheet.present();

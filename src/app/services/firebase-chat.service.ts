@@ -1573,7 +1573,7 @@ async forceCloseChat(): Promise<void> {
           this.senderId as string
         )) || [];
       this._conversations$.next([...convs]);
-      this.syncConversationWithServer();
+      await this.syncConversationWithServer();
       return convs;
     } catch (err) {
       console.error('loadConversations', err);
@@ -2945,92 +2945,122 @@ async forceCloseChat(): Promise<void> {
   //   );
   // }
 
-  async setPinConversation(
-    roomIds: string[],
-    pin: boolean = true
-  ): Promise<void> {
-    if (!this.senderId) {
-      throw new Error('senderId not set');
+ async setPinConversation(
+  roomIds: string[],
+  pin: boolean = true
+): Promise<{success: boolean; message?: string}> {
+  if (!this.senderId) {
+    throw new Error('senderId not set');
+  }
+
+  if (!Array.isArray(roomIds) || roomIds.length === 0) {
+    console.error('RoomIds is not an array');
+    return {success: false, message: 'Invalid room IDs'};
+  }
+
+  const existing = [...this.currentConversations];
+  const db = getDatabase();
+  const now = Date.now();
+
+  // ✅ Check 3-pin limit BEFORE pinning
+  if (pin) {
+    const currentPinnedCount = existing.filter(c => c.isPinned).length;
+    
+    if (currentPinnedCount >= 3) {
+      console.warn('⚠️ Maximum 3 chats can be pinned');
+      return {
+        success: false, 
+        message: 'Maximum 3 chats can be pinned. Please unpin a chat first.'
+      };
     }
-
-    if (!Array.isArray(roomIds) || roomIds.length === 0) {
-      console.error('RoomIds is not an array');
-      return;
-    }
-
-    const existing = this.currentConversations; // assumed array reference
-    const db = getDatabase();
-
-    const findLocalConv = (roomId: string) => {
-      // find conversation that actually needs a change (isPinned != pin)
-      return (
-        existing.find((c) => c.roomId === roomId && c.isPinned !== pin) ?? null
-      );
-    };
-
-    // do all updates in parallel, but only emit once after all done
-    await Promise.all(
-      roomIds.map(async (roomId) => {
-        try {
-          const chatRef = rtdbRef(db, `userchats/${this.senderId}/${roomId}`);
-          const snap: DataSnapshot = await rtdbGet(chatRef);
-
-          if (snap.exists()) {
-            // update existing node with desired pinned value
-            await rtdbUpdate(chatRef, { isPinned: pin });
-          } else {
-            // if there is no server node, create a meta using local conversation if available
-            const localConv: any = findLocalConv(roomId);
-            const meta: Partial<IChatMeta> = {
-              type: (localConv?.type as IChatMeta['type']) ?? 'private',
-              lastmessageAt:
-                localConv?.lastMessageAt instanceof Date
-                  ? localConv.lastMessageAt.getTime()
-                  : typeof localConv?.lastMessageAt === 'number'
-                  ? Number(localConv?.lastMessageAt)
-                  : Date.now(),
-              lastmessageType:
-                (localConv?.lastMessageType as IChatMeta['lastmessageType']) ??
-                'text',
-              lastmessage: localConv?.lastMessage ?? '',
-              unreadCount:
-                typeof localConv?.unreadCount === 'number'
-                  ? localConv.unreadCount
-                  : Number(localConv?.unreadCount) || 0,
-              isPinned: pin,
-              isArchived: !!localConv?.isArchived,
-              isLocked: !!localConv?.isLocked,
-            };
-
-            await rtdbSet(chatRef, meta);
-          }
-
-          // Update local conversation object (if present) — use `pin` not hard-coded true
-          const localConv = findLocalConv(roomId);
-          if (localConv) {
-            localConv.isPinned = pin;
-            // reflect in existing array (replace if found)
-            const idx = existing.findIndex((c) => c.roomId === roomId);
-            if (idx > -1) {
-              existing[idx] = { ...existing[idx], ...localConv };
-            } else {
-              existing.push(localConv);
-            }
-          }
-        } catch (err) {
-          console.error('Failed to pin/unpin room:', roomId, err);
-        }
-      })
-    );
-
-    // Emit updated conversations once
-    try {
-      this._conversations$.next(existing);
-    } catch (e) {
-      // safe-guard if _conversations$ isn't available
-      console.warn('Could not emit conversations update', e);
+    
+    // Check if pinning would exceed limit
+    if (currentPinnedCount + roomIds.length > 3) {
+      return {
+        success: false,
+        message: `You can only pin ${3 - currentPinnedCount} more chat(s). Please unpin some chats first.`
+      };
     }
   }
+
+  const findLocalConv = (roomId: string) => {
+    return existing.find((c) => c.roomId === roomId) ?? null;
+  };
+
+  // Process all updates
+  await Promise.all(
+    roomIds.map(async (roomId) => {
+      try {
+        const chatRef = rtdbRef(db, `userchats/${this.senderId}/${roomId}`);
+        const snap: DataSnapshot = await rtdbGet(chatRef);
+
+        const updateData: any = {
+          isPinned: pin,
+        };
+
+        // ✅ Add pinnedAt timestamp when pinning
+        if (pin) {
+          updateData.pinnedAt = now;
+        } else {
+          // ✅ Remove pinnedAt when unpinning
+          updateData.pinnedAt = "";
+        }
+
+        if (snap.exists()) {
+          // Update existing node
+          await rtdbUpdate(chatRef, updateData);
+        } else {
+          // Create new node if doesn't exist
+          const localConv: any = findLocalConv(roomId);
+          const meta: Partial<IChatMeta> = {
+            type: (localConv?.type as IChatMeta['type']) ?? 'private',
+            lastmessageAt:
+              localConv?.lastMessageAt instanceof Date
+                ? localConv.lastMessageAt.getTime()
+                : typeof localConv?.lastMessageAt === 'number'
+                ? Number(localConv?.lastMessageAt)
+                : Date.now(),
+            lastmessageType:
+              (localConv?.lastMessageType as IChatMeta['lastmessageType']) ??
+              'text',
+            lastmessage: localConv?.lastMessage ?? '',
+            unreadCount:
+              typeof localConv?.unreadCount === 'number'
+                ? localConv.unreadCount
+                : Number(localConv?.unreadCount) || 0,
+            isPinned: pin,
+            pinnedAt: pin ? now : "",
+            isArchived: !!localConv?.isArchived,
+            isLocked: !!localConv?.isLocked,
+          };
+
+          await rtdbSet(chatRef, meta);
+        }
+
+        // ✅ Update local conversation object
+        const localConv = findLocalConv(roomId);
+        if (localConv) {
+          localConv.isPinned = pin;
+          localConv.pinnedAt = pin ? now : null;
+          
+          const idx = existing.findIndex((c) => c.roomId === roomId);
+          if (idx > -1) {
+            existing[idx] = { ...existing[idx], ...localConv };
+          }
+        }
+      } catch (err) {
+        console.error('Failed to pin/unpin room:', roomId, err);
+      }
+    })
+  );
+
+  // ✅ CRITICAL: Emit updated conversations array
+  this._conversations$.next([...existing]);
+  
+  console.log(`✅ ${pin ? 'Pinned' : 'Unpinned'} ${roomIds.length} conversation(s)`);
+  
+  return {success: true};
+}
 
   async setLockConversation(
     roomIds: string[],

@@ -163,6 +163,7 @@ export interface IConversation {
   unreadCount?: number;
   isArchived: boolean;
   isPinned: boolean;
+  pinnedAt?: number | null;
   isLocked: boolean;
 }
 export interface IGroup {
