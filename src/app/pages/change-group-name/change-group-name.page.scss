@@ -50,6 +50,9 @@ ion-title { color: var(--ion-text-color); }
   --highlight-color-focused: var(--ion-color-primary);
   --border-color: var(--ion-color-primary);
 }
+.ion-valid.sc-ion-input-md-h {
+    --highlight-color: #bc8c2c;
+}
 
 /* Character counter */
 .char-count {
@@ -70,31 +73,31 @@ ion-icon[slot="end"] {
   left: 0; width: 100%;
   background: var(--ion-background-color);
   padding: 20px 24px;
-  border-top: 1px solid var(--ion-border-color);
+  // border-top: 1px solid var(--ion-border-color);
   box-shadow: none !important;
   bottom: max(0px, env(safe-area-inset-bottom));
 }
 
 /* Optional grid frame */
-ion-grid {
-  border: 1px solid var(--ion-border-color);
-  border-radius: 12px;
-}
+// ion-grid {
+//   border: 1px solid var(--ion-border-color);
+//   border-radius: 12px;
+// }
 
 /* Primary action button (gradient) */
 .ok-btn {
   /* also set CSS var for platforms that honor it */
-  --background: linear-gradient(175deg, var(--brand-grad-start) 0%, var(--brand-grad-end) 50%);
-  --color: var(--ion-color-primary-contrast, #fff);
+  // --background: linear-gradient(175deg, var(--brand-grad-start) 0%, var(--brand-grad-end) 50%);
+  // --color: var(--ion-color-primary-contrast, #fff);
   --border-radius: 12px;
 
-  &::part(native) {
-    --background: linear-gradient(175deg, var(--brand-grad-start) 0%, var(--brand-grad-end) 50%);
-    color: var(--ion-color-primary-contrast, #fff);
-    border-radius: 12px;
-    font-weight: 700;
-    box-shadow: 0 6px 16px color-mix(in srgb, var(--ion-color-primary) 20%, transparent);
-  }
+  // &::part(native) {
+  //   --background: linear-gradient(175deg, var(--brand-grad-start) 0%, var(--brand-grad-end) 50%);
+  //   color: var(--ion-color-primary-contrast, #fff);
+  //   border-radius: 12px;
+  //   font-weight: 700;
+  //   box-shadow: 0 6px 16px color-mix(in srgb, var(--ion-color-primary) 20%, transparent);
+  // }
 
   &:hover { filter: brightness(1.03); }
 
@@ -108,20 +111,22 @@ ion-grid {
 
 /* Outline/text-styled cancel button with gradient text */
 .cancel-btn {
-  --background: transparent;
-  --color: transparent; /* we’ll paint the text via gradient */
+  // --background: transparent;
+  // --color: transparent; /* we’ll paint the text via gradient */
   font-weight: 700;
   text-transform: none;
-
-  &::part(native) {
-    --background: transparent;
-    color: transparent;
-    background-image: linear-gradient(175deg, var(--brand-grad-start) 0%, var(--brand-grad-end) 50%);
-    -webkit-background-clip: text;
-            background-clip: text;
-    border: 1px solid color-mix(in srgb, var(--ion-color-primary) 35%, var(--ion-border-color));
+  border: 1px solid;
     border-radius: 12px;
-  }
+
+  // &::part(native) {
+  //   --background: transparent;
+  //   color: transparent;
+  //   background-image: linear-gradient(175deg, var(--brand-grad-start) 0%, var(--brand-grad-end) 50%);
+  //   -webkit-background-clip: text;
+  //           background-clip: text;
+  //   border: 1px solid color-mix(in srgb, var(--ion-color-primary) 35%, var(--ion-border-color));
+  //   border-radius: 12px;
+  // }
 
   &:focus-visible { box-shadow: var(--focus-ring); }
 }

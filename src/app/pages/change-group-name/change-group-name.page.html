@@ -1,7 +1,11 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-icon name="arrow-back-outline" slot="start" style="font-size: 24px; cursor: pointer; margin-right: 10px;"
-          (click)="onCancel()"></ion-icon>
+    <ion-icon
+      name="arrow-back-outline"
+      slot="start"
+      style="font-size: 24px; cursor: pointer; margin-right: 10px"
+      (click)="onCancel()"
+    ></ion-icon>
     <ion-title>Group name</ion-title>
   </ion-toolbar>
 </ion-header>
@@ -10,14 +14,17 @@
   <div class="group-name-wrapper">
     <ion-item lines="none" class="input-box">
       <ion-input
+        #groupNameInput
         [(ngModel)]="groupName"
         maxlength="90"
         placeholder="Enter group name"
         fill="outline"
         class="group-name-input"
       ></ion-input>
-      <ion-label slot="end" class="char-count">{{ groupName.length }}/90</ion-label>
-      <ion-icon name="happy-outline" slot="end"></ion-icon>
+      <ion-label slot="end" class="char-count"
+        >{{ groupName.length }}/90</ion-label
+      >
+      <ion-icon name="happy-outline" slot="end" (click)="openEmojiKeyboard()"></ion-icon>
     </ion-item>
   </div>
 
@@ -25,17 +32,23 @@
     <ion-grid>
       <ion-row>
         <ion-col size="6">
-          <ion-button expand="block" fill="clear" class="cancel-btn" (click)="onCancel()">Cancel</ion-button>
+          <ion-button
+            expand="block"
+            fill="clear"
+            class="cancel-btn"
+            (click)="onCancel()"
+            >Cancel</ion-button
+          >
         </ion-col>
         <ion-col size="6">
           <ion-button
-  expand="block"
-  (click)="onSave()"
-  class="ok-btn"
-  [disabled]="!groupName.trim()"
->
-  OK
-</ion-button>
+            expand="block"
+            (click)="onSave()"
+            class="ok-btn"
+            [disabled]="!groupName.trim()"
+          >
+            OK
+          </ion-button>
         </ion-col>
       </ion-row>
     </ion-grid>

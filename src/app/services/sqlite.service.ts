@@ -751,6 +751,21 @@ export class SqliteService {
     );
   }
 
+  async updateConversationTitle(roomId: string, newTitle: string): Promise<void> {
+  return this.withOpState('updateConversationTitle', async () => {
+    const sql = `
+      UPDATE conversations 
+      SET title = ?, 
+          updatedAt = datetime('now') 
+      WHERE roomId = ?
+    `;
+    
+    await this.db.run(sql, [newTitle, roomId]);
+    
+    console.log(`✅ Updated conversation title for ${roomId}: ${newTitle}`);
+  });
+}
+
   // async deleteConversation(roomId: string) {
   //   return this.withOpState('deleteConversation', async () => {
   //     await this.db.run('DELETE FROM messages WHERE roomId = ?', [roomId]);

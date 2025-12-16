@@ -64,9 +64,9 @@ export class UseraboutMenuComponent {
 }
 
   async navigateToChangeGroupName() {
-    // await this.popoverCtrl.dismiss();
-    // this.router.navigate(['/change-group-name'], {
-    //   queryParams: { groupId: this.groupId }
-    // });
+    await this.popoverCtrl.dismiss();
+    this.router.navigate(['/change-group-name'], {
+      queryParams: { groupId: this.groupId }
+    });
   }
 }

@@ -6,6 +6,7 @@ import {
   ActionSheetController,
   ToastController,
   AlertController,
+  LoadingController,
 } from '@ionic/angular';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
@@ -113,7 +114,8 @@ private groupMembershipUnsubscribe: (() => void) | null = null;
     private authService: AuthService,
     private service: ApiService,
     private alertCtrl: AlertController,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private loadingCtrl: LoadingController,
   ) {}
 
   ngOnInit() {
@@ -400,6 +402,72 @@ ngOnDestroy() {
     }
   }
 
+async deleteGroup() {
+  console.log("this delete group function is called");
+  
+  // ✅ Show confirmation alert
+  const alert = await this.alertCtrl.create({
+    header: 'Delete Group',
+    message: 'Are you sure you want to delete this group? This will remove all messages and cannot be undone.',
+    buttons: [
+      {
+        text: 'Cancel',
+        role: 'cancel',
+        cssClass: 'secondary',
+        handler: () => {
+          console.log('Delete cancelled');
+        }
+      },
+      {
+        text: 'Delete',
+        cssClass: 'danger',
+        handler: async () => {
+          try {
+            // Show loading spinner
+            const loading = await this.loadingCtrl.create({
+              message: 'Deleting group...',
+              spinner: 'crescent'
+            });
+            await loading.present();
+
+            // Perform delete operation
+            this.groupId = this.firebaseChatService.currentChat?.roomId || '';
+            await this.firebaseChatService.deleteGroup(this.groupId);
+
+            // Dismiss loading
+            await loading.dismiss();
+
+            // Show success toast
+            const toast = await this.toastCtrl.create({
+              message: 'Group deleted successfully',
+              duration: 2000,
+              color: 'success',
+              position: 'bottom'
+            });
+            await toast.present();
+
+            // Navigate to home
+            this.router.navigate(['/home-screen']);
+          } catch (error) {
+            console.error('Error deleting group:', error);
+            
+            // Show error toast
+            const toast = await this.toastCtrl.create({
+              message: 'Failed to delete group. Please try again.',
+              duration: 3000,
+              color: 'danger',
+              position: 'bottom'
+            });
+            await toast.present();
+          }
+        }
+      }
+    ]
+  });
+
+  await alert.present();
+}
+
   openProfileDp() {
     const profileToShow = this.receiverProfile || 'assets/images/user.jfif';
 
@@ -462,18 +530,17 @@ ngOnDestroy() {
     }
   }
 
-  openGroupDescriptionPage() {
-    if (this.chatType === 'group') {
-      this.navCtrl.navigateForward(`/group-description`, {
-        queryParams: {
-          receiverId: this.receiverId,
-          currentDescription: this.groupDescription,
-          receiver_name: this.receiver_name,
-          isGroup: this.isGroup,
-        },
-      });
-    }
+ openGroupDescriptionPage() {
+  if (this.chatType === 'group') {
+    this.navCtrl.navigateForward('/group-description', {
+      queryParams: {
+        receiverId: this.receiverId,
+        isGroup: true
+      }
+    });
   }
+}
+
 
   // ---- ACTION SHEET ----
 

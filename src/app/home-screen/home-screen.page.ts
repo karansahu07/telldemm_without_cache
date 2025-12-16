@@ -147,7 +147,7 @@ export class HomeScreenPage implements OnInit, OnDestroy {
     private sqlite: SqliteService,
     private toastCtrl: ToastController,
     private modalController: ModalController,
-    private loadingController: LoadingController
+    private alertController: AlertController
   ) {}
 
   async ngOnInit() {
@@ -417,6 +417,12 @@ export class HomeScreenPage implements OnInit, OnDestroy {
       this.archiveUnsub?.();
     } catch {}
     this.archiveUnsub = null;
+
+     if (this.firebaseChatService._userChatsListener) {
+    try {
+      this.firebaseChatService._userChatsListener();
+    } catch {}
+  }
   }
 
   goToUserAbout() {
@@ -942,16 +948,44 @@ get selectionMeta() {
   // delete chat code start
 
   async deleteMultipleChats() {
-    console.log('multiple delete selected');
-    try {
-      const result = await this.firebaseChatService.deleteChats(
-        this.selectedChats.map((c) => c.roomId)
-      );
-    } catch (error) {
-      console.error('Error deleting chats:', error);
-    }
-    this.clearChatSelection();
+  if (!this.selectedChats || this.selectedChats.length === 0) {
+    return;
   }
+
+  const alert = await this.alertController.create({
+    header: 'Delete Chats',
+    message: 'Are you sure you want to delete selected chats?',
+    buttons: [
+      {
+        text: 'Cancel',
+        role: 'cancel',
+        handler: () => {
+          console.log('Delete cancelled');
+        }
+      },
+      {
+        text: 'Delete',
+        role: 'destructive',
+        handler: async () => {
+          try {
+            console.log('multiple delete confirmed');
+
+            await this.firebaseChatService.deleteChats(
+              this.selectedChats.map(c => c.roomId)
+            );
+
+            this.clearChatSelection();
+          } catch (error) {
+            console.error('Error deleting chats:', error);
+          }
+        }
+      }
+    ]
+  });
+
+  await alert.present();
+}
+
 
   async onDeleteSelected() {
     try {

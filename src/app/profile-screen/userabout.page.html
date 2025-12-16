@@ -219,10 +219,10 @@
       </ion-badge>
     </ion-item>
 
-    <!-- <ion-item *ngIf="hasPastMembers">
+    <ion-item *ngIf="hasPastMembers">
       <ion-icon name="people-outline" slot="start" class="all-icon"></ion-icon>
       <ion-label class="Encry1" (click)="viewPastMembers()">{{ 'userabout.viewPastMembers' | translate }}</ion-label>
-    </ion-item> -->
+    </ion-item>
 
   </ion-list>
 
@@ -246,7 +246,7 @@
     </ion-item>
 
     <!-- Delete group - only show if user is NOT a member -->
-    <ion-item class="jha delete-group-item" *ngIf="chatType === 'group' && !isCurrentUserMember">
+    <ion-item class="jha delete-group-item" *ngIf="chatType === 'group' && !isCurrentUserMember" (click)="deleteGroup()">
       <ion-icon name="trash-outline" slot="start" class="all-icon"></ion-icon>
       <ion-label class="Encry">Delete Group</ion-label>
     </ion-item>
