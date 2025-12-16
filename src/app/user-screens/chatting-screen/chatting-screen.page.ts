@@ -1519,14 +1519,36 @@ async openMoreActions() {
     return types.includes('text') && types.some((t) => t !== 'text');
   }
 
+  // async copySelectedMessages() {
+  //   if (this.lastPressedMessage?.text) {
+  //     await Clipboard.write({ string: this.lastPressedMessage.text });
+  //     //console.log('Text copied to clipboard:', this.lastPressedMessage.text);
+  //     this.selectedMessages = [];
+  //     this.lastPressedMessage = null;
+  //   }
+  // }
+
   async copySelectedMessages() {
-    if (this.lastPressedMessage?.text) {
-      await Clipboard.write({ string: this.lastPressedMessage.text });
-      //console.log('Text copied to clipboard:', this.lastPressedMessage.text);
-      this.selectedMessages = [];
-      this.lastPressedMessage = null;
-    }
+  if (!this.lastPressedMessage) return;
+  
+  // Get the currently displayed text based on active translation
+  const textToCopy = this.getDisplayedText(this.lastPressedMessage);
+  
+  if (textToCopy) {
+    await Clipboard.write({ string: textToCopy });
+    
+    // Show feedback with translation label
+    const label = this.getActiveTranslationLabel(this.lastPressedMessage);
+    // const message = label 
+    //   ? `Copied (${label})` 
+    //   : 'Text copied';
+    
+    // this.showToast(message, 'success', 'top', 1500);
+    
+    this.selectedMessages = [];
+    this.lastPressedMessage = null;
   }
+}
 
   replyToMessages() {
     if (this.selectedMessages.length === 1) {

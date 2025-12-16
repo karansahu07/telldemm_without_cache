@@ -1704,53 +1704,121 @@ async forceCloseChat(): Promise<void> {
     return isNaN(parsed) ? undefined : new Date(parsed);
   }
 
-  private async fetchGroupConDetails(
-    roomId: string,
-    meta: IChatMeta
-  ): Promise<IConversation> {
-    const groupRef = rtdbRef(this.db, `groups/${roomId}`);
-    const groupSnap = await rtdbGet(groupRef);
-    const group: Partial<IGroup> = groupSnap.val() || {};
-    const membersObj: Record<string, Partial<IGroupMember>> = group.members ||
-    {};
-    const members = Object.keys(membersObj);
+  // private async fetchGroupConDetails(
+  //   roomId: string,
+  //   meta: IChatMeta
+  // ): Promise<IConversation> {
+  //   const groupRef = rtdbRef(this.db, `groups/${roomId}`);
+  //   const groupSnap = await rtdbGet(groupRef);
+  //   const group: Partial<IGroup> = groupSnap.val() || {};
+  //   const membersObj: Record<string, Partial<IGroupMember>> = group.members ||
+  //   {};
+  //   const members = Object.keys(membersObj);
 
-    let decryptedText: string | undefined;
-    try {
-      decryptedText = await this.encryptionService.decrypt(meta?.lastmessage);
-    } catch (e) {
-      console.warn('fetchGroupConDetails: decrypt failed for', roomId, e);
-      decryptedText =
-        typeof meta?.lastmessage === 'string' ? meta.lastmessage : undefined;
-    }
+  //   let decryptedText: string | undefined;
+  //   try {
+  //     decryptedText = await this.encryptionService.decrypt(meta?.lastmessage);
+  //   } catch (e) {
+  //     console.warn('fetchGroupConDetails: decrypt failed for', roomId, e);
+  //     decryptedText =
+  //       typeof meta?.lastmessage === 'string' ? meta.lastmessage : undefined;
+  //   }
 
-    const conv: IConversation = {
-      roomId,
-      type: meta.type,
-      communityId: group.communityId || null,
-      title: group.title || 'GROUP',
-      avatar: group.avatar || '',
-      members,
-      adminIds: group.adminIds || [],
-      isArchived: !!meta.isArchived,
-      isPinned: !!meta.isPinned,
-      isLocked: !!meta.isLocked,
-      createdAt: group.createdAt ? this.parseDate(group.createdAt) : undefined,
-      lastMessage: decryptedText ?? undefined,
-      lastMessageType: meta.lastmessageType ?? undefined,
-      lastMessageAt: meta.lastmessageAt
-        ? this.parseDate(meta.lastmessageAt)
-        : undefined,
-      unreadCount: meta.unreadCount || 0,
-      updatedAt: meta.lastmessageAt
-        ? this.parseDate(meta.lastmessageAt)
-        : group.updatedAt
-        ? this.parseDate(group.updatedAt)
-        : undefined,
-    } as IConversation;
+  //   const conv: IConversation = {
+  //     roomId,
+  //     type: meta.type,
+  //     communityId: group.communityId || null,
+  //     title: group.title || 'GROUP',
+  //     avatar: group.avatar || '',
+  //     members,
+  //     adminIds: group.adminIds || [],
+  //     isArchived: !!meta.isArchived,
+  //     isPinned: !!meta.isPinned,
+  //     isLocked: !!meta.isLocked,
+  //     createdAt: group.createdAt ? this.parseDate(group.createdAt) : undefined,
+  //     lastMessage: decryptedText ?? undefined,
+  //     lastMessageType: meta.lastmessageType ?? undefined,
+  //     lastMessageAt: meta.lastmessageAt
+  //       ? this.parseDate(meta.lastmessageAt)
+  //       : undefined,
+  //     unreadCount: meta.unreadCount || 0,
+  //     updatedAt: meta.lastmessageAt
+  //       ? this.parseDate(meta.lastmessageAt)
+  //       : group.updatedAt
+  //       ? this.parseDate(group.updatedAt)
+  //       : undefined,
+  //   } as IConversation;
 
-    return conv;
+  //   return conv;
+  // }
+
+   private async fetchGroupConDetails(
+  roomId: string,
+  meta: IChatMeta
+): Promise<IConversation> {
+  const groupRef = rtdbRef(this.db, `groups/${roomId}`);
+  const groupSnap = await rtdbGet(groupRef);
+  const group: Partial<IGroup> = groupSnap.val() || {};
+  const membersObj: Record<string, Partial<IGroupMember>> = group.members || {};
+  const members = Object.keys(membersObj);
+
+  let decryptedText: string | undefined;
+  try {
+    decryptedText = await this.encryptionService.decrypt(meta?.lastmessage);
+  } catch (e) {
+    console.warn('fetchGroupConDetails: decrypt failed for', roomId, e);
+    decryptedText =
+      typeof meta?.lastmessage === 'string' ? meta.lastmessage : undefined;
   }
+
+  // ✅ Fetch group avatar from API
+  let groupAvatar = group.avatar || '';
+  try {
+    const dpResponse = await firstValueFrom(
+      this.apiService.getGroupDp(roomId)
+    );
+    console.log("dp group response", dpResponse)
+    
+    if (dpResponse.group_dp_url) {
+      groupAvatar = dpResponse.group_dp_url;
+      console.log(`✅ Fetched group avatar for ${roomId}:`, groupAvatar);
+    } else {
+      console.warn(`⚠️ No group_dp in API response for ${roomId}`);
+    }
+  } catch (err) {
+    console.warn(`⚠️ Failed to fetch group avatar for ${roomId}:`, err);
+    // Fallback to Firebase avatar if API fails
+    groupAvatar = group.avatar || '';
+  }
+
+  const conv: IConversation = {
+    roomId,
+    type: meta.type,
+    communityId: group.communityId || null,
+    title: group.title || 'GROUP',
+    avatar: groupAvatar,
+    members,
+    adminIds: group.adminIds || [],
+    isArchived: !!meta.isArchived,
+    isPinned: !!meta.isPinned,
+    pinnedAt: meta.pinnedAt || "",
+    isLocked: !!meta.isLocked,
+    createdAt: group.createdAt ? this.parseDate(group.createdAt) : undefined,
+    lastMessage: decryptedText ?? undefined,
+    lastMessageType: meta.lastmessageType ?? undefined,
+    lastMessageAt: meta.lastmessageAt
+      ? this.parseDate(meta.lastmessageAt)
+      : undefined,
+    unreadCount: meta.unreadCount || 0,
+    updatedAt: meta.lastmessageAt
+      ? this.parseDate(meta.lastmessageAt)
+      : group.updatedAt
+      ? this.parseDate(group.updatedAt)
+      : undefined,
+  } as IConversation;
+
+  return conv;
+}
 
   async syncConversationWithServer(): Promise<void> {
     try {

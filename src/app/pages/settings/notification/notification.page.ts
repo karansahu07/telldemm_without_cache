@@ -31,19 +31,26 @@ export class NotificationPage implements OnInit {
     await this.checkNotificationPermission();
   }
 
+  // ✅ Check when view enters (handles back navigation from settings)
+  async ionViewWillEnter(): Promise<void> {
+    await this.checkNotificationPermission();
+  }
+
   /**
-   * Check current notification permission status and update toggle
+   * ✅ Check current notification permission status and update toggle
    */
   private async checkNotificationPermission(): Promise<void> {
     try {
       const permStatus = await PushNotifications.checkPermissions();
       console.log('📱 Current permission status:', permStatus.receive);
       
-      // Update toggle based on current permission
+      // ✅ Update toggle based ONLY on current permission
       this.highPriority = permStatus.receive === 'granted';
       
-      // Also load any saved settings
-      this.loadSettings();
+      // ✅ Save current state to localStorage
+      this.saveSettings();
+      
+      console.log('✅ Toggle state updated:', this.highPriority ? 'ON' : 'OFF');
     } catch (error) {
       console.error('❌ Error checking notification permission:', error);
       this.highPriority = false;
@@ -51,7 +58,7 @@ export class NotificationPage implements OnInit {
   }
 
   /**
-   * Handle toggle change - request or disable notifications
+   * ✅ Handle toggle change - request or disable notifications
    */
   async onToggleChange(event: any): Promise<void> {
     const isEnabled = event.detail.checked;
@@ -67,7 +74,7 @@ export class NotificationPage implements OnInit {
   }
 
   /**
-   * Enable notifications - request permission
+   * ✅ Enable notifications - request permission
    */
   private async enableNotifications(): Promise<void> {
     try {
@@ -78,6 +85,12 @@ export class NotificationPage implements OnInit {
       if (permStatus.receive === 'prompt' || permStatus.receive === 'prompt-with-rationale') {
         // Request permission
         permStatus = await PushNotifications.requestPermissions();
+      } else if (permStatus.receive === 'denied') {
+        // ✅ Permission was denied before - guide to settings immediately
+        console.warn('⚠️ Notification permission denied - redirecting to settings');
+        this.highPriority = false;
+        await this.showPermissionDeniedAlert();
+        return;
       }
       
       if (permStatus.receive === 'granted') {
@@ -89,18 +102,16 @@ export class NotificationPage implements OnInit {
         
         this.saveSettings();
         
-        // Show success message with settings option
+        // Show success message
         await this.showSuccessAlert();
-      } else if (permStatus.receive === 'denied') {
-        // Permission denied - guide user to settings
-        console.warn('⚠️ Notification permission denied');
+      } else {
+        // Permission denied or other status
+        console.warn('⚠️ Permission not granted:', permStatus.receive);
         this.highPriority = false;
         
-        await this.showPermissionDeniedAlert();
-      } else {
-        // Other status (like 'prompt')
-        console.log('⚠️ Permission status:', permStatus.receive);
-        this.highPriority = false;
+        if (permStatus.receive === 'denied') {
+          await this.showPermissionDeniedAlert();
+        }
       }
       
     } catch (error) {
@@ -112,11 +123,20 @@ export class NotificationPage implements OnInit {
   }
 
   /**
-   * Disable notifications - clear all notifications and update status
+   * ✅ Disable notifications - clear all notifications and update status
    */
   private async disableNotifications(): Promise<void> {
     try {
       console.log('🔕 Disabling notifications...');
+      
+      // ✅ Check current permission first
+      const permStatus = await PushNotifications.checkPermissions();
+      
+      if (permStatus.receive === 'granted') {
+        // Permission is granted but user wants to disable
+        // We can't revoke permission programmatically - guide to settings
+        await this.showDisabledAlert();
+      }
       
       // Clear all existing notifications
       await this.fcmService.clearAllNotifications();
@@ -124,10 +144,7 @@ export class NotificationPage implements OnInit {
       this.highPriority = false;
       this.saveSettings();
       
-      // Show info alert with settings option
-      await this.showDisabledAlert();
-      
-      console.log('✅ Notifications disabled');
+      console.log('✅ Notifications disabled in app');
       
     } catch (error) {
       console.error('❌ Error disabling notifications:', error);
@@ -137,32 +154,30 @@ export class NotificationPage implements OnInit {
   }
 
   /**
-   * Open device app settings
+   * ✅ Open device app settings
    */
   private async openAppSettings(): Promise<void> {
     try {
-        await NativeSettings.open({
-          optionAndroid: AndroidSettings.ApplicationDetails,
-          optionIOS: IOSSettings.AppNotification,
-        });
-      } catch (error) {
-        console.error('❌ Error opening native settings:', error);
-      }
+      await NativeSettings.open({
+        optionAndroid: AndroidSettings.ApplicationDetails,
+        optionIOS: IOSSettings.AppNotification,
+      });
+    } catch (error) {
+      console.error('❌ Error opening native settings:', error);
+    }
   }
 
   /**
-   * Show success alert when notifications are enabled
+   * ✅ Show success alert when notifications are enabled
    */
   private async showSuccessAlert(): Promise<void> {
     const alert = await this.alertController.create({
-      header: 'Notifications Enabled',
-      message: 'You will now receive push notifications from this app.',
+      header: this.translate.instant('notifications.alerts.success.title') || 'Notifications Enabled',
+      message: this.translate.instant('notifications.alerts.success.message') || 'You will now receive push notifications from this app.',
       buttons: [
         {
-          text: 'OK',
-          handler: () => {
-            this.openAppSettings();
-          }
+          text: this.translate.instant('common.ok') || 'OK',
+          role: 'cancel'
         }
       ]
     });
@@ -171,15 +186,23 @@ export class NotificationPage implements OnInit {
   }
 
   /**
-   * Show alert when notifications are disabled
+   * ✅ Show alert when notifications are disabled
    */
   private async showDisabledAlert(): Promise<void> {
     const alert = await this.alertController.create({
-      header: 'Notifications Disabled',
-      message: 'Notifications have been disabled. To completely turn off notifications, you can manage settings from your device.',
+      header: this.translate.instant('notifications.alerts.disabled.title') || 'Disable Notifications',
+      message: this.translate.instant('notifications.alerts.disabled.message') || 'To completely turn off notifications, please disable them from your device settings.',
       buttons: [
         {
-          text: 'OK',
+          text: this.translate.instant('common.cancel') || 'Cancel',
+          role: 'cancel',
+          handler: () => {
+            // ✅ Reset toggle if user cancels
+            this.highPriority = true;
+          }
+        },
+        {
+          text: this.translate.instant('notifications.openSettings') || 'Open Settings',
           handler: () => {
             this.openAppSettings();
           }
@@ -191,15 +214,19 @@ export class NotificationPage implements OnInit {
   }
 
   /**
-   * Show alert when permission is denied
+   * ✅ Show alert when permission is denied
    */
   private async showPermissionDeniedAlert(): Promise<void> {
     const alert = await this.alertController.create({
-      header: 'Permission Denied',
-      message: 'Notification permission was denied. Please enable it from your device settings to receive notifications.',
+      header: this.translate.instant('notifications.alerts.denied.title') || 'Permission Denied',
+      message: this.translate.instant('notifications.alerts.denied.message') || 'Notification permission was denied. Please enable it from your device settings to receive notifications.',
       buttons: [
         {
-          text: 'OK',
+          text: this.translate.instant('common.cancel') || 'Cancel',
+          role: 'cancel'
+        },
+        {
+          text: this.translate.instant('notifications.openSettings') || 'Open Settings',
           handler: () => {
             this.openAppSettings();
           }
@@ -211,38 +238,16 @@ export class NotificationPage implements OnInit {
   }
 
   /**
-   * Show error alert
+   * ✅ Show error alert
    */
   private async showErrorAlert(): Promise<void> {
     const alert = await this.alertController.create({
-      header: 'Error',
-      message: 'Something went wrong. Please try again or check your device settings.',
+      header: this.translate.instant('common.error') || 'Error',
+      message: this.translate.instant('notifications.alerts.error.message') || 'Something went wrong. Please try again or check your device settings.',
       buttons: [
         {
-          text: 'OK',
-          handler: () => {
-            this.openAppSettings();
-          }
-        }
-      ]
-    });
-
-    await alert.present();
-  }
-
-  /**
-   * Show alert to guide user to app settings
-   */
-  private async showSettingsAlert(): Promise<void> {
-    const alert = await this.alertController.create({
-      header: 'Permission Required',
-      message: 'Notifications are blocked. Please enable them in your device settings.',
-      buttons: [
-        {
-          text: 'OK',
-          handler: () => {
-            this.openAppSettings();
-          }
+          text: this.translate.instant('common.ok') || 'OK',
+          role: 'cancel'
         }
       ]
     });
@@ -251,43 +256,34 @@ export class NotificationPage implements OnInit {
   }
 
   openMessageNotifications() {
+    if (!this.highPriority) return;
     this.router.navigate(['settings/notifications/message']);
   }
 
   openGroupNotifications() {
+    if (!this.highPriority) return;
     this.router.navigate(['settings/notifications/group']);
   }
 
   openCallNotifications() {
+    if (!this.highPriority) return;
     this.router.navigate(['settings/notifications/call']);
-  }
-
-  private loadSettings() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      
-      const data = JSON.parse(raw);
-      if (typeof data.highPriority === 'boolean') {
-        // Only apply saved setting if it matches current permission
-        // This prevents mismatch between toggle and actual permission
-        this.highPriority = data.highPriority && this.highPriority;
-      }
-    } catch (e) {
-      console.warn('Could not load notification settings', e);
-    }
   }
 
   ionViewWillLeave() {
     this.saveSettings();
   }
 
+  /**
+   * ✅ Save current toggle state
+   */
   private saveSettings() {
     try {
       localStorage.setItem(
         STORAGE_KEY,
         JSON.stringify({ highPriority: this.highPriority })
       );
+      console.log('💾 Settings saved:', this.highPriority ? 'ON' : 'OFF');
     } catch (e) {
       console.warn('Could not save notification settings', e);
     }

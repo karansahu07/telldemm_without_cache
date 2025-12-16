@@ -163,6 +163,7 @@ export class HomeScreenPage implements OnInit, OnDestroy {
   async ionViewWillEnter() {
     try {
       // await this.initApp()
+      await this.firebaseChatService.closeChat();
 
       console.info('Loading home page ....');
       await this.firebaseChatService.initApp(

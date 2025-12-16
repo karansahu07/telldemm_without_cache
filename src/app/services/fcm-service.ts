@@ -9,7 +9,7 @@ import {
   LocalNotifications,
   LocalNotificationActionPerformed,
 } from '@capacitor/local-notifications';
-import { getDatabase, ref, remove, set } from 'firebase/database';
+import { getDatabase, ref, remove, set, update } from 'firebase/database';
 import { Router } from '@angular/router';
 import { Platform, ToastController } from '@ionic/angular';
 import { App } from '@capacitor/app';
@@ -527,7 +527,7 @@ export class FcmService {
     }
   }
 
-  // ✅ BONUS: Clear ALL notifications (for logout or app reset)
+  // Clear ALL notifications (for logout or app reset)
   async clearAllNotifications(): Promise<void> {
     try {
       console.log('🧹 Clearing ALL notifications');
@@ -552,58 +552,56 @@ export class FcmService {
     }
   }
 
-  // ✅ Expose method to get stored notification ID (if needed)
+  // Expose method to get stored notification ID (if needed)
   getNotificationIdForRoom(roomId: string): number | undefined {
     return this.activeNotifications.get(roomId);
   }
 
-// ✅ When user turns ON from toggle: ask permission + register FCM
-async askNotificationPermissionAndRegister(): Promise<boolean> {
-  try {
-    let permStatus = await PushNotifications.checkPermissions();
-    if (permStatus.receive !== 'granted') {
-      permStatus = await PushNotifications.requestPermissions();
-    }
+  // When user turns ON from toggle: ask permission + register FCM
+  async askNotificationPermissionAndRegister(): Promise<boolean> {
+    try {
+      let permStatus = await PushNotifications.checkPermissions();
+      if (permStatus.receive !== 'granted') {
+        permStatus = await PushNotifications.requestPermissions();
+      }
 
-    if (permStatus.receive !== 'granted') {
-      console.warn('Push notification permission denied by user');
+      if (permStatus.receive !== 'granted') {
+        console.warn('Push notification permission denied by user');
+        return false;
+      }
+
+      await PushNotifications.register();
+
+      // Local notifications (optional)
+      try {
+        const localPerm = await LocalNotifications.requestPermissions();
+        if (localPerm.display !== 'granted') {
+          console.warn('Local notification permission not granted');
+        }
+      } catch (e) {
+        console.warn('Local notification permission check failed', e);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('❌ Error while asking notification permission:', error);
       return false;
     }
+  }
 
-    // Permission mil gayi → register for push
-    await PushNotifications.register();
-
-    // Local notifications (optional)
+  // native app settings so user can turn notification OFF/ON there
+  async openAppSettingsForNotifications(): Promise<void> {
     try {
-      const localPerm = await LocalNotifications.requestPermissions();
-      if (localPerm.display !== 'granted') {
-        console.warn('Local notification permission not granted');
-      }
-    } catch (e) {
-      console.warn('Local notification permission check failed', e);
+      await NativeSettings.open({
+        optionAndroid: AndroidSettings.ApplicationDetails,
+        optionIOS: IOSSettings.AppNotification,
+      });
+    } catch (error) {
+      console.error('❌ Error opening native settings:', error);
     }
-
-    return true;
-  } catch (error) {
-    console.error('❌ Error while asking notification permission:', error);
-    return false;
   }
-}
 
-// ✅ Open native app settings so user can turn notification OFF/ON there
-async openAppSettingsForNotifications(): Promise<void> {
-  try {
-    await NativeSettings.open({
-      optionAndroid: AndroidSettings.ApplicationDetails, // Android → App info screen
-      optionIOS: IOSSettings.AppNotification,           // iOS → App notification settings
-      // (older iOS versions ke liye fallback chahe to IOSSettings.App use kar sakte ho)
-    });
-  } catch (error) {
-    console.error('❌ Error opening native settings:', error);
-  }
-}
-
-
+  // Save FCM token with isPermission flag set to TRUE
   async saveFcmTokenToDatabase(
     userId: string,
     userName: string,
@@ -627,9 +625,11 @@ async openAppSettingsForNotifications(): Promise<void> {
         fcmToken: this.fcmToken,
         platform: this.isIos() ? 'ios' : 'android',
         lastActive: new Date().toISOString(),
+        isPermission: true, // ✅ Set to TRUE when token is saved
       };
 
       await set(userRef, userData);
+      console.log('✅ FCM token saved with isPermission: true');
     } catch (error) {
       console.error('❌ Error saving FCM token:', error);
     }
@@ -639,6 +639,7 @@ async openAppSettingsForNotifications(): Promise<void> {
     return this.fcmToken;
   }
 
+  // Update FCM token with isPermission flag set to TRUE
   async updateFcmToken(userId: string): Promise<string | null> {
     try {
       if (!userId) {
@@ -660,20 +661,16 @@ async openAppSettingsForNotifications(): Promise<void> {
 
           // Update in Firebase
           const db = getDatabase();
-          const tokenRef = ref(db, `users/${userId}/fcmToken`);
-          await set(tokenRef, this.fcmToken);
+          const userRef = ref(db, `users/${userId}`);
+          
+          await update(userRef, {
+            fcmToken: this.fcmToken,
+            platform: this.isIos() ? 'ios' : 'android',
+            lastActive: new Date().toISOString(),
+            isPermission: true, // ✅ Set to TRUE when token is updated
+          });
 
-          // Update metadata
-          await set(
-            ref(db, `users/${userId}/lastActive`),
-            new Date().toISOString()
-          );
-          await set(
-            ref(db, `users/${userId}/platform`),
-            this.isIos() ? 'ios' : 'android'
-          );
-
-          console.log('✅ FCM token updated in Firebase successfully');
+          console.log('✅ FCM token updated in Firebase with isPermission: true');
           return this.fcmToken;
         } else {
           console.warn('⚠️ No fresh token received');
@@ -689,6 +686,7 @@ async openAppSettingsForNotifications(): Promise<void> {
     }
   }
 
+  // ✅ UPDATED: Delete FCM token and set isPermission flag to FALSE
   async deleteFcmToken(userId: string) {
     try {
       if (!userId) {
@@ -697,13 +695,21 @@ async openAppSettingsForNotifications(): Promise<void> {
       }
 
       const db = getDatabase();
-      const userRef = ref(db, `users/${userId}/fcmToken`);
+      const userRef = ref(db, `users/${userId}`);
 
-      await remove(userRef);
+      await update(userRef, {
+        fcmToken: null,
+        isPermission: false,
+        lastActive: new Date().toISOString(),
+      });
+
+      console.log('✅ FCM token deleted and isPermission set to false');
+
       const UserId = Number(userId);
       if (!Number.isNaN(UserId)) {
         this.service.logoutUser(UserId).subscribe({
           next: (res) => {
+            console.log('✅ Backend logout successful');
           },
           error: (err) => {
             console.error('❌ Backend logout failed:', err);
@@ -716,6 +722,28 @@ async openAppSettingsForNotifications(): Promise<void> {
       }
     } catch (error) {
       console.error('❌ Error deleting user token:', error);
+    }
+  }
+
+  // new Method to update only isPermission flag (useful for toggle changes)
+  async updatePermissionStatus(userId: string, isPermission: boolean): Promise<void> {
+    try {
+      if (!userId) {
+        console.warn('⚠️ updatePermissionStatus: userId is required');
+        return;
+      }
+
+      const db = getDatabase();
+      const userRef = ref(db, `users/${userId}`);
+
+      await update(userRef, {
+        isPermission: isPermission,
+        lastActive: new Date().toISOString(),
+      });
+
+      console.log(`✅ isPermission updated to ${isPermission} for user ${userId}`);
+    } catch (error) {
+      console.error('❌ Error updating permission status:', error);
     }
   }
 

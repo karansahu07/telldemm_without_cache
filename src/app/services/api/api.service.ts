@@ -279,7 +279,7 @@ export class ApiService {
    */
   getGroupDp(
     firebase_group_id: string
-  ): Observable<{ status: boolean; group_dp: string }> {
+  ): Observable<{ status: boolean; group_dp_url: string }> {
     return this.get('/api/groups/group-dp', { firebase_group_id });
   }
 
