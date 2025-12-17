@@ -590,8 +590,11 @@ export class FirebaseChatService {
     return this._platformUsers$.value;
   }
 
+  // get currentDeviceContacts(): any[] {
+  //   return this._deviceContacts$.value;
+  // }
   get currentDeviceContacts(): any[] {
-    return this._deviceContacts$.value;
+    return this._platformUsers$.value;
   }
 
   pushMsgToChat(msg: any) {

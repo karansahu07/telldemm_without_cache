@@ -10,12 +10,19 @@
     </ion-item>
   </ng-container>
 
-  <!-- Group Chat Menu -->
-  <ng-container *ngIf="chatType === 'group'">
+  <!-- Group Chat Menu - Show all options if user is a member -->
+  <ng-container *ngIf="chatType === 'group' && isCurrentUserMember">
     <ion-item button (click)="onOptionClick('addMembers')">
       <ion-label>Add Tellers to DemmRoom (Add members)</ion-label>
     </ion-item>
 
+    <ion-item button (click)="onOptionClick('changeGroupName')">
+      <ion-label>Rename DemmRoom Wip (Change group name)</ion-label>
+    </ion-item>
+  </ng-container>
+
+  <!-- Group Chat Menu - Show only Change Group Name if user is NOT a member -->
+  <ng-container *ngIf="chatType === 'group' && !isCurrentUserMember">
     <ion-item button (click)="onOptionClick('changeGroupName')">
       <ion-label>Rename DemmRoom Wip (Change group name)</ion-label>
     </ion-item>

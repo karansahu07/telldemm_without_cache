@@ -503,6 +503,20 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
         parts[parts.length - 1];
     } else {
       this.receiverId = currentChat?.roomId || '';
+       if (this.receiverId) {
+      try {
+        const { groupName, groupMembers } = 
+          await this.chatService.fetchGroupWithProfiles(this.receiverId);
+        
+        this.groupName = groupName;
+        this.groupMembers = groupMembers;
+        
+        console.log('✅ Loaded group members:', this.groupMembers);
+      } catch (err) {
+        console.warn('Failed to fetch group with profiles', err);
+        this.groupMembers = [];
+      }
+    }
       this.setupGroupMembershipListener();
     }
     this.receiverProfile =
@@ -517,6 +531,51 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     // ✅ Scroll to bottom after first load
     // setTimeout(() => this.scrollToBottomSmooth(), 100);
   }
+
+  /**
+ * Get display name for a sender - returns device contact name if available, otherwise phone number
+ */
+getSenderDisplayName(msg: any): string {
+  // If it's the current user
+  if (msg.sender === this.senderId) {
+    return 'You';
+  }
+
+  // Get device contacts
+  const deviceContacts = this.chatService.currentDeviceContacts || [];
+  
+  // Try to find the sender in group members first
+  const groupMember = this.groupMembers.find(
+    m => String(m.user_id) === String(msg.sender)
+  );
+
+  if (!groupMember) {
+    // Fallback to sender_name from message
+    return msg.sender_name || msg.sender;
+  }
+
+  // Get member's phone number (normalize it)
+  const memberPhone = (groupMember.phone_number || groupMember.phone || '').replace(/\D/g, '');
+  
+  if (!memberPhone) {
+    return groupMember.name || msg.sender_name || msg.sender;
+  }
+
+  // Try to find matching device contact
+  const deviceContact = deviceContacts.find(dc => {
+    const dcPhone = (dc.phoneNumber || '').replace(/\D/g, '');
+    // Match last 10 digits
+    return memberPhone.slice(-10) === dcPhone.slice(-10);
+  });
+
+  // Return device contact name if found, otherwise phone number
+  if (deviceContact) {
+    return deviceContact.username;
+  }
+
+  // Return phone number as fallback
+  return groupMember.phone_number || groupMember.phone || msg.sender_name || msg.sender;
+}
 
   setupGroupMembershipListener() {
     if (!this.roomId || this.chatType !== 'group') return;

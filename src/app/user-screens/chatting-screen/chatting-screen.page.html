@@ -157,9 +157,7 @@
                   </ng-template>
                 </ng-container>
 
-               
                 <ng-container *ngIf="currentConv?.type === 'group'">
-                
                   <ng-container
                     *ngIf="typingCount > 0; else groupPresenceBlock"
                   >
@@ -169,7 +167,6 @@
                     </span>
                   </ng-container>
 
-                
                   <ng-template #groupPresenceBlock>
                     <span style="color: var(--ion-color-medium)">
                       {{ currentConv?.members?.length || 0 }} members
@@ -350,9 +347,9 @@
             <!-- Group Sender Name -->
             <span
               *ngIf="chatType === 'group' && msg.sender !== senderId"
-              style="font-size: 12px; color: #6c6c6c; margin-left: 5px"
+              style="font-size: 10px; color: #bc8c2c;"
             >
-              {{ msg.sender_name }}
+              {{ getSenderDisplayName(msg) }}
             </span>
 
             <!-- Replied Message -->

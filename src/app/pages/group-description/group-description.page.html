@@ -6,13 +6,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-  <!-- <ion-textarea
-  [(ngModel)]="description"
-  placeholder="Enter group description"
-  auto-grow="true"
-  style="--background: #f1f1f1; --padding-start: 5px; border-radius: 25px;"
-></ion-textarea> -->
+<ion-content class="ion-padding" [fullscreen]="true">
 
 <ion-textarea
   [(ngModel)]="description"
@@ -21,19 +15,9 @@
   style="--background: #e0e0e0; border-radius: 25px; --padding-start: 15px; --padding-end: 15px;"
 ></ion-textarea>
 
+</ion-content>
 
-<!-- <div class="textarea-wrapper">
-  <ion-textarea
-    [(ngModel)]="description"
-    placeholder="Enter group description"
-    auto-grow="true"
-    class="custom-textarea"
-  ></ion-textarea>
-</div> -->
-
-
-
-  <div class="button-row" style="display: flex; justify-content: space-evenly;">
+  <!-- <div class="button-row" style="display: flex; justify-content: space-evenly;">
   <ion-button
     expand="block"
     style="--background: grey; --color: #fff;"
@@ -44,13 +28,39 @@
 
   <ion-button
     expand="block"
-    style="--background: linear-gradient(175deg, rgba(239, 111, 101, 1) 0%, rgba(110, 25, 17, 1) 50%); --color: #fff;"
+    style="--color: #fff;"
     (click)="saveDescription()"
   >
     Save
   </ion-button>
-</div>
+</div> -->
+
+<ion-footer class="footer-buttons">
+    <ion-grid>
+      <ion-row>
+        <ion-col size="6">
+          <ion-button
+            expand="block"
+            style="--background: grey; --color: #fff;"
+            (click)="cancel()"
+            class="cancel-btn"
+            >Cancel</ion-button
+          >
+        </ion-col>
+        <ion-col size="6">
+          <ion-button
+            expand="block"
+            style="--color: #fff;"
+            class="ok-btn"
+            (click)="saveDescription()"
+          >
+            save
+          </ion-button>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </ion-footer>
 
 
 
-</ion-content>
+

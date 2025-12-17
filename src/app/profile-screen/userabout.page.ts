@@ -156,7 +156,7 @@ private groupMembershipUnsubscribe: (() => void) | null = null;
     return this.adminIds.includes(String(userId));
   }
 
-  async ionViewWillEnter() {
+async ionViewWillEnter() {
   this.route.queryParams.subscribe((params) => {
     this.receiverId = params['receiverId'] || null;
     const isGroupParam = params['isGroup'];
@@ -172,6 +172,7 @@ private groupMembershipUnsubscribe: (() => void) | null = null;
   this.receiverProfile =
     (currentChat as any).avatar || (currentChat as any).groupAvatar || null;
   this.chatTitle = currentChat?.title || null;
+  this.receiver_phone = currentChat?.phoneNumber || ''
 
   if (this.chatType === 'group') {
     // ✅ Set up real-time membership listener
@@ -183,9 +184,11 @@ private groupMembershipUnsubscribe: (() => void) | null = null;
           this.receiverId
         );
       this.groupName = groupName;
-      this.groupMembers = groupMembers;
+      
+      // ✅ Map group members with device contact names
+      this.groupMembers = await this.membersWithDeviceNames(groupMembers);
 
-      console.log("group members", this.groupMembers);
+      console.log("group members with device names", this.groupMembers);
       this.currentUserId = this.authService.authData?.userId || '';
 
       this.isCurrentUserMember = this.groupMembers.some(
@@ -218,7 +221,42 @@ private groupMembershipUnsubscribe: (() => void) | null = null;
   }
 }
 
-// ✅ NEW: Setup real-time listener for group membership
+async membersWithDeviceNames(groupMembers: GroupMemberDisplay[]): Promise<GroupMemberDisplay[]> {
+  try {
+    const deviceContacts = this.firebaseChatService.currentDeviceContacts || [];
+    const currentUserId = this.authService.authData?.userId || '';
+    
+    return groupMembers.map(member => {
+      if (String(member.user_id) === String(currentUserId)) {
+        return {
+          ...member,
+          username: 'You'
+        };
+      }
+
+      // Try to find matching device contact by phone number
+      const deviceContact = deviceContacts.find(dc => {
+        const memberPhone = (member.phoneNumber || member.phone || '').replace(/\D/g, '');
+        const dcPhone = (dc.phoneNumber || '').replace(/\D/g, '');
+        
+        // Match last 10 digits
+        return memberPhone.slice(-10) === dcPhone.slice(-10);
+      });
+
+      // If device contact found, use its name; otherwise use phone number
+      return {
+        ...member,
+        username: deviceContact 
+          ? deviceContact.username 
+          : (member.phoneNumber || member.phone || member.username)
+      };
+    });
+  } catch (error) {
+    console.error('Error mapping members with device names:', error);
+    return groupMembers; // Return original if error
+  }
+}
+
 setupGroupMembershipListener() {
   if (!this.receiverId) return;
 
@@ -259,20 +297,9 @@ setupGroupMembershipListener() {
                 this.receiverId
               );
             this.groupName = groupName;
-            this.groupMembers = groupMembers;
             
-            // console.log('✅ Membership status changed - UI updated');
-            
-            // Show toast notification
-            // if (!this.isCurrentUserMember) {
-            //   const toast = await this.toastCtrl.create({
-            //     message: 'You are no longer a member of this group',
-            //     duration: 3000,
-            //     color: 'warning',
-            //     position: 'top'
-            //   });
-            //   await toast.present();
-            // }
+            // ✅ Map with device names on refresh too
+            this.groupMembers = await this.membersWithDeviceNames(groupMembers);
           } catch (err) {
             console.warn('Failed to refresh group members', err);
           }
@@ -506,6 +533,7 @@ async deleteGroup() {
       componentProps: {
         chatType: this.chatType,
         groupId: this.chatType === 'group' ? this.receiverId : '',
+        isCurrentUserMember: this.isCurrentUserMember,
       },
     });
 
@@ -530,8 +558,18 @@ async deleteGroup() {
     }
   }
 
- openGroupDescriptionPage() {
+ async openGroupDescriptionPage() {
   if (this.chatType === 'group') {
+    if (!this.isCurrentUserMember) {
+      const alert = await this.alertCtrl.create({
+        header: 'Cannot Edit Description',
+        message: 'You cannot edit group description because you are not a member of this group.',
+        buttons: ['OK']
+      });
+      await alert.present();
+      return;
+    }
+
     this.navCtrl.navigateForward('/group-description', {
       queryParams: {
         receiverId: this.receiverId,

@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { IonicModule, PopoverController } from '@ionic/angular';
+import { IonicModule, PopoverController, AlertController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { getDatabase, ref, set } from 'firebase/database';
 import { Router } from '@angular/router';
@@ -13,11 +13,13 @@ import { Router } from '@angular/router';
 })
 export class UseraboutMenuComponent {
   @Input() chatType: 'private' | 'group' = 'private';
-  @Input() groupId: string = ''; // 👈 Passed from parent
+  @Input() groupId: string = '';
+  @Input() isCurrentUserMember: boolean = true;
 
   constructor(
     private popoverCtrl: PopoverController,
-    private router: Router
+    private router: Router,
+    private alertCtrl: AlertController
   ) {}
 
   close() {
@@ -25,10 +27,19 @@ export class UseraboutMenuComponent {
   }
 
   async onOptionClick(option: string) {
-    //console.log('Selected:', option);
+    if (!this.isCurrentUserMember && option !== 'changeGroupName') {
+      await this.showNotMemberAlert();
+      return;
+    }
 
+    if (!this.isCurrentUserMember && option === 'changeGroupName') {
+      await this.showCannotChangeNameAlert();
+      return;
+    }
+
+    // Normal flow for members
     if (option === 'addMembers') {
-      await this.addMembersToGroup(); // Optional: can be kept as-is
+      await this.addMembersToGroup();
     } else if (option === 'changeGroupName') {
       await this.navigateToChangeGroupName();
     } else {
@@ -36,32 +47,33 @@ export class UseraboutMenuComponent {
     }
   }
 
-  // async addMembersToGroup() {
-  //   const userId = prompt("Enter User ID to add:");
-  //   if (!userId) return;
+  async showNotMemberAlert() {
+    const alert = await this.alertCtrl.create({
+      header: 'Not a Member',
+      message: 'You cannot perform this action because you are not a member of this group.',
+      buttons: ['OK']
+    });
+    await alert.present();
+  }
 
-  //   const db = getDatabase();
-  //   const groupRef = ref(db, `groups/${this.groupId}/members/${userId}`);
-
-  //   try {
-  //     await set(groupRef, true);
-  //     //console.log(`User ${userId} added successfully to group ${this.groupId}`);
-  //     this.popoverCtrl.dismiss({ action: 'memberAdded' });
-  //   } catch (err) {
-  //     console.error('Error adding member:', err);
-  //   }
-  // }
+  async showCannotChangeNameAlert() {
+    const alert = await this.alertCtrl.create({
+      header: 'Cannot Change Group Name',
+      message: 'You cannot change group name because you are not a member of this group.',
+      buttons: ['OK']
+    });
+    await alert.present();
+  }
 
   async addMembersToGroup() {
-  // Navigate to contact screen to select users
-  this.popoverCtrl.dismiss(); // Dismiss the popover if open
-  this.router.navigate(['/add-members'], {
-    queryParams: {
-      groupId: this.groupId,
-      action: 'add-member'
-    }
-  });
-}
+    this.popoverCtrl.dismiss();
+    this.router.navigate(['/add-members'], {
+      queryParams: {
+        groupId: this.groupId,
+        action: 'add-member'
+      }
+    });
+  }
 
   async navigateToChangeGroupName() {
     await this.popoverCtrl.dismiss();

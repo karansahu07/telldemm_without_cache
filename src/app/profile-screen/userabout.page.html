@@ -29,6 +29,9 @@
     <ion-label class="username">
       {{ chatTitle}}
     </ion-label>
+    <ion-label class="username1" *ngIf="chatType === 'private'">
+      {{ receiver_phone }}
+    </ion-label>
 
     <ion-label class="usernumber" *ngIf="chatType === 'group'">
     {{ groupMembers.length }} {{ 'userabout.members' | translate }}

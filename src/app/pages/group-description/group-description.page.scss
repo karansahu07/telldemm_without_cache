@@ -109,3 +109,37 @@ ion-button:disabled {
     border-color: color-mix(in srgb, var(--ion-border-color) 85%, transparent);
   }
 }
+
+.footer-buttons {
+  position: fixed;
+  left: 0; width: 100%;
+  background: var(--ion-background-color);
+  padding: 20px 24px;
+  // border-top: 1px solid var(--ion-border-color);
+  box-shadow: none !important;
+  bottom: max(0px, env(safe-area-inset-bottom));
+}
+@media (max-width: 420px) {
+  .footer-buttons { padding: 16px 16px; }
+}
+
+.cancel-btn {
+  font-weight: 700;
+  text-transform: none;
+  border: 1px solid;
+    border-radius: 12px;
+
+  &:focus-visible { box-shadow: var(--focus-ring); }
+}
+
+.ok-btn {
+  --border-radius: 12px;
+  &:hover { filter: brightness(1.03); }
+
+  &:disabled,
+  &[disabled] {
+    opacity: .6;
+    pointer-events: none;
+    filter: none;
+  }
+}
