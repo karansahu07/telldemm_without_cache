@@ -1,4 +1,4 @@
-import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, OnInit, OnDestroy, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule, ModalController, PopoverController, ToastController } from '@ionic/angular';
 import { Router } from '@angular/router';
@@ -8,6 +8,7 @@ import { FooterTabsComponent } from 'src/app/components/footer-tabs/footer-tabs.
 import { Channel, ChannelService } from 'src/app/pages/channels/services/channel';
 import { AuthService } from 'src/app/auth/auth.service';
 import { AddChannelModalComponent } from 'src/app/pages/channels/modals/add-channel-modal/add-channel-modal.component';
+import { ChannelFirebaseSyncService } from 'src/app/pages/channels/services/firebasesyncchannel';
 
 register();
 
@@ -19,36 +20,135 @@ register();
   imports: [IonicModule, CommonModule, FooterTabsComponent],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class StatusScreenPage implements OnInit {
+export class StatusScreenPage implements OnInit, OnDestroy {
   isLoadingChannels = false;
   loadingChannelId: number | null = null;
   isRotated = false;
 
   myChannels: Channel[] = [];
   publicChannels: Channel[] = [];
+  filteredChannels: Channel[] = [];
 
   // Source of truth: Set of channel IDs user is following
   private followedChannelIds = new Set<number>();
 
-  userId: any = this.authService.authData?.userId || ''; // Replace with real auth user ID later
+  userId: any = this.authService.authData?.userId || '';
+
+  private firebaseListeners: any[] = [];
 
   constructor(
     private popoverCtrl: PopoverController,
     private router: Router,
     private channelService: ChannelService,
     private toastCtrl: ToastController,
-    private authService:AuthService,
-    private modalCtrl: ModalController
-  ) {}
+    private authService: AuthService,
+    private modalCtrl: ModalController,
+    private channelFirebase: ChannelFirebaseSyncService
+  ) { }
 
   ngOnInit() {
-    // this.loadUserChannels(this.userId);
-    // this.loadPublicChannels();
+    // Initial setup in ionViewDidEnter
   }
 
-  ionViewDidEnter(){
-     this.loadUserChannels(this.userId);
+  ionViewWillEnter() {
+    this.listenFromFirebase();   // UI data
+    this.syncFromBackend();      // background refresh
+  }
+
+  ionViewWillLeave() {
+    this.cleanupFirebaseListeners();
+  }
+
+
+  private listenFromFirebase() {
+
+    this.channelFirebase.listenMyChannels(this.userId, channels => {
+      this.myChannels = channels;
+      this.followedChannelIds = new Set(
+        channels.map(c => c.channel_id)
+      );
+      this.updateFilteredChannels();
+    });
+
+    this.channelFirebase.listenDiscoverChannels(this.userId, channels => {
+      this.publicChannels = channels;
+      this.updateFilteredChannels();
+    });
+
+  }
+
+
+  ngOnDestroy() {
+    this.cleanupFirebaseListeners();
+  }
+
+  private setupFirebaseListeners() {
+    // 🔥 Listen to My Channels with full data (offline-first)
+    this.channelFirebase.listenMyChannels(this.userId, (channels) => {
+      console.log('📱 Firebase My Channels:', channels);
+      this.myChannels = channels;
+      this.followedChannelIds = new Set(channels.map(ch => ch.channel_id));
+      this.updateFilteredChannels();
+    });
+
+    // 🔥 Listen to Discover Channels with full data (offline-first)
+    this.channelFirebase.listenDiscoverChannels(this.userId, (channels) => {
+      console.log('📱 Firebase Discover Channels:', channels);
+      this.publicChannels = channels;
+      this.updateFilteredChannels();
+    });
+  }
+
+  private cleanupFirebaseListeners() {
+    // Firebase listeners are cleaned up by the service's ngOnDestroy
+    // But we can add additional cleanup here if needed
+  }
+
+  private refreshFromBackend() {
+    // 🌐 Backend refresh (updates cache in background)
+    this.loadUserChannels(this.userId);
     this.loadPublicChannels();
+  }
+
+  private syncFromBackend() {
+    this.syncMyChannelsFromBackend();
+    this.syncDiscoverChannelsFromBackend();
+  }
+
+  private syncMyChannelsFromBackend() {
+    this.channelService
+      .getUserChannels(this.userId, { role: 'all' })
+      .subscribe({
+        next: (res: any) => {
+          if (res?.status && Array.isArray(res.channels)) {
+            // 🔥 ONLY update Firebase
+            this.channelFirebase.syncMyChannels(
+              this.userId,
+              res.channels
+            );
+          }
+        },
+        error: () => {
+          // offline → ignore
+        }
+      });
+  }
+
+  private syncDiscoverChannelsFromBackend() {
+    this.channelService
+      .listChannels({ limit: 50 })
+      .subscribe({
+        next: (res: any) => {
+          if (res?.status && Array.isArray(res.channels)) {
+            // 🔥 ONLY update Firebase
+            this.channelFirebase.syncDiscoverChannels(
+              this.userId,
+              res.channels
+            );
+          }
+        },
+        error: () => { }
+      });
   }
 
   loadUserChannels(userId: number | string) {
@@ -56,16 +156,26 @@ export class StatusScreenPage implements OnInit {
     this.channelService.getUserChannels(userId, { role: 'all' }).subscribe({
       next: (res: any) => {
         this.isLoadingChannels = false;
+
         if (res?.status && Array.isArray(res.channels)) {
-          this.myChannels = res.channels;
+          console.log('🌐 Backend My Channels:', res.channels);
+
+          // Update local state
+          // this.myChannels = res.channels;
+
           this.followedChannelIds = new Set(this.myChannels.map(ch => ch.channel_id));
+
+          // 🔥 Sync to Firebase (updates cache)
+          this.channelFirebase.syncMyChannels(this.userId, this.myChannels);
         } else {
           this.myChannels = [];
         }
       },
-      error: () => {
+      error: (err) => {
         this.isLoadingChannels = false;
-        this.presentToast('Failed to load your channels');
+        console.error('❌ Failed to load channels from backend:', err);
+        // Don't show error toast - we have cached data
+        // this.presentToast('Failed to load your channels');
       }
     });
   }
@@ -75,26 +185,40 @@ export class StatusScreenPage implements OnInit {
     this.channelService.listChannels({ limit: 50 }).subscribe({
       next: (res: any) => {
         this.isLoadingChannels = false;
+
         if (res?.status && Array.isArray(res.channels)) {
+          console.log('🌐 Backend Public Channels:', res.channels);
+
           this.publicChannels = res.channels;
+          this.updateFilteredChannels();
         } else {
           this.publicChannels = [];
         }
       },
-      error: () => {
+      error: (err) => {
         this.isLoadingChannels = false;
-        this.presentToast('Failed to load discover channels');
+        console.error('❌ Failed to load public channels from backend:', err);
+        // Don't show error toast - we have cached data
+        // this.presentToast('Failed to load discover channels');
       }
     });
+  }
+
+  private updateFilteredChannels() {
+    this.filteredChannels = this.publicChannels.filter(
+      ch => !this.followedChannelIds.has(ch.channel_id)
+    );
+
+    // 🔥 Sync discover list to Firebase
+    this.channelFirebase.syncDiscoverChannels(
+      this.userId,
+      this.filteredChannels
+    );
   }
 
   // --- Follow Status ---
   isFollowing(channel: Channel): boolean {
     return this.followedChannelIds.has(channel.channel_id);
-  }
-
-  get filteredchannels(): Channel[] {
-    return this.publicChannels.filter(ch => !this.followedChannelIds.has(ch.channel_id));
   }
 
   // --- Follow/Unfollow with Loading & Optimistic Update ---
@@ -103,111 +227,70 @@ export class StatusScreenPage implements OnInit {
     this.toggleFollow(channel);
   }
 
-toggleFollow(channel: Channel) {
-  if (this.loadingChannelId !== null) return;
+  toggleFollow(channel: Channel) {
+    const wasFollowing = this.isFollowing(channel);
 
-  const channelId = channel.channel_id;
-  const wasFollowing = this.isFollowing(channel);
-  this.loadingChannelId = channelId;
+    // 1️⃣ Optimistic Firebase update
+    if (wasFollowing) {
+      this.channelFirebase.unfollowChannel(
+        this.userId,
+        channel.channel_id
+      );
+    } else {
+      this.channelFirebase.followChannel(
+        this.userId,
+        channel
+      );
+    }
 
-  // ───── 1. Optimistic Update (Instant UI) ─────
-  const delta = wasFollowing ? -1 : 1;
+    // 2️⃣ Backend confirmation
+    const req$ = wasFollowing
+      ? this.channelService.unfollowChannel(channel.channel_id, this.userId)
+      : this.channelService.followChannel(channel.channel_id, this.userId);
 
-  // Update the channel that was clicked
-  channel.followers_count = (channel.followers_count ?? 0) + delta;
-
-  // Update the SAME channel in the OTHER list (critical!)
-  if (wasFollowing) {
-    // Unfollowing → update discovery list version
-    const discoveryMatch = this.publicChannels.find(ch => ch.channel_id === channelId);
-    if (discoveryMatch) discoveryMatch.followers_count! += delta;
-  } else {
-    // Following → update myChannels version (if exists)
-    const myMatch = this.myChannels.find(ch => ch.channel_id === channelId);
-    if (myMatch) myMatch.followers_count! += delta;
-  }
-
-  // Update follow state
-  if (wasFollowing) {
-    this.followedChannelIds.delete(channelId);
-  } else {
-    this.followedChannelIds.add(channelId);
-  }
-
-  // ───── 2. API Call ─────
-  const action$ = wasFollowing
-    ? this.channelService.unfollowChannel(channelId, this.userId)
-    : this.channelService.followChannel(channelId, this.userId);
-
-  action$.subscribe({
-    next: (res: any) => {
-      this.loadingChannelId = null;
-
-      if (!res?.status) {
-        // Revert everything on failure
-        const revertDelta = wasFollowing ? 1 : -1;
-        channel.followers_count! += revertDelta;
-
+    req$.subscribe({
+      error: () => {
+        // 3️⃣ Revert Firebase on failure
         if (wasFollowing) {
-          const discoveryMatch = this.publicChannels.find(ch => ch.channel_id === channelId);
-          if (discoveryMatch) discoveryMatch.followers_count! += revertDelta;
+          this.channelFirebase.followChannel(this.userId, channel);
         } else {
-          const myMatch = this.myChannels.find(ch => ch.channel_id === channelId);
-          if (myMatch) myMatch.followers_count! += revertDelta;
-        }
-
-        if (wasFollowing) this.followedChannelIds.add(channelId);
-        else this.followedChannelIds.delete(channelId);
-
-        this.presentToast(res?.message || 'Failed. Try again');
-      } else {
-        // Success → move channel between lists
-        if (!wasFollowing) {
-          // Now following → add to My Channels
-          if (!this.myChannels.find(ch => ch.channel_id === channelId)) {
-            this.myChannels.unshift({ ...channel });
-          }
-        } else {
-          // Unfollowed → remove from My Channels
-          this.myChannels = this.myChannels.filter(ch => ch.channel_id !== channelId);
+          this.channelFirebase.unfollowChannel(
+            this.userId,
+            channel.channel_id
+          );
         }
       }
-    },
-    error: () => {
-      this.loadingChannelId = null;
-      // Revert all changes
-      const revertDelta = wasFollowing ? 1 : -1;
-      channel.followers_count! += revertDelta;
+    });
+  }
 
+
+
+
+  private revertOptimisticUpdate(channel: Channel, channelId: number, wasFollowing: boolean) {
+    const revertDelta = wasFollowing ? 1 : -1;
+
+    channel.followers_count! += revertDelta;
+
+    if (wasFollowing) {
       const discoveryMatch = this.publicChannels.find(ch => ch.channel_id === channelId);
       if (discoveryMatch) discoveryMatch.followers_count! += revertDelta;
-
+    } else {
       const myMatch = this.myChannels.find(ch => ch.channel_id === channelId);
       if (myMatch) myMatch.followers_count! += revertDelta;
-
-      if (wasFollowing) this.followedChannelIds.add(channelId);
-      else this.followedChannelIds.delete(channelId);
-
-      this.presentToast('No internet');
     }
-  });
-}
 
-  private revert(channel: Channel, wasFollowing: boolean) {
-    const delta = wasFollowing ? 1 : -1;
     if (wasFollowing) {
-      this.followedChannelIds.add(channel.channel_id);
+      this.followedChannelIds.add(channelId);
     } else {
-      this.followedChannelIds.delete(channel.channel_id);
+      this.followedChannelIds.delete(channelId);
     }
-    channel.followers_count! += delta;
   }
 
   // --- Navigation & UI ---
   openChat(channel: Channel) {
-    // this.router.navigate(['/channel-detail'], { queryParams: { channelId: channel.channel_id } });
-    this.router.navigate(['/channel-feed'], { queryParams: { channelId: channel.channel_id } });
-
+    this.router.navigate(['/channel-feed'], {
+      queryParams: { channelId: channel.channel_id }
+    });
   }
 
   goToChannels() {
@@ -224,7 +307,10 @@ toggleFollow(channel: Channel) {
   }
 
   async presentToast(msg: string) {
-    const toast = await this.toastCtrl.create({ message: msg, duration: 2000 });
+    const toast = await this.toastCtrl.create({
+      message: msg,
+      duration: 2000
+    });
     await toast.present();
   }
 
@@ -233,12 +319,14 @@ toggleFollow(channel: Channel) {
   }
 
   async openAddChannelModal() {
-      const modal = await this.modalCtrl.create({
-        component: AddChannelModalComponent
-      });
-      await modal.present();
-  
-      const { data } = await modal.onDidDismiss();
-      if (data) this.loadUserChannels(this.userId); // only reload if created
+    const modal = await this.modalCtrl.create({
+      component: AddChannelModalComponent
+    });
+    await modal.present();
+
+    const { data } = await modal.onDidDismiss();
+    if (data) {
+      this.refreshFromBackend(); // Reload from backend
     }
+  }
 }

@@ -36,7 +36,7 @@
 
       <ion-item *ngFor="let ch of myChannels" (click)="openChat(ch)">
         <ion-avatar slot="start">
-          <img [src]="ch.channel_dp || 'assets/images/user.jfif'" />
+          <img [src]="ch.channel_dp  || 'assets/images/user.jfif'" />
         </ion-avatar>
 
         <ion-label>
@@ -67,7 +67,7 @@
       <p class="channels">Discover MegaTells (Find channels to follow)</p>
 
       <ion-list *ngIf="!isLoadingChannels">
-        <ion-item *ngFor="let ch of filteredchannels" (click)="openChat(ch)">
+        <ion-item *ngFor="let ch of filteredChannels" (click)="openChat(ch)">
           <ion-avatar slot="start">
             <img [src]="ch.channel_dp || 'assets/images/user.jfif'" />
           </ion-avatar>

@@ -1,0 +1,157 @@
+/* -----------------------
+   Profile / Upload (themed)
+   Uses Ionic CSS variables from body {} and body.accessibility-high-contrast {}
+   -----------------------*/
+
+/* sensible focus-ring token (uses your --focus-ring if present) */
+:root {
+  --profile-focus-ring: var(--focus-ring, 0 0 0 3px rgba(0,0,0,0.12));
+}
+
+/* Profile image container */
+.profile-image-container {
+  text-align: center;
+  margin-bottom: 24px;
+  color: var(--ion-text-color, #0b0b0b);
+}
+
+/* Wrapper keeps camera button positioned relative */
+.profile-image-wrapper {
+  display: inline-block;
+  position: relative;
+}
+
+/* actual image and placeholder share sizes and shape */
+.profile-image,
+.profile-placeholder {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: var(--ion-item-background, #e0e4eb);
+  border: 2px solid var(--ion-border-color, #e7e7e7);
+}
+
+/* placeholder is centered content */
+.profile-placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* placeholder icon uses the header/text accent */
+.placeholder-icon {
+  font-size: 48px;
+  color: var(--ion-text-color-head, #adb5bd);
+}
+
+/* camera button — themed using primary token and toolbar background for border */
+.camera-button {
+  position: absolute;
+  bottom: 0;
+  right: -5px;
+
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: var(--ion-color-primary, #ff1414);
+  color: var(--ion-color-primary-contrast, #ffffff);
+
+  border-radius: 50%;
+  border: 3px solid var(--ion-toolbar-background, #ffffff);
+  cursor: pointer;
+
+  transition: background-color 0.2s ease, transform 0.12s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+/* hover/active use shade/tint fallbacks */
+.camera-button:hover {
+  background-color: var(--ion-color-primary-shade, color-mix(in srgb, var(--ion-color-primary, #ff1414) 75%, black 25%));
+  transform: translateY(-1px);
+}
+
+.camera-button:active {
+  transform: translateY(0);
+}
+
+/* ensure icon inside scales nicely and picks contrast color */
+.camera-icon {
+  font-size: 20px;
+  line-height: 1;
+  color: inherit;
+}
+
+/* upload helper text */
+.upload-text {
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--ion-text-color, #666);
+}
+
+/* Form items — respect Ionic tokens */
+ion-item {
+  margin-bottom: 16px;
+  --padding-start: 0;
+  --inner-padding-end: 0;
+  background: transparent;
+  border-color: var(--ion-border-color, #e7e7e7);
+}
+
+/* label spacing and themed text color */
+ion-item ion-label {
+  margin-bottom: 8px;
+  color: var(--ion-text-color, #0b0b0b);
+}
+
+/* Fix for floating labels (keep your behavior) */
+ion-item.item-has-value ion-label,
+ion-item.item-has-focus ion-label {
+  transform: translateY(0) scale(0.75);
+}
+
+/* Button container aligns with toolbar color contrast */
+.button-container {
+  margin-top: 24px;
+  text-align: right;
+}
+
+/* Focus-visible improvements using the theme focus ring or token above */
+:where(button, [role="button"], a, input, textarea, select, .focusable):focus-visible {
+  outline: none;
+  box-shadow: var(--profile-focus-ring);
+  border-radius: 8px;
+}
+
+/* Accessibility-specific tweaks (if body.accessibility-high-contrast is active,
+   these variable values are already set in your theme; we just ensure strong outlines) */
+body.accessibility-high-contrast .profile-image,
+body.accessibility-high-contrast .profile-placeholder {
+  border-color: var(--ion-border-color, #000);
+  background-color: var(--ion-item-background, #fff);
+}
+
+body.accessibility-high-contrast .camera-button {
+  background-color: var(--ion-color-primary, #bc8c2c);
+  color: var(--ion-color-primary-contrast, #000);
+  border-color: var(--ion-toolbar-background, #fff);
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
+}
+
+/* small responsive tweak */
+@media (max-width: 420px) {
+  .profile-image,
+  .profile-placeholder {
+    width: 96px;
+    height: 96px;
+  }
+
+  .camera-button {
+    width: 36px;
+    height: 36px;
+    right: -6px;
+  }
+}
