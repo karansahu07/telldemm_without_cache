@@ -272,7 +272,15 @@ const routes: Routes = [
   {
     path: 'select-contact-list',
     loadChildren: () => import('./pages/select-contact-list/select-contact-list.module').then( m => m.SelectContactListPageModule)
+  },  {
+    path: 'add-select-members',
+    loadChildren: () => import('./pages/add-select-members/add-select-members.module').then( m => m.AddSelectMembersPageModule)
   },
+  {
+    path: 'select-add-and-create-group',
+    loadChildren: () => import('./pages/select-add-and-create-group/select-add-and-create-group.module').then( m => m.SelectAddAndCreateGroupPageModule)
+  },
+
 ];
 
 @NgModule({

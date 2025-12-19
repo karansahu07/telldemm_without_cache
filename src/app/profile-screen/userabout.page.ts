@@ -156,26 +156,118 @@ private groupMembershipUnsubscribe: (() => void) | null = null;
     return this.adminIds.includes(String(userId));
   }
 
+// async ionViewWillEnter() {
+//   this.route.queryParams.subscribe((params) => {
+//     this.receiverId = params['receiverId'] || null;
+//     const isGroupParam = params['isGroup'];
+//     this.chatType = isGroupParam === 'true' ? 'group' : 'private';
+//     console.log('this chatType', this.chatType);
+//     console.log('Receiver ID:', this.receiverId);
+//   });
+
+//   this.loadReceiverProfile();
+//   this.checkForPastMembers();
+
+//   const currentChat = this.firebaseChatService.currentChat;
+//   this.receiverProfile =
+//     (currentChat as any).avatar || (currentChat as any).groupAvatar || null;
+//   this.chatTitle = currentChat?.title || null;
+//   this.receiver_phone = currentChat?.phoneNumber || ''
+
+//   if (this.chatType === 'group') {
+//     // ✅ Set up real-time membership listener
+//     this.setupGroupMembershipListener();
+    
+//     try {
+//       const { groupName, groupMembers } =
+//         await this.firebaseChatService.fetchGroupWithProfiles(
+//           this.receiverId
+//         );
+//       this.groupName = groupName;
+      
+//       // ✅ Map group members with device contact names
+//       this.groupMembers = await this.membersWithDeviceNames(groupMembers);
+
+//       console.log("group members with device names", this.groupMembers);
+//       this.currentUserId = this.authService.authData?.userId || '';
+
+//       this.isCurrentUserMember = this.groupMembers.some(
+//         member => String(member.user_id) === String(this.currentUserId)
+//       );
+      
+//       console.log('Is current user member:', this.isCurrentUserMember);
+
+//       // Load admin IDs
+//       this.adminIds = await this.firebaseChatService.getGroupAdminIds(
+//         this.receiverId
+//       );
+//       console.log('Loaded admin IDs:', this.adminIds);
+//       console.log('Group members:', this.groupMembers);
+//     } catch (err) {
+//       console.warn('Failed to fetch group with profiles', err);
+//       this.groupName = 'Group';
+//       this.groupMembers = [];
+//       this.adminIds = [];
+//     }
+
+//     await this.fetchGroupMeta(this.receiverId);
+//   }
+
+//   // this.findCommonGroups(this.currentUserId, this.receiverId);
+//   this.groupId = this.receiverId || '';
+
+//   if (!this.groupId) {
+//     console.warn('No groupId found in route');
+//     return;
+//   }
+// }
+
 async ionViewWillEnter() {
-  this.route.queryParams.subscribe((params) => {
-    this.receiverId = params['receiverId'] || null;
-    const isGroupParam = params['isGroup'];
-    this.chatType = isGroupParam === 'true' ? 'group' : 'private';
-    console.log('this chatType', this.chatType);
-    console.log('Receiver ID:', this.receiverId);
+  // ✅ Get from route params first
+  const params = this.route.snapshot.queryParams;
+  this.receiverId = params['receiverId'] || '';
+  const isGroupParam = params['isGroup'];
+  this.chatType = isGroupParam === 'true' ? 'group' : 'private';
+
+  // ✅ Get current chat from service
+  const currentChat = this.firebaseChatService.currentChat;
+  
+  if (!currentChat) {
+    console.error('❌ No current chat found in service');
+    this.navCtrl.back();
+    return;
+  }
+
+  // ✅ Extract receiver details from currentChat
+  if (this.chatType === 'private') {
+    // For private chat, extract receiver from roomId
+    const parts = currentChat.roomId.split('_');
+    const currentUserId = this.authService.authData?.userId || '';
+    this.receiverId = parts.find(p => p !== currentUserId) ?? parts[1];
+    
+    // Get receiver details
+    this.receiver_name = currentChat.title || '';
+    this.receiver_phone = currentChat.phoneNumber || params['receiver_phone'] || '';
+    this.receiverProfile = currentChat.avatar || null;
+  } else {
+    // For group chat
+    this.receiverId = currentChat.roomId;
+    this.groupName = currentChat.title || '';
+    this.receiverProfile = (currentChat as any).groupAvatar || null;
+  }
+
+  console.log('📋 Extracted Details:', {
+    receiverId: this.receiverId,
+    receiver_phone: this.receiver_phone,
+    receiver_name: this.receiver_name,
+    chatType: this.chatType
   });
 
+  this.chatTitle = currentChat?.title || null;
   this.loadReceiverProfile();
   this.checkForPastMembers();
 
-  const currentChat = this.firebaseChatService.currentChat;
-  this.receiverProfile =
-    (currentChat as any).avatar || (currentChat as any).groupAvatar || null;
-  this.chatTitle = currentChat?.title || null;
-  this.receiver_phone = currentChat?.phoneNumber || ''
-
   if (this.chatType === 'group') {
-    // ✅ Set up real-time membership listener
     this.setupGroupMembershipListener();
     
     try {
@@ -184,25 +276,16 @@ async ionViewWillEnter() {
           this.receiverId
         );
       this.groupName = groupName;
-      
-      // ✅ Map group members with device contact names
       this.groupMembers = await this.membersWithDeviceNames(groupMembers);
 
-      console.log("group members with device names", this.groupMembers);
       this.currentUserId = this.authService.authData?.userId || '';
-
       this.isCurrentUserMember = this.groupMembers.some(
         member => String(member.user_id) === String(this.currentUserId)
       );
-      
-      console.log('Is current user member:', this.isCurrentUserMember);
 
-      // Load admin IDs
       this.adminIds = await this.firebaseChatService.getGroupAdminIds(
         this.receiverId
       );
-      console.log('Loaded admin IDs:', this.adminIds);
-      console.log('Group members:', this.groupMembers);
     } catch (err) {
       console.warn('Failed to fetch group with profiles', err);
       this.groupName = 'Group';
@@ -214,11 +297,6 @@ async ionViewWillEnter() {
   }
 
   this.groupId = this.receiverId || '';
-
-  if (!this.groupId) {
-    console.warn('No groupId found in route');
-    return;
-  }
 }
 
 async membersWithDeviceNames(groupMembers: GroupMemberDisplay[]): Promise<GroupMemberDisplay[]> {
@@ -923,45 +1001,73 @@ async deleteGroup() {
     return fallback;
   }
 
+  // async createGroupWithMember() {
+  //   const currentUserId = this.authService.authData?.userId;
+  //   const currentUserPhone = this.authService.authData?.phone_number;
+  //   const currentUserName = this.authService.authData?.name || currentUserPhone;
+    
+    
+  //   if (!currentUserId || !this.receiverId || !this.receiver_name) {
+  //     console.error('Missing data for group creation');
+  //     return;
+  //   }
+
+  //   const groupId = `group_${Date.now()}`;
+  //   const groupName = `${currentUserName}, ${this.receiver_name}`;
+
+  //   const members = [
+  //     {
+  //       userId: currentUserId,
+  //       username: currentUserName as string,
+  //       phoneNumber: currentUserPhone as string,
+  //     },
+  //     {
+  //       userId: this.receiverId,
+  //       username: this.receiver_name,
+  //       phoneNumber: this.receiver_phone,
+  //     },
+  //   ];
+
+  //   try {
+  //     await this.firebaseChatService.createGroup({
+  //       groupId,
+  //       groupName,
+  //       members,
+  //     });
+  //     this.router.navigate(['/chatting-screen'], {
+  //       queryParams: { receiverId: groupId, isGroup: true },
+  //     });
+  //   } catch (error) {
+  //     console.error('Error creating group:', error);
+  //   }
+  // }
+
   async createGroupWithMember() {
-    const currentUserId = this.authService.authData?.userId;
-    const currentUserPhone = this.authService.authData?.phone_number;
-    const currentUserName = this.authService.authData?.name || currentUserPhone;
+  const currentUserId = this.authService.authData?.userId;
+  const currentUserPhone = this.authService.authData?.phone_number;
+  const currentUserName =
+    this.authService.authData?.name || currentUserPhone;
 
-    if (!currentUserId || !this.receiverId || !this.receiver_name) {
-      console.error('Missing data for group creation');
-      return;
-    }
-
-    const groupId = `group_${Date.now()}`;
-    const groupName = `${currentUserName}, ${this.receiver_name}`;
-
-    const members = [
-      {
-        userId: currentUserId,
-        username: currentUserName as string,
-        phoneNumber: currentUserPhone as string,
-      },
-      {
-        userId: this.receiverId,
-        username: this.receiver_name,
-        phoneNumber: this.receiver_phone,
-      },
-    ];
-
-    try {
-      await this.firebaseChatService.createGroup({
-        groupId,
-        groupName,
-        members,
-      });
-      this.router.navigate(['/chatting-screen'], {
-        queryParams: { receiverId: groupId, isGroup: true },
-      });
-    } catch (error) {
-      console.error('Error creating group:', error);
-    }
+  if (!currentUserId || !this.receiverId) {
+    console.error('Missing user data');
+    return;
   }
+
+  const receiverMember = {
+    userId: this.receiverId,
+    username: this.receiver_name || this.receiver_phone,
+    phoneNumber: this.receiver_phone,
+  };
+
+  this.firebaseChatService.setInitialGroupMember(receiverMember);
+
+  this.router.navigate(['/add-select-members'], {
+    queryParams: {
+      from: 'userabout'
+    }
+  });
+}
+
 
   async findCommonGroups(currentUserId: string, receiverId: string) {
     if (!currentUserId || !receiverId) return;
@@ -987,7 +1093,7 @@ async deleteGroup() {
         });
 
         this.commonGroups = matchedGroups;
-        //console.log('Common Groups:', this.commonGroups);
+        console.log('Common Groups:', this.commonGroups);
       }
     } catch (error) {
       console.error('Error fetching common groups:', error);

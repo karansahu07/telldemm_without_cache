@@ -1,0 +1,100 @@
+/* Header */
+.wm-header {
+  ion-toolbar {
+    --background: #fff;
+    --border-width: 0;
+  }
+}
+
+.wm-search {
+  --background: #f3f3f3;
+  --border-radius: 25px;
+  padding-inline: 10px;
+}
+
+/* Selected preview row */
+.selected-preview {
+  display: flex;
+  padding: 10px;
+  overflow-x: auto;
+}
+
+.preview-avatar {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--ion-color-primary);
+  color: #fff;
+  font-weight: 600;
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  ion-icon {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    background: #fff;
+    color: #333;
+    border-radius: 50%;
+    font-size: 14px;
+  }
+}
+
+/* Section title */
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #888;
+  padding: 12px 16px 6px;
+}
+
+/* Contact list */
+.wm-list ion-item {
+  --padding-start: 16px;
+  --inner-padding-end: 12px;
+}
+
+/* Avatar */
+.wm-avatar {
+  width: 46px;
+  height: 46px;
+  background: #f1f1f1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--ion-color-primary);
+
+  span {
+    font-size: 18px;
+  }
+}
+
+/* Right side checkbox */
+.wm-checkbox {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wm-checkbox.checked {
+  background: var(--ion-color-primary);
+  border-color: var(--ion-color-primary);
+
+  ion-icon {
+    color: #fff;
+    font-size: 14px;
+  }
+}
+
+/* Floating button */
+ion-fab-button {
+  --background: var(--ion-color-primary);
+}

@@ -1,0 +1,78 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>New group</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+
+  <!-- Group name section -->
+  <div class="group-header">
+    <ion-avatar class="camera-avatar">
+      <ion-icon name="camera-outline"></ion-icon>
+    </ion-avatar>
+
+    <ion-input
+      [(ngModel)]="groupName"
+      placeholder="Group name (optional)"
+      class="group-input"
+    ></ion-input>
+
+    <ion-icon name="happy-outline" class="emoji-icon"></ion-icon>
+  </div>
+
+  <ion-list>
+    <ion-item lines="none">
+      <ion-label>
+        <h2>Disappearing messages</h2>
+        <p>Off</p>
+      </ion-label>
+      <ion-icon name="timer-outline"></ion-icon>
+    </ion-item>
+
+    <ion-item lines="none">
+      <ion-label>
+        <h2>Group permissions</h2>
+      </ion-label>
+      <ion-icon name="settings-outline"></ion-icon>
+    </ion-item>
+  </ion-list>
+
+  <div class="member-count">
+    Members: {{ members.length }}
+  </div>
+
+  <ion-item *ngFor="let member of members">
+  <ion-avatar slot="start">
+
+    <img
+      *ngIf="member.image; else textAvatar"
+      [src]="member.image"
+      alt="{{ member.name }}"
+    />
+
+    <ng-template #textAvatar>
+      <div class="member-avatar">
+        {{ member.name?.charAt(0) | uppercase }}
+      </div>
+    </ng-template>
+
+  </ion-avatar>
+
+  <ion-label>
+    {{ member.name }}
+  </ion-label>
+</ion-item>
+
+
+</ion-content>
+
+<!-- Floating create button -->
+<ion-fab vertical="bottom" horizontal="end">
+  <ion-fab-button color="primary" (click)="createGroup()">
+    <ion-icon name="checkmark"></ion-icon>
+  </ion-fab-button>
+</ion-fab>

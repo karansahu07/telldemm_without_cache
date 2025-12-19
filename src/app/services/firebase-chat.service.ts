@@ -135,6 +135,8 @@ export class FirebaseChatService {
     typing: null as any | null,
   };
   senderName = '';
+  selectedMembersForGroup: any[] = [];
+  selectedGroupMembers: any[] = [];
 
   constructor(
     private cache: CacheService,
@@ -7381,6 +7383,33 @@ export class FirebaseChatService {
     if (clearAfterRead) this._selectedMessageInfo = null;
     return m;
   }
+
+  setInitialGroupMember(member: any) {
+  this.selectedMembersForGroup = [member];
+}
+
+getInitialGroupMembers() {
+  return this.selectedMembersForGroup;
+}
+
+clearInitialGroupMembers() {
+  this.selectedMembersForGroup = [];
+}
+
+// SET
+setSelectedGroupMembers(members: any[]) {
+  this.selectedGroupMembers = members;
+}
+
+// GET
+getSelectedGroupMembers() {
+  return this.selectedGroupMembers;
+}
+
+// CLEAR (optional but recommended)
+clearSelectedGroupMembers() {
+  this.selectedGroupMembers = [];
+}
 
   // =====================
   // ======= LEGACY ======

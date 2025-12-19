@@ -1,0 +1,50 @@
+.group-header {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  gap: 12px;
+}
+
+.camera-avatar {
+  width: 48px;
+  height: 48px;
+  background: #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  ion-icon {
+    font-size: 22px;
+    color: #666;
+  }
+}
+
+.group-input {
+  flex: 1;
+  border: 2px solid var(--ion-color-primary);
+  border-radius: 8px;
+  padding-left: 10px;
+}
+
+.emoji-icon {
+  font-size: 22px;
+  color: gray;
+}
+
+.member-count {
+  padding: 10px 16px;
+  color: gray;
+  font-size: 14px;
+}
+
+.member-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f3b2c5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #8a0036;
+}

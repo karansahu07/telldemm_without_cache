@@ -339,9 +339,9 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private fcmService: FcmService,
     private animationCtrl: AnimationController,
-    
+
     private actionSheetCtrl: ActionSheetController // private toastCtrl: ToastController, // private modalCtrl: ModalController, // private firebaseChatService : FirebaseChatService
-  ) { }
+  ) {}
 
   async ngOnInit() {
     Keyboard.setScroll({ isDisabled: false });
@@ -363,9 +363,9 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
       const from = params.get('from');
 
       if (from === 'archive') {
-        this.backUrl = '/archieved-screen'; // 👈 tumhara archived ka route
+        this.backUrl = '/archieved-screen';
       } else {
-        this.backUrl = '/home-screen'; // 👈 tumhara home ka route
+        this.backUrl = '/home-screen';
       }
     });
   }
@@ -483,6 +483,15 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
       }
     );
 
+    // this.setupTypingListener();
+
+    // const typingSub = this.typingInput$
+    //   .pipe(throttleTime(2000))
+    //   .subscribe(() => {
+    //     this.sendTypingSignal();
+    //   });
+    // this.typingRxSubs.push(typingSub);
+
     this.updateReceiverStatus();
     this.loadLanguages();
 
@@ -503,20 +512,20 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
         parts[parts.length - 1];
     } else {
       this.receiverId = currentChat?.roomId || '';
-       if (this.receiverId) {
-      try {
-        const { groupName, groupMembers } = 
-          await this.chatService.fetchGroupWithProfiles(this.receiverId);
-        
-        this.groupName = groupName;
-        this.groupMembers = groupMembers;
-        
-        console.log('✅ Loaded group members:', this.groupMembers);
-      } catch (err) {
-        console.warn('Failed to fetch group with profiles', err);
-        this.groupMembers = [];
+      if (this.receiverId) {
+        try {
+          const { groupName, groupMembers } =
+            await this.chatService.fetchGroupWithProfiles(this.receiverId);
+
+          this.groupName = groupName;
+          this.groupMembers = groupMembers;
+
+          console.log('✅ Loaded group members:', this.groupMembers);
+        } catch (err) {
+          console.warn('Failed to fetch group with profiles', err);
+          this.groupMembers = [];
+        }
       }
-    }
       this.setupGroupMembershipListener();
     }
     this.receiverProfile =
@@ -533,49 +542,58 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
- * Get display name for a sender - returns device contact name if available, otherwise phone number
- */
-getSenderDisplayName(msg: any): string {
-  // If it's the current user
-  if (msg.sender === this.senderId) {
-    return 'You';
+   * Get display name for a sender - returns device contact name if available, otherwise phone number
+   */
+  getSenderDisplayName(msg: any): string {
+    // If it's the current user
+    if (msg.sender === this.senderId) {
+      return 'You';
+    }
+
+    // Get device contacts
+    const deviceContacts = this.chatService.currentDeviceContacts || [];
+
+    // Try to find the sender in group members first
+    const groupMember = this.groupMembers.find(
+      (m) => String(m.user_id) === String(msg.sender)
+    );
+
+    if (!groupMember) {
+      // Fallback to sender_name from message
+      return msg.sender_name || msg.sender;
+    }
+
+    // Get member's phone number (normalize it)
+    const memberPhone = (
+      groupMember.phone_number ||
+      groupMember.phone ||
+      ''
+    ).replace(/\D/g, '');
+
+    if (!memberPhone) {
+      return groupMember.name || msg.sender_name || msg.sender;
+    }
+
+    // Try to find matching device contact
+    const deviceContact = deviceContacts.find((dc) => {
+      const dcPhone = (dc.phoneNumber || '').replace(/\D/g, '');
+      // Match last 10 digits
+      return memberPhone.slice(-10) === dcPhone.slice(-10);
+    });
+
+    // Return device contact name if found, otherwise phone number
+    if (deviceContact) {
+      return deviceContact.username;
+    }
+
+    // Return phone number as fallback
+    return (
+      groupMember.phone_number ||
+      groupMember.phone ||
+      msg.sender_name ||
+      msg.sender
+    );
   }
-
-  // Get device contacts
-  const deviceContacts = this.chatService.currentDeviceContacts || [];
-  
-  // Try to find the sender in group members first
-  const groupMember = this.groupMembers.find(
-    m => String(m.user_id) === String(msg.sender)
-  );
-
-  if (!groupMember) {
-    // Fallback to sender_name from message
-    return msg.sender_name || msg.sender;
-  }
-
-  // Get member's phone number (normalize it)
-  const memberPhone = (groupMember.phone_number || groupMember.phone || '').replace(/\D/g, '');
-  
-  if (!memberPhone) {
-    return groupMember.name || msg.sender_name || msg.sender;
-  }
-
-  // Try to find matching device contact
-  const deviceContact = deviceContacts.find(dc => {
-    const dcPhone = (dc.phoneNumber || '').replace(/\D/g, '');
-    // Match last 10 digits
-    return memberPhone.slice(-10) === dcPhone.slice(-10);
-  });
-
-  // Return device contact name if found, otherwise phone number
-  if (deviceContact) {
-    return deviceContact.username;
-  }
-
-  // Return phone number as fallback
-  return groupMember.phone_number || groupMember.phone || msg.sender_name || msg.sender;
-}
 
   setupGroupMembershipListener() {
     if (!this.roomId || this.chatType !== 'group') return;
@@ -599,7 +617,6 @@ getSenderDisplayName(msg: any): string {
           // Check if current user is still a member
           const wasCurrentUserMember = this.isCurrentUserMember();
           const isStillMember = !!members[this.senderId];
-          
 
           console.log('🔄 Real-time membership check:', {
             senderId: this.senderId,
@@ -631,7 +648,10 @@ getSenderDisplayName(msg: any): string {
             // Force UI update
             try {
               this.cdr.detectChanges();
-              await this.chatService.removeMemberFromConvLocal(this.roomId, this.senderId)
+              await this.chatService.removeMemberFromConvLocal(
+                this.roomId,
+                this.senderId
+              );
               await this.chatService.stopRoomListener();
             } catch (e) {
               console.warn('detectChanges error:', e);
@@ -783,10 +803,11 @@ getSenderDisplayName(msg: any): string {
 
     if (presence) {
       this.receiverStatus = presence.isOnline ? 'online' : 'offline';
-      this.isReceiverTyping = presence.isTyping || false; // 🆕
+      this.isReceiverTyping = presence.isTyping || false;
+      // console.log("presence of lastseen", presence.lastSeen)
 
       if (!presence.isOnline && presence.lastSeen) {
-        this.lastSeenTime = this.formatLastSeen(presence.lastSeen);
+        this.lastSeenTime = this.formatLastSeenDetailed(presence.lastSeen);
       }
     }
   }
@@ -808,94 +829,72 @@ getSenderDisplayName(msg: any): string {
 
     this.typingCount = typingCount;
   }
-showCompressedActions = false;
-// showSendButton = false;
-// typingTimeout: any;
-// messageText = '';
 
-  // 🆕 Call this when user types in the input
-  // onMessageInput(event: any) {
-  //   const text = event.target.value || '';
+  showCompressedActions = false;
+ 
+  onMessageInput(event: any) {
+    const text = event.target.value || '';
+    this.messageText = text;
 
-  //   // Show/hide send button based on input
-  //   this.showSendButton = text.trim().length > 0;
+    const isTyping = text.trim().length > 0;
 
-  //   // this.showTranslationOptions = this.messageText.trim().length > 0;
+    // Toggle send button
+    this.showSendButton = isTyping;
 
-  //   if (text.trim().length > 0) {
-  //     this.chatService.setTypingStatus(true);
+    // 🔥 Compress icons while typing
+    this.showCompressedActions = isTyping;
+    // console.log('this.showCompressedActions', this.showCompressedActions);
 
-  //     // Reset timeout
-  //     if (this.typingTimeout) {
-  //       clearTimeout(this.typingTimeout);
-  //     }
+    if (isTyping) {
+      this.chatService.setTypingStatus(true);
 
-  //     // Auto-clear after 2 seconds of no typing
-  //     this.typingTimeout = setTimeout(() => {
-  //       this.chatService.setTypingStatus(false);
-  //     }, 2000);
-  //   } else {
-  //     this.chatService.setTypingStatus(false);
-  //   }
-  // }
- onMessageInput(event: any) {
-  const text = event.target.value || '';
-  this.messageText = text;
+      // Reset timeout
+      if (this.typingTimeout) {
+        clearTimeout(this.typingTimeout);
+      }
 
-  const isTyping = text.trim().length > 0;
+      // Auto-clear after 2 seconds of no typing
+      this.typingTimeout = setTimeout(() => {
+        this.chatService.setTypingStatus(false);
+      }, 2000);
+    } else {
+      this.chatService.setTypingStatus(false);
+    }
+  }
 
-  // Toggle send button
-  this.showSendButton = isTyping;
+  async openMoreActions() {
+    const buttons: any[] = [
+      {
+        text: 'Attachment',
+        icon: 'attach',
+        handler: () => this.pickAttachment(),
+      },
+      {
+        text: 'Camera',
+        icon: 'camera',
+        handler: () => this.openCamera(),
+      },
+    ];
 
-  // 🔥 Compress icons while typing
-  this.showCompressedActions = isTyping;
-  console.log("this.showCompressedActions",this.showCompressedActions);
-
-  // Optional: typing status logic
-  if (isTyping) {
-    if (this.typingTimeout) {
-      clearTimeout(this.typingTimeout);
+    if (this.currentConv?.type !== 'group') {
+      buttons.push({
+        text: 'Translate',
+        icon: 'language',
+        handler: () => this.toggleTranslationOptions(),
+      });
     }
 
-    this.typingTimeout = setTimeout(() => {
-      // user stopped typing
-    }, 2000);
-  }
-}
-
-async openMoreActions() {
-  const buttons: any[] = [
-    {
-      text: 'Attachment',
-      icon: 'attach',
-      handler: () => this.pickAttachment(),
-    },
-    {
-      text: 'Camera',
-      icon: 'camera',
-      handler: () => this.openCamera(),
-    },
-  ];
-
-  if (this.currentConv?.type !== 'group') {
     buttons.push({
-      text: 'Translate',
-      icon: 'language',
-      handler: () => this.toggleTranslationOptions(),
+      text: 'Cancel',
+      role: 'cancel',
     });
+
+    const sheet = await this.actionSheetCtrl.create({
+      buttons: buttons,
+    });
+
+    await sheet.present();
   }
-
-  buttons.push({
-    text: 'Cancel',
-    role: 'cancel',
-  });
-
-  const sheet = await this.actionSheetCtrl.create({
-    buttons: buttons,
-  });
-
-  await sheet.present();
-}
 
   formatLastSeen(timestamp: number): string {
     const now = Date.now();
@@ -917,27 +916,33 @@ async openMoreActions() {
   formatLastSeenDetailed(timestamp: number): string {
     const date = new Date(timestamp);
     const now = new Date();
-    const diff = now.getTime() - date.getTime();
 
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
+    const diffMs = now.getTime() - date.getTime();
+    const diffMinutes = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
 
-    if (minutes < 1) return 'Last seen just now';
-    if (minutes < 60)
-      return `Last seen ${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-    if (hours < 24) return `Last seen ${hours} hour${hours > 1 ? 's' : ''} ago`;
+    // ⏱ Just now (0–1 min)
+    if (diffMinutes < 1) {
+      return 'Last seen just now';
+    }
 
-    // Today
-    if (date.toDateString() === now.toDateString()) {
+    // ⏱ Minutes ago (1–59 min)
+    if (diffMinutes < 60) {
+      return `Last seen ${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
+    }
+
+    // ⏱ Hours ago (same day)
+    if (diffHours < 24 && date.toDateString() === now.toDateString()) {
       return `Last seen today at ${date.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit',
       })}`;
     }
 
-    // Yesterday
+    // ⏱ Yesterday
     const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setDate(now.getDate() - 1);
+
     if (date.toDateString() === yesterday.toDateString()) {
       return `Last seen yesterday at ${date.toLocaleTimeString('en-US', {
         hour: '2-digit',
@@ -945,14 +950,13 @@ async openMoreActions() {
       })}`;
     }
 
-    // Older
-    return `Last seen ${date.toLocaleDateString()} at ${date.toLocaleTimeString(
-      'en-US',
-      {
-        hour: '2-digit',
-        minute: '2-digit',
-      }
-    )}`;
+    // 📅 Older (DD/MM/YYYY at HH:mm)
+    return `Last seen ${date.toLocaleDateString(
+      'en-GB'
+    )} at ${date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+    })}`;
   }
 
   loadReceiverProfile() {
@@ -1175,7 +1179,8 @@ async openMoreActions() {
   }
 
   // ✅ Clear Chat Implementation (Soft Delete)
-  private async clearChatMessages(userId: string) {    //this is for private
+  private async clearChatMessages(userId: string) {
+    //this is for private
     try {
       const roomId =
         this.chatType === 'group'
@@ -1266,12 +1271,12 @@ async openMoreActions() {
     this.onValueUnsubs.push(() => {
       try {
         unsubA();
-      } catch (e) { }
+      } catch (e) {}
     });
     this.onValueUnsubs.push(() => {
       try {
         unsubB();
-      } catch (e) { }
+      } catch (e) {}
     });
   }
 
@@ -1588,26 +1593,26 @@ async openMoreActions() {
   // }
 
   async copySelectedMessages() {
-  if (!this.lastPressedMessage) return;
-  
-  // Get the currently displayed text based on active translation
-  const textToCopy = this.getDisplayedText(this.lastPressedMessage);
-  
-  if (textToCopy) {
-    await Clipboard.write({ string: textToCopy });
-    
-    // Show feedback with translation label
-    const label = this.getActiveTranslationLabel(this.lastPressedMessage);
-    // const message = label 
-    //   ? `Copied (${label})` 
-    //   : 'Text copied';
-    
-    // this.showToast(message, 'success', 'top', 1500);
-    
-    this.selectedMessages = [];
-    this.lastPressedMessage = null;
+    if (!this.lastPressedMessage) return;
+
+    // Get the currently displayed text based on active translation
+    const textToCopy = this.getDisplayedText(this.lastPressedMessage);
+
+    if (textToCopy) {
+      await Clipboard.write({ string: textToCopy });
+
+      // Show feedback with translation label
+      const label = this.getActiveTranslationLabel(this.lastPressedMessage);
+      // const message = label
+      //   ? `Copied (${label})`
+      //   : 'Text copied';
+
+      // this.showToast(message, 'success', 'top', 1500);
+
+      this.selectedMessages = [];
+      this.lastPressedMessage = null;
+    }
   }
-}
 
   replyToMessages() {
     if (this.selectedMessages.length === 1) {
@@ -2107,58 +2112,58 @@ async openMoreActions() {
   // }
 
   async editMessage(message: IMessage) {
-  const alert = await this.alertCtrl.create({
-    header: 'Edit Message',
-    inputs: [
-      {
-        name: 'text',
-        type: 'text',
-        value: message.translations?.original?.text || message.text,
-      },
-    ],
-    buttons: [
-      {
-        text: 'Cancel',
-        role: 'cancel',
-      },
-      {
-        text: 'Save',
-        handler: async (data: any) => {
-          const newText = data.text?.trim();
-          if (!newText) return;
-
-          try {
-            await this.chatService.editMessage(
-              this.roomId,
-              message.msgId,
-              newText
-            );
-
-            message.text = newText;
-            message.isEdit = true;
-            // message.editedAt = Date.now();
-
-            if (message.translations?.original) {
-              message.translations.original.text = newText;
-            }
-
-            this.cdr.detectChanges();
-            
-            this.selectedMessages = [];
-            this.lastPressedMessage = null;
-            
-            this.showToast('Message edited successfully', 'success');
-          } catch (err) {
-            console.error('Failed to edit message:', err);
-            this.showToast('Failed to edit message', 'error');
-          }
+    const alert = await this.alertCtrl.create({
+      header: 'Edit Message',
+      inputs: [
+        {
+          name: 'text',
+          type: 'text',
+          value: message.translations?.original?.text || message.text,
         },
-      },
-    ],
-  });
+      ],
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+        },
+        {
+          text: 'Save',
+          handler: async (data: any) => {
+            const newText = data.text?.trim();
+            if (!newText) return;
 
-  await alert.present();
-}
+            try {
+              await this.chatService.editMessage(
+                this.roomId,
+                message.msgId,
+                newText
+              );
+
+              message.text = newText;
+              message.isEdit = true;
+              // message.editedAt = Date.now();
+
+              if (message.translations?.original) {
+                message.translations.original.text = newText;
+              }
+
+              this.cdr.detectChanges();
+
+              this.selectedMessages = [];
+              this.lastPressedMessage = null;
+
+              this.showToast('Message edited successfully', 'success');
+            } catch (err) {
+              console.error('Failed to edit message:', err);
+              this.showToast('Failed to edit message', 'error');
+            }
+          },
+        },
+      ],
+    });
+
+    await alert.present();
+  }
 
   async copyMessage() {
     if (this.lastPressedMessage?.text) {
@@ -2275,7 +2280,7 @@ async openMoreActions() {
 
       try {
         if (this.typingUnsubscribe) this.typingUnsubscribe();
-      } catch (e) { }
+      } catch (e) {}
 
       const unsubscribe = onValue(
         dbRef(db, `typing/${this.roomId}`),
@@ -2360,7 +2365,7 @@ async openMoreActions() {
       this.typingUnsubscribe = () => {
         try {
           unsubscribe();
-        } catch (e) { }
+        } catch (e) {}
       };
       this.onValueUnsubs.push(this.typingUnsubscribe);
     } catch (err) {
@@ -2859,8 +2864,8 @@ async openMoreActions() {
       const type = mimeType?.startsWith('image')
         ? 'image'
         : mimeType?.startsWith('video')
-          ? 'video'
-          : 'file';
+        ? 'video'
+        : 'file';
 
       let blob = file.blob as Blob;
 
@@ -3372,6 +3377,53 @@ async openMoreActions() {
     }
   }
 
+  async openEmojiKeyboardForInput() {
+    try {
+      const modal = await this.modalCtrl.create({
+        component: EmojiPickerModalComponent,
+        cssClass: 'emoji-picker-modal',
+        breakpoints: [0, 0.5, 0.75, 1],
+        initialBreakpoint: 0.75,
+        backdropDismiss: true,
+      });
+
+      await modal.present();
+
+      const { data } = await modal.onDidDismiss();
+
+      if (data && data.selected && data.emoji) {
+        console.log('✅ Emoji selected:', data.emoji);
+
+        // Add emoji to the message input
+        const currentText = this.messageText || '';
+        this.messageText = currentText + data.emoji;
+
+        // Update send button visibility
+        this.showSendButton = this.messageText.trim().length > 0;
+
+        // Focus back on input
+        setTimeout(() => {
+          const textareaElement = document.querySelector(
+            'ion-textarea'
+          ) as HTMLIonTextareaElement;
+          if (textareaElement) {
+            textareaElement.setFocus();
+          }
+        }, 100);
+      }
+    } catch (error) {
+      console.error('❌ Error opening emoji picker:', error);
+
+      const toast = await this.toastCtrl.create({
+        message: 'Failed to open emoji picker',
+        duration: 2000,
+        color: 'danger',
+        position: 'bottom',
+      });
+      await toast.present();
+    }
+  }
+
   async openEmojiKeyboard(msg: IMessage) {
     try {
       const modal = await this.modalCtrl.create({
@@ -3684,12 +3736,12 @@ async openMoreActions() {
     if (this.pinnedMessageSubscription) {
       try {
         this.pinnedMessageSubscription();
-      } catch (e) { }
+      } catch (e) {}
     }
     this.typingRxSubs.forEach((s) => s.unsubscribe());
     try {
       if (this.typingUnsubscribe) this.typingUnsubscribe();
-    } catch (e) { }
+    } catch (e) {}
     this.stopTypingSignal();
 
     window.removeEventListener('resize', this.resizeHandler);
@@ -3706,12 +3758,12 @@ async openMoreActions() {
       if (this.iBlockedRef) off(this.iBlockedRef);
       if (this.theyBlockedRef) off(this.theyBlockedRef);
       clearTimeout(this.blockBubbleTimeout);
-    } catch (e) { }
+    } catch (e) {}
 
     this.onValueUnsubs.forEach((fn) => {
       try {
         fn();
-      } catch (e) { }
+      } catch (e) {}
     });
     this.onValueUnsubs = [];
     this.statusPollSub?.unsubscribe();
@@ -3836,7 +3888,7 @@ async openMoreActions() {
             handler: () => {
               try {
                 localStorage.setItem(this.TRANSLATION_CONSENT_KEY, 'denied');
-              } catch { }
+              } catch {}
               this.showToast('Translation declined', 'medium');
               resolve(false);
             },
@@ -3846,7 +3898,7 @@ async openMoreActions() {
             handler: () => {
               try {
                 localStorage.setItem(this.TRANSLATION_CONSENT_KEY, 'granted');
-              } catch { }
+              } catch {}
               this.showToast('Translation allowed', 'success');
               resolve(true);
             },
@@ -3915,7 +3967,6 @@ async openMoreActions() {
       label,
     }));
   }
-
 
   /**
    * ✅ UPDATED: languageName method - removes country codes in parentheses
@@ -4158,8 +4209,8 @@ async openMoreActions() {
     return found
       ? found.label
       : st.activeCode === 'original'
-        ? 'English (Original)'
-        : null;
+      ? 'English (Original)'
+      : null;
   }
 
   getActiveTranslationShortCode(msg: any) {
@@ -4187,24 +4238,24 @@ async openMoreActions() {
   // }
 
   getDisplayedText(msg: any) {
-  this.ensureToggleState(msg);
-  const st = this.messageToggleMap.get(msg.msgId)!;
-  
-  if (!msg.translations) {
+    this.ensureToggleState(msg);
+    const st = this.messageToggleMap.get(msg.msgId)!;
+
+    if (!msg.translations) {
+      return msg.text || '';
+    }
+
+    const all = this.getAllTranslationsArray(msg);
+    const found = all.find((x) => x.code === st.activeCode);
+
+    if (found) return found.text;
+
+    if (st.activeCode === 'original' && msg.translations.original) {
+      return msg.translations.original.text;
+    }
+
     return msg.text || '';
   }
-  
-  const all = this.getAllTranslationsArray(msg);
-  const found = all.find((x) => x.code === st.activeCode);
-  
-  if (found) return found.text;
-  
-  if (st.activeCode === 'original' && msg.translations.original) {
-    return msg.translations.original.text;
-  }
-  
-  return msg.text || '';
-}
 
   cycleTranslation(msg: any) {
     if (!msg.translations) return;
@@ -4256,8 +4307,6 @@ async openMoreActions() {
       targetApiLang
     );
   }
-
-
 
   /**
    * ✅ UPDATED: Fetch custom language translation + receiver language (parallel)
@@ -4404,7 +4453,7 @@ async openMoreActions() {
     this.showToast('Translation ready', 'success');
     try {
       this.cdr.detectChanges();
-    } catch { }
+    } catch {}
   }
 
   /**
@@ -4430,7 +4479,6 @@ async openMoreActions() {
       recvApiLang
     );
   }
-
 
   // ========================================
   // 🎨 SHOW RECEIVER ONLY CARD
@@ -4527,7 +4575,7 @@ async openMoreActions() {
     this.showToast('Translation ready', 'success');
     try {
       this.cdr.detectChanges();
-    } catch { }
+    } catch {}
   }
 
   // ========================================
@@ -4566,7 +4614,7 @@ async openMoreActions() {
     this.showToast('Preview ready', 'success');
     try {
       this.cdr.detectChanges();
-    } catch { }
+    } catch {}
   }
 
   // ========================================
@@ -4648,7 +4696,6 @@ async openMoreActions() {
   }
 
   async sendFromTranslationCard() {
-
     // ✅ Loading flag ON
     if (this.isSendingFromTranslationCard) return;
     this.isSendingFromTranslationCard = true;
@@ -4790,13 +4837,13 @@ async openMoreActions() {
     try {
       this.stopTypingSignal();
       this.scrollToBottom();
-    } catch { }
-
-
-    // ✅ Loading flag OFF (always executed)
-    finally {
+    } catch {
+    } finally {
+      // ✅ Loading flag OFF (always executed)
       this.isSendingFromTranslationCard = false;
-      try { this.cdr.detectChanges(); } catch { }
+      try {
+        this.cdr.detectChanges();
+      } catch {}
     }
   }
 
@@ -4840,27 +4887,31 @@ async openMoreActions() {
   }
   // showTranslationOptions = false;
 
-
   toggleTranslationOptions() {
     this.showTranslationOptions = !this.showTranslationOptions;
     // // For quick test, run this in component init or console:
     // this.isSendingFromTranslationCard = true;
     // setTimeout(() => this.isSendingFromTranslationCard = false, 3000);
-
   }
-
 
   async showToast(
     message: string,
-    color: 'success' | 'warning' | 'error' | 'info' | 'primary' | 'secondary' | 'medium' = 'info',
+    color:
+      | 'success'
+      | 'warning'
+      | 'error'
+      | 'info'
+      | 'primary'
+      | 'secondary'
+      | 'medium' = 'info',
     position: 'top' | 'middle' | 'bottom' = 'top',
     duration: number = 2000
   ) {
     const toast = await this.toastController.create({
-      message: message,  // Keep it simple - just the message
+      message: message, // Keep it simple - just the message
       duration,
       position,
-      cssClass: `md-toast ${color} toast-with-dust`,  // Add extra class
+      cssClass: `md-toast ${color} toast-with-dust`, // Add extra class
       enterAnimation: (el) => this.getToastAnimation(el),
       leaveAnimation: (el) => this.getToastLeaveAnimation(el),
       buttons: [

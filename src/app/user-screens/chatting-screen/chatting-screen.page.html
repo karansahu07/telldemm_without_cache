@@ -130,7 +130,7 @@
                 <ng-container *ngIf="currentConv?.type === 'private'">
                   <!-- 🆕 Show typing first if user is typing -->
                   <ng-container *ngIf="isReceiverTyping; else presenceBlock">
-                    <span style="color: var(--ion-color-success)"
+                    <span style="color: var(--ion-color-primary)"
                       >typing...</span
                     >
                   </ng-container>
@@ -141,16 +141,13 @@
                       *ngIf="receiverStatus === 'online'; else lastSeenTpl"
                     >
                       <span class="online-dot" aria-hidden="true"></span>
-                      <span style="color: var(--ion-color-success)"
+                      <span style="color: var(--ion-color-primary)"
                         >Online</span
                       >
                     </ng-container>
 
                     <ng-template #lastSeenTpl>
-                      <span
-                        style="color: var(--ion-color-medium)"
-                        *ngIf="lastSeenTime"
-                      >
+                      <span class="last-seen-text" *ngIf="lastSeenTime">
                         {{ lastSeenTime }}
                       </span>
                     </ng-template>
@@ -161,7 +158,7 @@
                   <ng-container
                     *ngIf="typingCount > 0; else groupPresenceBlock"
                   >
-                    <span style="color: var(--ion-color-success)">
+                    <span style="color: var(--ion-color-primary)">
                       {{ typingCount }} {{ typingCount === 1 ? 'person' :
                       'people' }} typing...
                     </span>
@@ -347,7 +344,7 @@
             <!-- Group Sender Name -->
             <span
               *ngIf="chatType === 'group' && msg.sender !== senderId"
-              style="font-size: 10px; color: #bc8c2c;"
+              style="font-size: 10px; color: #bc8c2c"
             >
               {{ getSenderDisplayName(msg) }}
             </span>
@@ -813,9 +810,9 @@
       >
         <div style="display: flex; align-items: center; gap: 8px">
           <ion-icon
-            name="document-text-outline"
+            name="happy-outline"
             class="icon-left"
-            (click)="openKeyboard()"
+            (click)="openEmojiKeyboardForInput()"
           ></ion-icon>
 
           <!-- <ion-textarea [disabled]="iBlocked" [autoGrow]="true" [(ngModel)]="messageText" placeholder="Message"
