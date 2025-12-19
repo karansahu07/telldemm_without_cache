@@ -59,6 +59,11 @@ export class StatusScreenPage implements OnInit, OnDestroy {
     this.cleanupFirebaseListeners();
   }
 
+  opendummy(){
+     this.router.navigate(['/channel-feed'], {
+      queryParams: { channelId:33 }
+    });
+  }
 
   private listenFromFirebase() {
 

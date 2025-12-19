@@ -11,13 +11,15 @@ import {
   runTransaction,
   remove,
   onDisconnect,
-  get
+  get,
+  off, DatabaseReference
 } from '@angular/fire/database';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { HttpEventType } from '@angular/common/http';
 import { environment } from 'src/environments/environment.prod';
 import { AuthService } from 'src/app/auth/auth.service';
+import { Storage } from '@ionic/storage-angular';
 
 export interface UserReaction {
   emoji: string;
@@ -30,19 +32,44 @@ export interface UserReaction {
 export class PostService {
   // private currentUserId: number = 52; // Replace with actual auth user ID
   private currentUserId!: any;
+private postsRefMap = new Map<string, DatabaseReference>();
 
 
-  constructor(private db: Database, private http: HttpClient, private authService: AuthService) {
-    this.currentUserId = this.authService.authData?.userId || 0;  // ADD THIS
-    // this.currentUserId = "76";  // ADD THIS
+  // constructor(private db: Database, private http: HttpClient, private authService: AuthService) {
+  //   this.currentUserId = this.authService.authData?.userId || 0;  // ADD THIS
+  //   // this.currentUserId = "76";  // ADD THIS
 
-    // Firebase Realtime Database automatically enables offline persistence
-    // No additional configuration needed - it works out of the box
+  //   // Firebase Realtime Database automatically enables offline persistence
+  //   // No additional configuration needed - it works out of the box
+  // }
+
+  constructor(
+    private db: Database,
+    private http: HttpClient,
+    private authService: AuthService,
+    private storage: Storage
+  ) {
+    this.currentUserId = this.authService.authData?.userId || 0;
+    this.storage.create(); // 🔥 important
   }
 
   private baseUrl = environment.apiBaseUrl;
   private UPLOAD_API = `${this.baseUrl}/api/media/channel_media/upload-url`;
   private DOWNLOAD_API_BASE = `${this.baseUrl}/api/media/download-url`;
+
+
+  private postsCacheKey(channelId: string) {
+    return `posts_${channelId}`;
+  }
+
+  async savePostsToCache(channelId: string, posts: any[]) {
+    await this.storage.set(this.postsCacheKey(channelId), posts);
+  }
+
+  async getCachedPosts(channelId: string): Promise<any[]> {
+    return (await this.storage.get(this.postsCacheKey(channelId))) || [];
+  }
+
 
   // ============================
   // 1️⃣ CREATE POST (STORE ONLY media_id)
@@ -126,24 +153,92 @@ export class PostService {
   // ============================
   // 3️⃣ GET POSTS REAL-TIME (OLDEST → NEWEST)
   // ============================
+
+
+
+
+  cleanupPostsListener(channelId: string) {
+  const ref = this.postsRefMap.get(channelId);
+  if (ref) {
+    off(ref);
+    this.postsRefMap.delete(channelId);
+  }
+}
+
   getPosts(channelId: string): Observable<any[]> {
-    const postsRef = query(
-      ref(this.db, `channels/${channelId}/posts`),
-      orderByChild('timestamp')
-    );
+    // const postsRef = ref(this.db, `channels/${channelId}/posts`);
+    const postsRef = ref(this.db, `channels/${channelId}/posts`);
+this.postsRefMap.set(channelId, postsRef);
+
 
     return new Observable((observer) => {
+
+      // 1️⃣ Emit cached posts immediately (offline / cold start)
+      this.getCachedPosts(channelId).then(cached => {
+        if (cached.length) {
+          observer.next(cached);
+        }
+      });
+
+      // 2️⃣ Listen to Firebase (online or cached DB)
       onValue(postsRef, (snapshot) => {
         const data = snapshot.val() || {};
-
         const posts = Object.keys(data)
           .map(id => ({ id, ...data[id] }))
           .sort((a, b) => a.timestamp - b.timestamp);
+
+        // 3️⃣ Save fresh data to cache
+        this.savePostsToCache(channelId, posts);
 
         observer.next(posts);
       });
     });
   }
+
+  // getPosts(channelId: string): Observable<any[]> {
+  //   const postsRef = query(
+  //     ref(this.db, `channels/${channelId}/posts`),
+  //     orderByChild('timestamp')
+  //   );
+
+  //   return new Observable((observer) => {
+  //     onValue(postsRef, (snapshot) => {
+  //       const data = snapshot.val() || {};
+
+  //       const posts = Object.keys(data)
+  //         .map(id => ({ id, ...data[id] }))
+  //         .sort((a, b) => a.timestamp - b.timestamp);
+
+  //       observer.next(posts);
+  //     });
+  //   });
+  // }
+
+// getPosts(channelId: string): Observable<any[]> {
+//   const postsRef = ref(this.db, `channels/${channelId}/posts`);
+//   console.log("postsRef",postsRef);
+
+//   return new Observable((observer) => {
+
+//     // 1️⃣ Emit cached posts immediately
+//     this.getCachedPosts(channelId).then(cached => {
+//       if (cached.length) observer.next(cached);
+//     });
+
+//     // 2️⃣ Listen to Firebase (online or offline cache)
+//     onValue(postsRef, (snapshot) => {
+//       const data = snapshot.val() || {};
+
+//       const posts = Object.keys(data)
+//         .map(id => ({ id, ...data[id] }))
+//         .sort((a, b) => a.timestamp - b.timestamp); // client sort
+
+//       this.savePostsToCache(channelId, posts);
+//       observer.next(posts);
+//     });
+//   });
+// }
+
 
   // ============================
   // 4️⃣ ADD/UPDATE USER REACTION (One reaction per user)
@@ -189,15 +284,34 @@ export class PostService {
   // ============================
   // 6️⃣ GET USER'S CURRENT REACTION FOR A POST
   // ============================
-  async getUserReaction(channelId: string, postId: string, userId?: number): Promise<string | null> {
+  // async getUserReaction(channelId: string, postId: string, userId?: number): Promise<string | null> {
+  //   const uid = userId || this.currentUserId;
+  //   const userReactionRef = ref(
+  //     this.db,
+  //     `channels/${channelId}/posts/${postId}/user_reactions/${uid}`
+  //   );
+  //   const snapshot = await get(userReactionRef);
+  //   const reaction = snapshot.val() as UserReaction | null;
+  //   return reaction ? reaction.emoji : null;
+  // }
+  async getUserReaction(
+    channelId: string,
+    postId: string,
+    userId?: number
+  ): Promise<string | null> {
+
     const uid = userId || this.currentUserId;
     const userReactionRef = ref(
       this.db,
       `channels/${channelId}/posts/${postId}/user_reactions/${uid}`
     );
-    const snapshot = await get(userReactionRef);
-    const reaction = snapshot.val() as UserReaction | null;
-    return reaction ? reaction.emoji : null;
+
+    return new Promise((resolve) => {
+      onValue(userReactionRef, (snapshot) => {
+        const val = snapshot.val();
+        resolve(val ? val.emoji : null);
+      }, { onlyOnce: true });
+    });
   }
 
   // ============================

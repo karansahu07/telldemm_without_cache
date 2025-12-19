@@ -10,6 +10,9 @@ import { forkJoin, firstValueFrom } from 'rxjs';
 import { PostService } from '../services/post';
 import { EmojiPickerModalComponent } from 'src/app/components/emoji-picker-modal/emoji-picker-modal.component';
 import { AuthService } from 'src/app/auth/auth.service';
+import { Storage } from '@ionic/storage-angular';
+import { Subscription } from 'rxjs';
+
 
 interface ReactionMap {
   [emoji: string]: number;
@@ -66,6 +69,8 @@ export class ChannelFeedPage implements OnInit {
   private isLongPress: boolean = false;
   private touchStartX: number = 0;
   private touchStartY: number = 0;
+  private postsSub?: Subscription;
+
 
   // Cache for media URLs
   private mediaCache: Map<string, string> = new Map();
@@ -81,10 +86,12 @@ export class ChannelFeedPage implements OnInit {
     private router: Router,
     private modalController: ModalController,
     private actionSheetController: ActionSheetController,
-    private authService: AuthService
+    private authService: AuthService,
+    private storage: Storage
   ) {
     this.currentUserId = this.authService.authData?.userId || 0;  // ADD THIS
     // this.currentUserId = "76";  // ADD THIS
+    this.storage.create();
 
   }
   isOnline: boolean = true;
@@ -97,9 +104,24 @@ export class ChannelFeedPage implements OnInit {
     this.postService.getPosts(this.channelId).subscribe((rawPosts) => {
       this.resolveMediaUrls(rawPosts).then((resolvedPosts) => {
         this.posts = resolvedPosts;
+        console.log('[UI] posts received:', resolvedPosts.length);
         this.cdr.detectChanges();
       });
     });
+    // this.postsSub = this.postService
+    //   .getPosts(this.channelId)
+    //   .subscribe((rawPosts) => {
+    //     this.resolveMediaUrls(rawPosts).then((resolvedPosts) => {
+    //       this.posts = resolvedPosts;
+    //       this.cdr.detectChanges();
+    //     });
+    //   });
+// this.postsSub = this.postService
+//   .getPosts(this.channelId)
+//   .subscribe(posts => {
+//     console.log('[UI] posts received:', posts.length);
+//     // ...
+//   });
 
 
     // Monitor connection status
@@ -109,6 +131,28 @@ export class ChannelFeedPage implements OnInit {
       this.cdr.detectChanges();
     });
   }
+
+  ngOnDestroy() {
+    if (this.postsSub) {
+      this.postsSub.unsubscribe();
+    }
+
+    if (this.channelId) {
+      this.postService.cleanupPostsListener(this.channelId);
+    }
+  }
+
+  ionViewWillLeave() {
+    if (this.postsSub) {
+      this.postsSub.unsubscribe();
+      this.postsSub = undefined;
+    }
+
+    if (this.channelId) {
+      this.postService.cleanupPostsListener(this.channelId);
+    }
+  }
+
 
   // ============================
   // REACTION MANAGEMENT
@@ -305,8 +349,8 @@ export class ChannelFeedPage implements OnInit {
           this.canCreatePost = this.channel.created_by == this.currentUserId;
 
           //  console.log('Channel created by:', this.channel.created_by);
-        // console.log('Current user:', this.currentUserId);
-        // console.log('Can create post:', this.canCreatePost);
+          // console.log('Current user:', this.currentUserId);
+          // console.log('Can create post:', this.canCreatePost);
           this.isMuted = false;
           this.cdr.detectChanges();
         }
@@ -351,6 +395,56 @@ export class ChannelFeedPage implements OnInit {
       image: p.media_id ? this.mediaCache.get(p.media_id) : undefined
     }));
   }
+  // private async resolveMediaUrls(rawPosts: Post[]): Promise<Post[]> {
+
+  //   // 1️⃣ Load cached URLs from Storage FIRST (offline safe)
+  //   for (const post of rawPosts) {
+  //     if (post.media_id && !this.mediaCache.has(post.media_id)) {
+  //       const cachedUrl = await this.storage.get(`media_${post.media_id}`);
+  //       if (cachedUrl) {
+  //         this.mediaCache.set(post.media_id, cachedUrl);
+  //       }
+  //     }
+  //   }
+
+  //   // 2️⃣ Find media still unresolved (not cached anywhere)
+  //   const unresolvedMediaIds = rawPosts
+  //     .filter(p => p.media_id && !this.mediaCache.has(p.media_id))
+  //     .map(p => p.media_id!);
+
+  //   // 3️⃣ Fetch from API ONLY if needed
+  //   if (unresolvedMediaIds.length > 0) {
+
+  //     const urlObservables = unresolvedMediaIds.map(id =>
+  //       this.postService.getFreshMediaUrl(id)
+  //     );
+
+  //     let responses: any[] = [];
+  //     try {
+  //       responses = await firstValueFrom(forkJoin(urlObservables));
+  //     } catch (err) {
+  //       console.error('Failed to resolve media URLs:', err);
+  //       responses = [];
+  //     }
+
+  //     // 4️⃣ Save URLs to memory + persistent storage
+  //     for (let i = 0; i < responses.length; i++) {
+  //       const res = responses[i];
+  //       if (res?.downloadUrl) {
+  //         const mediaId = unresolvedMediaIds[i];
+
+  //         this.mediaCache.set(mediaId, res.downloadUrl);
+  //         await this.storage.set(`media_${mediaId}`, res.downloadUrl);
+  //       }
+  //     }
+  //   }
+
+  //   // 5️⃣ Attach image URLs to posts
+  //   return rawPosts.map(p => ({
+  //     ...p,
+  //     image: p.media_id ? this.mediaCache.get(p.media_id) : undefined
+  //   }));
+  // }
 
   async testAddPost() {
     if (!this.channelId) return;
