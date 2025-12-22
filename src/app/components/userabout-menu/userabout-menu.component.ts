@@ -4,6 +4,13 @@ import { CommonModule } from '@angular/common';
 import { getDatabase, ref, set } from 'firebase/database';
 import { Router } from '@angular/router';
 
+export interface GroupMeta {
+  title: string;
+  description: string;
+  createdBy: string;
+  createdAt: string;
+}
+
 @Component({
   selector: 'app-userabout-menu',
   standalone: true,
@@ -15,12 +22,17 @@ export class UseraboutMenuComponent {
   @Input() chatType: 'private' | 'group' = 'private';
   @Input() groupId: string = '';
   @Input() isCurrentUserMember: boolean = true;
+  @Input() groupMeta: GroupMeta | null = null;
 
   constructor(
     private popoverCtrl: PopoverController,
     private router: Router,
     private alertCtrl: AlertController
   ) {}
+
+  ngOnInit() {
+  console.log('📦 Received group meta in menu:', this.groupMeta);
+}
 
   close() {
     this.popoverCtrl.dismiss();

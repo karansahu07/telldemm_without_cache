@@ -17,14 +17,14 @@
     </ion-item>
 
     <ion-item button (click)="onOptionClick('changeGroupName')">
-      <ion-label>Rename DemmRoom Wip (Change group name)</ion-label>
+      <ion-label>Rename DemmRoom (Change group name)</ion-label>
     </ion-item>
   </ng-container>
 
   <!-- Group Chat Menu - Show only Change Group Name if user is NOT a member -->
   <ng-container *ngIf="chatType === 'group' && !isCurrentUserMember">
     <ion-item button (click)="onOptionClick('changeGroupName')">
-      <ion-label>Rename DemmRoom Wip (Change group name)</ion-label>
+      <ion-label>Rename DemmRoom (Change group name)</ion-label>
     </ion-item>
   </ng-container>
 

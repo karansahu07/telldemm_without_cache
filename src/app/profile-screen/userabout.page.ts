@@ -64,6 +64,13 @@ export class UseraboutPage implements OnInit {
   //   publicKeyHex?: string | null;
   // }[] = [];
 
+  groupMeta: {
+  title: string;
+  description: string;
+  createdBy: string;
+  createdAt: string;
+} | null = null;
+
   groupMembers: GroupMemberDisplay[] = [];
 
   groupData: IGroup | null = null;
@@ -101,6 +108,8 @@ export class UseraboutPage implements OnInit {
   private groupMembershipRef: any = null;
 private groupMembershipUnsubscribe: (() => void) | null = null;
  showAllCommonGroups: boolean = false;
+ private groupMetaRef: any = null;
+private groupMetaUnsubscribe: (() => void) | null = null;
 
   constructor(
     private router: Router,
@@ -295,7 +304,8 @@ async ionViewWillEnter() {
       this.adminIds = [];
     }
 
-    await this.fetchGroupMeta(this.receiverId);
+    // await this.fetchGroupMeta(this.receiverId);
+    await this.setupGroupMetaListener(this.receiverId);
   }
   this.findCommonGroups(this.currentUserId, this.receiverId);
   this.groupId = this.receiverId || '';
@@ -392,11 +402,103 @@ setupGroupMembershipListener() {
   );
 }
 
+async setupGroupMetaListener(groupId: string) {
+  const db = getDatabase();
+  
+  // Clean up old listener
+  if (this.groupMetaUnsubscribe) {
+    this.groupMetaUnsubscribe();
+  }
+
+  this.groupMetaRef = ref(db, `groups/${groupId}`);
+  
+  this.groupMetaUnsubscribe = onValue(
+    this.groupMetaRef,
+    (snapshot) => {
+      this.zone.run(async () => {
+        if (snapshot.exists()) {
+          const groupData = snapshot.val();
+          
+          // ✅ Get createdBy userId
+          const createdByUserId = groupData.createdBy || groupData.createdByUserId;
+          
+          // ✅ Get device contacts
+          const deviceContacts = this.firebaseChatService.currentDeviceContacts || [];
+          
+          // ✅ Try to find matching device contact
+          let createdByName = groupData.createdByName || 'Unknown';
+          
+          if (createdByUserId) {
+            // First check if it's current user
+            const currentUserId = this.authService.authData?.userId || '';
+            if (String(createdByUserId) === String(currentUserId)) {
+              createdByName = 'You';
+            } else {
+              // Try to find in device contacts by userId
+              const matchedContact = deviceContacts.find(contact => 
+                String(contact.userId) === String(createdByUserId)
+              );
+              
+              if (matchedContact && matchedContact.username) {
+                // ✅ Device contact found - use saved name
+                createdByName = matchedContact.username;
+              } else {
+                // ✅ Fallback: Try to get phone number from members or fetch from backend
+                try {
+                  // Check if creator is in members list
+                  const memberData = groupData.members?.[createdByUserId];
+                  if (memberData?.phone || memberData?.phoneNumber) {
+                    createdByName = memberData.phone || memberData.phoneNumber;
+                  } else {
+                    // Fetch from backend API
+                    const userProfile: any = await this.service.getUserProfilebyId(createdByUserId).toPromise();
+                    createdByName = userProfile?.phone_number || userProfile?.phone || 'Unknown';
+                  }
+                } catch (err) {
+                  console.warn('Failed to fetch creator phone number:', err);
+                  createdByName = groupData.createdByName || 'Unknown';
+                }
+              }
+            }
+          }
+          
+          this.groupMeta = {
+            title: groupData.title || groupData.groupName || 'Group',
+            description: groupData.description || 'No group description.',
+            createdBy: createdByName, // ✅ Use matched name or phone
+            createdAt: groupData.createdAt || '',
+          };
+          
+          this.groupName = this.groupMeta.title;
+          this.groupDescription = this.groupMeta.description;
+          this.groupCreatedBy = this.groupMeta.createdBy;
+          this.groupCreatedAt = this.groupMeta.createdAt;
+          this.chatTitle = this.groupMeta.title;
+          
+          console.log("✅ Group Meta Updated:", {
+            groupName: this.groupName,
+            createdBy: this.groupCreatedBy,
+            chatTitle: this.chatTitle
+          });
+        }
+      });
+    },
+    (error) => {
+      console.error('Error listening to group meta:', error);
+    }
+  );
+}
+
 ionViewWillLeave() {
   // Clean up real-time listener
   if (this.groupMembershipUnsubscribe) {
     this.groupMembershipUnsubscribe();
     this.groupMembershipUnsubscribe = null;
+  }
+
+   if (this.groupMetaUnsubscribe) {
+    this.groupMetaUnsubscribe();
+    this.groupMetaUnsubscribe = null;
   }
   
   // Clean up block listeners
@@ -411,6 +513,10 @@ ionViewWillLeave() {
 ngOnDestroy() {
   if (this.groupMembershipUnsubscribe) {
     this.groupMembershipUnsubscribe();
+  }
+
+  if (this.groupMetaUnsubscribe) {
+    this.groupMetaUnsubscribe();
   }
   
   try {
@@ -614,6 +720,7 @@ async deleteGroup() {
         chatType: this.chatType,
         groupId: this.chatType === 'group' ? this.receiverId : '',
         isCurrentUserMember: this.isCurrentUserMember,
+        groupMeta: this.groupMeta,
       },
     });
 
@@ -1180,24 +1287,61 @@ async deleteGroup() {
     this.showAllCommonGroups = !this.showAllCommonGroups;
   }
 
-  async fetchGroupMeta(groupId: string) {
-    const db = getDatabase();
-    const groupRef = ref(db, `groups/${groupId}`);
+  // async fetchGroupMeta(groupId: string) {
+  //   const db = getDatabase();
+  //   const groupRef = ref(db, `groups/${groupId}`);
 
-    try {
-      const snapshot = await get(groupRef);
-      if (snapshot.exists()) {
-        const groupData = snapshot.val();
-        console.log("group data ", groupData)
-        this.groupDescription =
-          groupData.description || 'No group description.';
-        this.groupCreatedBy = groupData.createdByName || 'Unknown';
-        this.groupCreatedAt = groupData.createdAt || '';
-      }
-    } catch (error) {
-      console.error('Error fetching group meta:', error);
+  //   try {
+  //     const snapshot = await get(groupRef);
+  //     if (snapshot.exists()) {
+  //       const groupData = snapshot.val();
+  //       console.log("group data ", groupData)
+  //       this.groupDescription =
+  //         groupData.description || 'No group description.';
+  //       this.groupCreatedBy = groupData.createdByName || 'Unknown';
+  //       this.groupCreatedAt = groupData.createdAt || '';
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching group meta:', error);
+  //   }
+  // }
+
+  async fetchGroupMeta(groupId: string) {
+  const db = getDatabase();
+  const groupRef = ref(db, `groups/${groupId}`);
+
+  try {
+    const snapshot = await get(groupRef);
+    if (snapshot.exists()) {
+      const groupData = snapshot.val();
+
+      this.groupMeta = {
+        title:
+          groupData.title ||
+          groupData.groupName ||
+          'Group',
+
+        description:
+          groupData.description || 'No group description.',
+
+        createdBy:
+          groupData.createdByName || 'Unknown',
+
+        createdAt:
+          groupData.createdAt || '',
+      };
+
+      // (optional) backward compatibility
+      this.groupName = this.groupMeta.title;
+      this.groupDescription = this.groupMeta.description;
+      this.groupCreatedBy = this.groupMeta.createdBy;
+      this.groupCreatedAt = this.groupMeta.createdAt;
     }
+  } catch (error) {
+    console.error('❌ Error fetching group meta:', error);
   }
+}
+
 
   //yeh delete nhi krna
   // async fetchReceiverAbout(userId: string) {

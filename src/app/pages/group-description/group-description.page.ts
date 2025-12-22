@@ -3,7 +3,14 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IonicModule, NavController } from '@ionic/angular';
-import { getDatabase, ref, update } from 'firebase/database';
+import { get, getDatabase, ref, update } from 'firebase/database';
+
+export interface GroupMeta {
+  title: string;
+  description: string;
+  createdBy: string;
+  createdAt: string;
+}
 
 @Component({
   selector: 'app-group-description',
@@ -19,6 +26,8 @@ export class GroupDescriptionPage {
   receiver_name: string = '';
   isGroup: boolean = false;
   chatType = "";
+  groupMeta: GroupMeta | null = null;
+  groupDescription: string = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -28,7 +37,7 @@ export class GroupDescriptionPage {
     
   }
 
-  ngOnInit() {
+  async ngOnInit() {
     this.route.queryParams.subscribe(params => {
       this.groupId = params['receiverId'];
       console.log("group Id is ",this.groupId)
@@ -43,8 +52,44 @@ export class GroupDescriptionPage {
 
       this.chatType = this.isGroup ? 'group' : 'private';
     });
+    await this.fetchGroupMeta(this.groupId)
   }
 
+   async fetchGroupMeta(groupId: string) {
+      const db = getDatabase();
+      const groupRef = ref(db, `groups/${groupId}`);
+    
+      try {
+        const snapshot = await get(groupRef);
+        if (snapshot.exists()) {
+          const groupData = snapshot.val();
+    
+          this.groupMeta = {
+            title:
+              groupData.title ||
+              groupData.groupName ||
+              'Group',
+    
+            description:
+              groupData.description || 'No group description.',
+    
+            createdBy:
+              groupData.createdByName || 'Unknown',
+    
+            createdAt:
+              groupData.createdAt || '',
+          };
+    
+          // (optional) backward compatibility
+          // this.groupName = this.groupMeta.title;
+          this.description = this.groupMeta.description;
+          // this.groupCreatedBy = this.groupMeta.createdBy;
+          // this.groupCreatedAt = this.groupMeta.createdAt;
+        }
+      } catch (error) {
+        console.error('❌ Error fetching group meta:', error);
+      }
+    }
 
 async saveDescription() {
   //console.log("this button is clicked", this.groupId);

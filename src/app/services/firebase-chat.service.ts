@@ -6695,7 +6695,7 @@ async getPastMembers(groupId: string): Promise<
         const avatar =
           localUser?.avatar ??
           profileResp?.profile ??
-          undefined;
+          'assets/images/user.jfif';
 
         return {
           user_id,

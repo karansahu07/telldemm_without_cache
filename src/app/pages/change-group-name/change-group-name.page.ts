@@ -3,9 +3,16 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { IonicModule, ModalController, NavController, ToastController, IonInput } from '@ionic/angular';
 import { ActivatedRoute } from '@angular/router';
-import { getDatabase, ref, set } from 'firebase/database';
+import { get, getDatabase, ref, set } from 'firebase/database';
 import { FirebaseChatService } from 'src/app/services/firebase-chat.service';
 import { EmojiPickerModalComponent } from 'src/app/components/emoji-picker-modal/emoji-picker-modal.component';
+
+export interface GroupMeta {
+  title: string;
+  description: string;
+  createdBy: string;
+  createdAt: string;
+}
 
 @Component({
   selector: 'app-change-group-name',
@@ -19,6 +26,8 @@ export class ChangeGroupNamePage implements OnInit {
   
   groupName: string = '';
   groupId: string = '';
+
+  groupMeta: GroupMeta | null = null;
 
   constructor(
     private navCtrl: NavController,
@@ -34,7 +43,45 @@ export class ChangeGroupNamePage implements OnInit {
       console.warn('Group ID not provided in query params');
       this.navCtrl.back();
     }
+     this.fetchGroupMeta(this.groupId);
   }
+
+    async fetchGroupMeta(groupId: string) {
+    const db = getDatabase();
+    const groupRef = ref(db, `groups/${groupId}`);
+  
+    try {
+      const snapshot = await get(groupRef);
+      if (snapshot.exists()) {
+        const groupData = snapshot.val();
+  
+        this.groupMeta = {
+          title:
+            groupData.title ||
+            groupData.groupName ||
+            'Group',
+  
+          description:
+            groupData.description || 'No group description.',
+  
+          createdBy:
+            groupData.createdByName || 'Unknown',
+  
+          createdAt:
+            groupData.createdAt || '',
+        };
+  
+        // (optional) backward compatibility
+        this.groupName = this.groupMeta.title;
+        // this.groupDescription = this.groupMeta.description;
+        // this.groupCreatedBy = this.groupMeta.createdBy;
+        // this.groupCreatedAt = this.groupMeta.createdAt;
+      }
+    } catch (error) {
+      console.error('❌ Error fetching group meta:', error);
+    }
+  }
+  
 
   onCancel() {
     this.navCtrl.back();
