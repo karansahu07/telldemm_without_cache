@@ -41,6 +41,7 @@ ion-header {
   justify-content: space-evenly;
   align-items: center;
   gap: 12px;
+  margin: 0px 20px;
 }
 
 .message-item {
@@ -67,7 +68,7 @@ ion-header {
 .main-media,
 .noti-list {
   margin-top: 10px;
-  padding: 1px 10px 1px 12px;
+  padding: 1px 20px 1px 20px;
   background: var(--ion-card-background);
   border: 1px solid var(--ion-border-color);
   border-radius: 10px;
@@ -239,4 +240,22 @@ ion-header.scrolled .dotbutton { position: unset; }
   font-weight: 600;
   border-radius: 4px;
   padding: 2px 4px;
+}
+
+.view-all-item {
+  --background: transparent;
+  cursor: pointer;
+  
+  ion-label {
+    // color: #128C7E;
+    font-weight: 500;
+  }
+  
+  ion-icon {
+    color: var(--ion-color-primary);
+  }
+  
+  &:hover {
+    --background: rgba(0, 0, 0, 0.02);
+  }
 }

@@ -165,12 +165,14 @@ export interface IConversation {
   isPinned: boolean;
   pinnedAt?: number | null;
   isLocked: boolean;
+  isTyping?: boolean;
 }
 export interface IGroup {
   roomId: string;
   title?: string;
   type: 'group';
   avatar?: string;
+  groupAvatar? : string;
   description: string;
   members?: Record<string, IGroupMember>;
   adminIds?: string[];

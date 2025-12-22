@@ -100,6 +100,7 @@ export class UseraboutPage implements OnInit {
 
   private groupMembershipRef: any = null;
 private groupMembershipUnsubscribe: (() => void) | null = null;
+ showAllCommonGroups: boolean = false;
 
   constructor(
     private router: Router,
@@ -231,7 +232,7 @@ async ionViewWillEnter() {
 
   // ✅ Get current chat from service
   const currentChat = this.firebaseChatService.currentChat;
-  
+  this.currentUserId = this.authService.authData?.userId || '';
   if (!currentChat) {
     console.error('❌ No current chat found in service');
     this.navCtrl.back();
@@ -254,6 +255,7 @@ async ionViewWillEnter() {
     this.receiverId = currentChat.roomId;
     this.groupName = currentChat.title || '';
     this.receiverProfile = (currentChat as any).groupAvatar || null;
+    // console.log("receiver profile for group",this.receiverProfile);
   }
 
   console.log('📋 Extracted Details:', {
@@ -295,7 +297,7 @@ async ionViewWillEnter() {
 
     await this.fetchGroupMeta(this.receiverId);
   }
-
+  this.findCommonGroups(this.currentUserId, this.receiverId);
   this.groupId = this.receiverId || '';
 }
 
@@ -482,10 +484,7 @@ ngOnDestroy() {
 
   goBackToChat() {
     try {
-      this.navCtrl.back();
-    } catch (err) {
-      console.warn('navCtrl.back() failed, fallback:', err);
-
+      // this.navCtrl.back();
       if (this.communityId) {
         this.router.navigate(['/community-chat'], {
           queryParams: {
@@ -499,11 +498,14 @@ ngOnDestroy() {
         this.router.navigate(['/chatting-screen'], {
           queryParams: {
             receiverId: this.receiverId,
-            receiver_phone: this.receiver_phone,
-            isGroup: this.isGroup,
+            // receiver_phone: this.receiver_phone,
+            // isGroup: this.isGroup,
           },
         });
       }
+    } catch (err) {
+      console.warn('navCtrl.back() failed, fallback:', err);
+
     }
   }
 
@@ -1069,35 +1071,113 @@ async deleteGroup() {
 }
 
 
+  // async findCommonGroups(currentUserId: string, receiverId: string) {
+  //   // console.log("this is called in findcomment group ", currentUserId,)
+  //   // console.log("this is called in findcomment group ",receiverId)
+  //   if (!currentUserId || !receiverId) return;
+
+  //   const db = getDatabase();
+  //   const groupsRef = ref(db, 'groups');
+
+  //   try {
+  //     const snapshot = await get(groupsRef);
+  //     if (snapshot.exists()) {
+  //       const allGroups = snapshot.val();
+  //       const matchedGroups: any[] = [];
+
+  //       Object.entries(allGroups).forEach(([groupId, groupData]: any) => {
+  //         const members = groupData.members || {};
+  //         console.log("group data", groupData)
+
+  //         if (members[currentUserId] && members[receiverId]) {
+  //           matchedGroups.push({
+  //             groupId,
+  //             name: groupData.title || 'Unnamed Group',
+  //             members,
+  //           });
+  //         }
+  //       });
+
+  //       this.commonGroups = matchedGroups;
+  //       console.log('Common Groups:', this.commonGroups);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching common groups:', error);
+  //   }
+  // }
+
   async findCommonGroups(currentUserId: string, receiverId: string) {
-    if (!currentUserId || !receiverId) return;
+  if (!currentUserId || !receiverId) return;
 
-    const db = getDatabase();
-    const groupsRef = ref(db, 'groups');
+  const db = getDatabase();
+  const groupsRef = ref(db, 'groups');
 
-    try {
-      const snapshot = await get(groupsRef);
-      if (snapshot.exists()) {
-        const allGroups = snapshot.val();
-        const matchedGroups: any[] = [];
+  try {
+    const snapshot = await get(groupsRef);
+    if (snapshot.exists()) {
+      const allGroups = snapshot.val();
+      const matchedGroups: any[] = [];
 
-        Object.entries(allGroups).forEach(([groupId, groupData]: any) => {
-          const members = groupData.members || {};
+      // Use for...of to handle async operations properly
+      for (const [groupId, groupData] of Object.entries(allGroups) as [string, any][]) {
+        const members = groupData.members || {};
+        console.log("group data", groupData);
 
-          if (members[currentUserId] && members[receiverId]) {
-            matchedGroups.push({
-              groupId,
-              name: groupData.name || 'Unnamed Group',
-            });
+        if (members[currentUserId] && members[receiverId]) {
+          let groupAvatar = groupData.avatar || '';
+
+          // ✅ Fetch group avatar from API
+          try {
+            const dpResponse: any = await this.service.getGroupDp(groupId).toPromise();
+            
+            if (dpResponse?.group_dp_url) {
+              groupAvatar = dpResponse.group_dp_url;
+              console.log(`✅ Fetched avatar for group ${groupId}:`, groupAvatar);
+            } else {
+              console.warn(`⚠️ No group_dp in API response for ${groupId}`);
+            }
+          } catch (err) {
+            console.warn(`⚠️ Failed to fetch avatar for group ${groupId}:`, err);
+            // Fallback to Firebase avatar if API fails
+            groupAvatar = groupData.avatar || '';
           }
-        });
 
-        this.commonGroups = matchedGroups;
-        console.log('Common Groups:', this.commonGroups);
+          matchedGroups.push({
+            groupId,
+            name: groupData.title || 'Unnamed Group',
+            avatar: groupAvatar,
+            memberCount: Object.keys(members).length,
+            members,
+          });
+        }
       }
-    } catch (error) {
-      console.error('Error fetching common groups:', error);
+
+      this.commonGroups = matchedGroups;
+      console.log('Common Groups with avatars:', this.commonGroups);
     }
+  } catch (error) {
+    console.error('Error fetching common groups:', error);
+  }
+}
+
+  getMemberCount(members: any): number {
+    if (!members) return 0;
+    return Object.keys(members).length;
+  }
+
+    get displayedCommonGroups() {
+    if (this.showAllCommonGroups || this.commonGroups.length <= 3) {
+      return this.commonGroups;
+    }
+    return this.commonGroups.slice(0, 3);
+  }
+  
+  get remainingGroupsCount() {
+    return Math.max(0, this.commonGroups.length - 3);
+  }
+  
+  toggleCommonGroups() {
+    this.showAllCommonGroups = !this.showAllCommonGroups;
   }
 
   async fetchGroupMeta(groupId: string) {

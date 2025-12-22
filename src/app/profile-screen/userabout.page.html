@@ -1,51 +1,68 @@
 <ion-header [translucent]="true" [class.scrolled]="isScrolled">
-
   <ion-toolbar>
-
-    <ion-button slot="start" fill="clear" (click)="goBackToChat()" class="backbutton">
+    <ion-button
+      slot="start"
+      fill="clear"
+      (click)="goBackToChat()"
+      class="backbutton"
+    >
       <ion-icon name="arrow-back-outline" class="back-icon"></ion-icon>
     </ion-button>
 
-    <ion-button slot="end" fill="clear" (click)="openMenu($event)" class="dotbutton">
+    <ion-button
+      slot="end"
+      fill="clear"
+      (click)="openMenu($event)"
+      class="dotbutton"
+    >
       <ion-icon name="ellipsis-vertical" class="dot-icon"></ion-icon>
     </ion-button>
 
     <div class="profile-container">
       <ion-avatar class="profile-avatar" (click)="openProfileDp()">
-        <img [src]="receiverProfile || 'assets/images/user.jfif'" alt="Profile Picture"
-          (error)="setDefaultAvatar($event)" />
+        <img
+          [src]="receiverProfile || 'assets/images/user.jfif'"
+          alt="Profile Picture"
+          (error)="setDefaultAvatar($event)"
+        />
       </ion-avatar>
 
       <ion-label class="profile-name"> <h2>{{ chatTitle }}</h2></ion-label>
-       
     </div>
-    
   </ion-toolbar>
-
 </ion-header>
 
-<ion-content [fullscreen]="true" (ionScroll)="onScroll($event)" scrollEvents="true">
+<ion-content
+  [fullscreen]="true"
+  (ionScroll)="onScroll($event)"
+  scrollEvents="true"
+>
   <div class="center-content">
-    <ion-label class="username">
-      {{ chatTitle}}
-    </ion-label>
+    <ion-label class="username"> {{ chatTitle}} </ion-label>
     <ion-label class="username1" *ngIf="chatType === 'private'">
       {{ receiver_phone }}
     </ion-label>
 
     <ion-label class="usernumber" *ngIf="chatType === 'group'">
-    {{ groupMembers.length }} {{ 'userabout.members' | translate }}
-  </ion-label>
+      {{ groupMembers.length }} {{ 'userabout.members' | translate }}
+    </ion-label>
   </div>
 
   <!-- Social Media Links -->
   <div class="social-links" *ngIf="socialMediaLinks.length > 0">
     <ion-list lines="none">
-      <ion-item *ngFor="let link of socialMediaLinks" button detail="false"
-        (click)="openExternalLink(link.profile_url)">
-        <ion-icon [name]="link.platform.toLowerCase() === 'instagram' ? 'logo-instagram' 
+      <ion-item
+        *ngFor="let link of socialMediaLinks"
+        button
+        detail="false"
+        (click)="openExternalLink(link.profile_url)"
+      >
+        <ion-icon
+          [name]="link.platform.toLowerCase() === 'instagram' ? 'logo-instagram' 
                       : link.platform.toLowerCase() === 'linkedin' ? 'logo-linkedin'
-                      : 'link-outline'" slot="start"></ion-icon>
+                      : 'link-outline'"
+          slot="start"
+        ></ion-icon>
         <ion-label>
           <h3>{{ link.platform }}</h3>
           <p>{{ link.profile_url }}</p>
@@ -54,10 +71,13 @@
     </ion-list>
   </div>
 
-
   <!-- Common Message Toolbar -->
-  <div class="message-toolbar" style="margin-top: 15px; margin-bottom: 15px;">
-    <div class="message-item" *ngIf="chatType === 'private'" (click)="goBackToChat()">
+  <div class="message-toolbar">
+    <div
+      class="message-item"
+      *ngIf="chatType === 'private'"
+      (click)="goBackToChat()"
+    >
       <ion-avatar class="centered-avatar">
         <ion-icon name="chatbox-ellipses-outline" class="mess-icon"></ion-icon>
       </ion-avatar>
@@ -79,7 +99,11 @@
     </div>
 
     <!-- Only show Add Member button if user is a member -->
-    <div class="message-item" *ngIf="chatType === 'group' && isCurrentUserMember" (click)="onAddMember()">
+    <div
+      class="message-item"
+      *ngIf="chatType === 'group' && isCurrentUserMember"
+      (click)="onAddMember()"
+    >
       <ion-avatar class="centered-avatar">
         <ion-icon name="person-add-outline" class="all-icon1"></ion-icon>
       </ion-avatar>
@@ -88,11 +112,28 @@
   </div>
 
   <!-- ✅ Warning message if user is not a member of the group -->
-  <ion-item *ngIf="chatType === 'group' && !isCurrentUserMember" lines="none" 
-    style="--background: #FFF3CD; --color: #856404; margin: 15px 10px; border-radius: 8px; --padding-start: 16px; --padding-end: 16px; --min-height: 50px;">
-    <ion-icon name="warning-outline" slot="start" style="color: #856404; font-size: 24px;"></ion-icon>
+  <ion-item
+    *ngIf="chatType === 'group' && !isCurrentUserMember"
+    lines="none"
+    style="
+      --background: #fff3cd;
+      --color: #856404;
+      margin: 15px 10px;
+      border-radius: 8px;
+      --padding-start: 16px;
+      --padding-end: 16px;
+      --min-height: 50px;
+    "
+  >
+    <ion-icon
+      name="warning-outline"
+      slot="start"
+      style="color: #856404; font-size: 24px"
+    ></ion-icon>
     <ion-label class="ion-text-wrap">
-      <p style="font-size: 14px; font-weight: 500; color: #856404; margin: 8px 0;">
+      <p
+        style="font-size: 14px; font-weight: 500; color: #856404; margin: 8px 0"
+      >
         You are no longer a member of this group
       </p>
     </ion-label>
@@ -105,89 +146,140 @@
         {{ receiverAbout || ('userabout.defaults.heyThere' | translate) }}
       </p>
       <p class="status-time" *ngIf="statusTime">
-        {{ 'userabout.updatedOn' | translate }} {{ statusTime | date:'dd MMM yyyy, h:mm a' }}
+        {{ 'userabout.updatedOn' | translate }} {{ statusTime | date:'dd MMM
+        yyyy, h:mm a' }}
       </p>
     </ng-container>
 
     <ng-container *ngIf="chatType === 'group'">
       <p class="messgae-chat" (click)="openGroupDescriptionPage()">
-        {{ groupDescription || ('userabout.defaults.noGroupDescription' | translate) }}
+        {{ groupDescription || ('userabout.defaults.noGroupDescription' |
+        translate) }}
       </p>
       <p class="message-number">
-        {{ 'userabout.createdByOn' | translate:{ name: (groupCreatedBy || ('userabout.defaults.unknown' | translate)) }
-        }}
-        {{ groupCreatedAt ? (groupCreatedAt | date: 'dd MMMM yyyy, h:mm a') : ('userabout.defaults.unknownDate' |
-        translate) }}
+        {{ 'userabout.createdByOn' | translate:{ name: (groupCreatedBy ||
+        ('userabout.defaults.unknown' | translate)) } }} {{ groupCreatedAt ?
+        (groupCreatedAt | date: 'dd MMMM yyyy, h:mm a') :
+        ('userabout.defaults.unknownDate' | translate) }}
       </p>
     </ng-container>
   </div>
 
   <!-- Notification Section (Common) -->
-  <ion-list lines="none" class="noti-list">
-  </ion-list>
+  <!-- <ion-list lines="none" class="noti-list"> </ion-list> -->
 
   <!-- Encryption and Privacy Settings (Only for Private Chat) -->
   <ion-list lines="none" class="noti-list" *ngIf="chatType === 'private'">
     <ion-item class="jha">
-      <ion-icon name="lock-closed-outline" slot="start" class="all-icon"></ion-icon>
+      <ion-icon
+        name="lock-closed-outline"
+        slot="start"
+        class="all-icon"
+      ></ion-icon>
       <ion-label>
         <div>
-          <div class="Encry">{{ 'userabout.encryption.title' | translate }}</div>
-          <div class="encrypted">{{ 'userabout.encryption.subtitle' | translate }}</div>
+          <div class="Encry">
+            {{ 'userabout.encryption.title' | translate }}
+          </div>
+          <div class="encrypted">
+            {{ 'userabout.encryption.subtitle' | translate }}
+          </div>
         </div>
       </ion-label>
     </ion-item>
     <ion-item class="jha">
       <ion-icon name="timer-outline" slot="start" class="all-icon"></ion-icon>
-      <ion-label class="Encry">{{ 'userabout.disappearing' | translate }}</ion-label>
+      <ion-label class="Encry"
+        >{{ 'userabout.disappearing' | translate }}</ion-label
+      >
     </ion-item>
     <ion-item class="jha">
-      <ion-icon name="lock-closed-outline" slot="start" class="all-icon"></ion-icon>
+      <ion-icon
+        name="lock-closed-outline"
+        slot="start"
+        class="all-icon"
+      ></ion-icon>
       <ion-label>
         <div>
           <div class="Encry">{{ 'userabout.chatLock.title' | translate }}</div>
-          <div class="encrypted">{{ 'userabout.chatLock.subtitle' | translate }}</div>
+          <div class="encrypted">
+            {{ 'userabout.chatLock.subtitle' | translate }}
+          </div>
         </div>
       </ion-label>
       <ion-icon name="toggle-outline" class="all-icon"></ion-icon>
     </ion-item>
     <ion-item class="jha">
-      <ion-icon name="shield-half-outline" slot="start" class="all-icon"></ion-icon>
+      <ion-icon
+        name="shield-half-outline"
+        slot="start"
+        class="all-icon"
+      ></ion-icon>
       <ion-label>
         <div>
-          <div class="Encry">{{ 'userabout.advancedPrivacy.title' | translate }}</div>
-          <div class="encrypted">{{ 'userabout.advancedPrivacy.off' | translate }}</div>
+          <div class="Encry">
+            {{ 'userabout.advancedPrivacy.title' | translate }}
+          </div>
+          <div class="encrypted">
+            {{ 'userabout.advancedPrivacy.off' | translate }}
+          </div>
         </div>
       </ion-label>
     </ion-item>
   </ion-list>
 
-  <!-- private Info Section (Only for private Chat) -->
-  <ion-list lines="none" class="noti-list" *ngIf="chatType === 'private'">
-    <ion-label class="total-group">
-      {{ commonGroups.length }} {{ commonGroups.length > 1 ? ('userabout.groups' | translate) : ('userabout.group' |
-      translate) }} {{ 'userabout.inCommon' | translate }}
+ <!-- private Info Section (Only for private Chat) -->
+<ion-list lines="none" class="noti-list" *ngIf="chatType === 'private'">
+  <ion-label class="total-group">
+    {{ commonGroups.length }} {{ commonGroups.length > 1 ? ('userabout.groups'
+    | translate) : ('userabout.group' | translate) }} {{ 'userabout.inCommon'
+    | translate }}
+  </ion-label>
+
+  <ion-item class="jha" (click)="createGroupWithMember()">
+    <ion-icon name="person-outline" class="all-icon" slot="start"></ion-icon>
+    <ion-label class="Encry"
+      >{{ 'userabout.createGroupWith' | translate:{ name: chatTitle }
+      }}</ion-label
+    >
+  </ion-item>
+
+  <!-- Display groups (max 3 or all if expanded) -->
+  <ion-item *ngFor="let group of displayedCommonGroups" class="jha">
+    <ion-avatar slot="start">
+      <img [src]="group.avatar || 'assets/images/user.jfif'" />
+    </ion-avatar>
+    <ion-label>
+      <div class="Encry">
+        {{ group.name || ('userabout.unnamedGroup' | translate) }}
+      </div>
+      <div class="encrypted">
+        {{ getMemberCount(group.members) }} 
+        {{ getMemberCount(group.members) === 1 ? 'member' : 'members' }}
+      </div>
     </ion-label>
+  </ion-item>
 
-    <ion-item class="jha" (click)="createGroupWithMember()">
-      <ion-icon name="person-outline" class="all-icon" slot="start"></ion-icon>
-      <ion-label class="Encry">{{ 'userabout.createGroupWith' | translate:{ name: chatTitle } }}</ion-label>
-    </ion-item>
-
-    <ion-item *ngFor="let group of commonGroups" class="jha">
-      <ion-avatar slot="start">
-        <img [src]="'assets/images/user.jfif'" />
-      </ion-avatar>
-      <ion-label>
-        <div class="Encry">{{ group.name || ('userabout.unnamedGroup' | translate) }}</div>
-        <div class="encrypted">{{ 'userabout.commonGroupWith' | translate:{ name: receiver_name } }}</div>
-      </ion-label>
-    </ion-item>
-  </ion-list>
+  <!-- View All / Show Less button -->
+  <ion-item 
+    class="jha view-all-item" 
+    *ngIf="commonGroups.length > 3"
+    (click)="toggleCommonGroups()"
+    button
+  >
+    <ion-icon 
+      [name]="showAllCommonGroups ? 'chevron-up-outline' : 'chevron-down-outline'" 
+      slot="start" 
+      class="all-icon"
+    ></ion-icon>
+    <ion-label class="Encry">
+      {{ showAllCommonGroups ? 'Show less' : (remainingGroupsCount + ' more') }}
+    </ion-label>
+  </ion-item>
+</ion-list>
 
   <!-- Group Members Section -->
   <ion-list *ngIf="chatType === 'group'" lines="none" class="noti-list">
-    
     <!-- Group members count -->
     <ion-item>
       <ion-icon name="people-outline" slot="start" class="all-icon"></ion-icon>
@@ -199,76 +291,129 @@
     <!-- Add members button - only show if user is a member -->
     <ion-item *ngIf="isCurrentUserMember">
       <ion-button fill="clear" slot="start" (click)="onAddMember()">
-        <ion-icon name="person-add-outline" slot="start" class="all-icon1"></ion-icon>
+        <ion-icon
+          name="person-add-outline"
+          slot="start"
+          class="all-icon1"
+        ></ion-icon>
       </ion-button>
       <ion-label class="Encry" (click)="onAddMember()">
         {{ 'userabout.addMembers' | translate }}
       </ion-label>
     </ion-item>
 
-    <ion-item *ngFor="let member of groupMembers" (click)="openActionSheet(member)">
+    <ion-item
+      *ngFor="let member of groupMembers"
+      (click)="openActionSheet(member)"
+    >
       <ion-avatar slot="start">
         <img [src]="member.avatar || 'assets/images/user.jfif'" />
       </ion-avatar>
 
       <ion-label>
-        <div class="Encry">
-          {{ member.username }}
-        </div>
+        <div class="Encry">{{ member.username }}</div>
       </ion-label>
 
-      <ion-badge *ngIf="isAdmin(member.user_id)" class="admin-badge" style="margin-left:6px;font-size:10px;color:red;background-color:#FFD4D4;">
+      <ion-badge
+        *ngIf="isAdmin(member.user_id)"
+        class="admin-badge"
+        style="
+          margin-left: 6px;
+          font-size: 10px;
+          color: red;
+          background-color: #ffd4d4;
+        "
+      >
         {{ 'userabout.groupAdmin' | translate }}
       </ion-badge>
     </ion-item>
 
     <ion-item *ngIf="hasPastMembers">
       <ion-icon name="people-outline" slot="start" class="all-icon"></ion-icon>
-      <ion-label class="Encry1" (click)="viewPastMembers()">{{ 'userabout.viewPastMembers' | translate }}</ion-label>
+      <ion-label class="Encry1" (click)="viewPastMembers()"
+        >{{ 'userabout.viewPastMembers' | translate }}</ion-label
+      >
     </ion-item>
-
   </ion-list>
 
   <!-- User Management Options (Common) -->
   <ion-list lines="none" class="noti-list">
-
     <ion-item class="jha">
       <ion-icon name="heart-outline" slot="start" class="all-icon"></ion-icon>
-      <ion-label class="Encry">{{ 'userabout.addToFavourites' | translate }}</ion-label>
+      <ion-label class="Encry"
+        >{{ 'userabout.addToFavourites' | translate }}</ion-label
+      >
     </ion-item>
 
     <ion-item class="jha">
-      <ion-icon name="person-add-outline" slot="start" class="all-icon"></ion-icon>
-      <ion-label class="Encry">{{ 'userabout.addToList' | translate }}</ion-label>
+      <ion-icon
+        name="person-add-outline"
+        slot="start"
+        class="all-icon"
+      ></ion-icon>
+      <ion-label class="Encry"
+        >{{ 'userabout.addToList' | translate }}</ion-label
+      >
     </ion-item>
-    
+
     <!-- Exit group - only show if user is currently a member -->
-    <ion-item class="jha exit-group-item" *ngIf="chatType === 'group' && isCurrentUserMember" (click)="confirmExitGroup()">
+    <ion-item
+      class="jha exit-group-item"
+      *ngIf="chatType === 'group' && isCurrentUserMember"
+      (click)="confirmExitGroup()"
+    >
       <ion-icon name="log-out-outline" slot="start" class="all-icon"></ion-icon>
       <ion-label class="Encry">Exit Group</ion-label>
     </ion-item>
 
     <!-- Delete group - only show if user is NOT a member -->
-    <ion-item class="jha delete-group-item" *ngIf="chatType === 'group' && !isCurrentUserMember" (click)="deleteGroup()">
+    <ion-item
+      class="jha delete-group-item"
+      *ngIf="chatType === 'group' && !isCurrentUserMember"
+      (click)="deleteGroup()"
+    >
       <ion-icon name="trash-outline" slot="start" class="all-icon"></ion-icon>
       <ion-label class="Encry">Delete Group</ion-label>
     </ion-item>
 
     <!-- Block/Unblock -->
-    <ion-item class="jha" *ngIf="chatType === 'private' && !iBlocked" (click)="blockUser()">
+    <ion-item
+      class="jha"
+      *ngIf="chatType === 'private' && !iBlocked"
+      (click)="blockUser()"
+    >
       <ion-icon name="ban-outline" slot="start" class="all-icon"></ion-icon>
-      <ion-label class="Encry">{{ 'userabout.block' | translate:{ name: receiver_name } }}</ion-label>
+      <ion-label class="Encry"
+        >{{ 'userabout.block' | translate:{ name: receiver_name } }}</ion-label
+      >
     </ion-item>
-    <ion-item class="jha" *ngIf="chatType === 'private' && iBlocked" (click)="unblockUser()">
-      <ion-icon name="checkmark-circle-outline" slot="start" class="all-icon"></ion-icon>
-      <ion-label class="Encry">{{ 'userabout.unblock' | translate:{ name: receiver_name } }}</ion-label>
+    <ion-item
+      class="jha"
+      *ngIf="chatType === 'private' && iBlocked"
+      (click)="unblockUser()"
+    >
+      <ion-icon
+        name="checkmark-circle-outline"
+        slot="start"
+        class="all-icon"
+      ></ion-icon>
+      <ion-label class="Encry"
+        >{{ 'userabout.unblock' | translate:{ name: receiver_name }
+        }}</ion-label
+      >
     </ion-item>
 
     <!-- Report -->
     <ion-item class="jha" (click)="reportUser()">
-      <ion-icon name="thumbs-down-outline" slot="start" class="all-icon"></ion-icon>
-      <ion-label class="Encry">{{ 'userabout.report' | translate:{ name: (isGroup ? groupName : receiver_name) } }}</ion-label>
+      <ion-icon
+        name="thumbs-down-outline"
+        slot="start"
+        class="all-icon"
+      ></ion-icon>
+      <ion-label class="Encry"
+        >{{ 'userabout.report' | translate:{ name: (isGroup ? groupName :
+        receiver_name) } }}</ion-label
+      >
     </ion-item>
-
   </ion-list>
 </ion-content>

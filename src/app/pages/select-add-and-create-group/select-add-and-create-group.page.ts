@@ -48,9 +48,9 @@ export class SelectAddAndCreateGroupPage implements OnInit {
     }
 
     const membersForFirebase = selectedUsers.map((u) => ({
-      userId: u.userId,
+      userId: u.user_id,
       username: u.name,
-      phoneNumber: u.phoneNumber,
+      phoneNumber: u.phone_number,
     }));
 
     console.log("members for firebase",membersForFirebase)

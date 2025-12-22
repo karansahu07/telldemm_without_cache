@@ -129,6 +129,9 @@ export class HomeScreenPage implements OnInit, OnDestroy {
   isChatsLoaded: boolean = false;
   selectedChat: any = null;
 
+  typingUsers$ : any;
+  isTyping$ : any;
+
   constructor(
     private router: Router,
     private popoverCtrl: PopoverController,
@@ -204,6 +207,13 @@ export class HomeScreenPage implements OnInit, OnDestroy {
     this.clearChatData();
     this.sender_name = this.authService.authData?.name || '';
     await this.sqlite.printAllTables();
+    // this.typingUsers$ = this.firebaseChatService.getTypingStatusForRoom(this.roomId);
+// this.isTyping$ = this.firebaseChatService.isAnyoneTypingInRoom(this.roomId);
+  }
+
+  //typing status get
+  getTypingStatusForConv(roomId : string){
+    return this.firebaseChatService.getTypingStatusForRoom(roomId)
   }
 
   isSelfChat(chat: any): boolean {

@@ -706,6 +706,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private computeMessageStatus(msg: IMessage): UIMessageStatus {
+    return msg.status as UIMessageStatus;
     if (!msg) return null;
 
     const readStatus = !!msg.receipts?.read?.status;
@@ -719,7 +720,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
       msg.status === 'pending' ||
       msg.status === 'sent'
     ) {
-      return msg.status;
+      // return msg.status;
     }
 
     return null;
@@ -780,6 +781,11 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
       default:
         return null;
     }
+  }
+
+    //typing status get
+  getTypingStatusForConv(roomId : string){
+    return this.chatService.getTypingStatusForRoom(roomId)
   }
 
   updateReceiverStatus() {

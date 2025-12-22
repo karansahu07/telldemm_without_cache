@@ -35,6 +35,7 @@ import {
   BehaviorSubject,
   catchError,
   debounceTime,
+  distinctUntilChanged,
   firstValueFrom,
   map,
   Observable,
@@ -85,6 +86,15 @@ interface MemberPresence {
   isTyping?: boolean;
 }
 
+type TypingEventType = 'added' | 'updated';
+
+interface ITypingEvent {
+  roomId: string;
+  userId: string;
+  isTyping: boolean;
+  type: TypingEventType;
+}
+
 @Injectable({ providedIn: 'root' })
 export class FirebaseChatService {
   // =====================
@@ -96,6 +106,7 @@ export class FirebaseChatService {
   private _selectedMessageInfo: any = null;
   private _selectedAttachment: any = null;
   private _conversations$ = new BehaviorSubject<IConversation[]>([]);
+  private _conversationsTypingStatus$ = new BehaviorSubject<Record<string, any[]>>({});
   private _platformUsers$ = new BehaviorSubject<Partial<IUser>[]>([]);
   platformUsers$ = this._platformUsers$.asObservable();
   private _deviceContacts$ = new BehaviorSubject<
@@ -125,6 +136,7 @@ export class FirebaseChatService {
 
   private _typingStatus$ = new BehaviorSubject<Map<string, boolean>>(new Map());
   typingStatus$ = this._typingStatus$.asObservable();
+  private _typingListeners = new Map<string, () => void>();
 
   private lastSavedSnapshots = {
     conversations: null as any | null,
@@ -926,6 +938,7 @@ export class FirebaseChatService {
             }
 
             await this.updateMessageLocally({ ...data, msgId: msgKey });
+            await this.updateMessageStatusFromReceipts({...data, msgId: msgKey})
           },
 
           onRemove(msgKey) {
@@ -1230,6 +1243,9 @@ export class FirebaseChatService {
         this._platformUsers$.next([]);
       }
     } finally {
+      this.conversations.subscribe((convs)=>{
+        convs.forEach(conv => this.attachTypingListener(conv.roomId))        
+      })
       // this.syncReceipt();
       // console.log("this finally block called")
     }
@@ -1424,30 +1440,69 @@ export class FirebaseChatService {
     }
   }
 
+  // async updateMessageStatusFromReceipts(msg: IMessage) {
+  //   if (!msg.receipts || !this.currentChat?.members) return;
+
+  //   const members = this.currentChat.members;
+  //   const sender = this.senderId!;
+  //   const others = members.filter((m) => m !== sender);
+
+  //   const deliveredTo =
+  //     msg.receipts.delivered?.deliveredTo?.map((d) => d.userId) || [];
+  //   const readBy = msg.receipts.read?.readBy?.map((r) => r.userId) || [];
+
+  //   let newStatus: IMessage['status'] | null = null;
+
+  //   if (others.every((id) => readBy.includes(id))) {
+  //     newStatus = 'read';
+  //   } else if (others.every((id) => deliveredTo.includes(id))) {
+  //     newStatus = 'delivered';
+  //   }
+
+  //   if (newStatus && msg.status !== newStatus) {
+  //     const msgRef = ref(this.db, `chats/${msg.roomId}/${msg.msgId}`);
+  //     await rtdbUpdate(msgRef, { status: newStatus });
+  //   }
+  // }
+
   async updateMessageStatusFromReceipts(msg: IMessage) {
-    if (!msg.receipts || !this.currentChat?.members) return;
+  if (!msg.receipts || !this.currentChat?.members) return;
 
-    const members = this.currentChat.members;
-    const sender = this.senderId!;
-    const others = members.filter((m) => m !== sender);
+  // ✅ Only sender should update message status
+  if (msg.sender !== this.senderId) return;
 
-    const deliveredTo =
-      msg.receipts.delivered?.deliveredTo?.map((d) => d.userId) || [];
-    const readBy = msg.receipts.read?.readBy?.map((r) => r.userId) || [];
+  const members = this.currentChat.members;
+  const others = members.filter((m) => m !== msg.sender);
 
-    let newStatus: IMessage['status'] | null = null;
+  // ✅ Prevent false positives
+  if (others.length === 0) return;
 
-    if (others.every((id) => readBy.includes(id))) {
-      newStatus = 'read';
-    } else if (others.every((id) => deliveredTo.includes(id))) {
-      newStatus = 'delivered';
-    }
+  const deliveredTo =
+    msg.receipts.delivered?.deliveredTo?.map(d => d.userId) || [];
 
-    if (newStatus && msg.status !== newStatus) {
-      const msgRef = ref(this.db, `chats/${msg.roomId}/${msg.msgId}`);
-      await rtdbUpdate(msgRef, { status: newStatus });
-    }
+  const readBy =
+    msg.receipts.read?.readBy?.map(r => r.userId) || [];
+
+  // ✅ Read implies delivered
+  const effectiveDelivered = new Set([
+    ...deliveredTo,
+    ...readBy,
+  ]);
+
+  let newStatus: IMessage['status'] | null = null;
+
+  if (others.every(id => readBy.includes(id))) {
+    newStatus = 'read';
+  } else if (others.every(id => effectiveDelivered.has(id))) {
+    newStatus = 'delivered';
   }
+
+  if (newStatus && msg.status !== newStatus) {
+    const msgRef = ref(this.db, `chats/${msg.roomId}/${msg.msgId}`);
+    await rtdbUpdate(msgRef, { status: newStatus });
+  }
+}
+
 
   async updateMessageLocally(msg: IMessage) {
     const messagesMap = new Map(this._messages$.value);
@@ -1731,6 +1786,7 @@ export class FirebaseChatService {
   //   const membersObj: Record<string, Partial<IGroupMember>> = group.members ||
   //   {};
   //   const members = Object.keys(membersObj);
+  //   console.log("group on home page", group);
 
   //   let decryptedText: string | undefined;
   //   try {
@@ -1746,7 +1802,7 @@ export class FirebaseChatService {
   //     type: meta.type,
   //     communityId: group.communityId || null,
   //     title: group.title || 'GROUP',
-  //     avatar: group.avatar || '',
+  //     avatar: group.groupAvatar || '',
   //     members,
   //     adminIds: group.adminIds || [],
   //     isArchived: !!meta.isArchived,
@@ -2053,6 +2109,124 @@ export class FirebaseChatService {
   //     this._isSyncing$.next(false);
   //   }
   // }
+
+  createTypingListener(
+  roomId: string,
+  onEvent: (event: ITypingEvent) => void
+): () => void {
+  const typingRef = rtdbRef(this.db, `typing/${roomId}`);
+
+  const handleAdded = (snap: DataSnapshot) => {
+    onEvent({
+      roomId,
+      userId: snap.key as string,
+      isTyping: Boolean(snap.val()),
+      type: 'added',
+    });
+  };
+
+  const handleChanged = (snap: DataSnapshot) => {
+    onEvent({
+      roomId,
+      userId: snap.key as string,
+      isTyping: Boolean(snap.val()),
+      type: 'updated',
+    });
+  };
+
+  onChildAdded(typingRef, handleAdded);
+  onChildChanged(typingRef, handleChanged);
+
+  return () => {
+    off(typingRef, 'child_added', handleAdded);
+    off(typingRef, 'child_changed', handleChanged);
+  };
+}
+
+attachTypingListener(roomId: string) {
+  if (this._typingListeners.has(roomId)) return;
+
+  const unsub = this.createTypingListener(roomId, (event) => {
+    // ignore own typing
+    if (event.userId === this.senderId) return;
+
+    this.handleTypingEvent(event);
+  });
+
+  this._typingListeners.set(roomId, unsub);
+}
+
+detachTypingListener(roomId: string) {
+  const unsub = this._typingListeners.get(roomId);
+  if (unsub) {
+    try {
+      unsub();
+    } catch {}
+    this._typingListeners.delete(roomId);
+  }
+}
+
+cleanupAllTypingListeners() {
+  this._typingListeners.forEach((unsub) => {
+    try {
+      unsub();
+    } catch {}
+  });
+  this._typingListeners.clear();
+}
+
+handleTypingEvent(event: ITypingEvent) {
+  const { roomId, userId, isTyping } = event;
+
+  const current = this._conversationsTypingStatus$.value;
+  const roomTypers = current[roomId] ?? [];
+
+  let updatedRoomTypers: string[];
+
+  if (isTyping) {
+    // add user if not already present
+    updatedRoomTypers = roomTypers.includes(userId)
+      ? roomTypers
+      : [...roomTypers, userId];
+  } else {
+    // remove user
+    updatedRoomTypers = roomTypers.filter((id) => id !== userId);
+  }
+
+  // avoid unnecessary emits (important for UI performance)
+  if (
+    roomTypers.length === updatedRoomTypers.length &&
+    roomTypers.every((id) => updatedRoomTypers.includes(id))
+  ) {
+    return;
+  }
+
+  this._conversationsTypingStatus$.next({
+    ...current,
+    [roomId]: updatedRoomTypers,
+  });
+}
+
+isAnyoneTypingInRoom(roomId: string) {
+  return this.getTypingStatusForRoom(roomId).pipe(
+    map((users) => users.length > 0),
+    distinctUntilChanged()
+  );
+}
+
+
+
+getTypingStatusForRoom(roomId: string) {
+  return this._conversationsTypingStatus$.pipe(
+    map((state) => state[roomId] ?? []),
+    distinctUntilChanged(
+      (a, b) =>
+        a.length === b.length && a.every((id) => b.includes(id))
+    )
+  );
+}
+
+
 
   async syncConversationWithServer(): Promise<void> {
     try {
@@ -6472,48 +6646,76 @@ export class FirebaseChatService {
   /**
    * Get past members of a group
    */
-  async getPastMembers(groupId: string): Promise<
-    Array<{
-      user_id: string;
-      username: string;
-      phoneNumber: string;
-      isActive: boolean;
-      removedAt: string;
-    }>
-  > {
-    try {
-      if (!groupId) {
-        console.warn('getPastMembers: groupId is required');
-        return [];
-      }
-
-      const pastMembersRef = rtdbRef(this.db, `groups/${groupId}/pastmembers`);
-      const snapshot = await rtdbGet(pastMembersRef);
-
-      if (!snapshot.exists()) {
-        console.log(`No past members found for group ${groupId}`);
-        return [];
-      }
-
-      const data = snapshot.val();
-      const pastMembers = Object.keys(data).map((user_id) => ({
-        user_id,
-        username: data[user_id].username || 'Unknown',
-        phoneNumber: data[user_id].phoneNumber || '',
-        isActive: data[user_id].isActive || false,
-        removedAt: data[user_id].removedAt || '',
-        ...data[user_id],
-      }));
-
-      console.log(
-        `✅ Loaded ${pastMembers.length} past members for group ${groupId}`
-      );
-      return pastMembers;
-    } catch (error) {
-      console.error('❌ Error loading past members:', error);
+async getPastMembers(groupId: string): Promise<
+  Array<{
+    user_id: string;
+    username: string;
+    phoneNumber: string;
+    avatar?: string;
+    isActive: boolean;
+    removedAt: string;
+  }>
+> {
+  try {
+    if (!groupId) {
+      console.warn('getPastMembers: groupId is required');
       return [];
     }
+
+    const pastMembersRef = rtdbRef(this.db, `groups/${groupId}/pastmembers`);
+    const snapshot = await rtdbGet(pastMembersRef);
+
+    if (!snapshot.exists()) {
+      console.log(`No past members found for group ${groupId}`);
+      return [];
+    }
+
+    const data = snapshot.val();
+    const isWeb = this.isWeb();
+
+    const pastMembers = await Promise.all(
+      Object.keys(data).map(async (user_id) => {
+        const memberData = data[user_id];
+
+        const localUser = this._platformUsers$.value.find(
+          (u) => u.userId == user_id
+        );
+
+        let profileResp: { profile: string | null } | null = null;
+
+        if (isWeb || !localUser) {
+          try {
+            profileResp = await firstValueFrom(
+              this.apiService.getUserProfilebyId(user_id)
+            );
+          } catch {
+          }
+        }
+
+        const avatar =
+          localUser?.avatar ??
+          profileResp?.profile ??
+          undefined;
+
+        return {
+          user_id,
+          username: memberData.username || 'Unknown',
+          phoneNumber: memberData.phoneNumber || '',
+          avatar,
+          isActive: memberData.isActive || false,
+          removedAt: memberData.removedAt || '',
+          ...memberData,
+        };
+      })
+    );
+
+    return pastMembers;
+  } catch (error) {
+    console.error('❌ Error loading past members:', error);
+    return [];
   }
+}
+
 
   //   async addMembersToGroup(roomId: string, userIds: string[]) {
   //   try {

@@ -36,6 +36,7 @@ export class ViewPastMembersPage implements OnInit {
     try {
       this.isLoading = true;
       this.pastMembers = await this.firebaseChatService.getPastMembers(this.groupId);
+      console.log("this past members",this.pastMembers)
     } catch (error) {
       console.error('Error loading past members:', error);
       this.pastMembers = [];

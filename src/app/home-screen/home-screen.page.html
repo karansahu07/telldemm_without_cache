@@ -133,18 +133,10 @@
       </ion-title>
 
       <ion-buttons slot="end">
-        <!-- <ion-button
-          (click)="scanBarcode()"
-          [attr.aria-label]="'home.actions.scan' | translate"
-        >
-          <i class="fa-solid fa-qrcode homemainicons"></i>
-        </ion-button> -->
-
         <ion-button
           (click)="openCamera()"
           [attr.aria-label]="'home.actions.camera' | translate"
         >
-          <!-- <img src="assets/images/camera.svg" alt="" /> -->
           <i class="fa-solid fa-camera homemainicons"></i>
         </ion-button>
 
@@ -152,17 +144,13 @@
           (click)="presentPopover($event)"
           [attr.aria-label]="'home.actions.menu' | translate"
         >
-          <!-- <img src="assets/images/dots (1).svg" alt="" /> -->
           <i class="fa-solid fa-ellipsis-vertical homemainicons"></i>
         </ion-button>
       </ion-buttons>
     </ion-toolbar>
   </ng-template>
 
-  <!-- 🔎 Search + filters row
-       - normal mode: interactive
-       - selection mode: visible but disabled
-  -->
+  <!-- 🔎 Search + filters row -->
   <ion-toolbar>
     <div
       class="main-header"
@@ -226,7 +214,6 @@
       </div>
     </div>
 
-    <!-- (optional) you can keep your group-creator here unchanged -->
     <div *ngIf="toggleGroupCreator" class="group-creator">
       <ion-input
         [(ngModel)]="newGroupName"
@@ -266,7 +253,6 @@
     </ion-item>
   </ion-list>
 
-  <!-- <div *ngIf="showNewChatPrompt" class="no-chats-container"> -->
   <div *ngIf="isLoading" class="no-chat-container">
     <ion-icon name="chatbubbles-outline"></ion-icon>
     <h2>No chats Yet</h2>
@@ -317,17 +303,7 @@
       (touchmove)="cancelHomeLongPress()"
       [class.selected]="isChatSelected(chat)"
     >
-      <!-- ✅ Selection tick when in selection mode -->
-      <!-- <div
-        slot="start"
-        class="select-tick"
-        *ngIf="selectedChats.length > 0"
-        (click)="toggleChatSelection(chat, $event)"
-      >
-        <ion-icon
-          [name]="chat.isSelected ? 'checkmark-circle' : 'ellipse-outline'"
-        ></ion-icon>
-      </div> -->
+      <!-- ✅ Selection checkbox -->
       <ion-checkbox
         *ngIf="hasSelection"
         slot="start"
@@ -358,7 +334,7 @@
         </ng-template>
       </ion-avatar>
 
-      <!-- ✅ Update this section in your ion-label -->
+      <!-- ✅ Chat Label with Title and Message -->
       <ion-label>
         <p
           class="chat-message"
@@ -372,7 +348,7 @@
         >
           {{ chat.title }}
 
-          <!-- ✅ NEW: (You) badge for self-chats -->
+          <!-- ✅ (You) badge for self-chats -->
           <span
             *ngIf="chat.isSelfChat || isSelfChat(chat)"
             class="self-you"
@@ -398,17 +374,32 @@
           </ion-badge>
         </p>
 
-        <!-- Message or typing indicator -->
-        <p
-          [ngClass]="{ 'typing-text': chat.isTyping }"
-          style="margin: 0; display: flex; align-items: center; gap: 6px"
-        >
-          <ng-container *ngIf="chat.isTyping; else justMessage">
-            <span style="font-weight: 600; color: #666">{{ chat.title }}</span>
-            <ion-icon
-              name="caret-forward-outline"
-              style="font-size: 10px; color: #999"
-            ></ion-icon>
+        <!-- ✅ UPDATED: Message preview with NEW typing indicator -->
+        <p style="margin: 0; display: flex; align-items: center; gap: 6px">
+          <!-- ✅ NEW: Real-time typing indicator -->
+          <ng-container *ngIf="(getTypingStatusForConv(chat.roomId) | async) as users">
+            <ng-container *ngIf="users.length > 0">
+              <!-- PRIVATE CHAT: Just show "typing…" -->
+              <span
+                *ngIf="chat.type === 'private'"
+                style="color: #666; font-style: italic"
+              >
+                typing…
+              </span>
+              
+              <!-- GROUP / COMMUNITY CHAT: Show count -->
+              <span
+                *ngIf="chat.type !== 'private'"
+                style="color: #bc8c2c; font-style: italic"
+              >
+                {{ users.length }}
+                {{ users.length === 1 ? 'person is' : 'people are' }} typing…
+              </span>
+            </ng-container>
+          </ng-container>
+
+          <!-- ✅ Show last message when no one is typing -->
+          <ng-container *ngIf="!(getTypingStatusForConv(chat.roomId) | async)?.length">
             <span
               style="
                 color: #666;
@@ -420,23 +411,6 @@
               {{ getPreviewText(chat) }}
             </span>
           </ng-container>
-
-          <ng-template #justMessage>
-            <ng-container [ngSwitch]="chat.isTyping">
-              <span *ngSwitchCase="true" style="color: #666"> ...Typing </span>
-              <span
-                *ngSwitchDefault
-                style="
-                  color: #666;
-                  white-space: nowrap;
-                  overflow: hidden;
-                  text-overflow: ellipsis;
-                "
-              >
-                &nbsp;{{ getPreviewText(chat) }}
-              </span>
-            </ng-container>
-          </ng-template>
         </p>
       </ion-label>
 
@@ -513,7 +487,7 @@
     </ng-template>
   </ion-modal>
 
-  <!-- 📸 Camera Preview Modal (Already in your code - just verifying) -->
+  <!-- 📸 Camera Preview Modal -->
   <ion-modal
     [isOpen]="showPreviewModal"
     (didDismiss)="showPreviewModal = false"
@@ -529,8 +503,6 @@
             ></ion-icon>
           </ion-buttons>
           <ion-buttons slot="end" class="pre-icons">
-            <!-- Show pencil icon only for images -->
-
             <img
               *ngIf="selectedAttachment?.type === 'image'"
               src="assets/images/crop-simple-solid-full.svg"
@@ -578,7 +550,6 @@
               class="pre-message"
             ></ion-textarea>
             <div class="sendbtn">
-              <!-- <p>{{ receiver_name }}</p> -->
               <ion-icon
                 name="send-outline"
                 (click)="goToContactList()"
