@@ -91,66 +91,126 @@ export class ChannelFeedPage implements OnInit {
   ) {
     this.currentUserId = this.authService.authData?.userId || 0;  // ADD THIS
     // this.currentUserId = "76";  // ADD THIS
-    this.storage.create();
+    // this.storage.create();
 
   }
   isOnline: boolean = true;
-  ngOnInit() {
-    this.channelId = this.route.snapshot.queryParamMap.get('channelId') || '0';
-    if (!this.channelId) return;
+//   ngOnInit() {
+//     this.channelId = this.route.snapshot.queryParamMap.get('channelId') || '0';
+//     if (!this.channelId) return;
 
-    this.fetchChannelDetails();
+//     this.fetchChannelDetails();
 
-    this.postService.getPosts(this.channelId).subscribe((rawPosts) => {
-      this.resolveMediaUrls(rawPosts).then((resolvedPosts) => {
-        this.posts = resolvedPosts;
-        console.log('[UI] posts received:', resolvedPosts.length);
-        this.cdr.detectChanges();
-      });
-    });
-    // this.postsSub = this.postService
-    //   .getPosts(this.channelId)
-    //   .subscribe((rawPosts) => {
-    //     this.resolveMediaUrls(rawPosts).then((resolvedPosts) => {
-    //       this.posts = resolvedPosts;
-    //       this.cdr.detectChanges();
-    //     });
-    //   });
-// this.postsSub = this.postService
-//   .getPosts(this.channelId)
-//   .subscribe(posts => {
-//     console.log('[UI] posts received:', posts.length);
-//     // ...
-//   });
+//     this.postService.getPosts(this.channelId).subscribe((rawPosts) => {
+//       this.resolveMediaUrls(rawPosts).then((resolvedPosts) => {
+//         this.posts = resolvedPosts;
+//         console.log('[UI] posts received:', resolvedPosts.length);
+//         this.cdr.detectChanges();
+//       });
+//     });
+//     // this.postsSub = this.postService
+//     //   .getPosts(this.channelId)
+//     //   .subscribe((rawPosts) => {
+//     //     this.resolveMediaUrls(rawPosts).then((resolvedPosts) => {
+//     //       this.posts = resolvedPosts;
+//     //       this.cdr.detectChanges();
+//     //     });
+//     //   });
+// // this.postsSub = this.postService
+// //   .getPosts(this.channelId)
+// //   .subscribe(posts => {
+// //     console.log('[UI] posts received:', posts.length);
+// //     // ...
+// //   });
 
 
-    // Monitor connection status
-    this.postService.getConnectionStatus().subscribe(isConnected => {
-      this.isOnline = isConnected;
-      // console.log('Connection status:', isConnected ? 'Online' : 'Offline');
+//     // Monitor connection status
+//     this.postService.getConnectionStatus().subscribe(isConnected => {
+//       this.isOnline = isConnected;
+//       // console.log('Connection status:', isConnected ? 'Online' : 'Offline');
+//       this.cdr.detectChanges();
+//     });
+//   }
+
+ngOnInit() {
+  // this.channelId = this.route.snapshot.queryParamMap.get('channelId') || '0';
+  // if (!this.channelId) return;
+
+  // this.fetchChannelDetails();
+
+  // // Subscribe and retain reference
+  // this.postsSub = this.postService
+  //   .getPosts(this.channelId)
+  //   .subscribe(async (rawPosts) => {
+  //     // For offline cold start, rawPosts will be whatever was returned by getCachedPosts
+  //     const resolvedPosts = await this.resolveMediaUrls(rawPosts);
+  //     console.log("rawPosts",rawPosts);
+
+  //     console.log("resolvedPosts",resolvedPosts);
+  //     this.posts = resolvedPosts;
+  //     this.cdr.detectChanges();
+  //   });
+
+  // this.postService.getConnectionStatus().subscribe(isConnected => {
+  //   this.isOnline = isConnected;
+  //   this.cdr.detectChanges();
+  // });
+}
+
+
+ionViewWillEnter(){
+ this.channelId = this.route.snapshot.queryParamMap.get('channelId') || '0';
+  if (!this.channelId) return;
+
+  this.fetchChannelDetails();
+
+  // Subscribe and retain reference
+  this.postsSub = this.postService
+    .getPosts(this.channelId)
+    .subscribe(async (rawPosts) => {
+      // For offline cold start, rawPosts will be whatever was returned by getCachedPosts
+      const resolvedPosts = await this.resolveMediaUrls(rawPosts);
+      console.log("rawPosts",rawPosts);
+
+      console.log("resolvedPosts",resolvedPosts);
+      this.posts = resolvedPosts;
       this.cdr.detectChanges();
     });
-  }
+
+  this.postService.getConnectionStatus().subscribe(isConnected => {
+    this.isOnline = isConnected;
+    this.cdr.detectChanges();
+  });
+
+  this.testStorage();
+}
+
+async testStorage() {
+  await this.storage.set('test_key', [{ hello: 'world' }]);
+  const val = await this.storage.get('test_key');
+  console.log('[testStorage] value', val);
+}
+
 
   ngOnDestroy() {
-    if (this.postsSub) {
-      this.postsSub.unsubscribe();
-    }
+    // if (this.postsSub) {
+    //   this.postsSub.unsubscribe();
+    // }
 
-    if (this.channelId) {
-      this.postService.cleanupPostsListener(this.channelId);
-    }
+    // if (this.channelId) {
+    //   this.postService.cleanupPostsListener(this.channelId);
+    // }
   }
 
   ionViewWillLeave() {
-    if (this.postsSub) {
-      this.postsSub.unsubscribe();
-      this.postsSub = undefined;
-    }
+    // if (this.postsSub) {
+    //   this.postsSub.unsubscribe();
+    //   this.postsSub = undefined;
+    // }
 
-    if (this.channelId) {
-      this.postService.cleanupPostsListener(this.channelId);
-    }
+    // if (this.channelId) {
+    //   this.postService.cleanupPostsListener(this.channelId);
+    // }
   }
 
 
@@ -330,12 +390,15 @@ export class ChannelFeedPage implements OnInit {
   // EXISTING METHODS
   // ============================
 
-  onHeaderClick() {
-    if (this.channel && this.channel.channel_id) {
-      this.router.navigate(['/channel-detail'], {
-        queryParams: { channelId: this.channel.channel_id }
-      });
-    }
+  async onHeaderClick() {
+      await this.storage.set('test_key', [{ hello: 'world' }]);
+  const val = await this.storage.get('test_key');
+  console.log('[testStorage] value', val);
+    // if (this.channel && this.channel.channel_id) {
+    //   this.router.navigate(['/channel-detail'], {
+    //     queryParams: { channelId: this.channel.channel_id }
+    //   });
+    // }
   }
 
   private fetchChannelDetails() {
@@ -366,35 +429,35 @@ export class ChannelFeedPage implements OnInit {
     this.cdr.detectChanges();
   }
 
-  private async resolveMediaUrls(rawPosts: Post[]): Promise<Post[]> {
-    const postsWithMedia = rawPosts.filter(p => p.media_id && !this.mediaCache.has(p.media_id));
-    const unresolvedMediaIds = postsWithMedia.map(p => p.media_id!);
+  // private async resolveMediaUrls(rawPosts: Post[]): Promise<Post[]> {
+  //   const postsWithMedia = rawPosts.filter(p => p.media_id && !this.mediaCache.has(p.media_id));
+  //   const unresolvedMediaIds = postsWithMedia.map(p => p.media_id!);
 
-    if (unresolvedMediaIds.length > 0) {
-      const urlObservables = unresolvedMediaIds.map(id =>
-        this.postService.getFreshMediaUrl(id)
-      );
+  //   if (unresolvedMediaIds.length > 0) {
+  //     const urlObservables = unresolvedMediaIds.map(id =>
+  //       this.postService.getFreshMediaUrl(id)
+  //     );
 
-      let responses: any[] = [];
-      try {
-        responses = await firstValueFrom(forkJoin(urlObservables));
-      } catch (err) {
-        console.error('Failed to resolve some media URLs:', err);
-        responses = [];
-      }
+  //     let responses: any[] = [];
+  //     try {
+  //       responses = await firstValueFrom(forkJoin(urlObservables));
+  //     } catch (err) {
+  //       console.error('Failed to resolve some media URLs:', err);
+  //       responses = [];
+  //     }
 
-      responses.forEach((res, index) => {
-        if (res && res.downloadUrl) {
-          this.mediaCache.set(unresolvedMediaIds[index], res.downloadUrl);
-        }
-      });
-    }
+  //     responses.forEach((res, index) => {
+  //       if (res && res.downloadUrl) {
+  //         this.mediaCache.set(unresolvedMediaIds[index], res.downloadUrl);
+  //       }
+  //     });
+  //   }
 
-    return rawPosts.map(p => ({
-      ...p,
-      image: p.media_id ? this.mediaCache.get(p.media_id) : undefined
-    }));
-  }
+  //   return rawPosts.map(p => ({
+  //     ...p,
+  //     image: p.media_id ? this.mediaCache.get(p.media_id) : undefined
+  //   }));
+  // }
   // private async resolveMediaUrls(rawPosts: Post[]): Promise<Post[]> {
 
   //   // 1️⃣ Load cached URLs from Storage FIRST (offline safe)
@@ -445,6 +508,46 @@ export class ChannelFeedPage implements OnInit {
   //     image: p.media_id ? this.mediaCache.get(p.media_id) : undefined
   //   }));
   // }
+private async resolveMediaUrls(rawPosts: Post[]): Promise<Post[]> {
+  const postsWithMedia = rawPosts.filter(
+    p => p.media_id && !this.mediaCache.has(p.media_id)
+  );
+  const unresolvedMediaIds = postsWithMedia.map(p => p.media_id!);
+
+  if (!this.isOnline || unresolvedMediaIds.length === 0) {
+    return rawPosts.map(p => ({
+      ...p,
+      image: p.media_id ? this.mediaCache.get(p.media_id) : undefined
+    }));
+  }
+
+  const urlObservables = unresolvedMediaIds.map(id =>
+    this.postService.getFreshMediaUrl(id)
+  );
+
+  let responses: any[] = [];
+  try {
+    responses = await firstValueFrom(forkJoin(urlObservables));
+  } catch (err) {
+    console.error('Failed to resolve some media URLs:', err);
+    responses = [];
+  }
+
+  responses.forEach((res, index) => {
+    if (res && res.downloadUrl) {
+      this.mediaCache.set(unresolvedMediaIds[index], res.downloadUrl);
+    }
+  });
+
+  return rawPosts.map(p => ({
+    ...p,
+    image: p.media_id ? this.mediaCache.get(p.media_id) : undefined
+  }));
+}
+
+
+
+
 
   async testAddPost() {
     if (!this.channelId) return;

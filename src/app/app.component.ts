@@ -19,9 +19,9 @@ import { Language } from './services/language';
 import { LangChangeEvent, TranslateService } from '@ngx-translate/core';
 import { EdgeToEdge } from '@capawesome/capacitor-android-edge-to-edge-support';
 import { ThemeService } from './services/theme';
-import { CacheService } from './services/cache.service';
 import { FirebaseChatService } from './services/firebase-chat.service';
 import { ContactSyncService } from './services/contact-sync.service';
+import { Storage } from '@ionic/storage-angular';
 
 const STORAGE_KEY = 'settings.accessibility';
 
@@ -43,6 +43,7 @@ export class AppComponent implements OnInit {
 
   constructor(
     private networkService: NetworkService,
+    private storage: Storage,
     private toastController: ToastController,
     private FirebasePushService: FirebasePushService,
     private FileSystemService: FileSystemService,
@@ -62,10 +63,10 @@ export class AppComponent implements OnInit {
     private themeSvc: ThemeService,
     private lang: Language,
     private cd: ChangeDetectorRef,
-    private cacheService: CacheService,
     private firebaseChatService: FirebaseChatService,
     private contactSyncService: ContactSyncService
   ) {
+    this.testStorage();
     this.initializeApp();
     this.applyAccessibilityFromStorage();
     this.NavBar_initialize();
@@ -86,6 +87,19 @@ export class AppComponent implements OnInit {
         });
       }
     });
+  }
+
+  private async testStorage() {
+    try {
+      const s = await this.storage.create();
+      console.log('[testStorage] driver used:', s.driver);
+      await s.set('test_key', 'ok');
+      console.log('[testStorage] set OK');
+      const v = await s.get('test_key');
+      console.log('[testStorage] get OK, value:', v);
+    } catch (e) {
+      console.error('[testStorage] error', e);
+    }
   }
 
   private applyLanguageChange(newLang: string) {
@@ -117,7 +131,7 @@ export class AppComponent implements OnInit {
     //   console.log("🔄 Initializing cache and Firebase chat service...");
     //   await this.cacheService.ready;
     //   console.log("✅ Ionic storage is ready");
-      
+
     //   await this.firebaseChatService.init();
     //   await this.firebaseChatService.logCacheContents();
     //   console.log('✅ [AppComponent] CacheService and FirebaseChatService initialized');
@@ -136,10 +150,10 @@ export class AppComponent implements OnInit {
     if (this.authService.isAuthenticated && this.authService.authData?.userId) {
       try {
         console.log("🔄 Starting contact sync and Firebase chat initialization...");
-        
+
         // Initialize the Firebase chat service with the current user
         await this.firebaseChatService.initApp(String(this.authService.authData.userId));
-        
+
         console.log("✅ Firebase chat service and contacts synced successfully!");
       } catch (error) {
         console.error("❌ Error initializing Firebase chat service:", error);
@@ -150,7 +164,7 @@ export class AppComponent implements OnInit {
     let fromNotification = false;
     // localStorage.setItem('fromNotification', 'true');
     const navigation = this.router.getCurrentNavigation();
-    console.log({navigation})
+    console.log({ navigation })
     if (navigation?.extras?.state?.['fromNotification']) {
       fromNotification = true;
       // console.log({fromNotification})
@@ -159,7 +173,7 @@ export class AppComponent implements OnInit {
       // console.log({fromNotification})
     }
 
-    console.log("authenticated on not ",this.authService.isAuthenticated)
+    console.log("authenticated on not ", this.authService.isAuthenticated)
     if (this.authService.isAuthenticated) {
       if (!fromNotification) {
         this.router.navigateByUrl('/home-screen', { replaceUrl: true });
@@ -274,7 +288,7 @@ export class AppComponent implements OnInit {
       } else if (this.appStateListener && typeof (this.appStateListener as any).cancel === 'function') {
         (this.appStateListener as any).cancel();
       }
-    } catch {}
+    } catch { }
     if (this.beforeUnloadHandler) {
       window.removeEventListener('beforeunload', this.beforeUnloadHandler);
     }

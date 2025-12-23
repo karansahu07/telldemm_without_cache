@@ -50,7 +50,7 @@ export function initAuth(authService: AuthService) {
     // IonicStorageModule.forRoot(),
     IonicStorageModule.forRoot({
       name: '_telldemm_firedb',
-      driverOrder: ['indexeddb', 'sqlite', 'localstorage']
+      driverOrder: ['indexeddb', 'localstorage']
     }),
 
     // ✅ Modular Firebase setup
