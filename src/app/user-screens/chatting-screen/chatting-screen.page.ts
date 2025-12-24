@@ -2019,7 +2019,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
         this.messageInfo();
         break;
       case 'copy':
-        this.copyMessage();
+        this.copySelectedMessages();
         break;
       case 'share':
         this.shareMessage();

@@ -1,90 +1,239 @@
-// // /**
-// //  * Import function triggers from their respective submodules:
-// //  *
-// //  * import {onCall} from "firebase-functions/v2/https";
-// //  * import {onDocumentWritten} from "firebase-functions/v2/firestore";
-// //  *
-// //  * See a full list of supported triggers at https://firebase.google.com/docs/functions
-// //  */
+// // // /**
+// // //  * Import function triggers from their respective submodules:
+// // //  *
+// // //  * import {onCall} from "firebase-functions/v2/https";
+// // //  * import {onDocumentWritten} from "firebase-functions/v2/firestore";
+// // //  *
+// // //  * See a full list of supported triggers at https://firebase.google.com/docs/functions
+// // //  */
 
-// // import { setGlobalOptions } from "firebase-functions";
-// // // import {onRequest} from "firebase-functions/https";
-// // // import * as logger from "firebase-functions/logger";
+// // // import { setGlobalOptions } from "firebase-functions";
+// // // // import {onRequest} from "firebase-functions/https";
+// // // // import * as logger from "firebase-functions/logger";
 
-// // // Start writing functions
-// // // https://firebase.google.com/docs/functions/typescript
+// // // // Start writing functions
+// // // // https://firebase.google.com/docs/functions/typescript
 
-// // // For cost control, you can set the maximum number of containers that can be
-// // // running at the same time. This helps mitigate the impact of unexpected
-// // // traffic spikes by instead downgrading performance. This limit is a
-// // // per-function limit. You can override the limit for each function using the
-// // // `maxInstances` option in the function's options, e.g.
-// // // `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
-// // // NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
-// // // functions should each use functions.runWith({ maxInstances: 10 }) instead.
-// // // In the v1 API, each function can only serve one request per container, so
-// // // this will be the maximum concurrent request count.
-// // setGlobalOptions({ maxInstances: 10 });
+// // // // For cost control, you can set the maximum number of containers that can be
+// // // // running at the same time. This helps mitigate the impact of unexpected
+// // // // traffic spikes by instead downgrading performance. This limit is a
+// // // // per-function limit. You can override the limit for each function using the
+// // // // `maxInstances` option in the function's options, e.g.
+// // // // `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
+// // // // NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
+// // // // functions should each use functions.runWith({ maxInstances: 10 }) instead.
+// // // // In the v1 API, each function can only serve one request per container, so
+// // // // this will be the maximum concurrent request count.
+// // // setGlobalOptions({ maxInstances: 10 });
 
-// // // export const helloWorld = onRequest((request, response) => {
-// // //   logger.info("Hello logs!", {structuredData: true});
-// // //   response.send("Hello from Firebase!");
-// // // });
+// // // // export const helloWorld = onRequest((request, response) => {
+// // // //   logger.info("Hello logs!", {structuredData: true});
+// // // //   response.send("Hello from Firebase!");
+// // // // });
 
-// // // import * as functions from 'firebase-functions/v1';
-// // // import * as admin from 'firebase-admin';
+// // // // import * as functions from 'firebase-functions/v1';
+// // // // import * as admin from 'firebase-admin';
 
-// // // admin.initializeApp();
+// // // // admin.initializeApp();
 
-// // // export const sendNotificationOnNewMessage = functions.database
-// // //   .ref('/chats/{chatId}/messages/{messageId}')
-// // //   .onCreate(async (snapshot, context) => {
-// // //     const messageData = snapshot.val();
-// // //     const chatId = context.params.chatId;
+// // // // export const sendNotificationOnNewMessage = functions.database
+// // // //   .ref('/chats/{chatId}/messages/{messageId}')
+// // // //   .onCreate(async (snapshot, context) => {
+// // // //     const messageData = snapshot.val();
+// // // //     const chatId = context.params.chatId;
 
-// // //     try {
-// // //       // Receiver ka FCM token get kariye
-// // //       const receiverTokenSnapshot = await admin.database()
-// // //         .ref(`/users/${messageData.receiverId}/fcmToken`)
-// // //         .once('value');
+// // // //     try {
+// // // //       // Receiver ka FCM token get kariye
+// // // //       const receiverTokenSnapshot = await admin.database()
+// // // //         .ref(`/users/${messageData.receiverId}/fcmToken`)
+// // // //         .once('value');
 
-// // //       const receiverToken = receiverTokenSnapshot.val();
+// // // //       const receiverToken = receiverTokenSnapshot.val();
 
-// // //       if (!receiverToken) {
-// // //         console.log('Receiver FCM token not found');
-// // //         return;
-// // //       }
+// // // //       if (!receiverToken) {
+// // // //         console.log('Receiver FCM token not found');
+// // // //         return;
+// // // //       }
 
-// // //       // Sender ka name get kariye
-// // //       const senderSnapshot = await admin.database()
-// // //         .ref(`/users/${messageData.senderId}/name`)
-// // //         .once('value');
+// // // //       // Sender ka name get kariye
+// // // //       const senderSnapshot = await admin.database()
+// // // //         .ref(`/users/${messageData.senderId}/name`)
+// // // //         .once('value');
 
-// // //       const senderName = senderSnapshot.val() || 'Unknown';
+// // // //       const senderName = senderSnapshot.val() || 'Unknown';
 
-// // //       // Notification payload
-// // //       const payload = {
-// // //         notification: {
-// // //           title: senderName,
-// // //           body: messageData.message,
-// // //           icon: 'assets/icon/favicon.ico',
-// // //           click_action: 'FCM_PLUGIN_ACTIVITY',
-// // //         },
-// // //         data: {
-// // //           chatId: chatId,
-// // //           senderId: messageData.senderId,
-// // //           messageId: context.params.messageId,
-// // //         },
-// // //       };
+// // // //       // Notification payload
+// // // //       const payload = {
+// // // //         notification: {
+// // // //           title: senderName,
+// // // //           body: messageData.message,
+// // // //           icon: 'assets/icon/favicon.ico',
+// // // //           click_action: 'FCM_PLUGIN_ACTIVITY',
+// // // //         },
+// // // //         data: {
+// // // //           chatId: chatId,
+// // // //           senderId: messageData.senderId,
+// // // //           messageId: context.params.messageId,
+// // // //         },
+// // // //       };
 
-// // //       // Send notification
-// // //       const response = await admin.messaging().sendToDevice(receiverToken, payload);
-// // //       console.log('Notification sent successfully:', response);
+// // // //       // Send notification
+// // // //       const response = await admin.messaging().sendToDevice(receiverToken, payload);
+// // // //       console.log('Notification sent successfully:', response);
 
-// // //     } catch (error) {
-// // //       console.error('Error sending notification:', error);
-// // //     }
-// // //   });
+// // // //     } catch (error) {
+// // // //       console.error('Error sending notification:', error);
+// // // //     }
+// // // //   });
+
+// // // // import * as functions from 'firebase-functions/v1';
+// // // // import * as admin from 'firebase-admin';
+// // // // import { webcrypto } from 'crypto';
+
+// // // // const { subtle } = webcrypto;
+
+// // // // admin.initializeApp();
+
+// // // // /**
+// // // //  * AES Decrypt (same logic as frontend service)
+// // // //  */
+// // // // const secretKey = 'YourSuperSecretPassphrase';
+// // // // let aesKey: CryptoKey | null = null;
+
+// // // // // derive AES key
+// // // // async function importAESKey(passphrase: string): Promise<void> {
+// // // //   const enc = new TextEncoder();
+// // // //   const keyMaterial = await subtle.importKey(
+// // // //     'raw',
+// // // //     enc.encode(passphrase),
+// // // //     { name: 'PBKDF2' },
+// // // //     false,
+// // // //     ['deriveKey']
+// // // //   );
+
+// // // //   aesKey = await subtle.deriveKey(
+// // // //     {
+// // // //       name: 'PBKDF2',
+// // // //       salt: enc.encode('your_salt_value'),
+// // // //       iterations: 100000,
+// // // //       hash: 'SHA-256'
+// // // //     },
+// // // //     keyMaterial,
+// // // //     { name: 'AES-GCM', length: 256 },
+// // // //     false,
+// // // //     ['encrypt', 'decrypt']
+// // // //   );
+// // // // }
+
+// // // // async function decryptText(cipherText: string): Promise<string> {
+// // // //   if (!aesKey) {
+// // // //     await importAESKey(secretKey);
+// // // //   }
+
+// // // //   if (!cipherText) return '';
+
+// // // //   try {
+// // // //     const data = Uint8Array.from(atob(cipherText), c => c.charCodeAt(0));
+
+// // // //     if (data.length <= 12) {
+// // // //       return cipherText; // fallback (maybe plain text)
+// // // //     }
+
+// // // //     const iv = data.slice(0, 12);
+// // // //     const encrypted = data.slice(12);
+
+// // // //     const decrypted = await subtle.decrypt(
+// // // //       { name: 'AES-GCM', iv },
+// // // //       aesKey!,
+// // // //       encrypted
+// // // //     );
+
+// // // //     return new TextDecoder().decode(decrypted);
+// // // //   } catch (err) {
+// // // //     console.error('❌ Decryption failed:', err);
+// // // //     return cipherText;
+// // // //   }
+// // // // }
+
+// // // // export const sendNotificationOnNewMessage = functions.database
+// // // //   .ref('/chats/{roomId}/{messageId}')
+// // // //   .onCreate(async (snapshot: functions.database.DataSnapshot, context: functions.EventContext) => {
+// // // //     const messageData = snapshot.val();
+// // // //     const roomId = context.params.roomId;
+// // // //     const messageId = context.params.messageId;
+
+// // // //     try {
+// // // //       // ✅ Get receiver FCM token
+// // // //       const receiverTokenSnapshot = await admin.database()
+// // // //         .ref(`/users/${messageData.receiver_id}/fcmToken`)
+// // // //         .once('value');
+
+// // // //       const receiverToken = receiverTokenSnapshot.val();
+
+// // // //       if (!receiverToken) {
+// // // //         console.log('Receiver FCM token not found for:', messageData.receiver_id);
+// // // //         return;
+// // // //       }
+
+// // // //       // ✅ Avoid self notification
+// // // //       if (messageData.sender_id === messageData.receiver_id) {
+// // // //         console.log('Self message, notification not sent');
+// // // //         return;
+// // // //       }
+
+// // // //       // ✅ Prepare message body
+// // // //       let messageBody = 'New message';
+
+// // // //       if (messageData.text) {
+// // // //         // 🔑 Decrypt text before sending notification
+// // // //         messageBody = await decryptText(messageData.text);
+// // // //       }
+
+// // // //       if (messageData.attachment) {
+// // // //         switch (messageData.attachment.type) {
+// // // //           case 'image': messageBody = '📷 Image'; break;
+// // // //           case 'video': messageBody = '🎥 Video'; break;
+// // // //           case 'audio': messageBody = '🎵 Audio'; break;
+// // // //           case 'document': messageBody = '📄 Document'; break;
+// // // //           default: messageBody = '📎 Attachment';
+// // // //         }
+// // // //       }
+
+// // // //       // ✅ Send notification (new format)
+// // // //       const response = await admin.messaging().send({
+// // // //         token: receiverToken,
+// // // //         notification: {
+// // // //           title: messageData.sender_name || 'New Message',
+// // // //           body: messageBody,
+// // // //         },
+// // // //         android: {
+// // // //           notification: {
+// // // //             sound: 'default',
+// // // //             clickAction: 'FCM_PLUGIN_ACTIVITY',
+// // // //             icon: 'assets/icon/favicon.ico',
+// // // //           },
+// // // //         },
+// // // //         data: {
+// // // //           roomId: roomId,
+// // // //           senderId: messageData.sender_id,
+// // // //           receiverId: messageData.receiver_id,
+// // // //           messageId: messageId,
+// // // //           chatType: 'private',
+// // // //           timestamp: messageData.timestamp.toString()
+// // // //         }
+// // // //       });
+
+// // // //       console.log('✅ Notification sent successfully:', response);
+
+// // // //       // (Optional) delivered mark
+// // // //       // await admin.database()
+// // // //       //   .ref(`/chats/${roomId}/messages/${messageId}/delivered`)
+// // // //       //   .set(true);
+
+// // // //     } catch (error) {
+// // // //       console.error('❌ Error sending notification:', error);
+// // // //     }
+// // // //   });
 
 // // // import * as functions from 'firebase-functions/v1';
 // // // import * as admin from 'firebase-admin';
@@ -155,85 +304,288 @@
 // // //   }
 // // // }
 
+// // // // 🔥 UNIFIED NOTIFICATION FUNCTION (Private + Group)
 // // // export const sendNotificationOnNewMessage = functions.database
-// // //   .ref('/chats/{roomId}/{messageId}')
+// // //   .ref('/chats/{roomId}/{msgId}')
 // // //   .onCreate(async (snapshot: functions.database.DataSnapshot, context: functions.EventContext) => {
 // // //     const messageData = snapshot.val();
 // // //     const roomId = context.params.roomId;
 // // //     const messageId = context.params.messageId;
 
 // // //     try {
-// // //       // ✅ Get receiver FCM token
-// // //       const receiverTokenSnapshot = await admin.database()
-// // //         .ref(`/users/${messageData.receiver_id}/fcmToken`)
-// // //         .once('value');
+// // //       // ✅ Check if this is a group chat
+// // //       const isGroupChat = roomId.startsWith('group_');
 
-// // //       const receiverToken = receiverTokenSnapshot.val();
-
-// // //       if (!receiverToken) {
-// // //         console.log('Receiver FCM token not found for:', messageData.receiver_id);
-// // //         return;
+// // //       if (isGroupChat) {
+// // //         console.log('👥 Group chat message detected:', { roomId, messageId });
+// // //         await handleGroupNotification(messageData, roomId, messageId);
+// // //       } else {
+// // //         console.log('📱 Private chat message detected:', { roomId, messageId });
+// // //         await handlePrivateNotification(messageData, roomId, messageId);
 // // //       }
 
-// // //       // ✅ Avoid self notification
-// // //       if (messageData.sender_id === messageData.receiver_id) {
-// // //         console.log('Self message, notification not sent');
-// // //         return;
+// // //     } catch (error) {
+// // //       console.error('❌ Error in notification function:', error);
+// // //     }
+// // //   });
+
+// // // // 📱 Private Chat Notification Handler
+// // // async function handlePrivateNotification(messageData: any, roomId: string, messageId: string) {
+// // //   try {
+// // //     // ✅ Get receiver FCM token
+// // //     const receiverTokenSnapshot = await admin.database()
+// // //       .ref(`/users/${messageData.receiver_id}/fcmToken`)
+// // //       .once('value');
+
+// // //     //  const roomParts = roomId.split('_');
+// // //     // const receiver_id = roomParts.find((id) => id !== messageData.sender_id);
+
+// // //     // if (!receiver_id) {
+// // //     //   console.log('⚠️ Could not determine receiver_id from roomId:', roomId);
+// // //     //   return;
+// // //     // }
+
+// // //     // // ✅ Get receiver FCM token
+// // //     // const receiverTokenSnapshot = await admin.database()
+// // //     //   .ref(`/users/${receiver_id}/fcmToken`)
+// // //     //   .once('value');
+
+// // //     const receiverToken = receiverTokenSnapshot.val();
+
+// // //     if (!receiverToken) {
+// // //       console.log('Receiver FCM token not found for:', messageData.receiver_id);
+// // //       return;
+// // //     }
+
+// // //     // ✅ Avoid self notification
+// // //     if (messageData.sender_id === messageData.receiver_id) {
+// // //       console.log('Self message, notification not sent');
+// // //       return;
+// // //     }
+
+// // //     // ✅ Prepare message body
+// // //     let messageBody = 'New message';
+
+// // //     if (messageData.text) {
+// // //       // 🔑 Decrypt text before sending notification
+// // //       messageBody = await decryptText(messageData.text);
+// // //     }
+
+// // //     if (messageData.attachment) {
+// // //       switch (messageData.attachment.type) {
+// // //         case 'image': messageBody = '📷 Image'; break;
+// // //         case 'video': messageBody = '🎥 Video'; break;
+// // //         case 'audio': messageBody = '🎵 Audio'; break;
+// // //         case 'document': messageBody = '📄 Document'; break;
+// // //         default: messageBody = '📎 Attachment';
 // // //       }
+// // //     }
 
-// // //       // ✅ Prepare message body
-// // //       let messageBody = 'New message';
-
-// // //       if (messageData.text) {
-// // //         // 🔑 Decrypt text before sending notification
-// // //         messageBody = await decryptText(messageData.text);
-// // //       }
-
-// // //       if (messageData.attachment) {
-// // //         switch (messageData.attachment.type) {
-// // //           case 'image': messageBody = '📷 Image'; break;
-// // //           case 'video': messageBody = '🎥 Video'; break;
-// // //           case 'audio': messageBody = '🎵 Audio'; break;
-// // //           case 'document': messageBody = '📄 Document'; break;
-// // //           default: messageBody = '📎 Attachment';
-// // //         }
-// // //       }
-
-// // //       // ✅ Send notification (new format)
-// // //       const response = await admin.messaging().send({
-// // //         token: receiverToken,
+// // //     // ✅ Send notification
+// // //     const response = await admin.messaging().send({
+// // //       token: receiverToken,
+// // //       notification: {
+// // //         title: messageData.sender_name || 'New Message',
+// // //         body: messageBody,
+// // //       },
+// // //       android: {
 // // //         notification: {
-// // //           title: messageData.sender_name || 'New Message',
-// // //           body: messageBody,
+// // //           sound: 'default',
+// // //           channelId: 'default',   // ✅ Make sure you create this channel in your app
+// // //           icon: 'ic_launcher',    // ✅ Must be a valid resource name in Android (not path to .ico)
 // // //         },
-// // //         android: {
-// // //           notification: {
+// // //       },
+// // //       apns: {
+// // //         payload: {
+// // //           aps: {
 // // //             sound: 'default',
-// // //             clickAction: 'FCM_PLUGIN_ACTIVITY',
-// // //             icon: 'assets/icon/favicon.ico',
 // // //           },
 // // //         },
-// // //         data: {
-// // //           roomId: roomId,
-// // //           senderId: messageData.sender_id,
-// // //           receiverId: messageData.receiver_id,
-// // //           messageId: messageId,
-// // //           chatType: 'private',
-// // //           timestamp: messageData.timestamp.toString()
+// // //       },
+// // //       data: {
+// // //         roomId: roomId,
+// // //         // senderId: messageData.sender_id,
+// // //         // receiverId: messageData.receiver_id,
+// // //          senderId: messageData.receiver_id,
+// // //         receiverId: messageData.sender_id,
+// // //         messageId: messageId,
+// // //         chatType: 'private',
+// // //         timestamp: messageData.timestamp.toString(),
+// // //         route: `/chatting-screen?receiverId=${messageData.receiver_id}`,
+// // //       },
+// // //     });
+
+// // //     console.log('✅ Private notification sent successfully:', response);
+
+// // //   } catch (error) {
+// // //     console.error('❌ Error sending private notification:', error);
+// // //   }
+// // // }
+
+// // // // 👥 Group Chat Notification Handler
+// // // async function handleGroupNotification(messageData: any, roomId: string, messageId: string) {
+// // //   try {
+// // //     // ✅ Get group details
+// // //     const groupSnapshot = await admin.database()
+// // //       .ref(`/groups/${roomId}`)
+// // //       .once('value');
+
+// // //     const groupData = groupSnapshot.val();
+// // //     if (!groupData) {
+// // //       console.log('❌ Group not found:', roomId);
+// // //       return;
+// // //     }
+
+// // //     // ✅ Get all group members (excluding sender)
+// // //     const members = groupData.members || {};
+// // //     const memberIds = Object.keys(members).filter(memberId =>
+// // //       memberId !== messageData.sender_id
+// // //     );
+
+// // //     if (memberIds.length === 0) {
+// // //       console.log('📭 No members to notify in group:', roomId);
+// // //       return;
+// // //     }
+
+// // //     // ✅ Get FCM tokens for all members
+// // //     const memberTokens: string[] = [];
+// // //     const tokenPromises = memberIds.map(async (memberId) => {
+// // //       try {
+// // //         const tokenSnapshot = await admin.database()
+// // //           .ref(`/users/${memberId}/fcmToken`)
+// // //           .once('value');
+
+// // //         const token = tokenSnapshot.val();
+// // //         if (token) {
+// // //           memberTokens.push(token);
+// // //           console.log(`✅ Token found for member: ${memberId}`);
+// // //         } else {
+// // //           console.log(`⚠️ No token for member: ${memberId}`);
+// // //         }
+// // //       } catch (error) {
+// // //         console.error(`❌ Error getting token for member ${memberId}:`, error);
+// // //       }
+// // //     });
+
+// // //     await Promise.all(tokenPromises);
+
+// // //     if (memberTokens.length === 0) {
+// // //       console.log('📭 No valid FCM tokens found for group members');
+// // //       return;
+// // //     }
+
+// // //     // ✅ Prepare message content
+// // //     let messageBody = 'New message';
+// // //     const groupName = groupData.name || 'Group Chat';
+// // //     const senderName = messageData.sender_name || 'Someone';
+
+// // //     if (messageData.text) {
+// // //       // 🔑 Decrypt text before sending notification
+// // //       const decryptedText = await decryptText(messageData.text);
+// // //       messageBody = decryptedText.length > 50
+// // //         ? `${decryptedText.substring(0, 50)}...`
+// // //         : decryptedText;
+// // //     }
+
+// // //     if (messageData.attachment) {
+// // //       switch (messageData.attachment.type) {
+// // //         case 'image': messageBody = '📷 sent an image'; break;
+// // //         case 'video': messageBody = '🎥 sent a video'; break;
+// // //         case 'audio': messageBody = '🎵 sent an audio'; break;
+// // //         case 'document': messageBody = '📄 sent a document'; break;
+// // //         default: messageBody = '📎 sent an attachment';
+// // //       }
+// // //     }
+
+// // //     // ✅ Send notifications to all group members (individual sends instead of multicast)
+// // //     const notificationResults = {
+// // //       successCount: 0,
+// // //       failureCount: 0,
+// // //       responses: [] as any[]
+// // //     };
+
+// // //     // Send individual notifications to avoid multicast issues
+// // //     const sendPromises = memberTokens.map(async (token) => {
+// // //       try {
+// // //         const message = {
+// // //           token: token,
+// // //           notification: {
+// // //             title: `${senderName} in ${groupName}`,
+// // //             body: messageBody,
+// // //           },
+// // //           android: {
+// // //             notification: {
+// // //               sound: 'default',
+// // //               clickAction: 'FCM_PLUGIN_ACTIVITY',
+// // //               icon: 'assets/icon/favicon.ico',
+// // //               tag: roomId, // Group notifications with same tag will replace each other
+// // //             },
+// // //           },
+// // //           data: {
+// // //             roomId: roomId,
+// // //             senderId: messageData.sender_id,
+// // //             messageId: messageId,
+// // //             chatType: 'group',
+// // //             groupName: groupName,
+// // //             timestamp: messageData.timestamp.toString()
+// // //           }
+// // //         };
+
+// // //         const response = await admin.messaging().send(message);
+// // //         notificationResults.successCount++;
+// // //         notificationResults.responses.push({ success: true, messageId: response });
+// // //         console.log(`✅ Group notification sent to token: ${token.substring(0, 10)}...`);
+
+// // //       } catch (error: any) {
+// // //         notificationResults.failureCount++;
+// // //         notificationResults.responses.push({
+// // //           success: false,
+// // //           error: error,
+// // //           token: token
+// // //         });
+// // //         console.error(`❌ Failed to send group notification to token ${token.substring(0, 10)}...:`, error.message);
+// // //       }
+// // //     });
+
+// // //     await Promise.all(sendPromises);
+// // //     const response = notificationResults;
+
+// // //     console.log('✅ Group notifications sent:', {
+// // //       successCount: response.successCount,
+// // //       failureCount: response.failureCount,
+// // //       totalTokens: memberTokens.length
+// // //     });
+
+// // //     // ✅ Handle failed tokens
+// // //     if (response.failureCount > 0) {
+// // //       const failedTokens: string[] = [];
+// // //       response.responses.forEach((resp, idx) => {
+// // //         if (!resp.success) {
+// // //           const token = resp.token || memberTokens[idx];
+// // //           console.error(`❌ Failed to send to token ${token?.substring(0, 10)}...:`, resp.error?.message);
+
+// // //           // Track invalid tokens
+// // //           if (resp.error?.code === 'messaging/registration-token-not-registered' ||
+// // //             resp.error?.code === 'messaging/invalid-registration-token') {
+// // //             failedTokens.push(token);
+// // //           }
 // // //         }
 // // //       });
 
-// // //       console.log('✅ Notification sent successfully:', response);
-
-// // //       // (Optional) delivered mark
-// // //       // await admin.database()
-// // //       //   .ref(`/chats/${roomId}/messages/${messageId}/delivered`)
-// // //       //   .set(true);
-
-// // //     } catch (error) {
-// // //       console.error('❌ Error sending notification:', error);
+// // //       if (failedTokens.length > 0) {
+// // //         console.log(`🧹 Found ${failedTokens.length} invalid tokens to clean up`);
+// // //       }
 // // //     }
-// // //   });
+
+// // //     // ✅ Update message notification status (optional)
+// // //     await admin.database()
+// // //       .ref(`/chats/${roomId}/${messageId}/notified`)
+// // //       .set(true);
+
+// // //   } catch (error) {
+// // //     console.error('❌ Error sending group notification:', error);
+// // //   }
+// // // }
 
 // // import * as functions from 'firebase-functions/v1';
 // // import * as admin from 'firebase-admin';
@@ -265,7 +617,7 @@
 // //       name: 'PBKDF2',
 // //       salt: enc.encode('your_salt_value'),
 // //       iterations: 100000,
-// //       hash: 'SHA-256'
+// //       hash: 'SHA-256',
 // //     },
 // //     keyMaterial,
 // //     { name: 'AES-GCM', length: 256 },
@@ -282,7 +634,7 @@
 // //   if (!cipherText) return '';
 
 // //   try {
-// //     const data = Uint8Array.from(atob(cipherText), c => c.charCodeAt(0));
+// //     const data = Uint8Array.from(atob(cipherText), (c) => c.charCodeAt(0));
 
 // //     if (data.length <= 12) {
 // //       return cipherText; // fallback (maybe plain text)
@@ -306,49 +658,49 @@
 
 // // // 🔥 UNIFIED NOTIFICATION FUNCTION (Private + Group)
 // // export const sendNotificationOnNewMessage = functions.database
-// //   .ref('/chats/{roomId}/{msgId}')
-// //   .onCreate(async (snapshot: functions.database.DataSnapshot, context: functions.EventContext) => {
-// //     const messageData = snapshot.val();
-// //     const roomId = context.params.roomId;
-// //     const messageId = context.params.messageId;
+// //   .ref('/chats/{roomId}/{messageId}')
+// //   .onCreate(
+// //     async (
+// //       snapshot: functions.database.DataSnapshot,
+// //       context: functions.EventContext
+// //     ) => {
+// //       const messageData = snapshot.val();
+// //       const roomId = context.params.roomId;
+// //       const messageId = context.params.messageId;
 
-// //     try {
-// //       // ✅ Check if this is a group chat
-// //       const isGroupChat = roomId.startsWith('group_');
+// //       try {
+// //         // ✅ Check if this is a group chat
+// //         const isGroupChat = roomId.startsWith('group_');
 
-// //       if (isGroupChat) {
-// //         console.log('👥 Group chat message detected:', { roomId, messageId });
-// //         await handleGroupNotification(messageData, roomId, messageId);
-// //       } else {
-// //         console.log('📱 Private chat message detected:', { roomId, messageId });
-// //         await handlePrivateNotification(messageData, roomId, messageId);
+// //         if (isGroupChat) {
+// //           console.log('👥 Group chat message detected:', { roomId, messageId });
+// //           await handleGroupNotification(messageData, roomId, messageId);
+// //         } else {
+// //           console.log('📱 Private chat message detected:', {
+// //             roomId,
+// //             messageId,
+// //           });
+// //           await handlePrivateNotification(messageData, roomId, messageId);
+// //         }
+// //       } catch (error) {
+// //         console.error('❌ Error in notification function:', error);
 // //       }
-
-// //     } catch (error) {
-// //       console.error('❌ Error in notification function:', error);
 // //     }
-// //   });
+// //   );
 
 // // // 📱 Private Chat Notification Handler
-// // async function handlePrivateNotification(messageData: any, roomId: string, messageId: string) {
+// // async function handlePrivateNotification(
+// //   messageData: any,
+// //   roomId: string,
+// //   messageId: string
+// // ) {
+// //   console.log('message Data is', messageData);
 // //   try {
 // //     // ✅ Get receiver FCM token
-// //     const receiverTokenSnapshot = await admin.database()
+// //     const receiverTokenSnapshot = await admin
+// //       .database()
 // //       .ref(`/users/${messageData.receiver_id}/fcmToken`)
 // //       .once('value');
-
-// //     //  const roomParts = roomId.split('_');
-// //     // const receiver_id = roomParts.find((id) => id !== messageData.sender_id);
-
-// //     // if (!receiver_id) {
-// //     //   console.log('⚠️ Could not determine receiver_id from roomId:', roomId);
-// //     //   return;
-// //     // }
-
-// //     // // ✅ Get receiver FCM token
-// //     // const receiverTokenSnapshot = await admin.database()
-// //     //   .ref(`/users/${receiver_id}/fcmToken`)
-// //     //   .once('value');
 
 // //     const receiverToken = receiverTokenSnapshot.val();
 
@@ -358,9 +710,30 @@
 // //     }
 
 // //     // ✅ Avoid self notification
-// //     if (messageData.sender_id === messageData.receiver_id) {
+// //     if (messageData.sender === messageData.receiver_id) {
 // //       console.log('Self message, notification not sent');
 // //       return;
+// //     }
+
+// //     // 🔥 NEW: Check if receiver has sender's chat screen open
+// //     const activeChatSnapshot = await admin
+// //       .database()
+// //       .ref(`/activeChats/${messageData.receiver_id}`)
+// //       .once('value');
+
+// //     const activeChatId = activeChatSnapshot.val();
+
+// //     if (activeChatId) {
+// //       // Split the chatId (format: "76_78")
+// //       const participants = String(activeChatId).split('_');
+
+// //       // Check if sender ID is in the participants
+// //       if (participants.includes(String(messageData.sender))) {
+// //         console.log(
+// //           `Receiver ${messageData.receiver_id} is currently chatting with sender ${messageData.sender}, notification not sent`
+// //         );
+// //         return;
+// //       }
 // //     }
 
 // //     // ✅ Prepare message body
@@ -373,15 +746,24 @@
 
 // //     if (messageData.attachment) {
 // //       switch (messageData.attachment.type) {
-// //         case 'image': messageBody = '📷 Image'; break;
-// //         case 'video': messageBody = '🎥 Video'; break;
-// //         case 'audio': messageBody = '🎵 Audio'; break;
-// //         case 'document': messageBody = '📄 Document'; break;
-// //         default: messageBody = '📎 Attachment';
+// //         case 'image':
+// //           messageBody = '📷 Image';
+// //           break;
+// //         case 'video':
+// //           messageBody = '🎥 Video';
+// //           break;
+// //         case 'audio':
+// //           messageBody = '🎵 Audio';
+// //           break;
+// //         case 'document':
+// //           messageBody = '📄 Document';
+// //           break;
+// //         default:
+// //           messageBody = '📎 Attachment';
 // //       }
 // //     }
 
-// //     // ✅ Send notification
+// //     // ✅ Send notification - ALL DATA VALUES MUST BE STRINGS!
 // //     const response = await admin.messaging().send({
 // //       token: receiverToken,
 // //       notification: {
@@ -391,8 +773,8 @@
 // //       android: {
 // //         notification: {
 // //           sound: 'default',
-// //           channelId: 'default',   // ✅ Make sure you create this channel in your app
-// //           icon: 'ic_launcher',    // ✅ Must be a valid resource name in Android (not path to .ico)
+// //           channelId: 'default',
+// //           icon: 'ic_launcher',
 // //         },
 // //       },
 // //       apns: {
@@ -403,112 +785,147 @@
 // //         },
 // //       },
 // //       data: {
-// //         roomId: roomId,
-// //         // senderId: messageData.sender_id,
-// //         // receiverId: messageData.receiver_id,
-// //          senderId: messageData.receiver_id,
-// //         receiverId: messageData.sender_id,
-// //         messageId: messageId,
-// //         chatType: 'private',
-// //         timestamp: messageData.timestamp.toString(),
-// //         route: `/chatting-screen?receiverId=${messageData.receiver_id}`,
+// //         payload: JSON.stringify({
+// //           roomId: String(roomId),
+// //           senderId: String(messageData.sender),
+// //           receiverId: String(messageData.receiver_id),
+// //           messageId: String(messageId),
+// //           notificationId: String(messageId),
+// //           chatType: 'private',
+// //           timestamp: String(messageData.timestamp),
+// //           route: `/chatting-screen?receiverId=${messageData.receiver_id}`,
+// //         }),
 // //       },
 // //     });
 
 // //     console.log('✅ Private notification sent successfully:', response);
-
 // //   } catch (error) {
 // //     console.error('❌ Error sending private notification:', error);
 // //   }
 // // }
 
-// // // 👥 Group Chat Notification Handler
-// // async function handleGroupNotification(messageData: any, roomId: string, messageId: string) {
+// // // 👥 Group Chat Notification Handler - FIXED VERSION
+// // async function handleGroupNotification(
+// //   messageData: any,
+// //   roomId: string,
+// //   messageId: string
+// // ) {
 // //   try {
-// //     // ✅ Get group details
-// //     const groupSnapshot = await admin.database()
-// //       .ref(`/groups/${roomId}`)
+// //     const groupId = roomId; // roomId = group_12345
+
+// //     // ✅ Fetch group root (for title, createdBy, adminIds, etc.)
+// //     const groupSnapshot = await admin
+// //       .database()
+// //       .ref(`/groups/${groupId}`)
 // //       .once('value');
 
 // //     const groupData = groupSnapshot.val();
 // //     if (!groupData) {
-// //       console.log('❌ Group not found:', roomId);
+// //       console.log('❌ Group not found:', groupId);
 // //       return;
 // //     }
 
-// //     // ✅ Get all group members (excluding sender)
-// //     const members = groupData.members || {};
-// //     const memberIds = Object.keys(members).filter(memberId =>
-// //       memberId !== messageData.sender_id
+// //     // 🔥 **Fetch members ONLY from /groups/groupId/members**
+// //     const membersSnapshot = await admin
+// //       .database()
+// //       .ref(`/groups/${groupId}/members`)
+// //       .once('value');
+
+// //     const members = membersSnapshot.val() || {};
+
+// //     // 🔥 Exclude sender from member list
+// //     const memberIds = Object.keys(members).filter(
+// //       (memberId) => memberId !== messageData.sender
 // //     );
 
 // //     if (memberIds.length === 0) {
-// //       console.log('📭 No members to notify in group:', roomId);
+// //       console.log('📭 No members to notify in group:', groupId);
 // //       return;
 // //     }
 
-// //     // ✅ Get FCM tokens for all members
-// //     const memberTokens: string[] = [];
+// //     console.log(`🔍 Members to notify: ${JSON.stringify(memberIds)}`);
+
+// //     // ✅ Get FCM tokens for group members + check active chats
+// //     const memberTokens: Array<{ memberId: string; token: string }> = [];
+
 // //     const tokenPromises = memberIds.map(async (memberId) => {
 // //       try {
-// //         const tokenSnapshot = await admin.database()
+// //         // 🔥 Check if this member has the group chat open
+// //         const activeChatSnapshot = await admin
+// //           .database()
+// //           .ref(`/activeChats/${memberId}`)
+// //           .once('value');
+
+// //         const activeChatId = activeChatSnapshot.val();
+
+// //         // If member has this group open, skip notification
+// //         if (activeChatId === groupId) {
+// //           console.log(
+// //             `⏭️ Member ${memberId} is currently in group ${groupId}, skipping notification`
+// //           );
+// //           return;
+// //         }
+
+// //         // Get FCM token
+// //         const tokenSnapshot = await admin
+// //           .database()
 // //           .ref(`/users/${memberId}/fcmToken`)
 // //           .once('value');
 
 // //         const token = tokenSnapshot.val();
 // //         if (token) {
-// //           memberTokens.push(token);
-// //           console.log(`✅ Token found for member: ${memberId}`);
+// //           memberTokens.push({ memberId, token });
 // //         } else {
-// //           console.log(`⚠️ No token for member: ${memberId}`);
+// //           console.log(`⚠️ Member has no token: ${memberId}`);
 // //         }
-// //       } catch (error) {
-// //         console.error(`❌ Error getting token for member ${memberId}:`, error);
+// //       } catch (err) {
+// //         console.error(`❌ Error fetching token for ${memberId}:`, err);
 // //       }
 // //     });
 
 // //     await Promise.all(tokenPromises);
 
 // //     if (memberTokens.length === 0) {
-// //       console.log('📭 No valid FCM tokens found for group members');
+// //       console.log('📭 No valid FCM tokens found for group (all members may have chat open)');
 // //       return;
 // //     }
 
-// //     // ✅ Prepare message content
-// //     let messageBody = 'New message';
-// //     const groupName = groupData.name || 'Group Chat';
+// //     // 🎯 Build notification body
+// //     const groupName = groupData.title || 'Group Chat';
 // //     const senderName = messageData.sender_name || 'Someone';
 
+// //     let messageBody = 'New message';
+
 // //     if (messageData.text) {
-// //       // 🔑 Decrypt text before sending notification
-// //       const decryptedText = await decryptText(messageData.text);
-// //       messageBody = decryptedText.length > 50
-// //         ? `${decryptedText.substring(0, 50)}...`
-// //         : decryptedText;
+// //       const decrypted = await decryptText(messageData.text);
+// //       messageBody =
+// //         decrypted.length > 60 ? decrypted.substring(0, 60) + '…' : decrypted;
 // //     }
 
 // //     if (messageData.attachment) {
 // //       switch (messageData.attachment.type) {
-// //         case 'image': messageBody = '📷 sent an image'; break;
-// //         case 'video': messageBody = '🎥 sent a video'; break;
-// //         case 'audio': messageBody = '🎵 sent an audio'; break;
-// //         case 'document': messageBody = '📄 sent a document'; break;
-// //         default: messageBody = '📎 sent an attachment';
+// //         case 'image':
+// //           messageBody = '📷 sent an image';
+// //           break;
+// //         case 'video':
+// //           messageBody = '🎥 sent a video';
+// //           break;
+// //         case 'audio':
+// //           messageBody = '🎵 sent an audio';
+// //           break;
+// //         case 'document':
+// //           messageBody = '📄 sent a document';
+// //           break;
+// //         default:
+// //           messageBody = '📎 sent an attachment';
 // //       }
 // //     }
 
-// //     // ✅ Send notifications to all group members (individual sends instead of multicast)
-// //     const notificationResults = {
-// //       successCount: 0,
-// //       failureCount: 0,
-// //       responses: [] as any[]
-// //     };
-
-// //     // Send individual notifications to avoid multicast issues
-// //     const sendPromises = memberTokens.map(async (token) => {
+// //     // 🚀 Send notifications individually
+// //     const sendTasks = memberTokens.map(async ({ memberId, token }) => {
 // //       try {
-// //         const message = {
-// //           token: token,
+// //         await admin.messaging().send({
+// //           token,
 // //           notification: {
 // //             title: `${senderName} in ${groupName}`,
 // //             body: messageBody,
@@ -517,71 +934,38 @@
 // //             notification: {
 // //               sound: 'default',
 // //               clickAction: 'FCM_PLUGIN_ACTIVITY',
-// //               icon: 'assets/icon/favicon.ico',
-// //               tag: roomId, // Group notifications with same tag will replace each other
+// //               icon: 'ic_launcher',
+// //               tag: groupId,
 // //             },
 // //           },
 // //           data: {
-// //             roomId: roomId,
-// //             senderId: messageData.sender_id,
-// //             messageId: messageId,
-// //             chatType: 'group',
-// //             groupName: groupName,
-// //             timestamp: messageData.timestamp.toString()
-// //           }
-// //         };
-
-// //         const response = await admin.messaging().send(message);
-// //         notificationResults.successCount++;
-// //         notificationResults.responses.push({ success: true, messageId: response });
-// //         console.log(`✅ Group notification sent to token: ${token.substring(0, 10)}...`);
-
-// //       } catch (error: any) {
-// //         notificationResults.failureCount++;
-// //         notificationResults.responses.push({
-// //           success: false,
-// //           error: error,
-// //           token: token
+// //             payload: JSON.stringify({
+// //               roomId: String(groupId),
+// //               senderId: String(messageData.sender),
+// //               messageId: String(messageId),
+// //               notificationId: String(messageId),
+// //               chatType: 'group',
+// //               groupName: String(groupName),
+// //               timestamp: String(messageData.timestamp),
+// //             }),
+// //           },
 // //         });
-// //         console.error(`❌ Failed to send group notification to token ${token.substring(0, 10)}...:`, error.message);
+
+// //         console.log(`✅ Notification sent to member ${memberId}`);
+// //       } catch (err: any) {
+// //         console.error(`❌ Failed sending to member ${memberId}:`, err.message);
 // //       }
 // //     });
 
-// //     await Promise.all(sendPromises);
-// //     const response = notificationResults;
+// //     await Promise.all(sendTasks);
 
-// //     console.log('✅ Group notifications sent:', {
-// //       successCount: response.successCount,
-// //       failureCount: response.failureCount,
-// //       totalTokens: memberTokens.length
-// //     });
-
-// //     // ✅ Handle failed tokens
-// //     if (response.failureCount > 0) {
-// //       const failedTokens: string[] = [];
-// //       response.responses.forEach((resp, idx) => {
-// //         if (!resp.success) {
-// //           const token = resp.token || memberTokens[idx];
-// //           console.error(`❌ Failed to send to token ${token?.substring(0, 10)}...:`, resp.error?.message);
-
-// //           // Track invalid tokens
-// //           if (resp.error?.code === 'messaging/registration-token-not-registered' ||
-// //             resp.error?.code === 'messaging/invalid-registration-token') {
-// //             failedTokens.push(token);
-// //           }
-// //         }
-// //       });
-
-// //       if (failedTokens.length > 0) {
-// //         console.log(`🧹 Found ${failedTokens.length} invalid tokens to clean up`);
-// //       }
-// //     }
-
-// //     // ✅ Update message notification status (optional)
-// //     await admin.database()
-// //       .ref(`/chats/${roomId}/${messageId}/notified`)
+// //     // Mark as notified
+// //     await admin
+// //       .database()
+// //       .ref(`/chats/${groupId}/${messageId}/notified`)
 // //       .set(true);
 
+// //     console.log('🎉 Group notifications completed.');
 // //   } catch (error) {
 // //     console.error('❌ Error sending group notification:', error);
 // //   }
@@ -726,7 +1110,7 @@
 //     if (activeChatId) {
 //       // Split the chatId (format: "76_78")
 //       const participants = String(activeChatId).split('_');
-      
+
 //       // Check if sender ID is in the participants
 //       if (participants.includes(String(messageData.sender))) {
 //         console.log(
@@ -763,7 +1147,7 @@
 //       }
 //     }
 
-//     // ✅ Send notification - ALL DATA VALUES MUST BE STRINGS!
+//     // ✅ Send notification with TAG - CRITICAL CHANGE!
 //     const response = await admin.messaging().send({
 //       token: receiverToken,
 //       notification: {
@@ -775,6 +1159,7 @@
 //           sound: 'default',
 //           channelId: 'default',
 //           icon: 'ic_launcher',
+//           tag: `${roomId}`, // 🔥 CRITICAL: Add roomId as tag for selective clearing
 //         },
 //       },
 //       apns: {
@@ -799,12 +1184,13 @@
 //     });
 
 //     console.log('✅ Private notification sent successfully:', response);
+//     console.log(`📌 Notification tag set to: room_${roomId}`);
 //   } catch (error) {
 //     console.error('❌ Error sending private notification:', error);
 //   }
 // }
 
-// // 👥 Group Chat Notification Handler - FIXED VERSION
+// // 👥 Group Chat Notification Handler - UPDATED WITH TAG
 // async function handleGroupNotification(
 //   messageData: any,
 //   roomId: string,
@@ -847,7 +1233,7 @@
 
 //     // ✅ Get FCM tokens for group members + check active chats
 //     const memberTokens: Array<{ memberId: string; token: string }> = [];
-    
+
 //     const tokenPromises = memberIds.map(async (memberId) => {
 //       try {
 //         // 🔥 Check if this member has the group chat open
@@ -886,7 +1272,9 @@
 //     await Promise.all(tokenPromises);
 
 //     if (memberTokens.length === 0) {
-//       console.log('📭 No valid FCM tokens found for group (all members may have chat open)');
+//       console.log(
+//         '📭 No valid FCM tokens found for group (all members may have chat open)'
+//       );
 //       return;
 //     }
 
@@ -921,7 +1309,7 @@
 //       }
 //     }
 
-//     // 🚀 Send notifications individually
+//     // 🚀 Send notifications individually with TAG
 //     const sendTasks = memberTokens.map(async ({ memberId, token }) => {
 //       try {
 //         await admin.messaging().send({
@@ -935,7 +1323,7 @@
 //               sound: 'default',
 //               clickAction: 'FCM_PLUGIN_ACTIVITY',
 //               icon: 'ic_launcher',
-//               tag: groupId,
+//               tag: `${groupId}`,
 //             },
 //           },
 //           data: {
@@ -952,6 +1340,7 @@
 //         });
 
 //         console.log(`✅ Notification sent to member ${memberId}`);
+//         console.log(`📌 Group notification tag set to: room_${groupId}`);
 //       } catch (err: any) {
 //         console.error(`❌ Failed sending to member ${memberId}:`, err.message);
 //       }
@@ -1081,6 +1470,23 @@ async function handlePrivateNotification(
 ) {
   console.log('message Data is', messageData);
   try {
+    // 🔥 NEW: Check isPermission FIRST
+    const permissionSnapshot = await admin
+      .database()
+      .ref(`/users/${messageData.receiver_id}/isPermission`)
+      .once('value');
+
+    const isPermission = permissionSnapshot.val();
+    console.log({isPermission})
+
+    // ✅ If permission is false, skip notification
+    if (isPermission === false) {
+      console.log(
+        `🚫 Notification permission disabled for receiver: ${messageData.receiver_id}`
+      );
+      return;
+    }
+
     // ✅ Get receiver FCM token
     const receiverTokenSnapshot = await admin
       .database()
@@ -1100,7 +1506,7 @@ async function handlePrivateNotification(
       return;
     }
 
-    // 🔥 NEW: Check if receiver has sender's chat screen open
+    // 🔥 Check if receiver has sender's chat screen open
     const activeChatSnapshot = await admin
       .database()
       .ref(`/activeChats/${messageData.receiver_id}`)
@@ -1111,7 +1517,7 @@ async function handlePrivateNotification(
     if (activeChatId) {
       // Split the chatId (format: "76_78")
       const participants = String(activeChatId).split('_');
-      
+
       // Check if sender ID is in the participants
       if (participants.includes(String(messageData.sender))) {
         console.log(
@@ -1148,7 +1554,7 @@ async function handlePrivateNotification(
       }
     }
 
-    // ✅ Send notification with TAG - CRITICAL CHANGE!
+    // ✅ Send notification with TAG
     const response = await admin.messaging().send({
       token: receiverToken,
       notification: {
@@ -1160,7 +1566,7 @@ async function handlePrivateNotification(
           sound: 'default',
           channelId: 'default',
           icon: 'ic_launcher',
-          tag: `${roomId}`, // 🔥 CRITICAL: Add roomId as tag for selective clearing
+          tag: `${roomId}`,
         },
       },
       apns: {
@@ -1185,13 +1591,13 @@ async function handlePrivateNotification(
     });
 
     console.log('✅ Private notification sent successfully:', response);
-    console.log(`📌 Notification tag set to: room_${roomId}`);
+    console.log(`📌 Notification tag set to: ${roomId}`);
   } catch (error) {
     console.error('❌ Error sending private notification:', error);
   }
 }
 
-// 👥 Group Chat Notification Handler - UPDATED WITH TAG
+// 👥 Group Chat Notification Handler - UPDATED WITH isPermission CHECK
 async function handleGroupNotification(
   messageData: any,
   roomId: string,
@@ -1232,11 +1638,27 @@ async function handleGroupNotification(
 
     console.log(`🔍 Members to notify: ${JSON.stringify(memberIds)}`);
 
-    // ✅ Get FCM tokens for group members + check active chats
+    // ✅ Get FCM tokens for group members + check active chats + isPermission
     const memberTokens: Array<{ memberId: string; token: string }> = [];
-    
+
     const tokenPromises = memberIds.map(async (memberId) => {
       try {
+        // 🔥 NEW: Check isPermission FIRST
+        const permissionSnapshot = await admin
+          .database()
+          .ref(`/users/${memberId}/isPermission`)
+          .once('value');
+
+        const isPermission = permissionSnapshot.val();
+
+        // ✅ If permission is false, skip this member
+        if (isPermission === false) {
+          console.log(
+            `🚫 Notification permission disabled for member: ${memberId}`
+          );
+          return;
+        }
+
         // 🔥 Check if this member has the group chat open
         const activeChatSnapshot = await admin
           .database()
@@ -1273,7 +1695,9 @@ async function handleGroupNotification(
     await Promise.all(tokenPromises);
 
     if (memberTokens.length === 0) {
-      console.log('📭 No valid FCM tokens found for group (all members may have chat open)');
+      console.log(
+        '📭 No valid FCM tokens found for group (permissions disabled or all members have chat open)'
+      );
       return;
     }
 
@@ -1339,7 +1763,7 @@ async function handleGroupNotification(
         });
 
         console.log(`✅ Notification sent to member ${memberId}`);
-        console.log(`📌 Group notification tag set to: room_${groupId}`);
+        console.log(`📌 Group notification tag set to: ${groupId}`);
       } catch (err: any) {
         console.error(`❌ Failed sending to member ${memberId}:`, err.message);
       }

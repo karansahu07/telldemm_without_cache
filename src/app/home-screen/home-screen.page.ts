@@ -29,6 +29,8 @@ import { ContactSyncService } from '../services/contact-sync.service';
 import { NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { Device, DeviceInfo } from '@capacitor/device';
+import { PushNotifications } from '@capacitor/push-notifications';
+import { FcmService } from '../services/fcm-service';
 import Cropper from 'cropperjs';
 
 // Firebase modular imports
@@ -150,7 +152,8 @@ export class HomeScreenPage implements OnInit, OnDestroy {
     private sqlite: SqliteService,
     private toastCtrl: ToastController,
     private modalController: ModalController,
-    private alertController: AlertController
+    private alertController: AlertController,
+    private fcmService: FcmService,
   ) {}
 
   async ngOnInit() {
@@ -166,6 +169,7 @@ export class HomeScreenPage implements OnInit, OnDestroy {
   async ionViewWillEnter() {
     try {
       // await this.initApp()
+      await this.checkAndUpdateNotificationPermission();
       await this.firebaseChatService.closeChat();
 
       console.info('Loading home page ....');
@@ -210,6 +214,37 @@ export class HomeScreenPage implements OnInit, OnDestroy {
     // this.typingUsers$ = this.firebaseChatService.getTypingStatusForRoom(this.roomId);
 // this.isTyping$ = this.firebaseChatService.isAnyoneTypingInRoom(this.roomId);
   }
+
+  /**
+ * ✅ Check notification permission and update Firebase isPermission flag
+ */
+private async checkAndUpdateNotificationPermission(): Promise<void> {
+  try {
+    const userId = this.senderUserId || this.authService.authData?.userId;
+    
+    if (!userId) {
+      console.warn('⚠️ Cannot check notification permission: userId is missing');
+      return;
+    }
+
+    console.log('🔔 Checking notification permission status...');
+    
+    // Check current permission status
+    const permStatus = await PushNotifications.checkPermissions();
+    console.log('📱 Current permission status:', permStatus.receive);
+    
+    const isGranted = permStatus.receive === 'granted';
+    
+    // Update Firebase isPermission flag
+    await this.fcmService.updatePermissionStatus(userId, isGranted);
+    
+    console.log(`✅ Firebase isPermission updated to: ${isGranted}`);
+    
+  } catch (error) {
+    console.error('❌ Error checking/updating notification permission:', error);
+  }
+}
+
 
   //typing status get
   getTypingStatusForConv(roomId : string){

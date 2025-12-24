@@ -474,7 +474,9 @@ export class ProfileSetupPage implements OnInit, OnDestroy {
     
     try {
       await this.fcmService.updateFcmToken(this.userID);
+      console.log("updating fcm token",this.fcmService.updateFcmToken(this.userID));
       finalFcmToken = this.fcmService.getFcmToken();
+      console.log("final fcm token", finalFcmToken);
       
       if (!finalFcmToken) {
         console.warn('⚠️ No token after refresh, retrying...');
