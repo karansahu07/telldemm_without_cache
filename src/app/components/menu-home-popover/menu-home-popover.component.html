@@ -55,9 +55,26 @@
 
   <!-- SINGLE GROUP -->
   <ng-container *ngIf="isSingleGroup">
-    <ion-item button detail="false" (click)="choose('exitGroup')">
+    <!-- ✅ Exit Group - Only if user IS a member -->
+    <ion-item 
+      *ngIf="isCurrentUserMember" 
+      button 
+      detail="false" 
+      (click)="choose('exitGroup')"
+    >
       <ion-label>Exit group</ion-label>
     </ion-item>
+
+    <!-- ✅ Delete Group - Only if user is NOT a member -->
+    <ion-item 
+      *ngIf="canDeleteGroup" 
+      button 
+      detail="false" 
+      (click)="choose('deleteGroup')"
+    >
+      <ion-label color="danger">Delete group</ion-label>
+    </ion-item>
+
     <ion-item button detail="false" (click)="choose('groupInfo')">
       <ion-label>Group info</ion-label>
     </ion-item>
@@ -85,7 +102,13 @@
 
   <!-- MULTI GROUPS -->
   <ng-container *ngIf="isMultiGroups">
-    <ion-item button detail="false" (click)="choose('exitGroups')">
+    <!-- ✅ Exit Groups - Only if user is member of all selected groups -->
+    <ion-item 
+      *ngIf="isCurrentUserMember" 
+      button 
+      detail="false" 
+      (click)="choose('exitGroups')"
+    >
       <ion-label>Exit groups</ion-label>
     </ion-item>
 
@@ -130,6 +153,30 @@
     </ion-item>
     <ion-item button detail="false" (click)="choose('addToList')">
       <ion-label>Add to list wip</ion-label>
+    </ion-item> -->
+  </ng-container>
+
+  <!-- ✅ NEW: SINGLE COMMUNITY -->
+  <ng-container *ngIf="isSingleCommunity">
+    <ion-item button detail="false" (click)="choose('communityInfo')">
+      <ion-label>Community info</ion-label>
+    </ion-item>
+
+    <!-- ✅ Exit Community - Only for members -->
+    <ion-item 
+      *ngIf="isCommunityMember" 
+      button 
+      detail="false" 
+      (click)="choose('exitCommunity')"
+    >
+      <ion-label>Exit community</ion-label>
+    </ion-item>
+
+    <!-- <ion-item *ngIf="canMarkReadSingle" button detail="false" (click)="choose('markRead')">
+      <ion-label>Mark as read</ion-label>
+    </ion-item>
+    <ion-item *ngIf="canMarkUnreadSingle" button detail="false" (click)="choose('markUnread')">
+      <ion-label>Mark as unread</ion-label>
     </ion-item> -->
   </ng-container>
 </ion-list>

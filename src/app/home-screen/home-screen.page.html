@@ -13,45 +13,56 @@
     <!-- ✅ Single PINNED Private Chat -->
     <ng-container *ngIf="selectionMeta.isSinglePrivatePinned">
       <ion-button (click)="onUnpinSelected()">
-        <ion-icon name="pin"></ion-icon>
+        <!-- <ion-icon name="pin"></ion-icon> -->
+        <i class="fa-solid fa-thumbtack-slash homemainicons"></i>
       </ion-button>
       <ion-button (click)="deleteMultipleChats()">
-        <ion-icon name="trash-outline"></ion-icon>
+        <!-- <ion-icon name="trash-outline"></ion-icon> -->
+         <i class="fa-solid fa-trash homemainicons"></i>
       </ion-button>
       <ion-button (click)="onArchievedSelected()">
-        <ion-icon name="download-outline"></ion-icon>
+        <!-- <ion-icon name="download-outline"></ion-icon> -->
+         <i class="fa-solid fa-box-archive homemainicons"></i>
       </ion-button>
       <ion-button (click)="onMoreSelected($event)">
-        <ion-icon name="ellipsis-vertical-outline"></ion-icon>
+        <!-- <ion-icon name="ellipsis-vertical-outline"></ion-icon> -->
+         <i class="fa-solid fa-ellipsis-vertical homemainicons"></i>
       </ion-button>
     </ng-container>
 
     <!-- ✅ Single UNPINNED Private Chat -->
     <ng-container *ngIf="selectionMeta.isSinglePrivateUnpinned">
       <ion-button (click)="onPinSelected()">
-        <ion-icon name="pin-outline"></ion-icon>
+        <!-- <ion-icon name="pin-outline"></ion-icon> -->
+         <i class="fa-solid fa-thumbtack homemainicons"></i>
       </ion-button>
       <ion-button (click)="deleteMultipleChats()">
-        <ion-icon name="trash-outline"></ion-icon>
+        <!-- <ion-icon name="trash-outline"></ion-icon> -->
+         <i class="fa-solid fa-trash homemainicons"></i>
       </ion-button>
       <ion-button (click)="onArchievedSelected()">
-        <ion-icon name="download-outline"></ion-icon>
+        <!-- <ion-icon name="download-outline"></ion-icon> -->
+         <i class="fa-solid fa-box-archive homemainicons"></i>
       </ion-button>
       <ion-button (click)="onMoreSelected($event)">
-        <ion-icon name="ellipsis-vertical-outline"></ion-icon>
+        <!-- <ion-icon name="ellipsis-vertical-outline"></ion-icon> -->
+         <i class="fa-solid fa-ellipsis-vertical homemainicons"></i>
       </ion-button>
     </ng-container>
 
     <!-- ✅ Single PINNED Group Chat -->
     <ng-container *ngIf="selectionMeta.isSingleGroupPinned">
       <ion-button (click)="onUnpinSelected()">
-        <ion-icon name="pin"></ion-icon>
+        <!-- <ion-icon name="pin"></ion-icon> -->
+         <i class="fa-solid fa-thumbtack-slash homemainicons"></i>
       </ion-button>
       <ion-button (click)="onArchievedSelected()">
-        <ion-icon name="download-outline"></ion-icon>
+        <!-- <ion-icon name="download-outline"></ion-icon> -->
+         <i class="fa-solid fa-box-archive homemainicons"></i>
       </ion-button>
       <ion-button (click)="onMoreSelected($event)">
-        <ion-icon name="ellipsis-vertical-outline"></ion-icon>
+        <!-- <ion-icon name="ellipsis-vertical-outline"></ion-icon> -->
+         <i class="fa-solid fa-ellipsis-vertical homemainicons"></i>
       </ion-button>
     </ng-container>
 
@@ -61,65 +72,80 @@
         <ion-icon name="pin-outline"></ion-icon>
       </ion-button>
       <ion-button (click)="onArchievedSelected()">
-        <ion-icon name="download-outline"></ion-icon>
+        <!-- <ion-icon name="download-outline"></ion-icon> -->
+         <i class="fa-solid fa-box-archive homemainicons"></i>
       </ion-button>
       <ion-button (click)="onMoreSelected($event)">
-        <ion-icon name="ellipsis-vertical-outline"></ion-icon>
+        <!-- <ion-icon name="ellipsis-vertical-outline"></ion-icon> -->
+         <i class="fa-solid fa-ellipsis-vertical homemainicons"></i>
       </ion-button>
     </ng-container>
 
     <!-- ✅ Multiple Private Chats -->
     <ng-container *ngIf="selectionMeta.isMultiPrivateOnly">
       <ion-button (click)="onPinSelected()">
-        <ion-icon name="pin-outline"></ion-icon>
+        <!-- <ion-icon name="pin-outline"></ion-icon> -->
+         <i class="fa-solid fa-thumbtack homemainicons"></i>
       </ion-button>
       <ion-button (click)="deleteMultipleChats()">
-        <ion-icon name="trash-outline"></ion-icon>
+        <!-- <ion-icon name="trash-outline"></ion-icon> -->
+         <i class="fa-solid fa-trash homemainicons"></i>
       </ion-button>
       <ion-button (click)="onArchievedSelected()">
-        <ion-icon name="download-outline"></ion-icon>
+        <!-- <ion-icon name="download-outline"></ion-icon> -->
+         <i class="fa-solid fa-box-archive homemainicons"></i>
       </ion-button>
       <ion-button (click)="onMoreSelected($event)">
-        <ion-icon name="ellipsis-vertical-outline"></ion-icon>
+        <!-- <ion-icon name="ellipsis-vertical-outline"></ion-icon> -->
+         <i class="fa-solid fa-ellipsis-vertical homemainicons"></i>
       </ion-button>
     </ng-container>
 
     <!-- ✅ Multiple Groups -->
     <ng-container *ngIf="selectionMeta.isMultiGroupsOnly">
       <ion-button (click)="onPinSelected()">
-        <ion-icon name="pin-outline"></ion-icon>
+        <!-- <ion-icon name="pin-outline"></ion-icon> -->
+         <i class="fa-solid fa-thumbtack homemainicons"></i>
       </ion-button>
       <ion-button (click)="onArchievedSelected()">
-        <ion-icon name="download-outline"></ion-icon>
+        <!-- <ion-icon name="download-outline"></ion-icon> -->
+         <i class="fa-solid fa-box-archive homemainicons"></i>
       </ion-button>
       <ion-button (click)="onMoreSelected($event)">
-        <ion-icon name="ellipsis-vertical-outline"></ion-icon>
+        <!-- <ion-icon name="ellipsis-vertical-outline"></ion-icon> -->
+         <i class="fa-solid fa-ellipsis-vertical homemainicons"></i>
       </ion-button>
     </ng-container>
 
     <!-- ✅ Mixed: Private + Groups -->
     <ng-container *ngIf="selectionMeta.isMixedPrivateAndGroups">
       <ion-button (click)="onPinSelected()">
-        <ion-icon name="pin-outline"></ion-icon>
+        <!-- <ion-icon name="pin-outline"></ion-icon> -->
+         <i class="fa-solid fa-thumbtack homemainicons"></i>
       </ion-button>
       <ion-button (click)="onArchievedSelected()">
-        <ion-icon name="download-outline"></ion-icon>
+        <!-- <ion-icon name="download-outline"></ion-icon> -->
+         <i class="fa-solid fa-box-archive homemainicons"></i>
       </ion-button>
       <ion-button (click)="onMoreSelected($event)">
-        <ion-icon name="ellipsis-vertical-outline"></ion-icon>
+        <!-- <ion-icon name="ellipsis-vertical-outline"></ion-icon> -->
+         <i class="fa-solid fa-ellipsis-vertical homemainicons"></i>
       </ion-button>
     </ng-container>
 
     <!-- ✅ Community (Pin only, no delete) -->
     <ng-container *ngIf="selectionMeta.includesCommunity">
       <ion-button (click)="onPinSelected()">
-        <ion-icon name="pin-outline"></ion-icon>
+        <!-- <ion-icon name="pin-outline"></ion-icon> -->
+         <i class="fa-solid fa-thumbtack homemainicons"></i>
       </ion-button>
       <ion-button (click)="onArchievedSelected()">
-        <ion-icon name="download-outline"></ion-icon>
+        <!-- <ion-icon name="download-outline"></ion-icon> -->
+         <i class="fa-solid fa-box-archive homemainicons"></i>
       </ion-button>
       <ion-button (click)="onMoreSelected($event)">
-        <ion-icon name="ellipsis-vertical-outline"></ion-icon>
+        <!-- <ion-icon name="ellipsis-vertical-outline"></ion-icon> -->
+         <i class="fa-solid fa-ellipsis-vertical homemainicons"></i>
       </ion-button>
     </ng-container>
   </ion-buttons>
@@ -456,11 +482,22 @@
         <div class="user-name">
           <p>{{ selectedChat?.title || 'Unknown' }}</p>
         </div>
-        <img
-          [src]="selectedImage"
-          [alt]="'home.alt.profile' | translate"
-          class="popup-image"
-        />
+        
+        <!-- Show image if available, otherwise show initial letter -->
+        <ng-container *ngIf="selectedImage && selectedImage !== 'assets/images/user.jfif'; else modalInitialsTpl">
+          <img
+            [src]="selectedImage"
+            [alt]="'home.alt.profile' | translate"
+            class="popup-image"
+          />
+        </ng-container>
+        
+        <ng-template #modalInitialsTpl>
+          <div class="popup-avatar">
+            {{ selectedChat?.title?.charAt(0)?.toUpperCase() || '?' }}
+          </div>
+        </ng-template>
+        
         <div class="icon-row">
           <ion-icon
             name="chatbox-ellipses-outline"

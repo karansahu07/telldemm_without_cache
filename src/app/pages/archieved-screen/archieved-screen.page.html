@@ -9,15 +9,18 @@
     <ion-title>{{ selected.length }}</ion-title>
     <ion-buttons slot="end">
       <!-- Delete only when ONLY privates are selected -->
-      <ion-button *ngIf="selectionMeta.onlyPrivates" (click)="deleteSelected()">
-        <ion-icon name="trash-outline"></ion-icon>
+      <ion-button *ngIf="selectionMeta.onlyPrivates" (click)="deleteMultipleChats()">
+        <!-- <ion-icon name="trash-outline"></ion-icon> -->
+         <i class="fa-solid fa-trash homemainicons"></i>
       </ion-button>
       <!-- Unarchive is always available -->
       <ion-button (click)="unarchiveSelected()">
-        <ion-icon name="archive-outline"></ion-icon>
+        <!-- <ion-icon name="archive-outline"></ion-icon> -->
+         <i class="fa-solid fa-box-open homemainicons"></i>
       </ion-button>
       <ion-button (click)="openArchiveMenu($event)">
-        <ion-icon name="ellipsis-vertical"></ion-icon>
+        <!-- <ion-icon name="ellipsis-vertical"></ion-icon> -->
+         <i class="fa-solid fa-ellipsis-vertical homemainicons"></i>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>

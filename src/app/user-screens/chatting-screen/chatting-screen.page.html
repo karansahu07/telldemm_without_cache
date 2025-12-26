@@ -96,103 +96,134 @@
             style="--padding-start: 0; --background: white; color: black"
             detail="false"
           >
-            <ion-avatar style="margin-left: 10px" slot="start">
-              <img
-                [src]="currentConv?.avatar || 'assets/images/default-avatar.png'"
-                alt="User Avatar"
-                (error)="setDefaultAvatar($event)"
-              />
-            </ion-avatar>
-           <ion-label
-  (click)="goToProfile()"
-  style="
-    width: auto;
-    max-width: 120px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    cursor: pointer;
-  "
->
-  <h2>{{ currentConv?.title||"Chat title" }}</h2>
+            <!-- ✅ Avatar with fallback to initial letter -->
+            <ng-container
+              *ngIf="currentConv?.avatar && currentConv?.avatar !== 'assets/images/default-avatar.png'; else headerInitialsTpl"
+            >
+              <ion-avatar style="margin-left: 10px" slot="start">
+                <img
+                  [src]="currentConv?.avatar"
+                  alt="User Avatar"
+                  (error)="setDefaultAvatar($event)"
+                />
+              </ion-avatar>
+            </ng-container>
 
-  <!-- ✅ UPDATED: Presence & Typing Status -->
-  <div
-    style="
-      font-size: 12px;
-      margin-top: 4px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    "
-  >
-    <!-- ✅ Private Chat -->
-    <ng-container *ngIf="currentConv?.type === 'private'">
-      <!-- Check if typing users exist using the new method -->
-      <ng-container *ngIf="currentConv && currentConv.roomId && (getTypingStatusForConv(currentConv.roomId) | async) as users">
-        <ng-container *ngIf="users.length > 0">
-          <!-- Show typing indicator -->
-          <span style="color: var(--ion-color-primary)">typing…</span>
-        </ng-container>
-        
-        <!-- Show online/last seen when NOT typing -->
-        <ng-container *ngIf="users.length === 0">
-          <ng-container *ngIf="receiverStatus === 'online'; else lastSeenTpl">
-            <span class="online-dot" aria-hidden="true"></span>
-            <span style="color: var(--ion-color-primary)">Online</span>
-          </ng-container>
+            <ng-template #headerInitialsTpl>
+              <ion-avatar style="margin-left: 10px" slot="start">
+                <div class="header-avatar-initial">
+                  {{ currentConv?.title?.charAt(0)?.toUpperCase() || '?' }}
+                </div>
+              </ion-avatar>
+            </ng-template>
 
-          <ng-template #lastSeenTpl>
-            <span class="last-seen-text" *ngIf="lastSeenTime">
-              {{ lastSeenTime }}
-            </span>
-          </ng-template>
-        </ng-container>
-      </ng-container>
+            <ion-label
+              (click)="goToProfile()"
+              style="
+                width: auto;
+                max-width: 120px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                cursor: pointer;
+              "
+            >
+              <h2>{{ currentConv?.title||"Chat title" }}</h2>
 
-      <!-- Fallback when roomId is not available -->
-      <ng-container *ngIf="!currentConv || !currentConv.roomId">
-        <ng-container *ngIf="receiverStatus === 'online'; else lastSeenTpl2">
-          <span class="online-dot" aria-hidden="true"></span>
-          <span style="color: var(--ion-color-primary)">Online</span>
-        </ng-container>
+              <!-- ✅ UPDATED: Presence & Typing Status -->
+              <div
+                style="
+                  font-size: 12px;
+                  margin-top: 4px;
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                "
+              >
+                <!-- ✅ Private Chat -->
+                <ng-container *ngIf="currentConv?.type === 'private'">
+                  <!-- Check if typing users exist using the new method -->
+                  <ng-container
+                    *ngIf="currentConv && currentConv.roomId && (getTypingStatusForConv(currentConv.roomId) | async) as users"
+                  >
+                    <ng-container *ngIf="users.length > 0">
+                      <!-- Show typing indicator -->
+                      <span style="color: var(--ion-color-primary)"
+                        >typing…</span
+                      >
+                    </ng-container>
 
-        <ng-template #lastSeenTpl2>
-          <span class="last-seen-text" *ngIf="lastSeenTime">
-            {{ lastSeenTime }}
-          </span>
-        </ng-template>
-      </ng-container>
-    </ng-container>
+                    <!-- Show online/last seen when NOT typing -->
+                    <ng-container *ngIf="users.length === 0">
+                      <ng-container
+                        *ngIf="receiverStatus === 'online'; else lastSeenTpl"
+                      >
+                        <span class="online-dot" aria-hidden="true"></span>
+                        <span style="color: var(--ion-color-primary)"
+                          >Online</span
+                        >
+                      </ng-container>
 
-    <!-- ✅ Group/Community Chat -->
-    <ng-container *ngIf="currentConv?.type === 'group' || currentConv?.type === 'community'">
-      <!-- Check if typing users exist using the new method -->
-      <ng-container *ngIf="currentConv && currentConv.roomId && (getTypingStatusForConv(currentConv.roomId) | async) as users">
-        <ng-container *ngIf="users.length > 0">
-          <!-- Show typing count -->
-          <span style="color: var(--ion-color-primary)">
-            {{ users.length }} {{ users.length === 1 ? 'person is' : 'people are' }} typing…
-          </span>
-        </ng-container>
-        
-        <!-- Show member count when NOT typing -->
-        <ng-container *ngIf="users.length === 0">
-          <span style="color: var(--ion-color-medium)">
-            {{ currentConv.members?.length || 0 }} members
-          </span>
-        </ng-container>
-      </ng-container>
+                      <ng-template #lastSeenTpl>
+                        <span class="last-seen-text" *ngIf="lastSeenTime">
+                          {{ lastSeenTime }}
+                        </span>
+                      </ng-template>
+                    </ng-container>
+                  </ng-container>
 
-      <!-- Fallback when roomId is not available -->
-      <ng-container *ngIf="!currentConv || !currentConv.roomId">
-        <span style="color: var(--ion-color-medium)">
-          {{ currentConv?.members?.length || 0 }} members
-        </span>
-      </ng-container>
-    </ng-container>
-  </div>
-</ion-label>
+                  <!-- Fallback when roomId is not available -->
+                  <ng-container *ngIf="!currentConv || !currentConv.roomId">
+                    <ng-container
+                      *ngIf="receiverStatus === 'online'; else lastSeenTpl2"
+                    >
+                      <span class="online-dot" aria-hidden="true"></span>
+                      <span style="color: var(--ion-color-primary)"
+                        >Online</span
+                      >
+                    </ng-container>
+
+                    <ng-template #lastSeenTpl2>
+                      <span class="last-seen-text" *ngIf="lastSeenTime">
+                        {{ lastSeenTime }}
+                      </span>
+                    </ng-template>
+                  </ng-container>
+                </ng-container>
+
+                <!-- ✅ Group/Community Chat -->
+                <ng-container
+                  *ngIf="currentConv?.type === 'group' || currentConv?.type === 'community'"
+                >
+                  <!-- Check if typing users exist using the new method -->
+                  <ng-container
+                    *ngIf="currentConv && currentConv.roomId && (getTypingStatusForConv(currentConv.roomId) | async) as users"
+                  >
+                    <ng-container *ngIf="users.length > 0">
+                      <!-- Show typing count -->
+                      <span style="color: var(--ion-color-primary)">
+                        {{ users.length }} {{ users.length === 1 ? 'person is' :
+                        'people are' }} typing…
+                      </span>
+                    </ng-container>
+
+                    <!-- Show member count when NOT typing -->
+                    <ng-container *ngIf="users.length === 0">
+                      <span style="color: var(--ion-color-medium)">
+                        {{ currentConv.members?.length || 0 }} members
+                      </span>
+                    </ng-container>
+                  </ng-container>
+
+                  <!-- Fallback when roomId is not available -->
+                  <ng-container *ngIf="!currentConv || !currentConv.roomId">
+                    <span style="color: var(--ion-color-medium)">
+                      {{ currentConv?.members?.length || 0 }} members
+                    </span>
+                  </ng-container>
+                </ng-container>
+              </div>
+            </ion-label>
           </ion-item>
         </ion-buttons>
       </ng-container>

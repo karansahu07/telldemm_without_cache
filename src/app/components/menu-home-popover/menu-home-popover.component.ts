@@ -5,7 +5,8 @@ import { IonicModule, PopoverController } from '@ionic/angular';
 export type HomeMenuAction =
   | 'addShortcut' | 'viewContact' | 'markUnread' | 'markRead' | 'selectAll'
   | 'lockChat' | 'lockChats' | 'favorite' | 'addToList' | 'block'
-  | 'exitGroup' | 'exitGroups' | 'groupInfo';
+  | 'exitGroup' | 'exitGroups' | 'groupInfo' | 'deleteGroup'
+  | 'communityInfo' | 'exitCommunity'; // ✅ Added community actions
 
 @Component({
   selector: 'app-menu-home-popover',
@@ -26,14 +27,28 @@ export class MenuHomePopoverComponent {
   @Input() isSingleGroup = false;
   @Input() isMultiGroups = false;
   @Input() isMixedChats = false;
+  @Input() isSingleCommunity = false; // ✅ NEW
 
-  // 👇 NEW: unread visibility flags
+  // unread visibility flags
   @Input() canMarkReadSingle = false;   // single selection has unread>0
   @Input() canMarkUnreadSingle = false; // single selection has unread==0
   @Input() canMarkReadMulti = false;    // at least one selected has unread>0
-  @Input() canMarkUnreadMulti = false;  // all selected have unread==0  (optional)
+  @Input() canMarkUnreadMulti = false;  // all selected have unread==0
+
+  // ✅ NEW: Group membership flags
+  @Input() isCurrentUserMember = false;  // User is a member of the group
+  @Input() canDeleteGroup = false;       // User can delete (not a member)
+
+  @Input() isCommunityAdmin = false;
+  @Input() isCommunityMember = false;
 
   constructor(private popover: PopoverController) {}
-  choose(action: HomeMenuAction) { this.popover.dismiss({ action }); }
-  close() { this.popover.dismiss(); }
+  
+  choose(action: HomeMenuAction) { 
+    this.popover.dismiss({ action }); 
+  }
+  
+  close() { 
+    this.popover.dismiss(); 
+  }
 }

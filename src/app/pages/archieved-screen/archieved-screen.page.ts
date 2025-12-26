@@ -64,7 +64,8 @@ export class ArchievedScreenPage implements OnInit, OnDestroy {
     private secureStorage: SecureStorageService,
     private firebaseChatService : FirebaseChatService,
     private authService : AuthService,
-    private contactSync: ContactSyncService
+    private contactSync: ContactSyncService,
+    private alertController : AlertController
   ) {}
 
   async ngOnInit() {
@@ -735,31 +736,70 @@ private openSelectedGroupInfo(): void {
   }
 
   // delete for me — only privates
-  async deleteSelected() {
-    const db = getDatabase();
-    const privates = this.selected.filter((s) => s.type !== 'group');
-    if (privates.length === 0) {
-      this.clearSelection();
-      return;
-    }
+  // async deleteSelected() {
+  //   const db = getDatabase();
+  //   const privates = this.selected.filter((s) => s.type !== 'group');
+  //   if (privates.length === 0) {
+  //     this.clearSelection();
+  //     return;
+  //   }
 
-    await Promise.all(
-      privates.map(async (it) => {
-        try {
-          await this.firebaseChat.deleteChatForUser(it.roomId, this.userId);
-        } catch {}
-        // try {
-        //   await remove(
-        //     rtdbRef(db, `archivedChats/${this.userId}/${it.roomId}`)
-        //   );
-        // } catch {}
-      })
-    );
+  //   await Promise.all(
+  //     privates.map(async (it) => {
+  //       try {
+  //         await this.firebaseChat.deleteChatForUser(it.roomId, this.userId);
+  //       } catch {}
+  //       // try {
+  //       //   await remove(
+  //       //     rtdbRef(db, `archivedChats/${this.userId}/${it.roomId}`)
+  //       //   );
+  //       // } catch {}
+  //     })
+  //   );
 
-    const toRemove = new Set(privates.map((p) => p.roomId));
-    this.items = this.items.filter((it) => !toRemove.has(it.roomId));
-    this.clearSelection();
+  //   const toRemove = new Set(privates.map((p) => p.roomId));
+  //   this.items = this.items.filter((it) => !toRemove.has(it.roomId));
+  //   this.clearSelection();
+  // }
+
+    async deleteMultipleChats() {
+  if (!this.selected || this.selected.length === 0) {
+    return;
   }
+
+  const alert = await this.alertController.create({
+    header: 'Delete Chats',
+    message: 'Are you sure you want to delete selected chats?',
+    buttons: [
+      {
+        text: 'Cancel',
+        role: 'cancel',
+        handler: () => {
+          console.log('Delete cancelled');
+        }
+      },
+      {
+        text: 'Delete',
+        role: 'destructive',
+        handler: async () => {
+          try {
+            console.log('multiple delete confirmed');
+
+            await this.firebaseChatService.deleteChats(
+              this.selected.map(c => c.roomId)
+            );
+
+            this.clearSelection();
+          } catch (error) {
+            console.error('Error deleting chats:', error);
+          }
+        }
+      }
+    ]
+  });
+
+  await alert.present();
+}
   async onBack() {
     // await this.chatService.closeChat();
     // this.router.navigate(['/home-screen']);
