@@ -36,13 +36,6 @@ export class PostService {
   private postsRefMap = new Map<string, DatabaseReference>();
 
 
-  // constructor(private db: Database, private http: HttpClient, private authService: AuthService) {
-  //   this.currentUserId = this.authService.authData?.userId || 0;  // ADD THIS
-  //   // this.currentUserId = "76";  // ADD THIS
-
-  //   // Firebase Realtime Database automatically enables offline persistence
-  //   // No additional configuration needed - it works out of the box
-  // }
 
   constructor(
     private db: Database,
@@ -80,10 +73,6 @@ export class PostService {
   }
 
 
-  // async getCachedPosts(channelId: string): Promise<any[]> {
-  //   console.log("getCachedPosts called");
-  //   return (await this.storage.get(this.postsCacheKey(channelId))) || [];
-  // }
 async getCachedPosts(channelId: string): Promise<any[]> {
   console.log('[getCachedPosts] key', this.postsCacheKey(channelId));
   const data = await this.localStorage.get<any[]>(this.postsCacheKey(channelId));
@@ -185,34 +174,6 @@ async getCachedPosts(channelId: string): Promise<any[]> {
     }
   }
 
-  // getPosts(channelId: string): Observable<any[]> {
-  //   console.log('[PostService] getPosts called with', channelId);
-  //   const postsRef = ref(this.db, `channels/${channelId}/posts`);
-  //   this.postsRefMap.set(channelId, postsRef);
-
-  //   return new Observable((observer) => {
-  //     this.getCachedPosts(channelId).then(cached => {
-  //       console.log('[PostService] cached posts length', cached.length);
-  //       if (cached.length) {
-  //         observer.next(cached);
-  //       }
-  //     });
-
-  //     onValue(postsRef, (snapshot) => {
-  //       console.log('[PostService] onValue fired');
-  //       const data = snapshot.val() || {};
-  //       const posts = Object.keys(data)
-  //         .map(id => ({ id, ...data[id] }))
-  //         .sort((a, b) => a.timestamp - b.timestamp);
-
-  //       this.savePostsToCache(channelId, posts);
-  //       observer.next(posts);
-  //     }, (error) => {
-  //       console.error('[PostService] onValue error', error);
-  //       observer.error(error);
-  //     });
-  //   });
-  // }
   getPosts(channelId: string): Observable<any[]> {
     const postsRef = ref(this.db, `channels/${channelId}/posts`);
     this.postsRefMap.set(channelId, postsRef);
@@ -220,12 +181,7 @@ async getCachedPosts(channelId: string): Promise<any[]> {
     return new Observable((observer) => {
       // 1) Emit cached posts immediately (offline / cold start)
 
-      // this.getCachedPosts(channelId).then(cached => {
-      //    console.log('[PostService] cached posts length on subscribe', cached.length);
-      //   if (cached.length) {
-      //     observer.next(cached);
-      //   }
-      // });
+    
 
       this.getCachedPosts(channelId).then(cached => {
         const posts = cached ?? [];
@@ -238,15 +194,7 @@ async getCachedPosts(channelId: string): Promise<any[]> {
 
 
       // 2) Live Firebase updates (when online)
-      // onValue(postsRef, (snapshot) => {
-      //   const data = snapshot.val() || {};
-      //   const posts = Object.keys(data)
-      //     .map(id => ({ id, ...data[id] }))
-      //     .sort((a, b) => a.timestamp - b.timestamp);
-
-      //   this.savePostsToCache(channelId, posts);
-      //   observer.next(posts);
-      // });
+    
       onValue(postsRef, (snapshot) => {
         const data = snapshot.val() || {};
         const posts = Object.keys(data)
@@ -264,50 +212,6 @@ async getCachedPosts(channelId: string): Promise<any[]> {
     });
   }
 
-
-  // getPosts(channelId: string): Observable<any[]> {
-  //   const postsRef = query(
-  //     ref(this.db, `channels/${channelId}/posts`),
-  //     orderByChild('timestamp')
-  //   );
-
-  //   return new Observable((observer) => {
-  //     onValue(postsRef, (snapshot) => {
-  //       const data = snapshot.val() || {};
-
-  //       const posts = Object.keys(data)
-  //         .map(id => ({ id, ...data[id] }))
-  //         .sort((a, b) => a.timestamp - b.timestamp);
-
-  //       observer.next(posts);
-  //     });
-  //   });
-  // }
-
-  // getPosts(channelId: string): Observable<any[]> {
-  //   const postsRef = ref(this.db, `channels/${channelId}/posts`);
-  //   console.log("postsRef",postsRef);
-
-  //   return new Observable((observer) => {
-
-  //     // 1️⃣ Emit cached posts immediately
-  //     this.getCachedPosts(channelId).then(cached => {
-  //       if (cached.length) observer.next(cached);
-  //     });
-
-  //     // 2️⃣ Listen to Firebase (online or offline cache)
-  //     onValue(postsRef, (snapshot) => {
-  //       const data = snapshot.val() || {};
-
-  //       const posts = Object.keys(data)
-  //         .map(id => ({ id, ...data[id] }))
-  //         .sort((a, b) => a.timestamp - b.timestamp); // client sort
-
-  //       this.savePostsToCache(channelId, posts);
-  //       observer.next(posts);
-  //     });
-  //   });
-  // }
 
 
   // ============================
@@ -354,16 +258,7 @@ async getCachedPosts(channelId: string): Promise<any[]> {
   // ============================
   // 6️⃣ GET USER'S CURRENT REACTION FOR A POST
   // ============================
-  // async getUserReaction(channelId: string, postId: string, userId?: number): Promise<string | null> {
-  //   const uid = userId || this.currentUserId;
-  //   const userReactionRef = ref(
-  //     this.db,
-  //     `channels/${channelId}/posts/${postId}/user_reactions/${uid}`
-  //   );
-  //   const snapshot = await get(userReactionRef);
-  //   const reaction = snapshot.val() as UserReaction | null;
-  //   return reaction ? reaction.emoji : null;
-  // }
+ 
   async getUserReaction(
     channelId: string,
     postId: string,

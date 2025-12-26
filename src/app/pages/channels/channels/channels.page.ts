@@ -8,6 +8,9 @@ import { AddChannelModalComponent } from '../modals/add-channel-modal/add-channe
 import { ChannelService, Category, Region, Channel } from '../services/channel';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from 'src/app/auth/auth.service';
+// import { ChannelPouchDbService } from 'src/app/services/channel-pouch-db.service';
+import { ChannelFirebaseSyncService } from '../services/firebasesyncchannel';
+import { ChannelPouchDbService } from '../services/pouch-db';
 
 interface GroupedCategory {
   id: number | 'uncategorized';
@@ -40,22 +43,13 @@ export class ChannelsPage implements OnInit {
   categories: Category[] = [];
   regions: Region[] = [];
 
-  // ADD THESE PROPERTIES at the top with others
-  // userId: number = 52; // ← Replace with real auth user ID later
-  userId: any = this.authService.authData?.userId || ''; // Replace with real auth user ID later
+  userId: any = this.authService.authData?.userId || '';
 
-  loadingChannelId: string | null = null; // for button loading state
-  private followedChannelIds = new Set<string>(); // source of truth
+  loadingChannelId: string | null = null;
+  private followedChannelIds = new Set<string>();
 
-  // ADD THIS METHOD – detects if user owns the channel
-  isOwner(channel: UIChannel): boolean {
-    return channel._meta?.created_by === this.userId;
-  }
-
-  // for category paging (main page)
+  // Category paging
   private loadedCategoryIds = new Set<number | 'uncategorized'>();
-
-  // for category-full-view channel dedupe
   private categoryChannelIds = new Set<string>();
 
   allGroupedCategories: GroupedCategory[] = [];
@@ -64,20 +58,19 @@ export class ChannelsPage implements OnInit {
   currentCategoryPage = 0;
   hasMoreCategories = true;
 
-  // filter segment
+  // Filters
   selectedCategoryId: number | 'all' = 'all';
   selectedRegionId: number | 'all' = 'all';
 
-  // placeholder
   placeholderAvatar = 'assets/channel/channel-placeholder.svg';
 
-  // Category Full-View state (for See all in-place)
+  // Category Full-View state
   categoryFullViewActive = false;
   activeCategoryId: number | 'uncategorized' | 'all' = 'all';
   activeCategoryName = '';
   categoryChannels: UIChannel[] = [];
   categoryPageSize = 10;
-  categoryOffset = 0; // page index (0-based)
+  categoryOffset = 0;
   hasMoreCategoryChannels = true;
 
   selectedCategoryName?: string | null = null;
@@ -88,33 +81,178 @@ export class ChannelsPage implements OnInit {
     private router: Router,
     private channelService: ChannelService,
     private toastCtrl: ToastController,
-    private authService: AuthService
+    private authService: AuthService,
+    private pouchDb: ChannelPouchDbService,
+    private channelFirebase: ChannelFirebaseSyncService
   ) { }
 
+  /* =========================
+     LIFECYCLE - OFFLINE-FIRST
+     ========================= */
+
   async ngOnInit() {
+    // 🔹 STEP 1: Load from cache FIRST (instant)
+    await this.loadFromCache();
+
+    // 🔹 STEP 2: Load metadata (categories/regions)
     await this.loadMetadata();
-    // ← ADD THIS: Load your followed channels so we know what you're following
-    await this.loadMyFollowedChannels();
+
+    // 🔹 STEP 3: Setup Firebase listeners
+    this.setupFirebaseListeners();
+
+    // 🔹 STEP 4: Load from backend (background sync)
     await this.loadChannels();
   }
 
-  private async loadMyFollowedChannels() {
+  async ionViewWillEnter() {
+    // Reload from cache when returning to page
+    await this.loadFromCache();
+  }
+
+  /* =========================
+     OFFLINE-FIRST LOADING
+     ========================= */
+
+  /**
+   * 🔹 Load from PouchDB cache FIRST (instant)
+   */
+  private async loadFromCache() {
+    console.log('📱 Loading channels from PouchDB cache...');
+
     try {
-      const res = await firstValueFrom(
-        this.channelService.getUserChannels(this.userId, { role: 'all' })
-      );
-      if (res?.status && Array.isArray(res.channels)) {
+      const [cachedDiscoverChannels, cachedMyChannels] = await Promise.all([
+        this.pouchDb.getDiscoverChannels(this.userId),
+        this.pouchDb.getMyChannels(this.userId)
+      ]);
+
+      // Build followed IDs set
+      if (cachedMyChannels.length > 0) {
         this.followedChannelIds = new Set(
-          res.channels.map((ch: any) => `c${ch.channel_id}`)
+          cachedMyChannels.map(c => `c${c.channel_id}`)
         );
+        console.log(`✅ Loaded ${cachedMyChannels.length} followed channels from cache`);
       }
-    } catch (err) {
-      console.warn('Could not load followed channels for sync', err);
+
+      // Convert discover channels to UI format
+      if (cachedDiscoverChannels.length > 0) {
+        const mapped: UIChannel[] = cachedDiscoverChannels.map((c: any) => {
+          const rawFollowers = c.followers_count ?? c.follower_count ?? c.followers ?? 0;
+          const followersNum = Number(rawFollowers) || 0;
+          const channelId = `c${c.channel_id}`;
+
+          return {
+            id: channelId,
+            name: c.channel_name,
+            followers: followersNum,
+            followersFormatted: this.formatFollowers(followersNum),
+            avatar: c.channel_dp || null,
+            verified: !!c.is_verified,
+            following: this.followedChannelIds.has(channelId),
+            _meta: c
+          } as UIChannel;
+        });
+
+        this.allChannels = mapped;
+        this.buildAllGroupedCategories(mapped);
+
+        // Reset paging
+        this.currentCategoryPage = 0;
+        this.loadedCategoryIds.clear();
+        this.pagedGroupedCategories = [];
+        this.hasMoreCategories = true;
+        this.loadNextCategoryPage();
+
+        console.log(`✅ Loaded ${mapped.length} discover channels from cache`);
+      }
+
+      if (cachedDiscoverChannels.length === 0) {
+        console.log('📭 No cached channels, will load from backend');
+        this.isLoading = true;
+      }
+
+    } catch (error) {
+      console.error('❌ Failed to load from cache:', error);
+      this.isLoading = true;
     }
   }
 
   /**
-   * Load categories & regions together and wait for both to complete.
+   * 🔥 Setup Firebase listeners for real-time updates
+   */
+  private setupFirebaseListeners() {
+    // Listen to my channels (for followed state)
+    this.channelFirebase.listenMyChannels(this.userId, channels => {
+      console.log('🔥 Firebase update: My Channels (followed state)');
+      this.followedChannelIds = new Set(
+        channels.map(c => `c${c.channel_id}`)
+      );
+      
+      // Update following state in all UI channels
+      this.updateFollowingStateInAllChannels();
+    });
+
+    // Listen to discover channels
+    this.channelFirebase.listenDiscoverChannels(this.userId, channels => {
+      console.log('🔥 Firebase update: Discover Channels');
+      
+      // Convert to UI format
+      const mapped: UIChannel[] = channels.map((c: any) => {
+        const rawFollowers = c.followers_count ?? c.follower_count ?? c.followers ?? 0;
+        const followersNum = Number(rawFollowers) || 0;
+        const channelId = `c${c.channel_id}`;
+
+        return {
+          id: channelId,
+          name: c.channel_name,
+          followers: followersNum,
+          followersFormatted: this.formatFollowers(followersNum),
+          avatar: c.channel_dp || null,
+          verified: !!c.is_verified,
+          following: this.followedChannelIds.has(channelId),
+          _meta: c
+        } as UIChannel;
+      });
+
+      // Only update if we have new data
+      if (mapped.length > 0) {
+        this.allChannels = mapped;
+        this.buildAllGroupedCategories(mapped);
+        this.resetPaging();
+        this.isLoading = false;
+      }
+    });
+  }
+
+  /**
+   * Update following state across all channel lists
+   */
+  private updateFollowingStateInAllChannels() {
+    // Update in all channels
+    this.allChannels.forEach(ch => {
+      ch.following = this.followedChannelIds.has(ch.id);
+    });
+
+    // Update in grouped categories
+    this.allGroupedCategories.forEach(group => {
+      group.channels.forEach(ch => {
+        ch.following = this.followedChannelIds.has(ch.id);
+      });
+    });
+
+    this.pagedGroupedCategories.forEach(group => {
+      group.channels.forEach(ch => {
+        ch.following = this.followedChannelIds.has(ch.id);
+      });
+    });
+
+    // Update in full view
+    this.categoryChannels.forEach(ch => {
+      ch.following = this.followedChannelIds.has(ch.id);
+    });
+  }
+
+  /**
+   * Load metadata (categories & regions)
    */
   async loadMetadata(): Promise<void> {
     try {
@@ -126,29 +264,33 @@ export class ChannelsPage implements OnInit {
       this.categories = (catsRes && (catsRes as any).categories) ? (catsRes as any).categories : [];
       this.regions = (regsRes && (regsRes as any).regions) ? (regsRes as any).regions : [];
     } catch (err) {
-      console.warn('Failed to load metadata', err);
+      console.warn('Failed to load metadata:', err);
       this.categories = [];
       this.regions = [];
     }
   }
 
-  /** Load all channels (used for compact main page grouping) */
+  /**
+   * Load channels from backend (background sync)
+   */
   async loadChannels(event?: any) {
     try {
-      this.isLoading = true;
+      if (!event) {
+        this.isLoading = true;
+      }
 
       const params: any = {
         page: 1,
-        limit: 50 // fetch many to build homepage categories
+        limit: 50
       };
 
-      // category filter by NAME
+      // Category filter
       if (this.selectedCategoryId !== 'all') {
         const catObj = this.categories.find(c => c.id == this.selectedCategoryId);
         if (catObj) params.category = catObj.category_name;
       }
 
-      // region filter by NAME
+      // Region filter
       if (this.selectedRegionId !== 'all') {
         const regionObj = this.regions.find(r => r.region_id == this.selectedRegionId);
         if (regionObj) params.region = regionObj.region_name;
@@ -157,146 +299,96 @@ export class ChannelsPage implements OnInit {
       const res = await firstValueFrom(this.channelService.listChannels(params));
       const backendChannels = Array.isArray(res.channels) ? res.channels : [];
 
-    
-      const mapped: UIChannel[] = backendChannels
-        .filter((c: any) => {
-         
-          const channelId = `c${c.channel_id}`;
-          const isOwned = c.created_by === this.userId;
-          const isFollowed = this.followedChannelIds.has(channelId);
+      console.log(`🌐 Backend: Loaded ${backendChannels.length} channels`);
 
-          // HIDE if owned OR followed
-          return !isOwned && !isFollowed;
-        })
-        .map((c: any) => {
-         
-          const rawFollowers = (c as any).followers_count ?? (c as any).follower_count ?? (c as any).followers ?? 0;
-          const followersNum = Number(rawFollowers) || 0;
-          // const followersNum = Number(rawFollowers) || 0;
-          const channelId = `c${c.channel_id}`;
+      // Filter out owned and followed channels
+      const filtered = backendChannels.filter((c: any) => {
+        const channelId = `c${c.channel_id}`;
+        const isOwned = c.created_by === this.userId;
+        const isFollowed = this.followedChannelIds.has(channelId);
+        return !isOwned && !isFollowed;
+      });
 
-          return {
-            id: channelId,
-            name: c.channel_name,
-            followers: followersNum,
-            followersFormatted: this.formatFollowers(followersNum),
-            avatar: c.channel_dp || null,
-            verified: !!c.is_verified,
-            following: false, // always false here — we filtered them out
-            _meta: c
-          } as UIChannel;
-        });
+      // 🔥 Sync to Firebase (which auto-updates PouchDB)
+      await this.channelFirebase.syncDiscoverChannels(
+        this.userId,
+        filtered
+      );
+
+      // Convert to UI format
+      const mapped: UIChannel[] = filtered.map((c: any) => {
+        const rawFollowers = c.followers_count ?? c.follower_count ?? c.followers ?? 0;
+        const followersNum = Number(rawFollowers) || 0;
+        const channelId = `c${c.channel_id}`;
+
+        return {
+          id: channelId,
+          name: c.channel_name,
+          followers: followersNum,
+          followersFormatted: this.formatFollowers(followersNum),
+          avatar: c.channel_dp || null,
+          verified: !!c.is_verified,
+          following: false,
+          _meta: c
+        } as UIChannel;
+      });
+
       this.allChannels = mapped;
-
-      // build categories for main page (first 4 each)
       this.buildAllGroupedCategories(mapped);
-
-      // reset paging
-      this.currentCategoryPage = 0;
-      this.loadedCategoryIds.clear();
-      this.pagedGroupedCategories = [];
-      this.hasMoreCategories = true;
-      this.loadNextCategoryPage();
+      this.resetPaging();
 
     } catch (err) {
-      console.error('Load channels error', err);
-      await this.presentToast('Could not load channels. Pull to retry.');
+      console.error('❌ Load channels error:', err);
+      
+      if (!event) {
+        // Only show toast if not a pull-to-refresh
+        await this.presentToast('Could not load channels. Using cached data.');
+      }
     } finally {
       this.isLoading = false;
       if (event?.target) event.target.complete();
     }
   }
 
-  private formatFollowers(n: number): string {
-    if (!n || n <= 0) return '0';
-    if (n < 1000) return `${n}`;
-    if (n < 1_000_000) {
-      const num = Math.round((n / 1000) * 10) / 10;
-      return `${num}`.replace(/\.0$/, '') + 'k';
-    }
-    const num = Math.round((n / 1_000_000) * 10) / 10;
-    return `${num}`.replace(/\.0$/, '') + 'M';
-  }
-
-  private buildAllGroupedCategories(channels: UIChannel[]) {
-    const groupsMap = new Map<number | 'uncategorized', GroupedCategory>();
-    for (const cat of this.categories) {
-      groupsMap.set(cat.id, { id: cat.id, name: cat.category_name, channels: [] });
+  /**
+   * Load followed channels in background
+   */
+  private async loadMyFollowedChannels() {
+    if (!navigator.onLine) {
+      console.log('📴 Offline: Skipping followed channels sync');
+      return;
     }
 
-    for (const ch of channels) {
-      const catId = ch._meta?.category_id;
-      const key = (catId != null && groupsMap.has(Number(catId))) ? Number(catId) : 'uncategorized';
-
-      if (!groupsMap.has(key)) {
-        groupsMap.set(key, { id: key, name: key === 'uncategorized' ? 'Uncategorized' : 'Unknown', channels: [] });
+    try {
+      const res = await firstValueFrom(
+        this.channelService.getUserChannels(this.userId, { role: 'all' })
+      );
+      
+      if (res?.status && Array.isArray(res.channels)) {
+        console.log(`✅ Backend sync: ${res.channels.length} followed channels`);
+        
+        // Update Firebase (which updates PouchDB)
+        await this.channelFirebase.syncMyChannels(
+          this.userId,
+          res.channels
+        );
       }
-
-      groupsMap.get(key)!.channels.push(ch);
-    }
-
-    const grouped: GroupedCategory[] = [];
-    for (const g of groupsMap.values()) {
-      if (g.channels && g.channels.length) grouped.push({ id: g.id, name: g.name, channels: g.channels.slice(0, 4) });
-    }
-
-    // ensure uncategorized last
-    this.allGroupedCategories = grouped.filter(g => g.id !== 'uncategorized');
-    const unc = grouped.find(g => g.id === 'uncategorized');
-    if (unc) this.allGroupedCategories.push(unc);
-  }
-
-  private loadNextCategoryPage() {
-    const start = this.currentCategoryPage * this.categoriesPageSize;
-    const end = start + this.categoriesPageSize;
-    const nextBatch = this.allGroupedCategories.slice(start, end);
-
-    // filter out any groups already loaded (safety)
-    const newBatch = nextBatch.filter(g => !this.loadedCategoryIds.has(g.id));
-
-    if (newBatch.length) {
-      newBatch.forEach(g => this.loadedCategoryIds.add(g.id));
-      this.pagedGroupedCategories = this.pagedGroupedCategories.concat(newBatch);
-
-      this.currentCategoryPage++;
-
-      if (this.pagedGroupedCategories.length >= this.allGroupedCategories.length) {
-        this.hasMoreCategories = false;
-      }
-    } else {
-      this.hasMoreCategories = false;
+    } catch (err) {
+      console.warn('📴 Could not sync followed channels:', err);
     }
   }
 
-  loadMoreCategories(event: any) {
-    // small delay to allow spinner show; keep short
-    setTimeout(() => {
-      this.loadNextCategoryPage();
-      if (event?.target) {
-        event.target.complete();
-        if (!this.hasMoreCategories) event.target.disabled = true;
-      }
-    }, 200);
-  }
+  /* =========================
+     FOLLOW / UNFOLLOW
+     ========================= */
 
-  onCategorySelected(ev: any) {
-    const v = ev.detail ? ev.detail.value : ev;
-    this.selectedCategoryId = (v === 'all') ? 'all' : Number(v);
-    // reset main paging and reload channels with new filter
-    this.currentCategoryPage = 0;
-    this.hasMoreCategories = true;
-    this.loadChannels();
-  }
-
-
-  // REPLACE YOUR toggleFollow() with this PERFECT version
   async toggleFollow(channel: UIChannel) {
     if (this.loadingChannelId === channel.id) return;
 
     const wasFollowing = channel.following;
     const channelId = channel._meta.channel_id;
 
-    // ───── OPTIMISTIC UI (Instant, no blink) ─────
+    // 1️⃣ Optimistic UI update
     channel.following = !wasFollowing;
     channel.followers += wasFollowing ? -1 : 1;
     channel.followersFormatted = this.formatFollowers(channel.followers);
@@ -307,7 +399,6 @@ export class ChannelsPage implements OnInit {
       this.followedChannelIds.add(channel.id);
     }
 
-    // Update same channel in ALL places (main list + full view)
     this.updateChannelInAllLists(channel.id, {
       following: !wasFollowing,
       followers: channel.followers,
@@ -316,20 +407,46 @@ export class ChannelsPage implements OnInit {
 
     this.loadingChannelId = channel.id;
 
-    // Haptics (only on device)
+    // Haptics
     try {
       const { Haptics, ImpactStyle } = await import('@capacitor/haptics');
       Haptics.impact({ style: ImpactStyle.Light });
     } catch (e) { /* web = no haptics */ }
 
+    // 2️⃣ Update Firebase + PouchDB (with offline queue)
+    if (wasFollowing) {
+      await this.channelFirebase.unfollowChannel(
+        this.userId,
+        channelId
+      );
+    } else {
+      await this.channelFirebase.followChannel(
+        this.userId,
+        channel._meta
+      );
+    }
+
+    // 3️⃣ Backend confirmation
     try {
       await firstValueFrom(
-        this.channelService.setFollow(channelId, !wasFollowing)
+        this.channelService.setFollow(channelId, !wasFollowing, this.userId)
       );
-      // Success → do nothing! Already updated
-      this.presentToast(!wasFollowing ? 'Now following' : 'Unfollowed', 800);
+      
+      console.log(`✅ Backend confirmed ${wasFollowing ? 'unfollow' : 'follow'}`);
+      this.presentToast(
+        !wasFollowing ? 'Now following' : 'Unfollowed',
+        800
+      );
+
+      // If followed, remove from explore views
+      if (!wasFollowing) {
+        this.removeChannelFromExploreViews(channel.id);
+      }
+
     } catch (err) {
-      // ───── REVERT ON FAILURE (smooth) ─────
+      console.error('❌ Backend operation failed:', err);
+
+      // 4️⃣ Revert optimistic update
       channel.following = wasFollowing;
       channel.followers += wasFollowing ? 1 : -1;
       channel.followersFormatted = this.formatFollowers(channel.followers);
@@ -340,18 +457,24 @@ export class ChannelsPage implements OnInit {
         this.followedChannelIds.delete(channel.id);
       }
 
-      if (!wasFollowing) {
-        // User just followed → remove from ALL explore lists
-        this.removeChannelFromExploreViews(channel.id);
-      }
-
       this.updateChannelInAllLists(channel.id, {
         following: wasFollowing,
         followers: channel.followers,
         followersFormatted: channel.followersFormatted
       });
 
-      this.presentToast('Failed. Try again.');
+      // 5️⃣ Revert Firebase
+      if (wasFollowing) {
+        await this.channelFirebase.followChannel(this.userId, channel._meta);
+      } else {
+        await this.channelFirebase.unfollowChannel(this.userId, channelId);
+      }
+
+      this.presentToast(
+        `Failed to ${wasFollowing ? 'unfollow' : 'follow'}. ${
+          navigator.onLine ? 'Try again.' : 'Will retry when online.'
+        }`
+      );
     } finally {
       this.loadingChannelId = null;
     }
@@ -369,79 +492,130 @@ export class ChannelsPage implements OnInit {
     // Remove from full category view
     this.categoryChannels = this.categoryChannels.filter(ch => ch.id !== channelId);
   }
-  // ADD THIS HELPER – updates channel in all lists (main + full view)
-  private updateChannelInAllLists(channelId: string, updates: Partial<UIChannel>) {
-    const id = `c${channelId}`;
 
+  private updateChannelInAllLists(channelId: string, updates: Partial<UIChannel>) {
     // Update in main allChannels
-    const inMain = this.allChannels.find(c => c.id === id);
+    const inMain = this.allChannels.find(c => c.id === channelId);
     if (inMain) Object.assign(inMain, updates);
 
     // Update in grouped categories
     for (const group of this.allGroupedCategories) {
-      const ch = group.channels.find(c => c.id === id);
+      const ch = group.channels.find(c => c.id === channelId);
       if (ch) Object.assign(ch, updates);
     }
 
     // Update in paged view
     for (const group of this.pagedGroupedCategories) {
-      const ch = group.channels.find(c => c.id === id);
+      const ch = group.channels.find(c => c.id === channelId);
       if (ch) Object.assign(ch, updates);
     }
 
     // Update in full category view
-    const inFull = this.categoryChannels.find(c => c.id === id);
+    const inFull = this.categoryChannels.find(c => c.id === channelId);
     if (inFull) Object.assign(inFull, updates);
   }
-  async openAddChannelModal() {
-    const modal = await this.modalCtrl.create({
-      component: AddChannelModalComponent
-    });
-    await modal.present();
 
-    const { data } = await modal.onDidDismiss();
-    if (data) this.loadChannels(); // only reload if created
-  }
+  /* =========================
+     CATEGORY & PAGING LOGIC
+     ========================= */
 
-  async openRegionFilter() {
-    const modal = await this.modalCtrl.create({
-      component: RegionFilterModalComponent,
-      componentProps: {
-        regions: this.regions ?? [],
-        categories: this.categories ?? [],
-      }
-    });
-    await modal.present();
-    const { data } = await modal.onDidDismiss();
-
-    if (!data) return;
-
-    this.applyRegionSelection(data.selectedRegionId ?? null, data.selectedRegionName ?? null);
-  }
-
-  private applyRegionSelection(regionId: number | null, regionName: string | null) {
-    if (regionId == null) {
-      this.selectedRegionId = 'all';
-      this.selectedRegionName = null;
-    } else {
-      this.selectedRegionId = regionId;
-      this.selectedRegionName = regionName ?? null;
+  private buildAllGroupedCategories(channels: UIChannel[]) {
+    const groupsMap = new Map<number | 'uncategorized', GroupedCategory>();
+    
+    for (const cat of this.categories) {
+      groupsMap.set(cat.id, { id: cat.id, name: cat.category_name, channels: [] });
     }
-    // reload channels using new region filter
+
+    for (const ch of channels) {
+      const catId = ch._meta?.category_id;
+      const key = (catId != null && groupsMap.has(Number(catId))) 
+        ? Number(catId) 
+        : 'uncategorized';
+
+      if (!groupsMap.has(key)) {
+        groupsMap.set(key, { 
+          id: key, 
+          name: key === 'uncategorized' ? 'Uncategorized' : 'Unknown', 
+          channels: [] 
+        });
+      }
+
+      groupsMap.get(key)!.channels.push(ch);
+    }
+
+    const grouped: GroupedCategory[] = [];
+    for (const g of groupsMap.values()) {
+      if (g.channels && g.channels.length) {
+        grouped.push({ 
+          id: g.id, 
+          name: g.name, 
+          channels: g.channels.slice(0, 4) 
+        });
+      }
+    }
+
+    // Ensure uncategorized last
+    this.allGroupedCategories = grouped.filter(g => g.id !== 'uncategorized');
+    const unc = grouped.find(g => g.id === 'uncategorized');
+    if (unc) this.allGroupedCategories.push(unc);
+  }
+
+  private resetPaging() {
+    this.currentCategoryPage = 0;
+    this.loadedCategoryIds.clear();
+    this.pagedGroupedCategories = [];
+    this.hasMoreCategories = true;
+    this.loadNextCategoryPage();
+  }
+
+  private loadNextCategoryPage() {
+    const start = this.currentCategoryPage * this.categoriesPageSize;
+    const end = start + this.categoriesPageSize;
+    const nextBatch = this.allGroupedCategories.slice(start, end);
+
+    const newBatch = nextBatch.filter(g => !this.loadedCategoryIds.has(g.id));
+
+    if (newBatch.length) {
+      newBatch.forEach(g => this.loadedCategoryIds.add(g.id));
+      this.pagedGroupedCategories = this.pagedGroupedCategories.concat(newBatch);
+      this.currentCategoryPage++;
+
+      if (this.pagedGroupedCategories.length >= this.allGroupedCategories.length) {
+        this.hasMoreCategories = false;
+      }
+    } else {
+      this.hasMoreCategories = false;
+    }
+  }
+
+  loadMoreCategories(event: any) {
+    setTimeout(() => {
+      this.loadNextCategoryPage();
+      if (event?.target) {
+        event.target.complete();
+        if (!this.hasMoreCategories) event.target.disabled = true;
+      }
+    }, 200);
+  }
+
+  onCategorySelected(ev: any) {
+    const v = ev.detail ? ev.detail.value : ev;
+    this.selectedCategoryId = (v === 'all') ? 'all' : Number(v);
+    this.currentCategoryPage = 0;
+    this.hasMoreCategories = true;
     this.loadChannels();
   }
 
-  clearRegionFilter() {
-    this.selectedRegionId = 'all';
-    this.selectedRegionName = null;
-    this.loadChannels();
-  }
+  /* =========================
+     CATEGORY FULL VIEW
+     ========================= */
 
-  /** ========== CATEGORY FULL VIEW HANDLERS ========== */
   openCategoryFullView(categoryId: number | 'uncategorized', categoryName?: string) {
     this.categoryFullViewActive = true;
     this.activeCategoryId = categoryId;
-    this.activeCategoryName = categoryName ?? (categoryId === 'uncategorized' ? 'Uncategorized' : 'Category');
+    this.activeCategoryName = categoryName ?? (
+      categoryId === 'uncategorized' ? 'Uncategorized' : 'Category'
+    );
 
     this.categoryChannels = [];
     this.categoryOffset = 0;
@@ -487,14 +661,11 @@ export class ChannelsPage implements OnInit {
       const res = await firstValueFrom(this.channelService.listChannels(params));
       const backendChannels = Array.isArray(res.channels) ? res.channels : [];
 
-    
-
       let filtered = backendChannels.filter((c: any) => {
         const channelId = `c${c.channel_id}`;
         const isOwned = c.created_by === this.userId;
         const isFollowed = this.followedChannelIds.has(channelId);
 
-        // Apply category filter (uncategorized)
         const matchesCategory = this.activeCategoryId === 'uncategorized'
           ? !c.category_name
           : true;
@@ -502,14 +673,10 @@ export class ChannelsPage implements OnInit {
         return matchesCategory && !isOwned && !isFollowed;
       });
 
-
       const mapped: UIChannel[] = filtered.map((c: any) => {
-        const rawFollowers = (c as any).followers_count ?? (c as any).follower_count ?? (c as any).followers ?? 0;
+        const rawFollowers = c.followers_count ?? c.follower_count ?? c.followers ?? 0;
         const followersNum = Number(rawFollowers) || 0;
-        // console.log(followersNum);
         const channelId = `c${c.channel_id}`;
-
-        const isFollowing = this.followedChannelIds.has(channelId);
 
         return {
           id: channelId,
@@ -518,12 +685,12 @@ export class ChannelsPage implements OnInit {
           followersFormatted: this.formatFollowers(followersNum),
           avatar: c.channel_dp || null,
           verified: !!c.is_verified,
-          following: isFollowing, // ← THIS IS THE FIX
+          following: this.followedChannelIds.has(channelId),
           _meta: c
         };
       });
 
-      // dedupe using channel id
+      // Dedupe
       const newOnes = mapped.filter(m => !this.categoryChannelIds.has(m.id));
       newOnes.forEach(n => this.categoryChannelIds.add(n.id));
       this.categoryChannels = [...this.categoryChannels, ...newOnes];
@@ -531,11 +698,11 @@ export class ChannelsPage implements OnInit {
       if (backendChannels.length < this.categoryPageSize) {
         this.hasMoreCategoryChannels = false;
       } else {
-        this.categoryOffset += 1; // move to next PAGE
+        this.categoryOffset += 1;
       }
 
     } catch (err) {
-      console.error('Full Category Page Error:', err);
+      console.error('❌ Full Category Page Error:', err);
       await this.presentToast('Could not load category channels.');
     } finally {
       if (event?.target) {
@@ -545,25 +712,94 @@ export class ChannelsPage implements OnInit {
     }
   }
 
- async openChannelDetail(channel: UIChannel) {
-  const channelId = channel._meta.channel_id;  // Numeric ID from backend (e.g., 34)
-  
-  // Navigate to /channel-feed with channelId as query param
-  this.router.navigate(['/channel-feed'], { 
-    queryParams: { channelId: channelId } 
-  });
-  
-  // Optional: Add haptics for smooth UX (as in toggleFollow)
-  try {
-    const { Haptics, ImpactStyle } = await import('@capacitor/haptics');
-    Haptics.impact({ style: ImpactStyle.Medium });
-  } catch (e) { /* No haptics on web */ }
-}
-
   loadMoreCategoryChannels(event: any) {
     setTimeout(() => {
       this.loadCategoryPage(event);
     }, 150);
+  }
+
+  /* =========================
+     FILTERS & MODALS
+     ========================= */
+
+  async openRegionFilter() {
+    const modal = await this.modalCtrl.create({
+      component: RegionFilterModalComponent,
+      componentProps: {
+        regions: this.regions ?? [],
+        categories: this.categories ?? [],
+      }
+    });
+    await modal.present();
+    const { data } = await modal.onDidDismiss();
+
+    if (!data) return;
+
+    this.applyRegionSelection(
+      data.selectedRegionId ?? null, 
+      data.selectedRegionName ?? null
+    );
+  }
+
+  private applyRegionSelection(regionId: number | null, regionName: string | null) {
+    if (regionId == null) {
+      this.selectedRegionId = 'all';
+      this.selectedRegionName = null;
+    } else {
+      this.selectedRegionId = regionId;
+      this.selectedRegionName = regionName ?? null;
+    }
+    this.loadChannels();
+  }
+
+  clearRegionFilter() {
+    this.selectedRegionId = 'all';
+    this.selectedRegionName = null;
+    this.loadChannels();
+  }
+
+  async openAddChannelModal() {
+    const modal = await this.modalCtrl.create({
+      component: AddChannelModalComponent
+    });
+    await modal.present();
+
+    const { data } = await modal.onDidDismiss();
+    if (data) {
+      this.loadChannels();
+    }
+  }
+
+  /* =========================
+     NAVIGATION & UTILITIES
+     ========================= */
+
+  async openChannelDetail(channel: UIChannel) {
+    const channelId = channel._meta.channel_id;
+    
+    this.router.navigate(['/channel-feed'], { 
+      queryParams: { channelId: channelId } 
+    });
+    
+    try {
+      const { Haptics, ImpactStyle } = await import('@capacitor/haptics');
+      Haptics.impact({ style: ImpactStyle.Medium });
+    } catch (e) { /* No haptics on web */ }
+  }
+
+  isOwner(channel: UIChannel): boolean {
+    return channel._meta?.created_by === this.userId;
+  }
+
+  private formatFollowers(n: number): string {
+    if (!n || n <= 0) return '0';
+    if (n < 1000) return `${n}`;
+    if (n < 1_000_000) {
+      const num = Math.round((n / 1000) * 10) / 10;
+      return `${num}`.replace(/\.0$/, '') + 'k';
+    }
+    const num = Math.round((n / 1_000_000) * 10) / 10;
+    return `${num}`.replace(/\.0$/, '') + 'M';
   }
 
   trackByChannel(index: number, item: UIChannel) {
@@ -571,7 +807,11 @@ export class ChannelsPage implements OnInit {
   }
 
   async presentToast(message: string, duration = 2000) {
-    const t = await this.toastCtrl.create({ message, duration, position: 'bottom' });
+    const t = await this.toastCtrl.create({ 
+      message, 
+      duration, 
+      position: 'bottom' 
+    });
     await t.present();
   }
 }

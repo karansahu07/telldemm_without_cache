@@ -9,6 +9,8 @@ import { Channel, ChannelService } from 'src/app/pages/channels/services/channel
 import { AuthService } from 'src/app/auth/auth.service';
 import { AddChannelModalComponent } from 'src/app/pages/channels/modals/add-channel-modal/add-channel-modal.component';
 import { ChannelFirebaseSyncService } from 'src/app/pages/channels/services/firebasesyncchannel';
+import { ChannelPouchDbService } from 'src/app/pages/channels/services/pouch-db';
+// import { ChannelPouchDbService } from 'src/app/services/channel-pouch-db.service';
 
 register();
 
@@ -34,8 +36,6 @@ export class StatusScreenPage implements OnInit, OnDestroy {
 
   userId: any = this.authService.authData?.userId || '';
 
-  private firebaseListeners: any[] = [];
-
   constructor(
     private popoverCtrl: PopoverController,
     private router: Router,
@@ -43,79 +43,111 @@ export class StatusScreenPage implements OnInit, OnDestroy {
     private toastCtrl: ToastController,
     private authService: AuthService,
     private modalCtrl: ModalController,
-    private channelFirebase: ChannelFirebaseSyncService
+    private channelFirebase: ChannelFirebaseSyncService,
+    private pouchDb: ChannelPouchDbService
   ) { }
 
   ngOnInit() {
-    // Initial setup in ionViewDidEnter
+    // Setup will happen in ionViewWillEnter
   }
 
-  ionViewWillEnter() {
-    this.listenFromFirebase();   // UI data
-    this.syncFromBackend();      // background refresh
+  /* =========================
+     LIFECYCLE - OFFLINE-FIRST STRATEGY
+     ========================= */
+
+  async ionViewWillEnter() {
+    // 🔹 STEP 1: Load from PouchDB IMMEDIATELY (instant UI)
+    await this.loadFromCache();
+
+    // 🔹 STEP 2: Setup Firebase listeners (background sync)
+    this.listenFromFirebase();
+
+    // 🔹 STEP 3: Sync from backend (background refresh)
+    this.syncFromBackend();
   }
 
   ionViewWillLeave() {
     this.cleanupFirebaseListeners();
   }
 
-  opendummy(){
-     this.router.navigate(['/channel-feed'], {
-      queryParams: { channelId:33 }
-    });
+  ngOnDestroy() {
+    this.cleanupFirebaseListeners();
   }
 
-  private listenFromFirebase() {
+  /* =========================
+     OFFLINE-FIRST DATA LOADING
+     ========================= */
 
+  /**
+   * 🔹 Load from PouchDB cache FIRST (instant)
+   */
+  private async loadFromCache() {
+    console.log('📱 Loading channels from PouchDB cache...');
+
+    try {
+      const [cachedMyChannels, cachedDiscoverChannels] = await Promise.all([
+        this.pouchDb.getMyChannels(this.userId),
+        this.pouchDb.getDiscoverChannels(this.userId)
+      ]);
+
+      if (cachedMyChannels.length > 0) {
+        this.myChannels = cachedMyChannels;
+        this.followedChannelIds = new Set(
+          cachedMyChannels.map(c => c.channel_id)
+        );
+        console.log(`✅ Loaded ${cachedMyChannels.length} my channels from cache`);
+      }
+
+      if (cachedDiscoverChannels.length > 0) {
+        this.publicChannels = cachedDiscoverChannels;
+        this.updateFilteredChannels();
+        console.log(`✅ Loaded ${cachedDiscoverChannels.length} discover channels from cache`);
+      }
+
+      if (cachedMyChannels.length === 0 && cachedDiscoverChannels.length === 0) {
+        console.log('📭 No cached data, showing loading state');
+        this.isLoadingChannels = true;
+      }
+
+    } catch (error) {
+      console.error('❌ Failed to load from cache:', error);
+      this.isLoadingChannels = true;
+    }
+  }
+
+  /**
+   * 🔥 Setup Firebase listeners (auto-updates UI when data changes)
+   */
+  private listenFromFirebase() {
+    // Firebase listeners automatically cache to PouchDB
     this.channelFirebase.listenMyChannels(this.userId, channels => {
+      console.log('🔥 Firebase update: My Channels');
       this.myChannels = channels;
       this.followedChannelIds = new Set(
         channels.map(c => c.channel_id)
       );
       this.updateFilteredChannels();
+      this.isLoadingChannels = false;
     });
 
     this.channelFirebase.listenDiscoverChannels(this.userId, channels => {
+      console.log('🔥 Firebase update: Discover Channels');
       this.publicChannels = channels;
       this.updateFilteredChannels();
-    });
-
-  }
-
-
-  ngOnDestroy() {
-    this.cleanupFirebaseListeners();
-  }
-
-  private setupFirebaseListeners() {
-    // 🔥 Listen to My Channels with full data (offline-first)
-    this.channelFirebase.listenMyChannels(this.userId, (channels) => {
-      console.log('📱 Firebase My Channels:', channels);
-      this.myChannels = channels;
-      this.followedChannelIds = new Set(channels.map(ch => ch.channel_id));
-      this.updateFilteredChannels();
-    });
-
-    // 🔥 Listen to Discover Channels with full data (offline-first)
-    this.channelFirebase.listenDiscoverChannels(this.userId, (channels) => {
-      console.log('📱 Firebase Discover Channels:', channels);
-      this.publicChannels = channels;
-      this.updateFilteredChannels();
+      this.isLoadingChannels = false;
     });
   }
 
-  private cleanupFirebaseListeners() {
-    // Firebase listeners are cleaned up by the service's ngOnDestroy
-    // But we can add additional cleanup here if needed
-  }
-
-  private refreshFromBackend() {
-    // 🌐 Backend refresh (updates cache in background)
-    this.loadUserChannels(this.userId);
-    this.loadPublicChannels();
-  }
-
+  /**
+   * 🌐 Sync from backend API (background refresh)
+   */
   private syncFromBackend() {
+    if (!navigator.onLine) {
+      console.log('📴 Offline: Skipping backend sync');
+      return;
+    }
+
+    console.log('🌐 Syncing from backend...');
     this.syncMyChannelsFromBackend();
     this.syncDiscoverChannelsFromBackend();
   }
@@ -126,15 +158,17 @@ export class StatusScreenPage implements OnInit, OnDestroy {
       .subscribe({
         next: (res: any) => {
           if (res?.status && Array.isArray(res.channels)) {
-            // 🔥 ONLY update Firebase
+            console.log(`✅ Backend sync: ${res.channels.length} my channels`);
+            // 🔥 Update Firebase (which auto-updates PouchDB)
             this.channelFirebase.syncMyChannels(
               this.userId,
               res.channels
             );
           }
         },
-        error: () => {
-          // offline → ignore
+        error: (err) => {
+          console.log('📴 Backend sync failed (offline or error):', err.message);
+          // Ignore - we have cached data
         }
       });
   }
@@ -145,88 +179,57 @@ export class StatusScreenPage implements OnInit, OnDestroy {
       .subscribe({
         next: (res: any) => {
           if (res?.status && Array.isArray(res.channels)) {
-            // 🔥 ONLY update Firebase
+            console.log(`✅ Backend sync: ${res.channels.length} discover channels`);
+            // 🔥 Update Firebase (which auto-updates PouchDB)
             this.channelFirebase.syncDiscoverChannels(
               this.userId,
               res.channels
             );
           }
         },
-        error: () => { }
+        error: (err) => {
+          console.log('📴 Backend sync failed (offline or error):', err.message);
+          // Ignore - we have cached data
+        }
       });
   }
 
-  loadUserChannels(userId: number | string) {
+  /* =========================
+     MANUAL REFRESH
+     ========================= */
+
+  async reload() {
+    console.log('🔄 Manual reload triggered');
+    
+    // Show loading
     this.isLoadingChannels = true;
-    this.channelService.getUserChannels(userId, { role: 'all' }).subscribe({
-      next: (res: any) => {
-        this.isLoadingChannels = false;
 
-        if (res?.status && Array.isArray(res.channels)) {
-          console.log('🌐 Backend My Channels:', res.channels);
+    // Load from cache first
+    await this.loadFromCache();
 
-          // Update local state
-          // this.myChannels = res.channels;
+    // Then sync from backend
+    this.syncFromBackend();
 
-          this.followedChannelIds = new Set(this.myChannels.map(ch => ch.channel_id));
-
-          // 🔥 Sync to Firebase (updates cache)
-          this.channelFirebase.syncMyChannels(this.userId, this.myChannels);
-        } else {
-          this.myChannels = [];
-        }
-      },
-      error: (err) => {
-        this.isLoadingChannels = false;
-        console.error('❌ Failed to load channels from backend:', err);
-        // Don't show error toast - we have cached data
-        // this.presentToast('Failed to load your channels');
-      }
-    });
+    // Hide loading after brief delay
+    setTimeout(() => {
+      this.isLoadingChannels = false;
+    }, 500);
   }
 
-  loadPublicChannels() {
-    this.isLoadingChannels = true;
-    this.channelService.listChannels({ limit: 50 }).subscribe({
-      next: (res: any) => {
-        this.isLoadingChannels = false;
-
-        if (res?.status && Array.isArray(res.channels)) {
-          console.log('🌐 Backend Public Channels:', res.channels);
-
-          this.publicChannels = res.channels;
-          this.updateFilteredChannels();
-        } else {
-          this.publicChannels = [];
-        }
-      },
-      error: (err) => {
-        this.isLoadingChannels = false;
-        console.error('❌ Failed to load public channels from backend:', err);
-        // Don't show error toast - we have cached data
-        // this.presentToast('Failed to load discover channels');
-      }
-    });
-  }
+  /* =========================
+     FOLLOW / UNFOLLOW (Optimistic Updates)
+     ========================= */
 
   private updateFilteredChannels() {
     this.filteredChannels = this.publicChannels.filter(
       ch => !this.followedChannelIds.has(ch.channel_id)
     );
-
-    // 🔥 Sync discover list to Firebase
-    this.channelFirebase.syncDiscoverChannels(
-      this.userId,
-      this.filteredChannels
-    );
   }
 
-  // --- Follow Status ---
   isFollowing(channel: Channel): boolean {
     return this.followedChannelIds.has(channel.channel_id);
   }
 
-  // --- Follow/Unfollow with Loading & Optimistic Update ---
   onFollowClick(ev: Event, channel: Channel) {
     ev.stopPropagation();
     this.toggleFollow(channel);
@@ -235,7 +238,32 @@ export class StatusScreenPage implements OnInit, OnDestroy {
   toggleFollow(channel: Channel) {
     const wasFollowing = this.isFollowing(channel);
 
-    // 1️⃣ Optimistic Firebase update
+    // 1️⃣ Optimistic UI update
+    if (wasFollowing) {
+      // Remove from my channels
+      this.myChannels = this.myChannels.filter(
+        ch => ch.channel_id !== channel.channel_id
+      );
+      this.followedChannelIds.delete(channel.channel_id);
+
+      // Add to discover
+      if (!this.publicChannels.find(ch => ch.channel_id === channel.channel_id)) {
+        this.publicChannels.push(channel);
+      }
+    } else {
+      // Add to my channels
+      this.myChannels.push(channel);
+      this.followedChannelIds.add(channel.channel_id);
+
+      // Remove from discover
+      this.publicChannels = this.publicChannels.filter(
+        ch => ch.channel_id !== channel.channel_id
+      );
+    }
+
+    this.updateFilteredChannels();
+
+    // 2️⃣ Update Firebase + PouchDB (with offline queue)
     if (wasFollowing) {
       this.channelFirebase.unfollowChannel(
         this.userId,
@@ -248,14 +276,27 @@ export class StatusScreenPage implements OnInit, OnDestroy {
       );
     }
 
-    // 2️⃣ Backend confirmation
+    // 3️⃣ Backend confirmation
     const req$ = wasFollowing
       ? this.channelService.unfollowChannel(channel.channel_id, this.userId)
       : this.channelService.followChannel(channel.channel_id, this.userId);
 
     req$.subscribe({
-      error: () => {
-        // 3️⃣ Revert Firebase on failure
+      next: () => {
+        console.log(`✅ Backend confirmed ${wasFollowing ? 'unfollow' : 'follow'}`);
+        this.presentToast(
+          wasFollowing 
+            ? `Unfollowed ${channel.channel_name}` 
+            : `Following ${channel.channel_name}`
+        );
+      },
+      error: (err) => {
+        console.error('❌ Backend operation failed, reverting:', err);
+        
+        // 4️⃣ Revert optimistic update on failure
+        this.revertOptimisticUpdate(channel, wasFollowing);
+
+        // 5️⃣ Revert Firebase
         if (wasFollowing) {
           this.channelFirebase.followChannel(this.userId, channel);
         } else {
@@ -264,34 +305,40 @@ export class StatusScreenPage implements OnInit, OnDestroy {
             channel.channel_id
           );
         }
+
+        this.presentToast(
+          `Failed to ${wasFollowing ? 'unfollow' : 'follow'} channel. ${navigator.onLine ? 'Try again.' : 'Will retry when online.'}`
+        );
       }
     });
   }
 
-
-
-
-  private revertOptimisticUpdate(channel: Channel, channelId: number, wasFollowing: boolean) {
-    const revertDelta = wasFollowing ? 1 : -1;
-
-    channel.followers_count! += revertDelta;
-
+  private revertOptimisticUpdate(channel: Channel, wasFollowing: boolean) {
     if (wasFollowing) {
-      const discoveryMatch = this.publicChannels.find(ch => ch.channel_id === channelId);
-      if (discoveryMatch) discoveryMatch.followers_count! += revertDelta;
+      // Was following, put it back in my channels
+      this.myChannels.push(channel);
+      this.followedChannelIds.add(channel.channel_id);
+      this.publicChannels = this.publicChannels.filter(
+        ch => ch.channel_id !== channel.channel_id
+      );
     } else {
-      const myMatch = this.myChannels.find(ch => ch.channel_id === channelId);
-      if (myMatch) myMatch.followers_count! += revertDelta;
+      // Was not following, remove from my channels
+      this.myChannels = this.myChannels.filter(
+        ch => ch.channel_id !== channel.channel_id
+      );
+      this.followedChannelIds.delete(channel.channel_id);
+      if (!this.publicChannels.find(ch => ch.channel_id === channel.channel_id)) {
+        this.publicChannels.push(channel);
+      }
     }
 
-    if (wasFollowing) {
-      this.followedChannelIds.add(channelId);
-    } else {
-      this.followedChannelIds.delete(channelId);
-    }
+    this.updateFilteredChannels();
   }
 
-  // --- Navigation & UI ---
+  /* =========================
+     NAVIGATION & UI
+     ========================= */
+
   openChat(channel: Channel) {
     this.router.navigate(['/channel-feed'], {
       queryParams: { channelId: channel.channel_id }
@@ -300,6 +347,12 @@ export class StatusScreenPage implements OnInit, OnDestroy {
 
   goToChannels() {
     this.router.navigate(['/channels']);
+  }
+
+  opendummy() {
+    this.router.navigate(['/channel-feed'], {
+      queryParams: { channelId: 33 }
+    });
   }
 
   async presentPopover(ev: any) {
@@ -314,7 +367,8 @@ export class StatusScreenPage implements OnInit, OnDestroy {
   async presentToast(msg: string) {
     const toast = await this.toastCtrl.create({
       message: msg,
-      duration: 2000
+      duration: 2000,
+      position: 'bottom'
     });
     await toast.present();
   }
@@ -331,7 +385,12 @@ export class StatusScreenPage implements OnInit, OnDestroy {
 
     const { data } = await modal.onDidDismiss();
     if (data) {
-      this.refreshFromBackend(); // Reload from backend
+      // Reload from backend
+      this.syncFromBackend();
     }
+  }
+
+  private cleanupFirebaseListeners() {
+    // Firebase listeners are cleaned up by the service's ngOnDestroy
   }
 }
