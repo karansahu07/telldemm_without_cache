@@ -1151,6 +1151,7 @@
 
       <!-- ✅ UPDATED: Disabled when translation card is visible -->
       <ion-col size="auto" style="display: flex; align-items: center">
+        <!-- ✅ MIC BUTTON (when no text) -->
         <ion-button
           *ngIf="!showSendButton"
           class="mic-button"
@@ -1160,16 +1161,27 @@
           <ion-icon slot="icon-only" name="mic"></ion-icon>
         </ion-button>
 
+        <!-- ✅ SEND BUTTON WITH SPINNER -->
         <ion-button
           *ngIf="showSendButton"
           fill="clear"
           class="send-btn"
           shape="round"
           (click)="sendMessage()"
-          [disabled]="iBlocked || translationCard?.visible"
-          [style.opacity]="translationCard?.visible ? '0.5' : '1'"
+          [disabled]="iBlocked || translationCard?.visible || isSending"
+          [style.opacity]="translationCard?.visible || isSending ? '0.5' : '1'"
+          [style.pointer-events]="isSending ? 'none' : 'auto'"
         >
-          <ion-icon slot="icon-only" name="send"></ion-icon>
+          <!-- ✅ Show spinner when sending -->
+          <ion-spinner
+            *ngIf="isSending"
+            name="crescent"
+            slot="icon-only"
+            style="--color: white"
+          ></ion-spinner>
+
+          <!-- ✅ Show send icon when not sending -->
+          <ion-icon *ngIf="!isSending" slot="icon-only" name="send"></ion-icon>
         </ion-button>
       </ion-col>
     </ion-row>

@@ -783,9 +783,9 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-    //typing status get
-  getTypingStatusForConv(roomId : string){
-    return this.chatService.getTypingStatusForRoom(roomId)
+  //typing status get
+  getTypingStatusForConv(roomId: string) {
+    return this.chatService.getTypingStatusForRoom(roomId);
   }
 
   updateReceiverStatus() {
@@ -837,7 +837,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   showCompressedActions = false;
- 
+
   onMessageInput(event: any) {
     const text = event.target.value || '';
     this.messageText = text;
@@ -2947,15 +2947,22 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * 🎯 Send message with smart scroll
+   * 🎯 Send message with smart scroll with spinner loader
    */
   async sendMessage() {
-    if (this.isSending) return;
+    // ✅ Prevent multiple sends
+    if (this.isSending) {
+      console.log('⚠️ Already sending, ignoring duplicate click');
+      return;
+    }
+
+    // ✅ Set loading flag IMMEDIATELY
     this.isSending = true;
 
     try {
       const plainText = (this.messageText || '').trim();
 
+      // ✅ Validation
       if (!plainText && !this.selectedAttachment) {
         const toast = await this.toastCtrl.create({
           message: 'Type something to send',
@@ -2963,7 +2970,6 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
           color: 'warning',
         });
         await toast.present();
-        this.isSending = false;
         return;
       }
 
@@ -2992,7 +2998,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
         },
       };
 
-      // Handle attachment if present
+      // ✅ Handle attachment if present
       if (this.selectedAttachment) {
         try {
           const mediaId = await this.uploadAttachmentToS3(
@@ -3015,22 +3021,22 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
               this.selectedAttachment.blob
             );
         } catch (error) {
-          console.error('Failed to upload attachment:', error);
+          console.error('❌ Failed to upload attachment:', error);
+
           const toast = await this.toastCtrl.create({
             message: 'Failed to upload attachment. Please try again.',
             duration: 3000,
             color: 'danger',
           });
           await toast.present();
-          this.isSending = false;
           return;
         }
       }
 
-      // Send message
+      // ✅ Send message to Firebase
       await this.chatService.sendMessage(localMessage);
 
-      // Clear UI
+      // ✅ Clear UI
       this.messageText = '';
       this.showSendButton = false;
       this.selectedAttachment = null;
@@ -3039,7 +3045,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
 
       await this.stopTypingSignal();
 
-      // Always scroll to bottom after sending
+      // ✅ Scroll to bottom
       await this.waitForDOM();
       this.scrollToBottomSmooth();
 
@@ -3048,7 +3054,8 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
         clearTimeout(this.typingTimeout);
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('❌ Error sending message:', error);
+
       const toast = await this.toastCtrl.create({
         message: 'Failed to send message. Please try again.',
         duration: 3000,
@@ -3056,7 +3063,15 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
       });
       await toast.present();
     } finally {
+      // ✅ ALWAYS reset loading flag
       this.isSending = false;
+
+      // ✅ Force UI update
+      try {
+        this.cdr.detectChanges();
+      } catch (e) {
+        console.warn('detectChanges warning:', e);
+      }
     }
   }
 

@@ -1627,24 +1627,62 @@ private async confirmAndDeleteGroup(): Promise<void> {
   }
 
   // are all visible non-community chats currently selected?
+  // private areAllVisibleSelected(): boolean {
+  //   const visible = this.visibleNonCommunityChats;
+  //   if (visible.length === 0) return false;
+  //   // compare by receiver_Id + group flag (community already excluded)
+  //   const key = (c: any) => `${c.receiver_Id}::${!!c.group}`;
+  //   // console.log({key});
+  //   const selectedKeys = new Set(this.selectedChats.map(key));
+  //   return visible.every((c) => selectedKeys.has(key(c)));
+  // }
+
   private areAllVisibleSelected(): boolean {
-    const visible = this.visibleNonCommunityChats;
-    if (visible.length === 0) return false;
-    // compare by receiver_Id + group flag (community already excluded)
-    const key = (c: any) => `${c.receiver_Id}::${!!c.group}`;
-    // console.log({key});
-    const selectedKeys = new Set(this.selectedChats.map(key));
-    return visible.every((c) => selectedKeys.has(key(c)));
-  }
+  const visible = this.visibleNonCommunityChats;
+  if (visible.length === 0) return false;
+  
+  // Use roomId for comparison (more reliable than receiver_Id)
+  const visibleRoomIds = new Set(visible.map(c => c.roomId));
+  const selectedRoomIds = new Set(this.selectedChats.map(c => c.roomId));
+  
+  // Check if all visible chats are selected
+  return visible.every((c) => selectedRoomIds.has(c.roomId));
+}
+
 
   // select all visible (non-community) chats; if already all selected, clear selection (toggle behavior)
+  // private selectAllVisible(): void {
+  //   if (this.areAllVisibleSelected()) {
+  //     this.clearChatSelection();
+  //     return;
+  //   }
+  //   this.selectedChats = [...this.visibleNonCommunityChats];
+  // }
+
   private selectAllVisible(): void {
-    if (this.areAllVisibleSelected()) {
-      this.clearChatSelection();
-      return;
-    }
-    this.selectedChats = [...this.visibleNonCommunityChats];
+  if (this.areAllVisibleSelected()) {
+    // If all are already selected, clear selection (toggle behavior)
+    this.clearChatSelection();
+    return;
   }
+  
+  // Select all visible non-community chats
+  const nonCommunityChats = this.visibleNonCommunityChats;
+  
+  // Clear existing selection first
+  this.selectedChats = [];
+  this.selectedConversations.clear();
+  
+  // Add all non-community chats to selection
+  nonCommunityChats.forEach(chat => {
+    this.selectedChats.push(chat);
+    if (chat.roomId) {
+      this.selectedConversations.add(chat.roomId);
+    }
+  });
+  
+  console.log(`✅ Selected ${this.selectedChats.length} chats (excluding communities)`);
+}
 
   /** Exit ONE selected group (with confirm) */
   private async confirmAndExitSingleSelectedGroup(): Promise<void> {
