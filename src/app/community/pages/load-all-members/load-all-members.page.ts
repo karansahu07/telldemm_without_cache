@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ContactSyncService } from 'src/app/services/contact-sync.service';
 import { AuthService } from 'src/app/auth/auth.service';
+import { FirebaseChatService } from 'src/app/services/firebase-chat.service';
 
 @Component({
   selector: 'app-load-all-members',
@@ -33,7 +34,8 @@ export class LoadAllMembersPage implements OnInit {
     private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute,
-    private alertCtrl: AlertController
+    private alertCtrl: AlertController,
+    private firebaseChatService: FirebaseChatService
   ) {}
 
   ngOnInit() {
@@ -47,32 +49,51 @@ export class LoadAllMembersPage implements OnInit {
   }
 
   async loadDeviceMatchedContacts() {
-    this.isLoading = true;
+    const currentUserPhone = this.authService.authData?.phone_number;
     this.allUsers = [];
-    this.filteredUsers = [];
+    this.isLoading = true;
 
     try {
-      const currentUserPhone = this.authService.authData?.phone_number;
-      const matched = await this.contactSyncService.getMatchedUsers();
+      const pfUsers = this.firebaseChatService.currentUsers || [];
+      const currentChatMember = this.firebaseChatService.currentChat?.members;
+      console.log({currentChatMember});
+      const deviceContacts = this.firebaseChatService.currentDeviceContacts || [];
 
-      (matched || []).forEach((u: any) => {
-        // skip yourself
-        if (u.phone_number && currentUserPhone && u.phone_number === currentUserPhone) return;
+      // Extract platform user phone numbers for reference
+      const pfUserPhones = pfUsers.map((pu: any) => String(pu.phoneNumber));
 
-        this.allUsers.push({
-          user_id: u.user_id ?? u.userId ?? null,
-          phone_number: u.phone_number ?? u.receiver_Id ?? null,
-          name: u.name ?? u.displayName ?? (u.phone_number ? u.phone_number : 'Unknown'),
-          profile: u.profile_picture_url ?? u.profile ?? null,
-          bio: u.bio ?? u.message ?? '',
-          selected: false
-        });
-      });
+      // Normalize platform users to match your HTML structure
+      // Filter out: 1) current user, 2) existing chat members
+      this.allUsers = [
+        ...pfUsers
+          .filter((u: any) => {
+            // Exclude current user
+            const userPhone = String(u.phoneNumber ?? '');
+            if (currentUserPhone && userPhone === currentUserPhone) return false;
 
-      // copy to filtered
+            // Exclude existing chat members
+            // const userId = String(u.userId ?? u.user_id ?? '');
+            // if (currentChatMember?.includes(userId)) return false;
+
+            return true;
+          })
+          .map((u: any) => ({
+            user_id: String(u.userId ?? u.user_id ?? ''), // backend ID
+            name: u.username ?? u.name ?? u.phoneNumber ?? 'Unknown',
+            profile: u.avatar ?? u.profile ?? 'assets/images/user.jfif',
+            phone_number: String(u.phoneNumber ?? ''),
+            bio: u.bio ?? u.status ?? '',
+            isOnPlatform: true,
+            selected: false,
+          })),
+      ];
+
+      console.log("all users ", this.allUsers);
+
+      // Initialize filtered list for search
       this.filteredUsers = [...this.allUsers];
-    } catch (err) {
-      console.error('loadDeviceMatchedContacts error', err);
+    } catch (error) {
+      console.error('Error loading contacts', error);
       this.allUsers = [];
       this.filteredUsers = [];
     } finally {
@@ -129,89 +150,43 @@ export class LoadAllMembersPage implements OnInit {
     return name.trim().charAt(0).toUpperCase();
   }
 
-  // --- UPDATED: show confirmation dialog before proceeding ---
-  // async confirmSelection() {
-  //   const selected = this.selectedMembers;
-  //   if (!selected || selected.length === 0) {
-  //     const a = await this.alertCtrl.create({
-  //       header: 'No members selected',
-  //       message: 'Please select at least one member to continue.',
-  //       buttons: ['OK']
-  //     });
-  //     await a.present();
-  //     return;
-  //   }
-
-  //   // Build message using community name if available
-  //   const communityLabel = this.communityName ? `"${this.communityName}"` : 'this community';
-  //   const msg = `Members will also be added to the community ${communityLabel} and its announcement group.`;
-
-  //   const alert = await this.alertCtrl.create({
-  //     header: 'Confirm',
-  //     message: msg,
-  //     cssClass: 'confirm-add-members-alert',
-  //     buttons: [
-  //       {
-  //         text: 'Cancel',
-  //         role: 'cancel'
-  //       },
-  //       {
-  //         text: 'Continue',
-  //         handler: () => {
-  //           // Navigate to confirm page with selected members and community context
-  //           this.router.navigate(['/confirm-add-existing-groups'], {
-  //             state: {
-  //               selectedMembers: selected,
-  //               communityId: this.communityId,
-  //               communityName: this.communityName
-  //             }
-  //           });
-  //         }
-  //       }
-  //     ]
-  //   });
-
-  //   await alert.present();
-  // }
-
   async confirmSelection() {
-  const selected = this.selectedMembers;
-  if (!selected || selected.length === 0) {
-    const a = await this.alertCtrl.create({
-      header: 'No members selected',
-      message: 'Please select at least one member to continue.',
-      buttons: ['OK']
-    });
-    await a.present();
-    return;
-  }
+    const selected = this.selectedMembers;
+    if (!selected || selected.length === 0) {
+      const a = await this.alertCtrl.create({
+        header: 'No members selected',
+        message: 'Please select at least one member to continue.',
+        buttons: ['OK']
+      });
+      await a.present();
+      return;
+    }
 
-  const communityLabel = this.communityName ? `"${this.communityName}"` : 'this community';
-  const msg = `Members will also be added to the community ${communityLabel} and its announcement group.`;
+    const communityLabel = this.communityName ? `"${this.communityName}"` : 'this community';
+    const msg = `Members will also be added to the community ${communityLabel} and its announcement group.`;
 
-  const alert = await this.alertCtrl.create({
-    header: 'Confirm',
-    message: msg,
-    cssClass: 'confirm-add-members-alert',
-    buttons: [
-      { text: 'Cancel', role: 'cancel' },
-      {
-        text: 'Continue',
-        handler: () => {
-          // ✅ Redirect back to create-new-group page with selected members
-          this.router.navigate(['/create-new-group'], {
-            state: {
-              selectedMembers: selected,
-              communityId: this.communityId,
-              communityName: this.communityName
-            }
-          });
+    const alert = await this.alertCtrl.create({
+      header: 'Confirm',
+      message: msg,
+      cssClass: 'confirm-add-members-alert',
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Continue',
+          handler: () => {
+            // ✅ Redirect back to create-new-group page with selected members
+            this.router.navigate(['/create-new-group'], {
+              state: {
+                selectedMembers: selected,
+                communityId: this.communityId,
+                communityName: this.communityName
+              }
+            });
+          }
         }
-      }
-    ]
-  });
+      ]
+    });
 
-  await alert.present();
-}
-
+    await alert.present();
+  }
 }

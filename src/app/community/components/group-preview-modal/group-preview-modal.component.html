@@ -10,53 +10,57 @@
     </ion-button>
   </ion-buttons>
 </ion-header>
-
 <ion-content class="modal-content" scrollY="true">
   <div class="top-block">
     <ion-avatar class="group-avatar" [attr.aria-label]="'group_preview_modal_component.groupIcon' | translate">
-      <ion-icon name="people-outline"></ion-icon>
+      <ng-container *ngIf="groupAvatar && groupAvatar !== avatarFallbackUrl(); else groupInitials">
+        <img
+          [src]="groupAvatar"
+          [alt]="groupName"
+          (error)="setDefaultAvatar($event)"
+        />
+      </ng-container>
+      <ng-template #groupInitials>
+        <div class="avatar-initials">{{ groupName?.charAt(0)?.toUpperCase() || 'G' }}</div>
+      </ng-template>
     </ion-avatar>
-
     <h2 class="group-title">{{ group?.name }}</h2>
-
     <p class="created-by">
       {{ createdByText }}
       <span *ngIf="group?.createdAt">
         , {{ (group?.createdAt | date) }}
       </span>
     </p>
-
     <div class="members-row">
-      <ng-container *ngIf="memberKeys?.length; else noMembers">
-        <div class="avatars">
-          <ng-container *ngFor="let k of memberKeys | slice:0:8">
-            <ion-avatar class="member-avatar">
-              <ng-container *ngIf="memberObj(k)?.avatar; else initialsTpl">
-                <img
-                  [src]="memberObj(k)?.avatar"
-                  alt=""
-                  (error)="setDefaultAvatar($event)"
-                />
-              </ng-container>
-              <ng-template #initialsTpl>
-                <div class="avatar-initials">{{ initialsFor(memberObj(k)) }}</div>
-              </ng-template>
-            </ion-avatar>
+  <ng-container *ngIf="memberKeys?.length; else noMembers">
+    <div class="avatars">
+      <ng-container *ngFor="let k of memberKeys | slice:0:8">
+        <ion-avatar class="member-avatar">
+          <ng-container *ngIf="memberObj(k)?.avatar; else memberInitialsTpl">
+            <img
+              [src]="memberObj(k)?.avatar"
+              alt=""
+              (error)="setDefaultAvatar($event)"
+            />
           </ng-container>
-          <div class="more-count" *ngIf="memberKeys.length > 8">+{{ memberKeys.length - 8 }}</div>
-        </div>
+          <ng-template #memberInitialsTpl>
+            <div class="member-avatar-initials">
+              {{ (memberObj(k)?.name || memberObj(k)?.username)?.charAt(0)?.toUpperCase() || 'U' }}
+            </div>
+          </ng-template>
+        </ion-avatar>
       </ng-container>
-
-      <ng-template #noMembers>
-        <p class="no-members">{{ 'group_preview_modal_component.noMembers' | translate }}</p>
-      </ng-template>
+      <div class="more-count" *ngIf="memberKeys.length > 8">+{{ memberKeys.length - 8 }}</div>
     </div>
+  </ng-container>
+  <ng-template #noMembers>
+    <p class="no-members">{{ 'group_preview_modal_component.noMembers' | translate }}</p>
+  </ng-template>
+</div>
   </div>
-
   <div class="description">
     <p>{{ group?.description || ('group_preview_modal_component.noDescription' | translate) }}</p>
   </div>
-
   <div class="info-note">
     <p>
       {{ 'group_preview_modal_component.communityLabel' | translate }} {{ communityName }}
@@ -65,7 +69,6 @@
       {{ 'group_preview_modal_component.joinNote' | translate }}
     </p>
   </div>
-
   <div class="join-row">
     <ion-button
       expand="block"
@@ -77,6 +80,5 @@
       {{ 'group_preview_modal_component.joinCta' | translate }}
     </ion-button>
   </div>
-
   <div style="height: 20px;"></div>
 </ion-content>

@@ -37,6 +37,7 @@ import {
   ToastController,
   IonDatetime,
   ActionSheetController,
+  AnimationController,
 } from '@ionic/angular';
 import { firstValueFrom, Subscription, timer } from 'rxjs';
 import { Keyboard } from '@capacitor/keyboard';
@@ -71,6 +72,9 @@ import { PresenceService } from 'src/app/services/presence.service';
 import { switchMap } from 'rxjs/operators';
 import { resolve } from 'path';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { ImageCropperModalComponent } from 'src/app/components/image-cropper-modal/image-cropper-modal.component';
+import { EmojiPickerModalComponent } from 'src/app/components/emoji-picker-modal/emoji-picker-modal.component';
+import { FcmService } from 'src/app/services/fcm-service';
 
 interface ICurrentChat {
   roomId: string;
@@ -293,6 +297,18 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
   isReceiverTyping: boolean = false;
   private presenceSubscription?: Subscription;
   private typingTimeout: any;
+  maxDate: string = new Date().toISOString();
+  backUrl = '/home-screen';
+
+  private isUserScrolling = false;
+  private isNearBottom = true;
+  private scrollThreshold = 150; // Distance from bottom to consider "near bottom"
+  private isInitialLoad = true;
+  private lastScrollTop = 0;
+  private scrollDebounceTimer: any;
+
+  private groupMembershipRef: any = null;
+  private groupMembershipUnsubscribe: (() => void) | null = null;
 
   constructor(
     private chatService: FirebaseChatService,
@@ -321,6 +337,9 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     private presence: PresenceService,
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
+    private fcmService: FcmService,
+    private animationCtrl: AnimationController,
+
     private actionSheetCtrl: ActionSheetController // private toastCtrl: ToastController, // private modalCtrl: ModalController, // private firebaseChatService : FirebaseChatService
   ) {}
 
@@ -339,6 +358,16 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
       nameFromQuery ||
       (await this.secureStorage.getItem('receiver_name')) ||
       '';
+    this.maxDate = new Date().toISOString();
+    this.route.queryParamMap.subscribe((params) => {
+      const from = params.get('from');
+
+      if (from === 'archive') {
+        this.backUrl = '/archieved-screen';
+      } else {
+        this.backUrl = '/home-screen';
+      }
+    });
   }
 
   onInputTyping() {
@@ -380,45 +409,91 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  // async ionViewWillEnter() {
+  //   await this.chatService.loadMessages(20, true);
+  //   this.chatService.syncMessagesWithServer();
+  //   this.chatService.getMessages().subscribe(async (msgs: any) => {
+  //     console.log({ msgs });
+  //     this.groupedMessages = (await this.groupMessagesByDate(
+  //       msgs as any[]
+  //     )) as any[];
+  //     // msgs.forEach((msg: any) => console.log({msg}));
+  //     this.allMessage = msgs as IMessage[];
+  //     for (const msg of msgs) {
+  //       if (!msg.isMe) {
+  //         // console.log('Marking read from chat screen');
+  //         this.chatService.markAsRead(msg.msgId);
+  //       }
+  //     }
+  //   });
 
   async ionViewWillEnter() {
-    await this.chatService.loadMessages(20, true);
-    this.chatService.syncMessagesWithServer();
-    this.chatService.getMessages().subscribe(async (msgs: any) => {
-      console.log({ msgs });
-      this.groupedMessages = (await this.groupMessagesByDate(
-        msgs as any[]
-      )) as any[];
-      // msgs.forEach((msg: any) => console.log({msg}));
-      this.allMessage = msgs as IMessage[];
-      for (const msg of msgs) {
-        if (!msg.isMe) {
-          // console.log('Marking read from chat screen');
-          this.chatService.markAsRead(msg.msgId);
-        }
+    // Load initial messages
+    // await this.chatService.loadMessages(20, true);
+    // this.chatService.syncMessagesWithServer();
+    this.route.queryParamMap.subscribe((params) => {
+      const from = params.get('from');
+
+      if (from === 'archive') {
+        this.backUrl = '/archieved-screen'; // 👈 tumhara archived ka route
+      } else {
+        this.backUrl = '/home-screen'; // 👈 tumhara home ka route
       }
     });
 
+    this.chatService.getMessages().subscribe(async (msgs: any) => {
+      console.log({ msgs });
+
+      if (!msgs || msgs.length === 0) {
+        this.groupedMessages = [];
+        this.allMessage = [];
+        return;
+      }
+
+      const previousMessageCount = this.groupedMessages.reduce(
+        (count, group) => count + group.messages.length,
+        0
+      );
+
+      this.groupedMessages = (await this.groupMessagesByDate(
+        msgs as any[]
+      )) as any[];
+      this.allMessage = msgs as IMessage[];
+
+      const newMessageCount = this.groupedMessages.reduce(
+        (count, group) => count + group.messages.length,
+        0
+      );
+
+      // Mark messages as read
+      for (const msg of msgs) {
+        if (!msg.isMe) {
+          this.chatService.markAsRead(msg.msgId);
+        }
+      }
+
+      // Handle scroll behavior based on context
+      // await this.handleMessageUpdate(previousMessageCount, newMessageCount);  //this will imrove in future
+    });
+
+    // Setup presence subscription
     this.presenceSubscription = this.chatService.presenceChanges$.subscribe(
       (presenceMap) => {
         this.updateReceiverStatus();
       }
     );
 
-    // Initial status check
+    // this.setupTypingListener();
+
+    // const typingSub = this.typingInput$
+    //   .pipe(throttleTime(2000))
+    //   .subscribe(() => {
+    //     this.sendTypingSignal();
+    //   });
+    // this.typingRxSubs.push(typingSub);
+
     this.updateReceiverStatus();
-
     this.loadLanguages();
-
-    //scroll to bottom pagination load messages
-    const scrollElement = await this.ionContent.getScrollElement();
-    const distanceFromBottom =
-      scrollElement.scrollHeight -
-      (scrollElement.scrollTop + scrollElement.clientHeight);
-
-    if (distanceFromBottom < 300) {
-      this.scrollToBottomSmooth();
-    }
 
     this.currentConv = this.chatService.currentChat;
     Keyboard.setScroll({ isDisabled: false });
@@ -437,30 +512,201 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
         parts[parts.length - 1];
     } else {
       this.receiverId = currentChat?.roomId || '';
+      if (this.receiverId) {
+        try {
+          const { groupName, groupMembers } =
+            await this.chatService.fetchGroupWithProfiles(this.receiverId);
+
+          this.groupName = groupName;
+          this.groupMembers = groupMembers;
+
+          console.log('✅ Loaded group members:', this.groupMembers);
+        } catch (err) {
+          console.warn('Failed to fetch group with profiles', err);
+          this.groupMembers = [];
+        }
+      }
+      this.setupGroupMembershipListener();
     }
     this.receiverProfile =
       (currentChat as any).avatar || (currentChat as any).groupAvatar || null;
     this.chatTitle = currentChat?.title || null;
 
+    if (this.roomId) {
+      await this.fcmService.clearNotificationForRoom(this.roomId);
+      console.log('✅ Notifications cleared for room:', this.roomId);
+    }
+
     // ✅ Scroll to bottom after first load
-    setTimeout(() => this.scrollToBottomSmooth(), 100);
+    // setTimeout(() => this.scrollToBottomSmooth(), 100);
+  }
+
+  /**
+   * Get display name for a sender - returns device contact name if available, otherwise phone number
+   */
+  getSenderDisplayName(msg: any): string {
+    // If it's the current user
+    if (msg.sender === this.senderId) {
+      return 'You';
+    }
+
+    // Get device contacts
+    const deviceContacts = this.chatService.currentDeviceContacts || [];
+
+    // Try to find the sender in group members first
+    const groupMember = this.groupMembers.find(
+      (m) => String(m.user_id) === String(msg.sender)
+    );
+
+    if (!groupMember) {
+      // Fallback to sender_name from message
+      return msg.sender_name || msg.sender;
+    }
+
+    // Get member's phone number (normalize it)
+    const memberPhone = (
+      groupMember.phone_number ||
+      groupMember.phone ||
+      ''
+    ).replace(/\D/g, '');
+
+    if (!memberPhone) {
+      return groupMember.name || msg.sender_name || msg.sender;
+    }
+
+    // Try to find matching device contact
+    const deviceContact = deviceContacts.find((dc) => {
+      const dcPhone = (dc.phoneNumber || '').replace(/\D/g, '');
+      // Match last 10 digits
+      return memberPhone.slice(-10) === dcPhone.slice(-10);
+    });
+
+    // Return device contact name if found, otherwise phone number
+    if (deviceContact) {
+      return deviceContact.username;
+    }
+
+    // Return phone number as fallback
+    return (
+      groupMember.phone_number ||
+      groupMember.phone ||
+      msg.sender_name ||
+      msg.sender
+    );
+  }
+
+  setupGroupMembershipListener() {
+    if (!this.roomId || this.chatType !== 'group') return;
+
+    const db = getDatabase();
+
+    // Clean up old listener if exists
+    if (this.groupMembershipUnsubscribe) {
+      this.groupMembershipUnsubscribe();
+    }
+
+    // Listen to the members node of this group
+    this.groupMembershipRef = ref(db, `groups/${this.roomId}/members`);
+
+    this.groupMembershipUnsubscribe = onValue(
+      this.groupMembershipRef,
+      (snapshot) => {
+        this.zone.run(async () => {
+          const members = snapshot.val() || {};
+
+          // Check if current user is still a member
+          const wasCurrentUserMember = this.isCurrentUserMember();
+          const isStillMember = !!members[this.senderId];
+
+          console.log('🔄 Real-time membership check:', {
+            senderId: this.senderId,
+            wasCurrentUserMember,
+            isStillMember,
+            currentMembers: Object.keys(members),
+          });
+
+          // Update currentConv.members to trigger isCurrentUserMember() change
+          if (this.currentConv) {
+            this.currentConv.members = Object.keys(members);
+          }
+
+          // If membership status changed from member to non-member
+          if (wasCurrentUserMember && !isStillMember) {
+            console.log('⚠️ User removed from group - hiding keyboard');
+
+            // Show toast notification
+            // this.zone.run(async () => {
+            //   const toast = await this.toastCtrl.create({
+            //     message: 'You are no longer a member of this group',
+            //     duration: 3000,
+            //     color: 'warning',
+            //     position: 'top',
+            //   });
+            //   await toast.present();
+            // });
+
+            // Force UI update
+            try {
+              this.cdr.detectChanges();
+              await this.chatService.removeMemberFromConvLocal(
+                this.roomId,
+                this.senderId
+              );
+              await this.chatService.stopRoomListener();
+            } catch (e) {
+              console.warn('detectChanges error:', e);
+            }
+          }
+        });
+      },
+      (error) => {
+        console.error('❌ Error listening to group membership:', error);
+      }
+    );
+  }
+
+  isCurrentUserMember(): boolean {
+    if (this.chatType !== 'group') {
+      return true;
+    }
+
+    if (
+      !this.currentConv?.members ||
+      !Array.isArray(this.currentConv.members)
+    ) {
+      return false;
+    }
+    return this.currentConv.members.includes(this.senderId);
   }
 
   async ionViewWillLeave() {
     try {
       // await this.chatService.closeChat();
       console.log('Chat is closed');
+
+      // ✅ NEW: Clean up group membership listener when leaving page
+      if (this.groupMembershipUnsubscribe) {
+        this.groupMembershipUnsubscribe();
+        this.groupMembershipUnsubscribe = null;
+      }
     } catch (error) {
       console.error('error in closing chat', error);
     }
   }
+
   async onBack() {
-    await this.chatService.closeChat();
-    this.router.navigate(['/home-screen']);
-    // this.navCtrl.back();
+    try {
+      await this.chatService.closeChat();
+      console.log('✅ Chat closed from onBack()');
+    } catch (error) {
+      console.error('❌ Error in onBack():', error);
+    } finally {
+      this.navCtrl.navigateBack(this.backUrl);
+    }
   }
 
   private computeMessageStatus(msg: IMessage): UIMessageStatus {
+    return msg.status as UIMessageStatus;
     if (!msg) return null;
 
     const readStatus = !!msg.receipts?.read?.status;
@@ -474,7 +720,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
       msg.status === 'pending' ||
       msg.status === 'sent'
     ) {
-      return msg.status;
+      // return msg.status;
     }
 
     return null;
@@ -537,6 +783,11 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  //typing status get
+  getTypingStatusForConv(roomId: string) {
+    return this.chatService.getTypingStatusForRoom(roomId);
+  }
+
   updateReceiverStatus() {
     const currentChat = this.chatService.currentChat;
     if (!currentChat) return;
@@ -558,10 +809,11 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
 
     if (presence) {
       this.receiverStatus = presence.isOnline ? 'online' : 'offline';
-      this.isReceiverTyping = presence.isTyping || false; // 🆕
+      this.isReceiverTyping = presence.isTyping || false;
+      // console.log("presence of lastseen", presence.lastSeen)
 
       if (!presence.isOnline && presence.lastSeen) {
-        this.lastSeenTime = this.formatLastSeen(presence.lastSeen);
+        this.lastSeenTime = this.formatLastSeenDetailed(presence.lastSeen);
       }
     }
   }
@@ -584,16 +836,22 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     this.typingCount = typingCount;
   }
 
-  // 🆕 Call this when user types in the input
+  showCompressedActions = false;
+
   onMessageInput(event: any) {
     const text = event.target.value || '';
+    this.messageText = text;
 
-    // Show/hide send button based on input
-    this.showSendButton = text.trim().length > 0;
+    const isTyping = text.trim().length > 0;
 
-    this.showTranslationOptions = this.messageText.trim().length > 0;
+    // Toggle send button
+    this.showSendButton = isTyping;
 
-    if (text.trim().length > 0) {
+    // 🔥 Compress icons while typing
+    this.showCompressedActions = isTyping;
+    // console.log('this.showCompressedActions', this.showCompressedActions);
+
+    if (isTyping) {
       this.chatService.setTypingStatus(true);
 
       // Reset timeout
@@ -608,6 +866,40 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     } else {
       this.chatService.setTypingStatus(false);
     }
+  }
+
+  async openMoreActions() {
+    const buttons: any[] = [
+      {
+        text: 'Attachment',
+        icon: 'attach',
+        handler: () => this.pickAttachment(),
+      },
+      {
+        text: 'Camera',
+        icon: 'camera',
+        handler: () => this.openCamera(),
+      },
+    ];
+
+    if (this.currentConv?.type !== 'group') {
+      buttons.push({
+        text: 'Translate',
+        icon: 'language',
+        handler: () => this.toggleTranslationOptions(),
+      });
+    }
+
+    buttons.push({
+      text: 'Cancel',
+      role: 'cancel',
+    });
+
+    const sheet = await this.actionSheetCtrl.create({
+      buttons: buttons,
+    });
+
+    await sheet.present();
   }
 
   formatLastSeen(timestamp: number): string {
@@ -630,27 +922,33 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
   formatLastSeenDetailed(timestamp: number): string {
     const date = new Date(timestamp);
     const now = new Date();
-    const diff = now.getTime() - date.getTime();
 
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
+    const diffMs = now.getTime() - date.getTime();
+    const diffMinutes = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
 
-    if (minutes < 1) return 'Last seen just now';
-    if (minutes < 60)
-      return `Last seen ${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-    if (hours < 24) return `Last seen ${hours} hour${hours > 1 ? 's' : ''} ago`;
+    // ⏱ Just now (0–1 min)
+    if (diffMinutes < 1) {
+      return 'Last seen just now';
+    }
 
-    // Today
-    if (date.toDateString() === now.toDateString()) {
+    // ⏱ Minutes ago (1–59 min)
+    if (diffMinutes < 60) {
+      return `Last seen ${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
+    }
+
+    // ⏱ Hours ago (same day)
+    if (diffHours < 24 && date.toDateString() === now.toDateString()) {
       return `Last seen today at ${date.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit',
       })}`;
     }
 
-    // Yesterday
+    // ⏱ Yesterday
     const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setDate(now.getDate() - 1);
+
     if (date.toDateString() === yesterday.toDateString()) {
       return `Last seen yesterday at ${date.toLocaleTimeString('en-US', {
         hour: '2-digit',
@@ -658,14 +956,13 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
       })}`;
     }
 
-    // Older
-    return `Last seen ${date.toLocaleDateString()} at ${date.toLocaleTimeString(
-      'en-US',
-      {
-        hour: '2-digit',
-        minute: '2-digit',
-      }
-    )}`;
+    // 📅 Older (DD/MM/YYYY at HH:mm)
+    return `Last seen ${date.toLocaleDateString(
+      'en-GB'
+    )} at ${date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+    })}`;
   }
 
   loadReceiverProfile() {
@@ -718,7 +1015,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async handleOption(option: string) {
-    if (option === 'Search') {
+    if (option === 'Search (FindTell)') {
       this.showSearchBar = true;
       setTimeout(() => {
         const input = document.querySelector('ion-input');
@@ -727,7 +1024,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    if (option === 'View Contact') {
+    if (option === 'View Contact (View Demmian)') {
       const queryParams: any = {
         receiverId: this.receiverId,
         receiver_phone: this.receiver_phone,
@@ -739,7 +1036,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // ✅ NEW: Clear Chat Option
-    if (option === 'clear chat') {
+    if (option === 'Clear Chat (Clear DemmChat)') {
       //console.log("clear chat calls");
       await this.handleClearChat();
       return;
@@ -748,7 +1045,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     const groupId = this.receiverId;
     const userId = await this.secureStorage.getItem('userId');
 
-    if (option === 'Group Info') {
+    if (option === 'Group Info (DemmRoom Info)') {
       const queryParams: any = {
         receiverId: this.chatType === 'group' ? this.roomId : this.receiverId,
         receiver_phone: this.receiver_phone,
@@ -756,7 +1053,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
         isGroup: this.chatType === 'group',
       };
       this.router.navigate(['/profile-screen'], { queryParams });
-    } else if (option === 'Add Members') {
+    } else if (option === 'Add Members (Add Demmians)') {
       const memberPhones = this.groupMembers.map((member) => member.phone);
       this.router.navigate(['/add-members'], {
         queryParams: {
@@ -764,7 +1061,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
           members: JSON.stringify(memberPhones),
         },
       });
-    } else if (option === 'Exit Group') {
+    } else if (option === 'Exit Group (Leave DemmRoom)') {
       if (!this.roomId || !this.senderId) {
         console.error('Missing groupId or userId');
         return;
@@ -889,6 +1186,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
 
   // ✅ Clear Chat Implementation (Soft Delete)
   private async clearChatMessages(userId: string) {
+    //this is for private
     try {
       const roomId =
         this.chatType === 'group'
@@ -1130,8 +1428,39 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     this.showPopover = true;
   }
 
+  // onDateSelected(event: any) {
+  //   const selectedDateObj = new Date(event.detail.value);
+
+  //   const day = String(selectedDateObj.getDate()).padStart(2, '0');
+  //   const month = String(selectedDateObj.getMonth() + 1).padStart(2, '0');
+  //   const year = selectedDateObj.getFullYear();
+
+  //   const formattedDate = `${day}/${month}/${year}`;
+
+  //   this.selectedDate = event.detail.value;
+  //   this.showPopover = false;
+  //   this.showDateModal = false;
+
+  //   setTimeout(() => {
+  //     const el = document.getElementById('date-group-' + formattedDate);
+  //     if (el) {
+  //       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  //     } else {
+  //       console.warn('No messages found for selected date:', formattedDate);
+  //     }
+  //   }, 300);
+  // }
+
   onDateSelected(event: any) {
     const selectedDateObj = new Date(event.detail.value);
+    const today = new Date();
+
+    // ✅ Additional validation: Prevent future dates
+    if (selectedDateObj > today) {
+      console.warn('Future date selected, ignoring');
+      this.showToast('Cannot select future dates', 'warning');
+      return;
+    }
 
     const day = String(selectedDateObj.getDate()).padStart(2, '0');
     const month = String(selectedDateObj.getMonth() + 1).padStart(2, '0');
@@ -1149,6 +1478,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } else {
         console.warn('No messages found for selected date:', formattedDate);
+        this.showToast('No messages found for this date', 'warning');
       }
     }, 300);
   }
@@ -1259,10 +1589,32 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     return types.includes('text') && types.some((t) => t !== 'text');
   }
 
+  // async copySelectedMessages() {
+  //   if (this.lastPressedMessage?.text) {
+  //     await Clipboard.write({ string: this.lastPressedMessage.text });
+  //     //console.log('Text copied to clipboard:', this.lastPressedMessage.text);
+  //     this.selectedMessages = [];
+  //     this.lastPressedMessage = null;
+  //   }
+  // }
+
   async copySelectedMessages() {
-    if (this.lastPressedMessage?.text) {
-      await Clipboard.write({ string: this.lastPressedMessage.text });
-      //console.log('Text copied to clipboard:', this.lastPressedMessage.text);
+    if (!this.lastPressedMessage) return;
+
+    // Get the currently displayed text based on active translation
+    const textToCopy = this.getDisplayedText(this.lastPressedMessage);
+
+    if (textToCopy) {
+      await Clipboard.write({ string: textToCopy });
+
+      // Show feedback with translation label
+      const label = this.getActiveTranslationLabel(this.lastPressedMessage);
+      // const message = label
+      //   ? `Copied (${label})`
+      //   : 'Text copied';
+
+      // this.showToast(message, 'success', 'top', 1500);
+
       this.selectedMessages = [];
       this.lastPressedMessage = null;
     }
@@ -1303,18 +1655,6 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     this.replyToMessage = null;
   }
 
-  // getRepliedMessage(
-  //   replyToMessageId: string
-  // ): (IMessage & { attachment?: IAttachment; fadeOut: boolean }) | null {
-  //   console.log("this all messages", this.allMessages)
-  //   const msg =
-  //     this.allMessages.find((msg) => {
-  //       return msg.msgId === replyToMessageId;
-  //     }) || null;
-  //     console.log({msg})
-  //   return msg;
-  // }
-
   getRepliedMessage(
     replyToMessageId: string
   ): (IMessage & { attachment?: IAttachment; fadeOut: boolean }) | null {
@@ -1338,7 +1678,6 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
 
     // console.log("Found message:", msg);
 
-    // ✅ Add fadeOut property before returning
     if (msg) {
       return {
         ...msg,
@@ -1524,6 +1863,9 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
               });
 
               // Now apply deletions to server/db for each selected message
+              const isLastMessageUpdateNeeded = this.selectedMessages.some(
+                (m) => m.isLast
+              );
               for (const msg of [...this.selectedMessages]) {
                 const key = msg.msgId;
                 if (!key) continue;
@@ -1531,7 +1873,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
                 // DELETE FOR ME: mark deleted for this user
                 if (doForMe) {
                   try {
-                    this.chatService.deleteMessage(key, false);
+                    await this.chatService.deleteMessage(key, false);
                     console.log('calling from chatting screen');
                   } catch (err) {
                     console.warn('deleteForMe failed for key', key, err);
@@ -1541,11 +1883,19 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
                 // DELETE FOR EVERYONE: attempt for all messages (not restricted to sender)
                 if (doForEveryone) {
                   try {
-                    this.chatService.deleteMessage(key, true);
+                    await this.chatService.deleteMessage(key, true);
                   } catch (err) {
                     console.warn('deleteForEveryone failed for key', key, err);
                   }
                 }
+              }
+
+              if (isLastMessageUpdateNeeded) {
+                const lastMessage = await this.sqliteService.getLastMessage(
+                  this.roomId,
+                  currentUserId
+                );
+                await this.chatService.updateLastMessageInMeta(lastMessage);
               }
 
               const toast = await this.toastCtrl.create({
@@ -1576,23 +1926,23 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     await alert.present();
   }
 
-  isMessageHiddenForUser(msg: any): boolean {
-    if (!msg) return false;
+  // isMessageHiddenForUser(msg: any): boolean {
+  //   if (!msg) return false;
 
-    if (msg.deletedFor && msg.deletedFor.everyone === true) {
-      return true;
-    }
+  //   if (msg.deletedFor && msg.deletedFor.everyone === true) {
+  //     return true;
+  //   }
 
-    if (
-      msg.deletedFor &&
-      Array.isArray(msg.deletedFor.users) &&
-      msg.deletedFor.users.includes(String(this.senderId))
-    ) {
-      return true;
-    }
+  //   if (
+  //     msg.deletedFor &&
+  //     Array.isArray(msg.deletedFor.users) &&
+  //     msg.deletedFor.users.includes(String(this.senderId))
+  //   ) {
+  //     return true;
+  //   }
 
-    return false;
-  }
+  //   return false;
+  // }
 
   private applyDeletionFilters(dm: Message): boolean {
     try {
@@ -1669,7 +2019,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
         this.messageInfo();
         break;
       case 'copy':
-        this.copyMessage();
+        this.copySelectedMessages();
         break;
       case 'share':
         this.shareMessage();
@@ -1724,6 +2074,49 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  // async editMessage(message: IMessage) {
+  //   const alert = await this.alertCtrl.create({
+  //     header: 'Edit Message',
+  //     inputs: [
+  //       {
+  //         name: 'text',
+  //         type: 'text',
+  //         value: message.text,
+  //       },
+  //     ],
+  //     buttons: [
+  //       {
+  //         text: 'Cancel',
+  //         role: 'cancel',
+  //       },
+  //       {
+  //         text: 'Save',
+  //         handler: async (data: any) => {
+  //           const newText = data.text?.trim();
+  //           if (!newText) return;
+
+  //           try {
+  //             await this.chatService.editMessage(
+  //               this.roomId,
+  //               message.msgId,
+  //               newText
+  //             );
+
+  //             message.text = newText;
+  //             message.isEdit = true;
+  //             this.lastPressedMessage = { ...message };
+  //             this.lastPressedMessage = [];
+  //           } catch (err) {
+  //             console.error('Failed to edit message:', err);
+  //           }
+  //         },
+  //       },
+  //     ],
+  //   });
+
+  //   await alert.present();
+  // }
+
   async editMessage(message: IMessage) {
     const alert = await this.alertCtrl.create({
       header: 'Edit Message',
@@ -1731,7 +2124,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
         {
           name: 'text',
           type: 'text',
-          value: message.text,
+          value: message.translations?.original?.text || message.text,
         },
       ],
       buttons: [
@@ -1754,10 +2147,21 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
 
               message.text = newText;
               message.isEdit = true;
-              this.lastPressedMessage = { ...message };
-              this.lastPressedMessage = [];
+              // message.editedAt = Date.now();
+
+              if (message.translations?.original) {
+                message.translations.original.text = newText;
+              }
+
+              this.cdr.detectChanges();
+
+              this.selectedMessages = [];
+              this.lastPressedMessage = null;
+
+              this.showToast('Message edited successfully', 'success');
             } catch (err) {
               console.error('Failed to edit message:', err);
+              this.showToast('Failed to edit message', 'error');
             }
           },
         },
@@ -1980,60 +2384,99 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     return message.msgId;
   }
 
- 
-
   //new this method used in pagination
   async ngAfterViewInit() {
+    // Setup scroll listener for pagination
     if (this.ionContent) {
       this.ionContent.ionScroll.subscribe(async (event: any) => {
-        const scrollTop = event.detail.scrollTop;
+        await this.handleScroll(event);
+      });
 
-        // 🟢 Load older messages when user scrolls up near top
-        if (
-          scrollTop < 100 &&
-          this.chatService.hasMoreMessages &&
-          !this.isLoadingMore
-        ) {
-          await this.loadOlderMessages();
-        }
+      // Setup scroll event for tracking user scroll
+      const scrollElement = await this.ionContent.getScrollElement();
+      scrollElement.addEventListener('scroll', () => {
+        this.trackUserScroll();
       });
     }
 
-    this.setDynamicPadding();
-    window.addEventListener('resize', this.resizeHandler);
+    // Initial scroll to bottom after short delay
+    setTimeout(() => {
+      this.scrollToBottomInstant();
+      this.isInitialLoad = false;
+    }, 300);
+  }
 
-    const footer = this.el.nativeElement.querySelector(
-      '.footer-fixed'
-    ) as HTMLElement;
-    if (footer && 'ResizeObserver' in window) {
-      const ro = new (window as any).ResizeObserver(() =>
-        this.setDynamicPadding()
-      );
-      ro.observe(footer);
-      (this as any)._ro = ro;
+  /**
+   * 🎯 Handle scroll events for pagination
+   */
+  async handleScroll(event: any) {
+    const scrollTop = event.detail.scrollTop;
+
+    // Calculate if user is near bottom
+    const scrollElement = await this.ionContent.getScrollElement();
+    const scrollHeight = scrollElement.scrollHeight;
+    const clientHeight = scrollElement.clientHeight;
+    const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
+
+    this.isNearBottom = distanceFromBottom < this.scrollThreshold;
+
+    // Load older messages when scrolling near top
+    if (
+      scrollTop < 100 &&
+      !this.isLoadingMore &&
+      this.chatService.hasMoreMessages
+    ) {
+      await this.loadOlderMessages();
     }
   }
 
-  //new function used in pagination
+  /**
+   * 🎯 Track if user is actively scrolling
+   */
+  private trackUserScroll() {
+    this.isUserScrolling = true;
+
+    // Reset flag after scroll stops
+    if (this.scrollDebounceTimer) {
+      clearTimeout(this.scrollDebounceTimer);
+    }
+
+    this.scrollDebounceTimer = setTimeout(() => {
+      this.isUserScrolling = false;
+    }, 150);
+  }
+
+  /**
+   * 🎯 Load older messages with scroll position preservation
+   */
   async loadOlderMessages() {
     if (this.isLoadingMore || !this.chatService.hasMoreMessages) return;
 
     this.isLoadingMore = true;
-
-    // Remember current scroll height
-    const scrollElement = await this.ionContent.getScrollElement();
-    const oldScrollHeight = scrollElement.scrollHeight;
+    console.log('⬆️ Loading older messages...');
 
     try {
-      console.log('⬆️ Loading older messages...');
-      await this.chatService.loadMessages(); // loads next offset from SQLite
+      // Get current scroll position
+      const scrollElement = await this.ionContent.getScrollElement();
+      const oldScrollHeight = scrollElement.scrollHeight;
+      const oldScrollTop = scrollElement.scrollTop;
 
-      // After messages load, adjust scroll position to stay at same spot
-      setTimeout(async () => {
-        const newScrollHeight = scrollElement.scrollHeight;
-        const scrollDiff = newScrollHeight - oldScrollHeight;
-        await this.ionContent.scrollByPoint(0, scrollDiff, 0);
-      }, 100);
+      // Load more messages
+      await this.chatService.loadMessages();
+
+      // Wait for DOM to update
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Calculate new scroll position to maintain user's view
+      const newScrollHeight = scrollElement.scrollHeight;
+      const scrollDiff = newScrollHeight - oldScrollHeight;
+
+      // Restore scroll position
+      if (scrollDiff > 0) {
+        await this.ionContent.scrollToPoint(0, oldScrollTop + scrollDiff, 0);
+      }
+
+      console.log('✅ Older messages loaded, scroll position maintained');
     } catch (error) {
       console.error('❌ Error loading older messages:', error);
     } finally {
@@ -2041,14 +2484,109 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  //new function used in pagination
-  scrollToBottomSmooth() {
-    if (this.ionContent) {
-      setTimeout(() => {
-        this.ionContent.scrollToBottom(200);
-      }, 100);
+  /**
+   * 🎯 Handle message updates intelligently
+   */
+  private async handleMessageUpdate(previousCount: number, newCount: number) {
+    // Wait for DOM update
+    await this.waitForDOM();
+
+    if (this.isInitialLoad) {
+      // Initial load - always scroll to bottom
+      this.scrollToBottomInstant();
+      return;
+    }
+
+    if (newCount > previousCount) {
+      // New messages received
+      if (this.isNearBottom) {
+        // User is near bottom - auto scroll to new message
+        this.scrollToBottomSmooth();
+      } else {
+        // User is reading older messages - don't disturb
+        console.log(
+          '📨 New message received but user is scrolling up - not auto-scrolling'
+        );
+      }
     }
   }
+
+  /**
+   * 🎯 Scroll to bottom instantly (for initial load)
+   */
+  async scrollToBottomInstant() {
+    if (!this.ionContent) return;
+
+    try {
+      await this.ionContent.scrollToBottom(0);
+      this.isNearBottom = true;
+      console.log('📍 Scrolled to bottom (instant)');
+    } catch (error) {
+      console.warn('Scroll to bottom failed:', error);
+    }
+  }
+
+  /**
+   * 🎯 Scroll to bottom smoothly (for new messages)
+   */
+  async scrollToBottomSmooth() {
+    if (!this.ionContent) return;
+
+    try {
+      await this.ionContent.scrollToBottom(300);
+      this.isNearBottom = true;
+      console.log('📍 Scrolled to bottom (smooth)');
+    } catch (error) {
+      console.warn('Scroll to bottom failed:', error);
+    }
+  }
+
+  /**
+   * 🎯 Wait for DOM to update
+   */
+  private waitForDOM(): Promise<void> {
+    return new Promise((resolve) => {
+      requestAnimationFrame(() => {
+        setTimeout(() => resolve(), 50);
+      });
+    });
+  }
+
+  //new function used in pagination
+  // async loadOlderMessages() {
+  //   if (this.isLoadingMore || !this.chatService.hasMoreMessages) return;
+
+  //   this.isLoadingMore = true;
+
+  //   // Remember current scroll height
+  //   const scrollElement = await this.ionContent.getScrollElement();
+  //   const oldScrollHeight = scrollElement.scrollHeight;
+
+  //   try {
+  //     console.log('⬆️ Loading older messages...');
+  //     await this.chatService.loadMessages(); // loads next offset from SQLite
+
+  //     // After messages load, adjust scroll position to stay at same spot
+  //     setTimeout(async () => {
+  //       const newScrollHeight = scrollElement.scrollHeight;
+  //       const scrollDiff = newScrollHeight - oldScrollHeight;
+  //       await this.ionContent.scrollByPoint(0, scrollDiff, 0);
+  //     }, 100);
+  //   } catch (error) {
+  //     console.error('❌ Error loading older messages:', error);
+  //   } finally {
+  //     this.isLoadingMore = false;
+  //   }
+  // }
+
+  //new function used in pagination
+  // scrollToBottomSmooth() {
+  //   if (this.ionContent) {
+  //     setTimeout(() => {
+  //       this.ionContent.scrollToBottom(200);
+  //     }, 100);
+  //   }
+  // }
 
   async loadMoreMessages() {
     if (this.isLoadingMore || !this.hasMoreMessages) {
@@ -2128,57 +2666,113 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  async groupMessagesByDate(messages: Message[]) {
-    const grouped: { [date: string]: any[] } = {};
-    const today = new Date();
-    const yesterday = new Date();
-    yesterday.setDate(today.getDate() - 1);
+  // async groupMessagesByDate(messages: Message[]) {
+  //   const grouped: { [date: string]: any[] } = {};
+  //   const today = new Date();
+  //   const yesterday = new Date();
+  //   yesterday.setDate(today.getDate() - 1);
 
-    for (const msg of messages) {
-      const timestamp = new Date(msg.timestamp);
+  //   for (const msg of messages) {
+  //     const timestamp = new Date(msg.timestamp);
 
-      const hours = timestamp.getHours();
-      const minutes = timestamp.getMinutes();
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      const formattedHours = hours % 12 || 12;
-      const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
-      (msg as any).time = `${formattedHours}:${formattedMinutes} ${ampm}`;
+  //     const hours = timestamp.getHours();
+  //     const minutes = timestamp.getMinutes();
+  //     const ampm = hours >= 12 ? 'PM' : 'AM';
+  //     const formattedHours = hours % 12 || 12;
+  //     const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
+  //     (msg as any).time = `${formattedHours}:${formattedMinutes} ${ampm}`;
 
-     
+  //     const isToday =
+  //       timestamp.getDate() === today.getDate() &&
+  //       timestamp.getMonth() === today.getMonth() &&
+  //       timestamp.getFullYear() === today.getFullYear();
 
-      const isToday =
-        timestamp.getDate() === today.getDate() &&
-        timestamp.getMonth() === today.getMonth() &&
-        timestamp.getFullYear() === today.getFullYear();
+  //     const isYesterday =
+  //       timestamp.getDate() === yesterday.getDate() &&
+  //       timestamp.getMonth() === yesterday.getMonth() &&
+  //       timestamp.getFullYear() === yesterday.getFullYear();
 
-      const isYesterday =
-        timestamp.getDate() === yesterday.getDate() &&
-        timestamp.getMonth() === yesterday.getMonth() &&
-        timestamp.getFullYear() === yesterday.getFullYear();
+  //     let label = '';
+  //     if (isToday) {
+  //       label = 'Today';
+  //     } else if (isYesterday) {
+  //       label = 'Yesterday';
+  //     } else {
+  //       const dd = timestamp.getDate().toString().padStart(2, '0');
+  //       const mm = (timestamp.getMonth() + 1).toString().padStart(2, '0');
+  //       const yyyy = timestamp.getFullYear();
+  //       label = `${dd}/${mm}/${yyyy}`;
+  //     }
 
-      let label = '';
-      if (isToday) {
-        label = 'Today';
-      } else if (isYesterday) {
-        label = 'Yesterday';
-      } else {
-        const dd = timestamp.getDate().toString().padStart(2, '0');
-        const mm = (timestamp.getMonth() + 1).toString().padStart(2, '0');
-        const yyyy = timestamp.getFullYear();
-        label = `${dd}/${mm}/${yyyy}`;
-      }
+  //     if (!grouped[label]) {
+  //       grouped[label] = [];
+  //     }
+  //     grouped[label].push(msg);
+  //   }
 
-      if (!grouped[label]) {
-        grouped[label] = [];
-      }
-      grouped[label].push(msg);
-    }
+  //   return Object.keys(grouped).map((date) => ({
+  //     date,
+  //     messages: grouped[date],
+  //   }));
+  // }
 
-    return Object.keys(grouped).map((date) => ({
-      date,
-      messages: grouped[date],
-    }));
-  }
+  // async groupMessagesByDate(messages: Message[]) {
+  //   const grouped: { [date: string]: any[] } = {};
+  //   const today = new Date();
+  //   const yesterday = new Date();
+  //   yesterday.setDate(today.getDate() - 1);
+
+  //   if (!messages || messages.length === 0) {
+  //     return [];
+  //   }
+
+  //   const visibleMessages = messages.filter(msg => !this.isMessageHiddenForUser(msg));
+
+  //   for (const msg of visibleMessages) {
+  //     const timestamp = new Date(msg.timestamp);
+
+  //     const hours = timestamp.getHours();
+  //     const minutes = timestamp.getMinutes();
+  //     const ampm = hours >= 12 ? 'PM' : 'AM';
+  //     const formattedHours = hours % 12 || 12;
+  //     const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
+  //     (msg as any).time = `${formattedHours}:${formattedMinutes} ${ampm}`;
+
+  //     const isToday =
+  //       timestamp.getDate() === today.getDate() &&
+  //       timestamp.getMonth() === today.getMonth() &&
+  //       timestamp.getFullYear() === today.getFullYear();
+
+  //     const isYesterday =
+  //       timestamp.getDate() === yesterday.getDate() &&
+  //       timestamp.getMonth() === yesterday.getMonth() &&
+  //       timestamp.getFullYear() === yesterday.getFullYear();
+
+  //     let label = '';
+  //     if (isToday) {
+  //       label = 'Today';
+  //     } else if (isYesterday) {
+  //       label = 'Yesterday';
+  //     } else {
+  //       const dd = timestamp.getDate().toString().padStart(2, '0');
+  //       const mm = (timestamp.getMonth() + 1).toString().padStart(2, '0');
+  //       const yyyy = timestamp.getFullYear();
+  //       label = `${dd}/${mm}/${yyyy}`;
+  //     }
+
+  //     if (!grouped[label]) {
+  //       grouped[label] = [];
+  //     }
+  //     grouped[label].push(msg);
+  //   }
+
+  //   return Object.keys(grouped)
+  //     .filter(date => grouped[date].length > 0)
+  //     .map((date) => ({
+  //       date,
+  //       messages: grouped[date],
+  //     }));
+  // }
 
   isLoadingIndicatorVisible(): boolean {
     return this.isLoadingMore;
@@ -2352,17 +2946,23 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     this.replyToMessage = message;
   }
 
-
+  /**
+   * 🎯 Send message with smart scroll with spinner loader
+   */
   async sendMessage() {
-    console.log("this send message function is called")
-    this.sender_name = this.authService.authData?.name || '';
-    if (this.isSending) return;
+    // ✅ Prevent multiple sends
+    if (this.isSending) {
+      console.log('⚠️ Already sending, ignoring duplicate click');
+      return;
+    }
+
+    // ✅ Set loading flag IMMEDIATELY
     this.isSending = true;
 
     try {
       const plainText = (this.messageText || '').trim();
 
-      // Defensive: don't send empty message (unless attachment exists)
+      // ✅ Validation
       if (!plainText && !this.selectedAttachment) {
         const toast = await this.toastCtrl.create({
           message: 'Type something to send',
@@ -2370,11 +2970,10 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
           color: 'warning',
         });
         await toast.present();
-        this.isSending = false;
         return;
       }
 
-      // Build base local message (conforms to IMessage shape)
+      // Build message
       const msgId = uuidv4();
       const timestamp = Date.now();
 
@@ -2382,7 +2981,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
         sender: this.senderId,
         sender_name: this.sender_name,
         receiver_id: this.receiverId,
-        text: plainText || '', // visible text (original)
+        text: plainText || '',
         timestamp,
         msgId,
         replyToMsgId: this.replyTo?.message?.msgId || '',
@@ -2390,8 +2989,6 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
         isPinned: false,
         type: 'text',
         reactions: [],
-        // Add a translations object containing only the original (English).
-        // This keeps the message contract uniform across translated & non-translated sends.
         translations: {
           original: {
             code: 'en',
@@ -2401,15 +2998,13 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
         },
       };
 
-      // Handle attachment if present
-      console.log("this is called and upload to S3 before", this.selectedAttachment)
+      // ✅ Handle attachment if present
       if (this.selectedAttachment) {
         try {
-          console.log("this is called and upload to S3 after")
           const mediaId = await this.uploadAttachmentToS3(
             this.selectedAttachment
           );
-          console.log({ mediaId });
+
           localMessage.attachment = {
             type: this.selectedAttachment.type,
             msgId,
@@ -2419,44 +3014,48 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
             fileSize: this.selectedAttachment.fileSize,
             caption: plainText || '',
           };
-          console.log(localMessage.attachment);
-          // Save file locally into "sent" folder (existing behavior)
+
           localMessage.attachment.localUrl =
             await this.FileService.saveFileToSent(
               this.selectedAttachment.fileName,
               this.selectedAttachment.blob
             );
         } catch (error) {
-          console.error('Failed to upload attachment:', error);
+          console.error('❌ Failed to upload attachment:', error);
+
           const toast = await this.toastCtrl.create({
             message: 'Failed to upload attachment. Please try again.',
             duration: 3000,
             color: 'danger',
           });
           await toast.present();
-          this.isSending = false;
           return;
         }
       }
 
-      // Send using chat service (this will persist to RTDB, SQLite, etc.)
-      console.log({ localMessage });
+      // ✅ Send message to Firebase
       await this.chatService.sendMessage(localMessage);
 
-      // Clear UI state exactly like before
+      // ✅ Clear UI
       this.messageText = '';
       this.showSendButton = false;
       this.selectedAttachment = null;
       this.showPreviewModal = false;
       this.replyToMessage = null;
+
       await this.stopTypingSignal();
-      this.scrollToBottom();
+
+      // ✅ Scroll to bottom
+      await this.waitForDOM();
+      this.scrollToBottomSmooth();
+
       this.chatService.setTypingStatus(false);
       if (this.typingTimeout) {
         clearTimeout(this.typingTimeout);
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('❌ Error sending message:', error);
+
       const toast = await this.toastCtrl.create({
         message: 'Failed to send message. Please try again.',
         duration: 3000,
@@ -2464,8 +3063,103 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
       });
       await toast.present();
     } finally {
+      // ✅ ALWAYS reset loading flag
       this.isSending = false;
+
+      // ✅ Force UI update
+      try {
+        this.cdr.detectChanges();
+      } catch (e) {
+        console.warn('detectChanges warning:', e);
+      }
     }
+  }
+
+  /**
+   * 🎯 Group messages by date (filter empty/deleted)
+   */
+  async groupMessagesByDate(messages: Message[]) {
+    const grouped: { [date: string]: any[] } = {};
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+
+    if (!messages || messages.length === 0) {
+      return [];
+    }
+
+    // Filter out hidden messages
+    const visibleMessages = messages.filter(
+      (msg) => !this.isMessageHiddenForUser(msg)
+    );
+
+    for (const msg of visibleMessages) {
+      const timestamp = new Date(msg.timestamp);
+
+      const hours = timestamp.getHours();
+      const minutes = timestamp.getMinutes();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const formattedHours = hours % 12 || 12;
+      const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
+      (msg as any).time = `${formattedHours}:${formattedMinutes} ${ampm}`;
+
+      const isToday =
+        timestamp.getDate() === today.getDate() &&
+        timestamp.getMonth() === today.getMonth() &&
+        timestamp.getFullYear() === today.getFullYear();
+
+      const isYesterday =
+        timestamp.getDate() === yesterday.getDate() &&
+        timestamp.getMonth() === yesterday.getMonth() &&
+        timestamp.getFullYear() === yesterday.getFullYear();
+
+      let label = '';
+      if (isToday) {
+        label = 'Today';
+      } else if (isYesterday) {
+        label = 'Yesterday';
+      } else {
+        const dd = timestamp.getDate().toString().padStart(2, '0');
+        const mm = (timestamp.getMonth() + 1).toString().padStart(2, '0');
+        const yyyy = timestamp.getFullYear();
+        label = `${dd}/${mm}/${yyyy}`;
+      }
+
+      if (!grouped[label]) {
+        grouped[label] = [];
+      }
+      grouped[label].push(msg);
+    }
+
+    return Object.keys(grouped)
+      .filter((date) => grouped[date].length > 0)
+      .map((date) => ({
+        date,
+        messages: grouped[date],
+      }));
+  }
+
+  /**
+   * 🎯 Check if message is hidden for current user
+   */
+  isMessageHiddenForUser(msg: any): boolean {
+    if (!msg) return false;
+
+    // Global deletion
+    if (msg.deletedFor && msg.deletedFor.everyone === true) {
+      return true;
+    }
+
+    // User-specific deletion
+    if (
+      msg.deletedFor &&
+      Array.isArray(msg.deletedFor.users) &&
+      msg.deletedFor.users.includes(String(this.senderId))
+    ) {
+      return true;
+    }
+
+    return false;
   }
 
   async getPreviewUrl(msg: any) {
@@ -2496,11 +3190,9 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
       : null;
   }
 
-    isEmptyObject(obj: any): boolean {
-  return obj && Object.keys(obj).length === 0;
-}
-
- 
+  isEmptyObject(obj: any): boolean {
+    return obj && Object.keys(obj).length === 0;
+  }
 
   private async uploadAttachmentToS3(attachment: any): Promise<string> {
     try {
@@ -2547,31 +3239,31 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     // console.log("this msg is show in preview modal", msg);
 
     try {
-     
       let localUrl = msg.attachment.localUrl;
 
       if (!localUrl) {
-     
-
-          if (!msg.isMe) {
-           const relativePath = await this.downloadAndSaveLocally(
-              msg.attachment.cdnUrl,
-              msg.attachment.fileName
+        if (!msg.isMe) {
+          const relativePath = await this.downloadAndSaveLocally(
+            this.escapeUrl(msg.attachment.cdnUrl),
+            msg.attachment.fileName
+          );
+          if (relativePath) {
+            localUrl = await this.FileService.getFilePreview(
+              relativePath as string
             );
-            localUrl = await this.FileService.getFilePreview(relativePath as string)
             // attachmentUrl = localUrl;
-            this.sqliteService.updateAttachment(msg.msgId, {localUrl})
+            this.sqliteService.updateAttachment(msg.msgId, { localUrl });
           }
+        }
         // }
       }
-      
 
       const modal = await this.modalCtrl.create({
         component: AttachmentPreviewModalComponent,
         componentProps: {
           attachment: {
             ...msg.attachment,
-            url: localUrl || msg.attachment.cdnUrl,
+            url: localUrl || this.escapeUrl(msg.attachment.cdnUrl),
           },
           message: msg,
         },
@@ -2580,7 +3272,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
 
       await modal.present();
       const { data } = await modal.onDidDismiss();
-      console.log({data})
+      console.log({ data });
 
       if (data && data.action === 'reply') {
         this.setReplyToMessage(data.message);
@@ -2603,7 +3295,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
       return await this.FileService.saveFileToReceived(fileName, blob);
     } catch (error) {
       console.warn('Failed to save file locally:', error);
-      throw error;
+      return null;
     }
   }
 
@@ -2700,24 +3392,100 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
         userId,
         emoji: newVal,
       });
+      this.selectedMessages = [];
     } catch (error) {
       console.error('Reaction not save', error);
     }
   }
 
-  openEmojiKeyboard(msg: Message) {
-    this.emojiTargetMsg = msg;
-    // focus hidden input to pop OS emoji keyboard
-    const el = (document.querySelector('#chatting-screen') || document) // adjust root if needed
-      .querySelector('ion-input[ng-reflect-name="emojiKeyboard"]') as any;
+  async openEmojiKeyboardForInput() {
+    try {
+      const modal = await this.modalCtrl.create({
+        component: EmojiPickerModalComponent,
+        cssClass: 'emoji-picker-modal',
+        breakpoints: [0, 0.5, 0.75, 1],
+        initialBreakpoint: 0.75,
+        backdropDismiss: true,
+      });
 
-    // better: use @ViewChild('emojiKeyboard') emojiInput!: IonInput;
-    // then: this.emojiInput.setFocus();
-    const inputEl = document.querySelector(
-      'ion-input + input'
-    ) as HTMLInputElement; // Ionic renders native <input> after shadow
-    if (this.datePicker) {
-      /* just to keep reference lint happy */
+      await modal.present();
+
+      const { data } = await modal.onDidDismiss();
+
+      if (data && data.selected && data.emoji) {
+        console.log('✅ Emoji selected:', data.emoji);
+
+        // Add emoji to the message input
+        const currentText = this.messageText || '';
+        this.messageText = currentText + data.emoji;
+
+        // Update send button visibility
+        this.showSendButton = this.messageText.trim().length > 0;
+
+        // Focus back on input
+        setTimeout(() => {
+          const textareaElement = document.querySelector(
+            'ion-textarea'
+          ) as HTMLIonTextareaElement;
+          if (textareaElement) {
+            textareaElement.setFocus();
+          }
+        }, 100);
+      }
+    } catch (error) {
+      console.error('❌ Error opening emoji picker:', error);
+
+      const toast = await this.toastCtrl.create({
+        message: 'Failed to open emoji picker',
+        duration: 2000,
+        color: 'danger',
+        position: 'bottom',
+      });
+      await toast.present();
+    }
+  }
+
+  async openEmojiKeyboard(msg: IMessage) {
+    try {
+      const modal = await this.modalCtrl.create({
+        component: EmojiPickerModalComponent,
+        cssClass: 'emoji-picker-modal',
+        breakpoints: [0, 0.5, 0.75, 1],
+        initialBreakpoint: 0.75,
+        backdropDismiss: true,
+      });
+
+      await modal.present();
+
+      const { data } = await modal.onDidDismiss();
+
+      if (data && data.selected && data.emoji) {
+        console.log('✅ Emoji selected:', data.emoji);
+
+        // Add reaction to the message
+        await this.addReaction(msg, data.emoji);
+
+        // Clear selection
+        this.selectedMessages = [];
+
+        // Show success toast
+        const toast = await this.toastCtrl.create({
+          message: `Reaction added: ${data.emoji}`,
+          duration: 1500,
+          color: 'success',
+          position: 'top',
+        });
+        await toast.present();
+      }
+    } catch (error) {
+      console.error('❌ Error opening emoji picker:', error);
+
+      const toast = await this.toastCtrl.create({
+        message: 'Failed to open emoji picker',
+        duration: 2000,
+        color: 'danger',
+      });
+      await toast.present();
     }
   }
 
@@ -2778,7 +3546,26 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     msg: IMessage,
     badge: { emoji: string | null; userId: string }
   ) {
-    
+    ev.stopPropagation();
+
+    const currentUserId = this.senderId;
+
+    // If user clicks any reaction badge, toggle their reaction with same emoji
+    const currentReaction = msg.reactions?.find(
+      (r) => r.userId === currentUserId
+    );
+    const newEmoji =
+      currentReaction?.emoji === badge.emoji ? null : badge.emoji;
+
+    try {
+      await this.chatService.setQuickReaction({
+        msgId: msg.msgId,
+        userId: currentUserId,
+        emoji: newEmoji,
+      });
+    } catch (error) {
+      console.error('Failed to update reaction:', error);
+    }
   }
 
   goToProfile() {
@@ -2822,10 +3609,9 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   goToCallingScreen() {
-    this.router.navigate(['/calling-screen']);
+    // this.router.navigate(['/calling-screen']);
+    console.log('will work in future');
   }
-
-
 
   async openCamera() {
     try {
@@ -2849,10 +3635,9 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
       const fileName = `camera_${timestamp}.${image.format || 'jpg'}`;
       const mimeType = `image/${image.format || 'jpeg'}`;
 
-      // Create preview URL (same as pickAttachment)
+      // Create preview URL
       const previewUrl = URL.createObjectURL(blob);
 
-      // Set selectedAttachment exactly like pickAttachment does
       this.selectedAttachment = {
         type: 'image',
         blob: blob,
@@ -2861,15 +3646,93 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
         fileSize: blob.size,
         previewUrl: previewUrl,
       };
-      console.log("this selected attachment", this.selectedAttachment);
+      console.log('this selected attachment', this.selectedAttachment);
 
-      // Show preview modal (same as pickAttachment)
+      // Show preview modal
       this.showPreviewModal = true;
     } catch (error) {
       console.error('Camera error:', error);
 
       const toast = await this.toastCtrl.create({
         message: 'Failed to capture photo. Please try again.',
+        duration: 2000,
+        color: 'danger',
+      });
+      await toast.present();
+    }
+  }
+
+  // ========================================
+  // 📸 CROPPER MODAL INTEGRATION
+  // ========================================
+
+  async openCropperModal() {
+    if (!this.selectedAttachment || this.selectedAttachment.type !== 'image') {
+      return;
+    }
+
+    try {
+      const modal = await this.modalCtrl.create({
+        component: ImageCropperModalComponent,
+        componentProps: {
+          imageUrl: this.selectedAttachment.previewUrl,
+          aspectRatio: 0, // Free aspect ratio
+          cropQuality: 0.9,
+        },
+        cssClass: 'image-cropper-modal',
+      });
+
+      await modal.present();
+
+      const { data } = await modal.onDidDismiss();
+
+      if (data && data.success && data.originalBlob) {
+        if (this.selectedAttachment.previewUrl) {
+          URL.revokeObjectURL(this.selectedAttachment.previewUrl);
+        }
+
+        // ✅ Create new preview URL from cropped blob
+        const newPreviewUrl = URL.createObjectURL(data.originalBlob);
+
+        // ✅ Generate new filename with timestamp
+        const timestamp = Date.now();
+        const fileExtension =
+          this.selectedAttachment.fileName.split('.').pop() || 'jpg';
+        const newFileName = `cropped_${timestamp}.${fileExtension}`;
+
+        // ✅ Update selectedAttachment with cropped image data
+        this.selectedAttachment = {
+          ...this.selectedAttachment,
+          blob: data.originalBlob,
+          previewUrl: newPreviewUrl,
+          fileName: newFileName,
+          fileSize: data.originalBlob.size,
+          mimeType: data.originalBlob.type || this.selectedAttachment.mimeType,
+        };
+
+        // ✅ Show success toast
+        const toast = await this.toastCtrl.create({
+          message: 'Image cropped successfully',
+          duration: 1500,
+          color: 'success',
+        });
+        await toast.present();
+      } else if (data && data.cancelled) {
+        // User cancelled cropping
+        console.log('Cropping cancelled by user');
+      } else if (data && data.error) {
+        // Show error toast
+        const toast = await this.toastCtrl.create({
+          message: data.error,
+          duration: 2000,
+          color: 'danger',
+        });
+        await toast.present();
+      }
+    } catch (error) {
+      console.error('Error opening cropper modal:', error);
+      const toast = await this.toastCtrl.create({
+        message: 'Failed to open image editor',
         duration: 2000,
         color: 'danger',
       });
@@ -2905,6 +3768,11 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     window.removeEventListener('resize', this.resizeHandler);
     if ((this as any)._ro) {
       (this as any)._ro.disconnect();
+    }
+
+    if (this.groupMembershipUnsubscribe) {
+      this.groupMembershipUnsubscribe();
+      this.groupMembershipUnsubscribe = null;
     }
 
     try {
@@ -2980,6 +3848,11 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
+  //for removing query params from local or cdn url
+  escapeUrl(url: any) {
+    return url.replace(/[?#].*$/, '');
+  }
+
   // --------------------------translation module added on 1 nov-----
 
   // // ============================================
@@ -2987,6 +3860,8 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
   // // ============================================
 
   showTranslationOptions = false;
+  // ✅ NEW: Flag to track if send is in progress
+  isSendingFromTranslationCard = false;
   myLangCode = 'en';
   receiverLangCode = 'hi';
   myLangLabel = 'English';
@@ -3072,10 +3947,8 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
   isTranslatingCustom = false; // ✅ NEW: For custom language selection
 
   translationApiBase =
-    // 'https://script.google.com/macros/s/AKfycbyxnbC6LBpbtdMw2rLVqCRvqbHkT97CPQo9Ta9by1QpCMBH25BE6edivkNj5_dYp1qj/exec';
-    // 'https://script.google.com/macros/s/AKfycbxpr7MVGsJNzDTZoBWa_IuTd8z5C9ZDfM3iENhuqBN01hgKiU2fF-Hc3DZ1c0u9KzHZ/exec';
     'https://script.google.com/macros/s/AKfycbz069QioIcP8CO2ly7j29cyQPQjzQKywYcrDicxqG35_bQ3Ch_fcuVORsMAdAWu5-uh/exec';
-    
+
   languageMap: Record<string, string> = {
     'ar-EG': 'Arabic (Egypt)',
     'ar-SA': 'Arabic (Saudi Arabia)',
@@ -3116,10 +3989,9 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     }));
   }
 
-  // languageName(code: string): string {
-  //   return this.languageMap[code] || code;
-  // }
-
+  /**
+   * ✅ UPDATED: languageName method - removes country codes in parentheses
+   */
   languageName(code: string): string {
     const full = this.languageMap[code] || code;
 
@@ -3374,15 +4246,35 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     return st.activeCode !== 'original';
   }
 
+  // getDisplayedText(msg: any) {
+  //   this.ensureToggleState(msg);
+  //   const st = this.messageToggleMap.get(msg.msgId)!;
+  //   if (!msg.translations) return msg.text || '';
+  //   const all = this.getAllTranslationsArray(msg);
+  //   const found = all.find((x) => x.code === st.activeCode);
+  //   if (found) return found.text;
+  //   if (st.activeCode === 'original' && msg.translations.original)
+  //     return msg.translations.original.text;
+  //   return msg.text || '';
+  // }
+
   getDisplayedText(msg: any) {
     this.ensureToggleState(msg);
     const st = this.messageToggleMap.get(msg.msgId)!;
-    if (!msg.translations) return msg.text || '';
+
+    if (!msg.translations) {
+      return msg.text || '';
+    }
+
     const all = this.getAllTranslationsArray(msg);
     const found = all.find((x) => x.code === st.activeCode);
+
     if (found) return found.text;
-    if (st.activeCode === 'original' && msg.translations.original)
+
+    if (st.activeCode === 'original' && msg.translations.original) {
       return msg.translations.original.text;
+    }
+
     return msg.text || '';
   }
 
@@ -3439,6 +4331,7 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * ✅ UPDATED: Fetch custom language translation + receiver language (parallel)
+   * Prevents translation when source and target are the same
    */
   async fetchCustomTranslation(
     mode: 'translateCustom',
@@ -3449,82 +4342,91 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
   ) {
     const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
 
-    const promises: Promise<any>[] = [];
-
-    // ✅ Fetch custom language translation
-    const customParams = new HttpParams()
+    // First, detect source language
+    const detectParams = new HttpParams()
       .set('text', originalText)
       .set('to', targetApiLang);
 
-    promises.push(
-      this.http
+    try {
+      const detectResponse: any = await this.http
         .get(this.translationApiBase, {
-          params: customParams,
+          params: detectParams,
           responseType: 'json',
         })
-        .toPromise()
-    );
+        .toPromise();
 
-    // ✅ Fetch receiver language translation (if different from custom selected)
-    if (recvApiLang !== targetApiLang) {
-      const recvParams = new HttpParams()
-        .set('text', originalText)
-        .set('to', recvApiLang);
+      if (!detectResponse?.success) {
+        this.showToast('Translation failed', 'warning');
+        this.isTranslatingCustom = false;
+        return;
+      }
 
-      promises.push(
-        this.http
-          .get(this.translationApiBase, {
-            params: recvParams,
-            responseType: 'json',
-          })
-          .toPromise()
-      );
-    }
+      const detectedLang = detectResponse.detectedSource || 'unknown';
+      const detectedApiLang = this.apiLanguageCode(detectedLang);
+      const detectedLabel =
+        this.languageName(this.normalizeLocaleCode(detectedLang)) ||
+        detectedLang;
 
-    try {
-      const results = await Promise.all(promises);
+      // ✅ Check if source and target are the same
+      if (detectedApiLang === targetApiLang) {
+        this.showToast(
+          `Already in ${targetLabel}. No translation needed.`,
+          'warning'
+        );
+        this.isTranslatingCustom = false;
+        return;
+      }
 
-      const customResponse = results[0];
-      const receiverResponse = results[1]; // undefined if same language
+      const promises: Promise<any>[] = [];
+      let needsReceiverTranslation = false;
 
-      if (customResponse?.success && customResponse.translatedText) {
-        const detectedLang = customResponse.detectedSource || 'unknown';
-        const detectedLabel =
-          this.languageName(this.normalizeLocaleCode(detectedLang)) ||
-          detectedLang;
+      // ✅ Custom language translation (already fetched above)
+      const customTranslation = detectResponse.translatedText;
 
-        let receiverTranslation = null;
+      // ✅ Fetch receiver language translation only if different from both source and custom
+      if (recvApiLang !== targetApiLang && recvApiLang !== detectedApiLang) {
+        needsReceiverTranslation = true;
+        const recvParams = new HttpParams()
+          .set('text', originalText)
+          .set('to', recvApiLang);
+
+        promises.push(
+          this.http
+            .get(this.translationApiBase, {
+              params: recvParams,
+              responseType: 'json',
+            })
+            .toPromise()
+        );
+      }
+
+      let receiverTranslation = null;
+      if (needsReceiverTranslation) {
+        const results = await Promise.all(promises);
+        const receiverResponse = results[0];
         if (receiverResponse?.success && receiverResponse.translatedText) {
           receiverTranslation = receiverResponse.translatedText;
         }
-
-        this.showCustomTranslationCard(
-          mode,
-          originalText,
-          targetCode,
-          targetLabel,
-          customResponse.translatedText,
-          detectedLang,
-          detectedLabel,
-          receiverTranslation
-        );
-      } else {
-        this.showToast('Translation failed', 'warning');
       }
+
+      this.showCustomTranslationCard(
+        mode,
+        originalText,
+        targetCode,
+        targetLabel,
+        customTranslation,
+        detectedLang,
+        detectedLabel,
+        receiverTranslation
+      );
 
       this.isTranslatingCustom = false;
     } catch (err) {
       console.error('Translation error', err);
-      this.showToast('Translation failed', 'danger');
+      this.showToast('Translation failed', 'error');
       this.isTranslatingCustom = false;
     }
   }
-
-
-  // ========================================
-  // 🎨 SHOW CUSTOM TRANSLATION CARD
-  // ========================================
-
   showCustomTranslationCard(
     mode: 'translateCustom',
     originalText: string,
@@ -3599,15 +4501,21 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
+  // ========================================
+  // 🎨 SHOW RECEIVER ONLY CARD
+  // ========================================
   /**
-   * Fetch ONLY receiver translation (with auto-detect)
+   * ✅ UPDATED: Fetch ONLY receiver translation (with source check)
+   */
+
+  /**
+   * ✅ UPDATED: Fetch ONLY receiver translation (with source check)
    */
   async fetchReceiverTranslationOnly(
     mode: 'translateToReceiver',
     originalText: string,
     recvApiLang: string
   ) {
-    // ✅ Auto-detect source language
     const params = new HttpParams()
       .set('text', originalText)
       .set('to', recvApiLang);
@@ -3618,9 +4526,20 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
         next: (response: any) => {
           if (response.success && response.translatedText) {
             const detectedLang = response.detectedSource || 'unknown';
+            const detectedApiLang = this.apiLanguageCode(detectedLang);
             const detectedLabel =
               this.languageName(this.normalizeLocaleCode(detectedLang)) ||
               detectedLang;
+
+            // ✅ Check if source and target are the same
+            if (detectedApiLang === recvApiLang) {
+              this.showToast(
+                `Already in ${this.receiverLangLabel}. No translation needed.`,
+                'warning'
+              );
+              this.isTranslatingToReceiver = false;
+              return;
+            }
 
             this.showReceiverOnlyCard(
               mode,
@@ -3637,16 +4556,11 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
         },
         error: (err) => {
           console.error('Translation error', err);
-          this.showToast('Translation failed', 'danger');
+          this.showToast('Translation failed', 'error');
           this.isTranslatingToReceiver = false;
         },
       });
   }
-
-  // ========================================
-  // 🎨 SHOW RECEIVER ONLY CARD
-  // ========================================
-
   showReceiverOnlyCard(
     mode: 'translateToReceiver',
     originalText: string,
@@ -3728,15 +4642,8 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
   // 🔧 HELPER: CLOSE TRANSLATION CARD
   // ========================================
 
-  // closeTranslationCard() {
-  //   if (this.translationCard) {
-  //     this.translationCard.visible = false;
-  //     this.translationCard = null;
-  //   }
-  // }
-
   /**
-   * Send Original with auto-translation (with auto-detect)
+   * ✅ UPDATED: Send Original with auto-translation (with source check)
    */
   async sendOriginalWithTranslation() {
     const text = this.messageText?.trim();
@@ -3752,7 +4659,6 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
 
     const recvApiLang = this.apiLanguageCode(this.receiverLangCode);
 
-    // ✅ Auto-detect source language
     const params = new HttpParams().set('text', text).set('to', recvApiLang);
 
     this.http
@@ -3761,21 +4667,29 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
         next: (response: any) => {
           if (response.success && response.translatedText) {
             const detectedLang = response.detectedSource || 'unknown';
+            const detectedApiLang = this.apiLanguageCode(detectedLang);
             const detectedLabel =
               this.languageName(this.normalizeLocaleCode(detectedLang)) ||
               detectedLang;
 
+            // ✅ Check if source and target are the same
+            if (detectedApiLang === recvApiLang) {
+              // Same language - just send without translation card
+              this.messageText = text;
+              this.sendMessage(); // Call your existing sendMessage method
+              this.isTranslatingOriginal = false;
+              return;
+            }
+
             const items: TranslationItem[] = [
               {
                 code: detectedLang,
-                label: detectedLabel + ' (Original)',
+                label: detectedLabel,
                 text: text,
               },
               {
                 code: this.receiverLangCode,
-                label:
-                  this.languageName(this.receiverLangCode) +
-                  ' (Receiver will see)',
+                label: this.languageName(this.receiverLangCode) + ' (Receiver)',
                 text: response.translatedText,
               },
             ];
@@ -3796,14 +4710,17 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
         },
         error: (err) => {
           console.error('Translation error', err);
-          this.showToast('Translation failed', 'danger');
+          this.showToast('Translation failed', 'error');
           this.isTranslatingOriginal = false;
         },
       });
   }
 
-
   async sendFromTranslationCard() {
+    // ✅ Loading flag ON
+    if (this.isSendingFromTranslationCard) return;
+    this.isSendingFromTranslationCard = true;
+
     if (!this.translationCard) return;
 
     console.log('📋 Translation Card:', this.translationCard);
@@ -3911,9 +4828,9 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     // ✅ Build final message
     const localMessage: Partial<IMessage & { attachment?: any }> = {
       sender: this.senderId,
-      sender_name : this.sender_name,
+      sender_name: this.sender_name,
       text: visibleTextForSender,
-      receiver_id : this.receiverId,
+      receiver_id: this.receiverId,
       translations: translationsPayload,
       timestamp,
       msgId,
@@ -3941,7 +4858,14 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     try {
       this.stopTypingSignal();
       this.scrollToBottom();
-    } catch {}
+    } catch {
+    } finally {
+      // ✅ Loading flag OFF (always executed)
+      this.isSendingFromTranslationCard = false;
+      try {
+        this.cdr.detectChanges();
+      } catch {}
+    }
   }
 
   async sendDirectMessage(senderText: string, receiverText: string) {
@@ -3982,18 +4906,35 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
     this.showSendButton = false;
     this.showToast('Message sent', 'success');
   }
+  // showTranslationOptions = false;
+
+  toggleTranslationOptions() {
+    this.showTranslationOptions = !this.showTranslationOptions;
+    // // For quick test, run this in component init or console:
+    // this.isSendingFromTranslationCard = true;
+    // setTimeout(() => this.isSendingFromTranslationCard = false, 3000);
+  }
 
   async showToast(
     message: string,
-    color: string = 'medium',
-    duration: number = 2000,
-    position: 'top' | 'middle' | 'bottom' = 'bottom'
+    color:
+      | 'success'
+      | 'warning'
+      | 'error'
+      | 'info'
+      | 'primary'
+      | 'secondary'
+      | 'medium' = 'info',
+    position: 'top' | 'middle' | 'bottom' = 'top',
+    duration: number = 2000
   ) {
     const toast = await this.toastController.create({
-      message: message,
-      duration: duration,
-      color: color,
-      position: position,
+      message: message, // Keep it simple - just the message
+      duration,
+      position,
+      cssClass: `md-toast ${color} toast-with-dust`, // Add extra class
+      enterAnimation: (el) => this.getToastAnimation(el),
+      leaveAnimation: (el) => this.getToastLeaveAnimation(el),
       buttons: [
         {
           text: 'Dismiss',
@@ -4007,14 +4948,16 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
 
   async showToastSimple(
     message: string,
-    color: string = 'medium',
+    color: 'success' | 'warning' | 'error' | 'info' = 'info',
     duration: number = 1500
   ) {
     const toast = await this.toastController.create({
       message: message,
-      duration: duration,
-      color: color,
-      position: 'bottom',
+      duration,
+      position: 'top',
+      cssClass: `md-toast ${color} toast-with-dust`,
+      enterAnimation: (el) => this.getToastAnimation(el),
+      leaveAnimation: (el) => this.getToastLeaveAnimation(el),
     });
 
     await toast.present();
@@ -4022,23 +4965,44 @@ export class CommunityChatPage implements OnInit, AfterViewInit, OnDestroy {
 
   async showToastWithIcon(
     message: string,
-    color: string = 'success',
+    color: 'success' | 'warning' | 'error' | 'info' | 'primary' = 'success',
     icon: string = 'checkmark-circle'
   ) {
     const toast = await this.toastController.create({
       message: message,
       duration: 2000,
-      color: color,
-      position: 'bottom',
-      icon: icon,
-      buttons: [
-        {
-          text: 'OK',
-          role: 'cancel',
-        },
-      ],
+      position: 'top',
+      icon,
+      cssClass: `md-toast ${color} toast-with-dust`,
+      enterAnimation: (el) => this.getToastAnimation(el),
+      leaveAnimation: (el) => this.getToastLeaveAnimation(el),
+      buttons: [{ text: 'OK', role: 'cancel' }],
     });
 
     await toast.present();
+  }
+
+  getToastAnimation(baseEl: HTMLElement) {
+    const wrapper = baseEl.shadowRoot?.querySelector('.toast-wrapper');
+
+    return this.animationCtrl
+      .create()
+      .addElement(wrapper!)
+      .duration(280)
+      .easing('cubic-bezier(0.32, 0.72, 0, 1)')
+      .fromTo('transform', 'translateY(-16px)', 'translateY(0)')
+      .fromTo('opacity', '0', '1');
+  }
+
+  getToastLeaveAnimation(baseEl: HTMLElement) {
+    const wrapper = baseEl.shadowRoot?.querySelector('.toast-wrapper');
+
+    return this.animationCtrl
+      .create()
+      .addElement(wrapper!)
+      .duration(200)
+      .easing('cubic-bezier(0.4, 0, 1, 1)')
+      .fromTo('opacity', '1', '0')
+      .fromTo('transform', 'translateY(0)', 'translateY(-10px)');
   }
 }

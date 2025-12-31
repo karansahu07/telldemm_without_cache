@@ -15,23 +15,20 @@
     <ion-input #searchInput clearInput placeholder="Search contacts" [(ngModel)]="searchTerm" (ionChange)="filterList()"></ion-input>
   </ion-toolbar>
 
-  <!-- Selected avatars row -->
-  <div *ngIf="selectedCount > 0" class="chips-row">
-    <div class="chips-scroll">
-      <ng-container *ngFor="let s of selectedMembers">
-        <div class="chip">
-          <div class="chip-avatar">
-            <ng-container *ngIf="s.profile; else initials">
-              <img [src]="s.profile" />
-            </ng-container>
-            <ng-template #initials>
-              <div class="initial">{{ getInitial(s.name) }}</div>
-            </ng-template>
-          </div>
-        </div>
-      </ng-container>
-    </div>
-    <div class="selected-count">{{ selectedCount }} selected</div>
+  <!-- Selected chips row - UPDATED: With cross button like add-members -->
+  <div *ngIf="selectedCount > 0" class="selected-chip-row">
+    <ion-chip *ngFor="let user of selectedMembers" (click)="toggleSelect(user)">
+      <ion-avatar>
+        <ng-container *ngIf="user.profile; else chipInitials">
+          <img [src]="user.profile" />
+        </ng-container>
+        <ng-template #chipInitials>
+          <div class="chip-initial">{{ getInitial(user.name) }}</div>
+        </ng-template>
+      </ion-avatar>
+      <ion-label>{{ user.name }}</ion-label>
+      <ion-icon name="close-circle" (click)="toggleSelect(user); $event.stopPropagation()"></ion-icon>
+    </ion-chip>
   </div>
 </ion-header>
 

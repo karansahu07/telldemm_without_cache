@@ -1210,11 +1210,12 @@ ion-tab-bar,
 
   /* Reply preview */
   .reply-preview {
-    background: color-mix(
-      in srgb,
-      var(--chat-bg, var(--ion-background-color)),
-      black 2%
-    );
+    // background: color-mix(
+    //   in srgb,
+    //   var(--chat-bg, var(--ion-background-color)),
+    //   black 2%
+    // );
+    background: white;
     border-top: 1px solid rgba(0, 0, 0, 0.06);
     padding: 8px 12px;
     margin: 0 -12px 8px -12px;

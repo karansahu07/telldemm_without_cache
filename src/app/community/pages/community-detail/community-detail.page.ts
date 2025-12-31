@@ -21,6 +21,8 @@ import { GroupPreviewModalComponent } from '../../components/group-preview-modal
 import { AlertController } from '@ionic/angular';
 import { Database, get, ref, onValue, off } from 'firebase/database';
 import { get as rtdbGet, getDatabase } from 'firebase/database';
+import { ApiService } from 'src/app/services/api/api.service';
+import { firstValueFrom } from 'rxjs';
 
 interface CommunityGroup extends IConversation {
   membersCount?: number;
@@ -71,6 +73,7 @@ export class CommunityDetailPage implements OnInit, OnDestroy {
     private sqliteService: SqliteService,
     private alertCtrl: AlertController,
     private loadingCtrl: LoadingController,
+    private api : ApiService
   ) {}
 
   ngOnInit() {
@@ -498,12 +501,26 @@ export class CommunityDetailPage implements OnInit, OnDestroy {
     });
   }
 
-  async openGroupPreview(group: any) {
+async openGroupPreview(group: any) {
     if (!group) return;
-
+    
+    const groupId = group.roomId || group.id;
+    
+    // Fetch group avatar from API
+    let groupAvatar = 'assets/images/user.jfif';
+    try {
+      const res: any = await firstValueFrom(this.api.getGroupDp(groupId));
+      groupAvatar = res?.group_dp_url || 'assets/images/user.jfif';
+      console.log('✅ Group avatar fetched:', groupAvatar);
+    } catch (err) {
+      console.error('❌ Error loading group avatar:', err);
+      groupAvatar = 'assets/images/user.jfif';
+    }
+    // console.log("group avatar",groupAvatar)
+    
     const groupData = {
-      roomId: group.roomId || group.id,
-      id: group.roomId || group.id,
+      roomId: groupId,
+      id: groupId,
       name: group.name || group.title,
       title: group.name || group.title,
       description: group.description || '',
@@ -512,12 +529,12 @@ export class CommunityDetailPage implements OnInit, OnDestroy {
       createdBy: group.createdBy || '',
       createdByName: group.createdByName || '',
       createdAt: group.createdAt,
-      avatar: group.avatar || '',
+      avatar: groupAvatar,
       communityId: this.communityId,
     };
-
+    
     console.log('Opening group preview with data:', groupData);
-
+    
     const modal = await this.modalCtrl.create({
       component: GroupPreviewModalComponent,
       componentProps: {
@@ -532,10 +549,10 @@ export class CommunityDetailPage implements OnInit, OnDestroy {
       initialBreakpoint: 0.45,
       backdropDismiss: true,
     });
-
+    
     await modal.present();
+    
     const { data } = await modal.onDidDismiss();
-
     if (data && data.action === 'join' && data.groupId) {
       await this.joinGroup(data.groupId);
     }

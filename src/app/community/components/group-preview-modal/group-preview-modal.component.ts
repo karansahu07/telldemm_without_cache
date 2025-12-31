@@ -1,4 +1,4 @@
-// import { Component, Input } from '@angular/core';
+// import { Component, Input, OnInit } from '@angular/core';
 // import { IonicModule, ModalController } from '@ionic/angular';
 // import { CommonModule } from '@angular/common';
 // import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -10,30 +10,59 @@
 //   standalone: true,
 //   imports: [IonicModule, CommonModule, TranslateModule],
 // })
-// export class GroupPreviewModalComponent {
+// export class GroupPreviewModalComponent implements OnInit {
 //   @Input() group: any;
 //   @Input() communityName = '';
 //   @Input() currentUserId = '';
 //   @Input() currentUserName = '';
 //   @Input() currentUserPhone = '';
 
+//   // Local variables for group details
+//   memberKeys: string[] = [];
+
 //   constructor(
 //     private modalCtrl: ModalController,
 //     private translate: TranslateService
 //   ) {}
 
-//   get memberKeys(): string[] {
-//     if (!this.group || !this.group.rawMembers) return [];
-//     return Object.keys(this.group.rawMembers);
+//   async ngOnInit() {
+//     console.log("group detail in preview modal", this.group);
+//     this.extractMemberKeys();
 //   }
 
+//   /**
+//    * 🔹 Extract member keys from group object
+//    */
+//   extractMemberKeys() {
+//     if (this.group?.members) {
+//       if (Array.isArray(this.group.members)) {
+//         this.memberKeys = this.group.members;
+//       } else if (typeof this.group.members === 'object') {
+//         this.memberKeys = Object.keys(this.group.members);
+//       }
+//     }
+//   }
+
+//   /**
+//    * 🔹 Get member object by key
+//    */
 //   memberObj(key: string): any {
-//     return this.group && this.group.rawMembers ? this.group.rawMembers[key] : null;
+//     if (!this.group?.members) return null;
+//     return this.group.members[key];
 //   }
 
+//   /**
+//    * 🔹 Get initials for member avatar
+//    */
 //   initialsFor(mem: any): string {
-//     const n: string = mem?.name || '';
-//     if (!n) return mem?.phone_number ? String(mem.phone_number).slice(-2) : 'U';
+//     if (!mem) return 'U';
+    
+//     const n: string = mem?.name || mem?.username || '';
+//     if (!n) {
+//       return mem?.phone_number || mem?.phoneNumber 
+//         ? String(mem.phone_number || mem.phoneNumber).slice(-2) 
+//         : 'U';
+//     }
 
 //     const initials = n
 //       .split(' ')
@@ -47,27 +76,74 @@
 //   }
 
 //   /**
-//    * Localized "Created by {{name}}"
-//    * (Date is appended in the template with Angular date pipe)
+//    * 🔹 Get "Created by" text
 //    */
 //   get createdByText(): string {
-//     const name =
-//       this.group?.createdByName ||
-//       this.group?.createdBy ||
-//       this.group?.created_by ||
-//       '';
+//     const name = this.group?.createdByName || this.group?.createdBy || this.group?.created_by || '';
 //     if (!name) return '';
 //     return this.translate.instant('group_preview_modal_component.createdBy', { name });
 //   }
 
+//   /**
+//    * 🔹 Get group name
+//    */
+//   get groupName(): string {
+//     return this.group?.name || this.group?.title || 'Unnamed Group';
+//   }
+
+//   /**
+//    * 🔹 Get group description
+//    */
+//   get groupDescription(): string {
+//     return this.group?.description || '';
+//   }
+
+//   /**
+//    * 🔹 Get member count
+//    */
+//   get memberCount(): number {
+//     return this.memberKeys.length || this.group?.membersCount || 0;
+//   }
+
+//   /**
+//    * 🔹 Get creation date
+//    */
+//   get createdAt(): Date | null {
+//     if (this.group?.createdAt) {
+//       return typeof this.group.createdAt === 'string' 
+//         ? new Date(this.group.createdAt) 
+//         : this.group.createdAt;
+//     }
+//     return null;
+//   }
+
+//   /**
+//    * 🔹 Get group avatar
+//    */
+//   get groupAvatar(): string {
+//     return this.group?.avatar || this.avatarFallbackUrl();
+//   }
+
+//   /**
+//    * 🔹 Close modal
+//    */
 //   close(): void {
 //     this.modalCtrl.dismiss();
 //   }
 
+//   /**
+//    * 🔹 Join group
+//    */
 //   join(): void {
-//     this.modalCtrl.dismiss({ action: 'join', groupId: this.group?.id });
+//     this.modalCtrl.dismiss({ 
+//       action: 'join', 
+//       groupId: this.group?.roomId || this.group?.id 
+//     });
 //   }
 
+//   /**
+//    * 🔹 Set default avatar on error
+//    */
 //   setDefaultAvatar(event: Event) {
 //     try {
 //       const img = event?.target as HTMLImageElement | null;
@@ -79,17 +155,19 @@
 //     }
 //   }
 
+//   /**
+//    * 🔹 Get fallback avatar URL
+//    */
 //   avatarFallbackUrl(): string {
 //     return 'assets/images/user.jfif';
 //   }
 // }
 
-
 import { Component, Input, OnInit } from '@angular/core';
 import { IonicModule, ModalController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { FirebaseChatService } from '../../../services/firebase-chat.service';
+import { ApiService } from 'src/app/services/api/api.service';
 
 @Component({
   selector: 'app-group-preview-modal',
@@ -106,71 +184,88 @@ export class GroupPreviewModalComponent implements OnInit {
   @Input() currentUserPhone = '';
 
   // Local variables for group details
-  groupDetails: any = null;
   memberKeys: string[] = [];
-  loading = false;
+  memberAvatars: { [key: string]: string } = {};
+  memberDetails: { [key: string]: any } = {};
 
   constructor(
     private modalCtrl: ModalController,
     private translate: TranslateService,
-    private firebaseService: FirebaseChatService
+    private api: ApiService 
   ) {}
 
   async ngOnInit() {
-    await this.loadGroupDetails();
+    console.log("group detail in preview modal", this.group);
+    this.extractMemberKeys();
+    this.loadMemberAvatars();
   }
 
   /**
-   * 🔹 Load full group details from Firebase
+   * 🔹 Extract member keys from group object
    */
-  async loadGroupDetails() {
-    if (!this.group || !this.group.roomId) {
-      console.error('Invalid group data');
-      return;
-    }
-
-    this.loading = true;
-    try {
-      // Fetch full group details from Firebase
-      this.groupDetails = await this.firebaseService.getGroupDetails(
-        this.group.roomId
-      );
-
-      console.log('Group details loaded:', this.groupDetails);
-
-      // Extract member keys
-      if (this.groupDetails?.members) {
-        this.memberKeys = Object.keys(this.groupDetails.members);
-      }
-    } catch (error) {
-      console.error('Error loading group details:', error);
-      // Fallback to group object passed from parent
-      this.groupDetails = this.group;
-      
-      // Try to extract members from group object
-      if (this.group.members && Array.isArray(this.group.members)) {
+  extractMemberKeys() {
+    if (this.group?.members) {
+      if (Array.isArray(this.group.members)) {
         this.memberKeys = this.group.members;
-      } else if (this.group.members && typeof this.group.members === 'object') {
+      } else if (typeof this.group.members === 'object') {
         this.memberKeys = Object.keys(this.group.members);
       }
-    } finally {
-      this.loading = false;
     }
   }
 
-  /**
-   * 🔹 Get member object by key
-   */
-  memberObj(key: string): any {
-    if (!this.groupDetails || !this.groupDetails.members) return null;
-    return this.groupDetails.members[key];
+ loadMemberAvatars() {
+  if (!this.memberKeys || this.memberKeys.length === 0) {
+    console.log('⚠️ No member keys to load avatars');
+    return;
   }
 
+  const membersToLoad = this.memberKeys.slice(0, 8);
+  console.log('👥 Loading member details for:', membersToLoad);
+  
+  membersToLoad.forEach((memberId) => {
+    this.api.getUserProfilebyId(memberId).subscribe({
+      next: (res: any) => {
+        console.log(`✅ Response for member ${memberId}:`, res);
+        
+        // Store complete member details
+        this.memberDetails[memberId] = {
+          id: memberId,
+          name: res?.name || res?.username || '',
+          username: res?.username || '',
+          phone_number: res?.phone_number || res?.phoneNumber || '',
+          avatar: res?.profile || ''
+        };
+        
+        console.log(`💾 Stored member details for ${memberId}:`, this.memberDetails[memberId]);
+      },
+      error: (err) => {
+        console.error(`❌ Error loading profile for member ${memberId}:`, err);
+        // Store minimal details on error
+        this.memberDetails[memberId] = {
+          id: memberId,
+          name: '',
+          username: '',
+          phone_number: '',
+          avatar: ''
+        };
+      },
+    });
+  });
+}
+
+/**
+ * 🔹 Get member object by key
+ */
+memberObj(key: string): any {
+  // Return fetched member details instead of group.members[key]
+  return this.memberDetails[key] || null;
+}
   /**
    * 🔹 Get initials for member avatar
    */
   initialsFor(mem: any): string {
     if (!mem) return 'U';
+    // console.log("ffffffffffffffffffffffffff",mem)
     
     const n: string = mem?.name || mem?.username || '';
     if (!n) {
@@ -194,12 +289,7 @@ export class GroupPreviewModalComponent implements OnInit {
    * 🔹 Get "Created by" text
    */
   get createdByText(): string {
-    const details = this.groupDetails || this.group;
-    const name =
-      details?.createdByName ||
-      details?.createdBy ||
-      details?.created_by ||
-      '';
+    const name = this.group?.createdByName || this.group?.createdBy || this.group?.created_by || '';
     if (!name) return '';
     return this.translate.instant('group_preview_modal_component.createdBy', { name });
   }
@@ -208,34 +298,40 @@ export class GroupPreviewModalComponent implements OnInit {
    * 🔹 Get group name
    */
   get groupName(): string {
-    return this.groupDetails?.name || this.groupDetails?.title || this.group?.name || this.group?.title || 'Unnamed Group';
+    return this.group?.name || this.group?.title || 'Unnamed Group';
   }
 
   /**
    * 🔹 Get group description
    */
   get groupDescription(): string {
-    return this.groupDetails?.description || this.group?.description || '';
+    return this.group?.description || '';
   }
 
   /**
    * 🔹 Get member count
    */
   get memberCount(): number {
-    return this.memberKeys.length || this.groupDetails?.membersCount || this.group?.membersCount || 0;
+    return this.memberKeys.length || this.group?.membersCount || 0;
   }
 
   /**
    * 🔹 Get creation date
    */
   get createdAt(): Date | null {
-    const details = this.groupDetails || this.group;
-    if (details?.createdAt) {
-      return typeof details.createdAt === 'string' 
-        ? new Date(details.createdAt) 
-        : details.createdAt;
+    if (this.group?.createdAt) {
+      return typeof this.group.createdAt === 'string' 
+        ? new Date(this.group.createdAt) 
+        : this.group.createdAt;
     }
     return null;
+  }
+
+  /**
+   * 🔹 Get group avatar
+   */
+  get groupAvatar(): string {
+    return this.group?.avatar || this.avatarFallbackUrl();
   }
 
   /**

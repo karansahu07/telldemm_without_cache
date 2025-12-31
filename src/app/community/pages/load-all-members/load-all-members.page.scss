@@ -1,78 +1,117 @@
-/* ===== Chips row (header) ===== */
-.chips-row {
+// ===== CHIP ROW (Header with wrapping chips) =====
+.selected-chip-row {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap; // Enable wrapping like add-members
+  gap: 8px;
   padding: 8px 12px;
+  max-height: 200px; // Optional: limit height
+  overflow-y: auto; // Vertical scroll if needed
   border-bottom: 1px solid var(--ion-border-color);
   background: var(--ion-item-background);
+  
+  // Subtle scrollbar styling
+  &::-webkit-scrollbar { 
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--ion-text-color) 14%, transparent);
+    border-radius: 999px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
 }
 
-/* ===== Horizontal scroller ===== */
-.chips-scroll {
+// ===== ION-CHIP STYLING (Same as add-members) =====
+ion-chip {
+  --background: color-mix(in srgb, var(--ion-color-primary) 12%, var(--ion-item-background));
+  --color: var(--ion-text-color);
+  --border-color: color-mix(in srgb, var(--ion-color-primary) 28%, var(--ion-border-color));
+  --ripple-color: color-mix(in srgb, var(--ion-color-primary) 30%, transparent);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: transform .12s ease, background-color .12s ease, border-color .12s ease;
+  flex-shrink: 0; // Prevent chips from shrinking
+  height: auto; // Match add-members height
+  min-height: 32px; // Consistent minimum height
+  
+  &:hover {
+    --background: color-mix(in srgb, var(--ion-color-primary) 16%, var(--ion-item-background));
+    transform: scale(1.02);
+  }
+  
+  &:active {
+    transform: scale(0.98);
+  }
+  
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--ion-color-primary);
+    border-radius: 999px;
+  }
+  
+  // Chip avatar styling
+  ion-avatar {
+    width: 24px;
+    height: 24px;
+    margin-right: 4px;
+  }
+  
+  // Chip label styling
+  ion-label {
+    font-size: 14px;
+    font-weight: 500;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  // Close icon - always visible like add-members
+  ion-icon[name="close-circle"] {
+    margin-left: 4px;
+    font-size: 20px;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+    
+    &:hover {
+      opacity: 1;
+      color: var(--ion-color-danger);
+    }
+  }
+}
+
+// Chip initial (when no profile image)
+.chip-initial {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ion-color-primary) 20%, var(--ion-card-background));
   display: flex;
-  gap: 8px;
-  overflow: auto;
-  flex: 1 1 auto;
-  padding: 6px 0;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--ion-text-color);
 }
 
-/* subtle thumb for webkit scroll */
-.chips-scroll::-webkit-scrollbar { height: 8px; }
-.chips-scroll::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--ion-text-color) 12%, transparent);
-  border-radius: 999px;
-}
-
-/* ===== Chip base ===== */
-:root {
-  --chip-size: 48px;
-  --chip-radius: 50%;
-}
-
-.chip,
+// ===== AVATAR INITIAL (List items) =====
 .avatar-initial {
-  width: var(--chip-size);
-  height: var(--chip-size);
-  border-radius: var(--chip-radius);
-  overflow: hidden;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ion-color-primary) 12%, var(--ion-card-background));
+  border: 1px solid var(--ion-border-color);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--ion-text-color);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Image chip */
-.chip {
-  background: color-mix(in srgb, var(--ion-text-color) 6%, var(--ion-item-background));
-  border: 1px solid var(--ion-border-color);
-  transition: transform .12s ease, box-shadow .12s ease, background-color .12s ease;
-}
-.chip img {
-  width: 100%; height: 100%; object-fit: cover; display: block;
-}
-.chip .initial {
-  font-weight: 600; font-size: 18px;
-  color: color-mix(in srgb, var(--ion-text-color) 80%, transparent);
-}
-
-/* Text/initial avatar (no image) */
-.avatar-initial {
-  background: color-mix(in srgb, var(--ion-color-primary) 12%, var(--ion-card-background));
-  border: 1px solid var(--ion-border-color);
-  font-weight: 700;
-  color: var(--ion-text-color);
-}
-
-/* Hover & focus */
-.chip:hover,
-.avatar-initial:hover {
-  background: color-mix(in srgb, var(--ion-color-primary) 16%, var(--ion-item-background));
-}
-:where(.chip, .avatar-initial):focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
-
-/* ===== Selection indicator ===== */
+// ===== SELECTION INDICATOR (Checkmark) =====
 .select-indicator {
   display: flex;
   align-items: center;
@@ -80,37 +119,74 @@
 
 .check-circle,
 .empty-circle {
-  width: 30px; height: 30px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
+  width: 30px; 
+  height: 30px; 
+  border-radius: 50%;
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
 }
 
-/* Selected: success tint (fallback to primary) */
+// Selected: success tint
 .check-circle {
   background: var(--ion-color-success, var(--ion-color-primary));
   color: var(--ion-color-success-contrast, var(--ion-color-primary-contrast, #fff));
   box-shadow: 0 1px 3px rgba(0,0,0,.12);
 }
 
-/* Unselected ring */
+// Unselected ring
 .empty-circle {
   border: 1px solid var(--ion-border-color);
   background: var(--ion-item-background);
 }
 
-/* Selected count text */
-.selected-count {
-  margin-left: 8px;
-  font-size: 13px;
-  padding-right: 8px;
-  color: color-mix(in srgb, var(--ion-text-color) 60%, transparent);
+// ===== LIST ITEM HOVER =====
+ion-item {
+  --transition: background-color 0.2s ease;
+  cursor: pointer;
+  
+  &:hover {
+    --background: color-mix(in srgb, var(--ion-color-primary) 5%, var(--ion-item-background));
+  }
 }
 
-/* ===== Motion & dark-mode niceties ===== */
-@media (prefers-reduced-motion: reduce) {
-  .chip { transition: none; }
+// ===== SEARCH TOOLBAR =====
+.search-toolbar {
+  padding: 8px 12px;
+  
+  ion-input {
+    --background: var(--ion-item-background);
+    --padding-start: 12px;
+    --padding-end: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--ion-border-color);
+  }
 }
+
+// ===== FAB STYLING =====
+ion-fab-button {
+  --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  
+  &[disabled] {
+    opacity: 0.4;
+  }
+}
+
+// ===== DARK MODE ADJUSTMENTS =====
 @media (prefers-color-scheme: dark) {
-  .chips-scroll::-webkit-scrollbar-thumb {
-    background: color-mix(in srgb, var(--ion-text-color) 22%, transparent);
+  .selected-chip-row::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--ion-text-color) 24%, transparent);
+  }
+  
+  .check-circle {
+    box-shadow: 0 1px 3px rgba(0,0,0,.3);
+  }
+}
+
+// ===== REDUCED MOTION =====
+@media (prefers-reduced-motion: reduce) {
+  ion-chip,
+  ion-item {
+    transition: none;
   }
 }
