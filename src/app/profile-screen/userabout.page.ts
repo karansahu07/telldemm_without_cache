@@ -970,60 +970,60 @@ async deleteGroup() {
     });
   }
 
-  async removeMemberFromGroup(member: any) {
-    const groupId = this.groupId || this.receiverId;
+  // async removeMemberFromGroup(member: any) {
+  //   const groupId = this.groupId || this.receiverId;
 
-    try {
-      if (!groupId || !member?.user_id) {
-        console.error('Missing groupId or member.user_id');
-        return;
-      }
-      // console.log("groupId and memmber.userId", groupId, member.user_id)
-      await this.firebaseChatService.removeMembersToGroup(groupId, [
-        member.user_id,
-      ]);
+  //   try {
+  //     if (!groupId || !member?.user_id) {
+  //       console.error('Missing groupId or member.user_id');
+  //       return;
+  //     }
+  //     // console.log("groupId and memmber.userId", groupId, member.user_id)
+  //     await this.firebaseChatService.removeMembersToGroup(groupId, [
+  //       member.user_id,
+  //     ]);
 
-      await this.firebaseChatService.removeMemberFromConvLocal(this.receiverId, this.currentUserId);
+  //     await this.firebaseChatService.removeMemberFromConvLocal(this.receiverId, this.currentUserId);
 
-      const backendGroupId = await this.firebaseChatService.getBackendGroupId(
-        groupId
-      );
+  //     const backendGroupId = await this.firebaseChatService.getBackendGroupId(
+  //       groupId
+  //     );
 
-      if (backendGroupId) {
-        this.service
-          .updateMemberStatus(backendGroupId, Number(member.user_id), false)
-          .subscribe({
-            next: (res: any) => {
-              console.log('Member status updated in backend:', res);
-            },
-            error: (error: any) => {
-              console.error('Error updating member status in backend:', error);
-            },
-          });
-      }
+  //     if (backendGroupId) {
+  //       this.service
+  //         .updateMemberStatus(backendGroupId, Number(member.user_id), false)
+  //         .subscribe({
+  //           next: (res: any) => {
+  //             console.log('Member status updated in backend:', res);
+  //           },
+  //           error: (error: any) => {
+  //             console.error('Error updating member status in backend:', error);
+  //           },
+  //         });
+  //     }
 
-      this.groupMembers = this.groupMembers.filter(
-        (m) => m.user_id !== member.user_id
-      );
+  //     this.groupMembers = this.groupMembers.filter(
+  //       (m) => m.user_id !== member.user_id
+  //     );
 
-      const toast = await this.toastCtrl.create({
-        message: this.translate.instant('userabout.toasts.removedFromGroup', {
-          name: member.username,
-        }),
-        duration: 2000,
-        color: 'success',
-      });
-      await toast.present();
-    } catch (error) {
-      console.error('Error moving member to pastmembers:', error);
-      const toast = await this.toastCtrl.create({
-        message: this.translate.instant('userabout.errors.removeMember'),
-        duration: 2000,
-        color: 'danger',
-      });
-      await toast.present();
-    }
-  }
+  //     const toast = await this.toastCtrl.create({
+  //       message: this.translate.instant('userabout.toasts.removedFromGroup', {
+  //         name: member.username,
+  //       }),
+  //       duration: 2000,
+  //       color: 'success',
+  //     });
+  //     await toast.present();
+  //   } catch (error) {
+  //     console.error('Error moving member to pastmembers:', error);
+  //     const toast = await this.toastCtrl.create({
+  //       message: this.translate.instant('userabout.errors.removeMember'),
+  //       duration: 2000,
+  //       color: 'danger',
+  //     });
+  //     await toast.present();
+  //   }
+  // }
 
   async checkForPastMembers() {
     if (!this.receiverId) return;
@@ -1047,16 +1047,141 @@ async deleteGroup() {
     }
   }
 
-  async confirmExitGroup() {
-    // console.log("this exit group function is called")
+  // async confirmExitGroup() {
+  //   // console.log("this exit group function is called")
+  //   const alert = await this.alertCtrl.create({
+  //     header: this.translateText(
+  //       'userabout.exitGroupConfirmHeader',
+  //       'Exit group'
+  //     ),
+  //     message: this.translateText(
+  //       'userabout.exitGroupConfirmMsg',
+  //       'Are you sure you want to exit this group?'
+  //     ),
+  //     buttons: [
+  //       {
+  //         text: this.translateText('common.cancel', 'Cancel'),
+  //         role: 'cancel',
+  //       },
+  //       {
+  //         text: this.translateText('common.exit', 'Exit'),
+  //         handler: () => {
+  //           this.exitGroup();
+  //         },
+  //       },
+  //     ],
+  //   });
+
+  //   await alert.present();
+  // }
+
+  // async exitGroup() {
+  //   try {
+  //     this.currentUserId = this.authService.authData?.userId || '';
+  //     console.log('this.currentUserId', this.currentUserId);
+  //     this.firebaseChatService.exitGroup(this.receiverId, [this.currentUserId]);
+  //     this.firebaseChatService.removeMemberFromConvLocal(this.receiverId, this.currentUserId);
+  //     const toast = await this.toastCtrl.create({
+  //       message: this.translateText(
+  //         'userabout.exitSuccess',
+  //         'You have exited the group.'
+  //       ),
+  //       duration: 2000,
+  //       position: 'bottom',
+  //     });
+  //     await toast.present();
+
+  //     // this.navCtrl.back();
+  //   } catch (err) {
+  //     console.error('Error exiting group:', err);
+  //     const toast = await this.toastCtrl.create({
+  //       message: this.translateText(
+  //         'userabout.exitError',
+  //         'Failed to exit group. Please try again.'
+  //       ),
+  //       duration: 2500,
+  //       position: 'bottom',
+  //     });
+  //     await toast.present();
+  //   }
+  // }
+
+// Add these methods to your UseraboutPage class
+
+async removeMemberFromGroup(member: any) {
+  const groupId = this.groupId || this.receiverId;
+
+  try {
+    if (!groupId || !member?.user_id) {
+      console.error('Missing groupId or member.user_id');
+      return;
+    }
+
+    // ✅ Remove from adminIds if the member is an admin
+    if (this.adminIds.includes(String(member.user_id))) {
+      await this.removeFromAdminList(groupId, member.user_id);
+    }
+
+    await this.firebaseChatService.removeMembersToGroup(groupId, [
+      member.user_id,
+    ]);
+
+    await this.firebaseChatService.removeMemberFromConvLocal(
+      this.receiverId,
+      this.currentUserId
+    );
+
+    const backendGroupId = await this.firebaseChatService.getBackendGroupId(
+      groupId
+    );
+
+    if (backendGroupId) {
+      this.service
+        .updateMemberStatus(backendGroupId, Number(member.user_id), false)
+        .subscribe({
+          next: (res: any) => {
+            console.log('Member status updated in backend:', res);
+          },
+          error: (error: any) => {
+            console.error('Error updating member status in backend:', error);
+          },
+        });
+    }
+
+    this.groupMembers = this.groupMembers.filter(
+      (m) => m.user_id !== member.user_id
+    );
+
+    const toast = await this.toastCtrl.create({
+      message: this.translate.instant('userabout.toasts.removedFromGroup', {
+        name: member.username,
+      }),
+      duration: 2000,
+      color: 'success',
+    });
+    await toast.present();
+  } catch (error) {
+    console.error('Error removing member from group:', error);
+    const toast = await this.toastCtrl.create({
+      message: this.translate.instant('userabout.errors.removeMember'),
+      duration: 2000,
+      color: 'danger',
+    });
+    await toast.present();
+  }
+}
+
+async confirmExitGroup() {
+  const currentUserId = this.authService.authData?.userId || '';
+  const isCurrentUserAdmin = this.adminIds.includes(String(currentUserId));
+  
+  // ✅ Check if current user is the only admin
+  if (isCurrentUserAdmin && this.adminIds.length === 1 && this.groupMembers.length > 1) {
     const alert = await this.alertCtrl.create({
-      header: this.translateText(
-        'userabout.exitGroupConfirmHeader',
-        'Exit group'
-      ),
+      header: this.translateText('userabout.exitGroupAdminHeader', 'Cannot Exit'),
       message: this.translateText(
-        'userabout.exitGroupConfirmMsg',
-        'Are you sure you want to exit this group?'
+        'userabout.exitGroupAdminMsg',
+        'You are the only admin. Please make another member admin before exiting, or the system will randomly assign an admin.'
       ),
       buttons: [
         {
@@ -1064,48 +1189,190 @@ async deleteGroup() {
           role: 'cancel',
         },
         {
-          text: this.translateText('common.exit', 'Exit'),
+          text: this.translateText('userabout.makeAdminAndExit', 'Make Random Admin & Exit'),
           handler: () => {
-            this.exitGroup();
+            this.exitGroupWithRandomAdmin();
           },
         },
       ],
     });
 
     await alert.present();
+    return;
   }
 
-  async exitGroup() {
-    try {
-      this.currentUserId = this.authService.authData?.userId || '';
-      console.log('this.currentUserId', this.currentUserId);
-      this.firebaseChatService.exitGroup(this.receiverId, [this.currentUserId]);
-      this.firebaseChatService.removeMemberFromConvLocal(this.receiverId, this.currentUserId);
-      const toast = await this.toastCtrl.create({
-        message: this.translateText(
-          'userabout.exitSuccess',
-          'You have exited the group.'
-        ),
-        duration: 2000,
-        position: 'bottom',
-      });
-      await toast.present();
+  // ✅ Normal exit confirmation
+  const alert = await this.alertCtrl.create({
+    header: this.translateText('userabout.exitGroupConfirmHeader', 'Exit group'),
+    message: this.translateText(
+      'userabout.exitGroupConfirmMsg',
+      'Are you sure you want to exit this group?'
+    ),
+    buttons: [
+      {
+        text: this.translateText('common.cancel', 'Cancel'),
+        role: 'cancel',
+      },
+      {
+        text: this.translateText('common.exit', 'Exit'),
+        handler: () => {
+          this.exitGroup();
+        },
+      },
+    ],
+  });
 
-      // this.navCtrl.back();
-    } catch (err) {
-      console.error('Error exiting group:', err);
-      const toast = await this.toastCtrl.create({
-        message: this.translateText(
-          'userabout.exitError',
-          'Failed to exit group. Please try again.'
-        ),
-        duration: 2500,
-        position: 'bottom',
-      });
-      await toast.present();
+  await alert.present();
+}
+
+async exitGroup() {
+  try {
+    this.currentUserId = this.authService.authData?.userId || '';
+    console.log('Exiting group, currentUserId:', this.currentUserId);
+
+    // ✅ Remove from adminIds if the user is an admin
+    if (this.adminIds.includes(String(this.currentUserId))) {
+      await this.removeFromAdminList(this.receiverId, this.currentUserId);
     }
-  }
 
+    this.firebaseChatService.exitGroup(this.receiverId, [this.currentUserId]);
+    this.firebaseChatService.removeMemberFromConvLocal(
+      this.receiverId,
+      this.currentUserId
+    );
+
+    const toast = await this.toastCtrl.create({
+      message: this.translateText(
+        'userabout.exitSuccess',
+        'You have exited the group.'
+      ),
+      duration: 2000,
+      position: 'bottom',
+    });
+    await toast.present();
+
+    // Navigate back to home
+    this.router.navigate(['/home-screen']);
+  } catch (err) {
+    console.error('Error exiting group:', err);
+    const toast = await this.toastCtrl.create({
+      message: this.translateText(
+        'userabout.exitError',
+        'Failed to exit group. Please try again.'
+      ),
+      duration: 2500,
+      position: 'bottom',
+    });
+    await toast.present();
+  }
+}
+
+async exitGroupWithRandomAdmin() {
+  try {
+    this.currentUserId = this.authService.authData?.userId || '';
+    
+    // ✅ Find eligible members (excluding current user)
+    const eligibleMembers = this.groupMembers.filter(
+      (m) => String(m.user_id) !== String(this.currentUserId)
+    );
+
+    if (eligibleMembers.length === 0) {
+      // If no other members, just exit normally
+      await this.exitGroup();
+      return;
+    }
+
+    // ✅ Select random member to make admin
+    const randomMember = eligibleMembers[Math.floor(Math.random() * eligibleMembers.length)];
+    
+    // Show loading
+    const loading = await this.loadingCtrl.create({
+      message: 'Assigning new admin...',
+      spinner: 'crescent'
+    });
+    await loading.present();
+
+    // ✅ Make the random member admin
+    await this.firebaseChatService.makeGroupAdmin(
+      this.receiverId,
+      randomMember.user_id
+    );
+
+    // ✅ Remove current user from admin list
+    await this.removeFromAdminList(this.receiverId, this.currentUserId);
+
+    // ✅ Exit the group
+    this.firebaseChatService.exitGroup(this.receiverId, [this.currentUserId]);
+    this.firebaseChatService.removeMemberFromConvLocal(
+      this.receiverId,
+      this.currentUserId
+    );
+
+    await loading.dismiss();
+
+    const toast = await this.toastCtrl.create({
+      message: `${randomMember.username} is now the admin. You have exited the group.`,
+      duration: 3000,
+      position: 'bottom',
+      color: 'success'
+    });
+    await toast.present();
+
+    // Navigate back to home
+    this.router.navigate(['/home-screen']);
+  } catch (err) {
+    console.error('Error exiting group with random admin:', err);
+    const toast = await this.toastCtrl.create({
+      message: 'Failed to assign admin and exit. Please try again.',
+      duration: 2500,
+      position: 'bottom',
+      color: 'danger'
+    });
+    await toast.present();
+  }
+}
+
+// ✅ Helper method to remove user from adminIds in Firebase
+async removeFromAdminList(groupId: string, userId: string) {
+  try {
+    const db = getDatabase();
+    const adminIdsRef = ref(db, `groups/${groupId}/adminIds`);
+    
+    const snapshot = await get(adminIdsRef);
+    if (snapshot.exists()) {
+      const currentAdminIds = snapshot.val() || {};
+      
+      // Convert object to array of admin IDs
+      const adminIdsArray = Object.values(currentAdminIds).map(id => String(id));
+      
+      console.log('Current adminIds:', adminIdsArray);
+      console.log('Removing userId:', String(userId));
+      
+      // Remove the userId from array
+      const updatedAdminIdsArray = adminIdsArray.filter(id => String(id) !== String(userId));
+      
+      console.log('Updated adminIds:', updatedAdminIdsArray);
+      
+      // Convert back to object format for Firebase (0: "78", 1: "77")
+      const updatedAdminIds = updatedAdminIdsArray.reduce((acc, id, index) => {
+        acc[index] = id;
+        return acc;
+      }, {} as any);
+
+      // Update Firebase with new admin list
+      await set(adminIdsRef, updatedAdminIds);
+      
+      // Update local adminIds array
+      this.adminIds = this.adminIds.filter(id => String(id) !== String(userId));
+      
+      console.log(`✅ Removed ${userId} from adminIds in Firebase`);
+    }
+  } catch (error) {
+    console.error('❌ Error removing from admin list:', error);
+    throw error;
+  }
+}
+  
   translateText(key: string, fallback: string) {
     return fallback;
   }

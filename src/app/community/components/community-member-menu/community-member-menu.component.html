@@ -1,0 +1,38 @@
+<ion-list>
+  <!-- Message option - Available to everyone -->
+  <ion-item button (click)="message()" *ngIf="!isSelf">
+    <ion-icon name="chatbox-outline" slot="start"></ion-icon>
+    <ion-label>{{ 'common.message' | translate }}</ion-label>
+  </ion-item>
+
+  <!-- Make Admin - Only for Creator when target is not admin -->
+  <ion-item 
+    button 
+    (click)="makeAdmin()" 
+    *ngIf="isCreator && !isTargetUserAdmin && !isSelf"
+  >
+    <ion-icon name="person-add-outline" slot="start"></ion-icon>
+    <ion-label>{{ 'community.makeAdmin' | translate }}</ion-label>
+  </ion-item>
+
+  <!-- Dismiss Admin - Only for Creator when target is admin -->
+  <ion-item 
+    button 
+    (click)="dismissAdmin()" 
+    *ngIf="isCreator && isTargetUserAdmin && !isSelf"
+  >
+    <ion-icon name="remove-circle-outline" slot="start"></ion-icon>
+    <ion-label>{{ 'community.dismissAdmin' | translate }}</ion-label>
+  </ion-item>
+
+  <!-- Remove Member - Only for Creator -->
+  <ion-item 
+    button 
+    (click)="removeMember()" 
+    *ngIf="isCreator && !isSelf"
+    class="danger-item"
+  >
+    <ion-icon name="person-remove-outline" slot="start" color="danger"></ion-icon>
+    <ion-label color="danger">{{ 'community.removeMember' | translate }}</ion-label>
+  </ion-item>
+</ion-list>

@@ -8,7 +8,6 @@
 </ion-header>
 
 <ion-content class="red-theme-content">
-
   <!-- Message Bubble -->
   <div class="message-bubble sender">
     <p class="text">{{ message?.text }}</p>
@@ -16,17 +15,84 @@
     <ion-icon
       name="checkmark-done-outline"
       class="status-icon"
-      [ngClass]="{ read: message?.read, delivered: !message?.read }"
+      [ngClass]="{ read: isRead, delivered: isDelivered && !isRead }"
     ></ion-icon>
   </div>
 
-  <!-- Info Section -->
-  <ion-list>
+  <!-- Group Chat: Show list of users with receipts -->
+  <div *ngIf="isGroupChat">
+    <!-- Read By Section -->
+    <div *ngIf="readByUsers.length > 0" class="receipt-section">
+      <div class="section-header">
+        <ion-icon name="checkmark-done-outline" class="status-icon read"></ion-icon>
+        <h3>Read by {{ readByUsers.length }}</h3>
+      </div>
+      <ion-list>
+        <ion-item *ngFor="let user of readByUsers">
+          <ion-avatar slot="start">
+            <img [src]="user.userAvatar || 'assets/default-avatar.png'" />
+          </ion-avatar>
+          <ion-label>
+            <h2>{{ user.userName }}</h2>
+            <p>{{ formatDate(user.timestamp) }}</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </div>
+
+    <!-- Delivered To Section (users who haven't read yet) -->
+    <div *ngIf="deliveredToUsers.length > 0" class="receipt-section">
+      <div class="section-header">
+        <ion-icon name="checkmark-done-outline" class="status-icon delivered"></ion-icon>
+        <h3>Delivered to {{ deliveredToUsers.length }}</h3>
+      </div>
+      <ion-list>
+        <ion-item *ngFor="let user of deliveredToUsers">
+          <ion-avatar slot="start">
+            <img [src]="user.userAvatar || 'assets/default-avatar.png'" />
+          </ion-avatar>
+          <ion-label>
+            <h2>{{ user.userName }}</h2>
+            <p>{{ formatDate(user.timestamp) }}</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </div>
+
+    <!-- All Delivered At Section (total delivery info) -->
+    <div *ngIf="allDeliveredUsers.length > 0" class="receipt-section">
+      <div class="section-header">
+        <ion-icon name="time-outline" class="status-icon info"></ion-icon>
+        <h3>Delivered at</h3>
+      </div>
+      <ion-list>
+        <ion-item *ngFor="let user of allDeliveredUsers">
+          <ion-avatar slot="start">
+            <img [src]="user.userAvatar || 'assets/default-avatar.png'" />
+          </ion-avatar>
+          <ion-label>
+            <h2>{{ user.userName }}</h2>
+            <p>{{ formatDate(user.timestamp) }}</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </div>
+
+    <!-- No receipts message -->
+    <div *ngIf="readByUsers.length === 0 && deliveredToUsers.length === 0 && allDeliveredUsers.length === 0" class="no-receipts">
+      <p>No delivery or read receipts yet</p>
+    </div>
+  </div>
+
+  <!-- One-to-One Chat: Show simple read/delivered status -->
+  <ion-list *ngIf="!isGroupChat">
     <ion-item>
       <ion-icon name="checkmark-done-outline" slot="start" class="status-icon read"></ion-icon>
       <ion-label>
         <h2>Read</h2>
-        <p *ngIf="message?.read; else notRead">{{ formatDate(message?.readAt) }}</p>
+        <p *ngIf="isRead && readTimestamp; else notRead">
+          {{ formatDate(readTimestamp) }}
+        </p>
         <ng-template #notRead><span>Not read yet</span></ng-template>
       </ion-label>
     </ion-item>
@@ -35,10 +101,11 @@
       <ion-icon name="checkmark-done-outline" slot="start" class="status-icon delivered"></ion-icon>
       <ion-label>
         <h2>Delivered</h2>
-        <p *ngIf="message?.delivered; else notDelivered">{{ formatDate(message?.deliveredAt) }}</p>
+        <p *ngIf="isDelivered && deliveredTimestamp; else notDelivered">
+          {{ formatDate(deliveredTimestamp) }}
+        </p>
         <ng-template #notDelivered><span>Not delivered yet</span></ng-template>
       </ion-label>
     </ion-item>
   </ion-list>
-
 </ion-content>

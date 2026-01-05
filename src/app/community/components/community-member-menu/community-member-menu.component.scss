@@ -1,0 +1,27 @@
+ion-list {
+  padding: 0;
+  margin: 0;
+}
+
+ion-item {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --min-height: 48px;
+  font-size: 14px;
+
+  &:hover {
+    --background: var(--ion-color-light);
+  }
+}
+
+.danger-item {
+  ion-icon,
+  ion-label {
+    color: var(--ion-color-danger);
+  }
+}
+
+ion-icon {
+  margin-right: 12px;
+  font-size: 20px;
+}

@@ -1,92 +1,202 @@
-/* =========================
-   Chat (tokenized, theme-aware)
-   ========================= */
+// /* =========================
+//    Chat (tokenized, theme-aware)
+//    ========================= */
 
-/* Page-scoped red header (falls back to global primary) */
-.red-header {
-  --page-primary: var(--ion-color-primary, #ff1414);
-  --page-contrast: var(--ion-color-primary-contrast, #fff);
-  --background: var(--page-primary);
-  --color: var(--page-contrast);
-}
+// /* Page-scoped red header (falls back to global primary) */
+// .red-header {
+//   --page-primary: var(--ion-color-primary, #ff1414);
+//   --page-contrast: var(--ion-color-primary-contrast, #fff);
+//   --background: var(--page-primary);
+//   --color: var(--page-contrast);
+// }
 
-/* Content surface */
-.red-theme-content {
-  --background: var(--ion-background-color);
-  background: var(--background);
-}
+// /* Content surface */
+// .red-theme-content {
+//   --background: var(--ion-background-color);
+//   background: var(--background);
+// }
 
-/* Bubbles */
+// /* Bubbles */
+// .message-bubble {
+//   margin: 12px 16px;
+//   padding: 12px 16px;
+//   border-radius: 18px;
+//   max-width: 75%;
+//   display: inline-block;
+//   font-size: 15px;
+//   position: relative;
+//   box-shadow: 0 1px 2px rgba(0,0,0,.06);
+// }
+
+// .message-bubble.sender {
+//   /* prefers explicit chat token if you set it, else brand tint */
+//   background: var(--chat-bubble-sent, color-mix(in srgb, var(--ion-color-primary) 14%, var(--ion-item-background)));
+//   align-self: flex-end;
+// }
+
+// .message-bubble.receiver {
+//   background: var(--chat-bubble-received, var(--ion-card-background));
+//   align-self: flex-start;
+//   border: 1px solid var(--ion-border-color);
+// }
+
+// .message-bubble .text {
+//   margin: 0;
+//   color: var(--chat-bubble-text, var(--ion-text-color));
+// }
+
+// .message-bubble .time {
+//   font-size: 12px;
+//   color: color-mix(in srgb, var(--ion-text-color) 55%, transparent);
+//   margin-left: 8px;
+//   white-space: nowrap;
+// }
+
+// /* Delivery/read status */
+// .status-icon {
+//   font-size: 20px;
+//   margin-left: 6px;
+//   vertical-align: middle;
+//   color: color-mix(in srgb, var(--ion-text-color) 55%, transparent);
+// }
+// .status-icon.sent,
+// .status-icon.delivered {
+//   color: color-mix(in srgb, var(--ion-text-color) 55%, transparent);
+// }
+// .status-icon.read {
+//   color: var(--ion-color-primary);
+// }
+
+// /* List item typography */
+// ion-item h2 {
+//   font-size: 16px;
+//   font-weight: 600;
+//   color: var(--ion-text-color);
+//   margin: 0;
+// }
+// ion-item p {
+//   font-size: 14px;
+//   color: color-mix(in srgb, var(--ion-text-color) 65%, transparent);
+//   margin: 0;
+// }
+
+// /* Accessibility focus */
+// :where(.message-bubble):focus-visible {
+//   outline: none;
+//   box-shadow: var(--focus-ring);
+// }
+
+// /* Dark-mode polish */
+// @media (prefers-color-scheme: dark) {
+//   .message-bubble.receiver { border-color: color-mix(in srgb, var(--ion-border-color) 85%, transparent); }
+// }
+
 .message-bubble {
-  margin: 12px 16px;
+  margin: 16px;
   padding: 12px 16px;
-  border-radius: 18px;
-  max-width: 75%;
-  display: inline-block;
-  font-size: 15px;
-  position: relative;
-  box-shadow: 0 1px 2px rgba(0,0,0,.06);
+  border-radius: 12px;
+  max-width: 80%;
+  
+  &.sender {
+    background-color: #bc8c2c;
+    margin-left: auto;
+    margin-right: 16px;
+  }
+
+  .text {
+    margin: 0 0 8px 0;
+    word-wrap: break-word;
+  }
+
+  .time {
+    font-size: 11px;
+    color: rgba(0, 0, 0, 0.45);
+    margin-right: 4px;
+  }
+
+  .status-icon {
+    font-size: 16px;
+    vertical-align: middle;
+    
+    &.delivered {
+      color: #999;
+    }
+    
+    &.read {
+      color: red;
+    }
+  }
 }
 
-.message-bubble.sender {
-  /* prefers explicit chat token if you set it, else brand tint */
-  background: var(--chat-bubble-sent, color-mix(in srgb, var(--ion-color-primary) 14%, var(--ion-item-background)));
-  align-self: flex-end;
+.receipt-section {
+  margin-top: 24px;
+  
+  .section-header {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    background-color: #f5f5f5;
+    
+    ion-icon {
+      font-size: 20px;
+      margin-right: 12px;
+      
+      &.read {
+        color: red;
+      }
+      
+      &.delivered {
+        color: #999;
+      }
+
+      &.info {
+        color: #666;
+      }
+    }
+    
+    h3 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: #666;
+    }
+  }
+  
+  ion-list {
+    margin-top: 0;
+  }
+  
+  ion-item {
+    --padding-start: 16px;
+    
+    ion-avatar {
+      width: 40px;
+      height: 40px;
+    }
+    
+    ion-label {
+      h2 {
+        font-size: 16px;
+        font-weight: 500;
+        color: #000;
+      }
+      
+      p {
+        font-size: 13px;
+        color: #666;
+        margin-top: 4px;
+      }
+    }
+  }
 }
 
-.message-bubble.receiver {
-  background: var(--chat-bubble-received, var(--ion-card-background));
-  align-self: flex-start;
-  border: 1px solid var(--ion-border-color);
-}
-
-.message-bubble .text {
-  margin: 0;
-  color: var(--chat-bubble-text, var(--ion-text-color));
-}
-
-.message-bubble .time {
-  font-size: 12px;
-  color: color-mix(in srgb, var(--ion-text-color) 55%, transparent);
-  margin-left: 8px;
-  white-space: nowrap;
-}
-
-/* Delivery/read status */
-.status-icon {
-  font-size: 20px;
-  margin-left: 6px;
-  vertical-align: middle;
-  color: color-mix(in srgb, var(--ion-text-color) 55%, transparent);
-}
-.status-icon.sent,
-.status-icon.delivered {
-  color: color-mix(in srgb, var(--ion-text-color) 55%, transparent);
-}
-.status-icon.read {
-  color: var(--ion-color-primary);
-}
-
-/* List item typography */
-ion-item h2 {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--ion-text-color);
-  margin: 0;
-}
-ion-item p {
-  font-size: 14px;
-  color: color-mix(in srgb, var(--ion-text-color) 65%, transparent);
-  margin: 0;
-}
-
-/* Accessibility focus */
-:where(.message-bubble):focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
-
-/* Dark-mode polish */
-@media (prefers-color-scheme: dark) {
-  .message-bubble.receiver { border-color: color-mix(in srgb, var(--ion-border-color) 85%, transparent); }
+.no-receipts {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+  
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
 }

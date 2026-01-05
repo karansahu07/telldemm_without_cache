@@ -2061,6 +2061,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
       this.router.navigate(['/message-info'], {
         queryParams: {
           messageKey: msg.msgId || '',
+          receiverId: this.receiverId || '',
         },
       });
     } catch (err) {

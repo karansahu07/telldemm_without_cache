@@ -280,6 +280,10 @@ const routes: Routes = [
     path: 'select-add-and-create-group',
     loadChildren: () => import('./pages/select-add-and-create-group/select-add-and-create-group.module').then( m => m.SelectAddAndCreateGroupPageModule)
   },
+  {
+    path: 'select-new-owner',
+    loadChildren: () => import('./community/pages/select-new-owner/select-new-owner.module').then( m => m.SelectNewOwnerPageModule)
+  },
 
 ];
 

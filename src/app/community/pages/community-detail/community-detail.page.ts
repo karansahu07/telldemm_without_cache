@@ -791,6 +791,7 @@ async openGroupPreview(group: any) {
   }
 
   private async performExitCommunity() {
+    console.log("this exit community function called");
     const loading = await this.loadingCtrl.create({
       message: 'Exiting community...',
     });

@@ -8,8 +8,8 @@
       <ion-item lines="none" detail="false"
         style="--padding-start: 0; --background: white; color: black; margin-top: 2px; margin-left: 20px;">
         <ion-label class="user-name">
-          <h2 class="user-real-name">Select Demm(s)</h2>
-          <h5>{{ allUsers.length }} Demm(s) found on TellDemm</h5>
+          <h2 class="user-real-name">Select Contacts</h2>
+          <h5>{{ allUsers.length }} contacts found on TellDemm</h5>
         </ion-label>
       </ion-item>
     </ion-buttons>
@@ -46,14 +46,14 @@
       <ion-avatar slot="start" class="green-icon">
         <ion-icon name="people-outline"></ion-icon>
       </ion-avatar>
-      <ion-label class="group">New DemmRoom</ion-label>
+      <ion-label class="group">New Group</ion-label>
     </ion-item>
 
     <ion-item class="items">
       <ion-avatar slot="start" class="green-icon">
         <ion-icon name="person-add-outline"></ion-icon>
       </ion-avatar>
-      <ion-label class="group">New Demm (wip)</ion-label>
+      <ion-label class="group">New Contact (wip)</ion-label>
       <ion-icon style="color: black" name="qr-code-outline" slot="end"></ion-icon>
     </ion-item>
 
@@ -61,7 +61,7 @@
       <ion-avatar slot="start" class="green-icon">
         <ion-icon name="people-circle-outline"></ion-icon>
       </ion-avatar>
-      <ion-label class="group">New DemmCircle</ion-label>
+      <ion-label class="group">New Community</ion-label>
     </ion-item>
 
     <!-- <ion-item class="items">
@@ -83,7 +83,7 @@
       </ion-item>
     </ion-list>
 
-    <ion-button expand="full" color="primary" (click)="createGroup()">Create DemmRoom</ion-button>
+    <ion-button expand="full" color="primary" (click)="createGroup()">Create Group</ion-button>
   </div>
 
   <!-- 🔄 Skeleton Loader While Contacts Are Loading -->
@@ -105,7 +105,7 @@
 
   <!-- Matched Contacts -->
   <ion-list-header *ngIf="!creatingGroup && !isLoading && filteredContacts.length > 0">
-    <ion-label>DemmList on TellDemm</ion-label>
+    <ion-label>Contact list on TellDemm</ion-label>
   </ion-list-header>
 
   <ion-list class="list2" lines="none" *ngIf="!creatingGroup && !isLoading && filteredContacts.length > 0">
@@ -129,7 +129,7 @@
   <div *ngIf="!creatingGroup && !isLoading && filteredContacts.length === 0" class="no-contacts"
     style="text-align: center; margin-top: 2rem;">
     <ion-icon name="sad-outline" size="large" color="medium"></ion-icon>
-    <p style="margin-top: 10px;">No matched Demms found.</p>
+    <p style="margin-top: 10px;">No matched contacts found.</p>
   </div>
 
 </ion-content>

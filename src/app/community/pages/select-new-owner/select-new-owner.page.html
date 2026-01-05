@@ -1,0 +1,77 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Select new owner</ion-title>
+    <ion-buttons slot="end">
+      <ion-button>
+        <ion-icon name="search-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <!-- Info message -->
+  <div class="info-message">
+    <p>You can only assign community admins as the new owner.</p>
+  </div>
+
+  <!-- Search bar -->
+  <ion-searchbar
+    [(ngModel)]="searchTerm"
+    placeholder="Search admins"
+    animated="true"
+    [debounce]="300"
+  ></ion-searchbar>
+
+  <!-- Loading spinner -->
+  <div *ngIf="loading" class="loading-container">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>Loading admins...</p>
+  </div>
+
+  <!-- No admins message -->
+  <div *ngIf="!loading && adminMembers.length === 0" class="no-admins">
+    <ion-icon name="people-outline" class="empty-icon"></ion-icon>
+    <p>No admins</p>
+    <p class="hint">Make some members admin first to assign ownership</p>
+  </div>
+
+  <!-- No search results -->
+  <div *ngIf="!loading && adminMembers.length > 0 && filteredAdmins.length === 0" class="no-results">
+    <ion-icon name="search-outline" class="empty-icon"></ion-icon>
+    <p>No admins found</p>
+    <p class="hint">Try a different search term</p>
+  </div>
+
+  <!-- Admins list -->
+  <ion-list *ngIf="!loading && filteredAdmins.length > 0" lines="full">
+    <ion-item
+      *ngFor="let admin of filteredAdmins"
+      button
+      detail="false"
+      (click)="selectNewOwner(admin)"
+    >
+      <ion-avatar slot="start">
+        <img
+          [src]="admin.avatar || 'assets/images/user.jfif'"
+          (error)="setDefaultAvatar($event)"
+        />
+      </ion-avatar>
+
+      <ion-label>
+        <h2>{{ admin.username }}</h2>
+        <p *ngIf="admin.status">{{ admin.status }}</p>
+      </ion-label>
+
+      <!-- Admin badge -->
+      <ion-badge slot="end" color="primary" class="admin-badge">
+        Admin
+      </ion-badge>
+    </ion-item>
+  </ion-list>
+</ion-content>

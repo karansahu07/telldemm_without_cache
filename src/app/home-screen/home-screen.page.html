@@ -69,7 +69,8 @@
     <!-- ✅ Single UNPINNED Group Chat -->
     <ng-container *ngIf="selectionMeta.isSingleGroupUnpinned">
       <ion-button (click)="onPinSelected()">
-        <ion-icon name="pin-outline"></ion-icon>
+        <!-- <ion-icon name="pin-outline"></ion-icon> -->
+         <i class="fa-solid fa-thumbtack homemainicons"></i>
       </ion-button>
       <ion-button (click)="onArchievedSelected()">
         <!-- <ion-icon name="download-outline"></ion-icon> -->
@@ -235,7 +236,8 @@
           (click)="!isSelectionMode && setFilter('groups')"
           [disabled]="isSelectionMode"
         >
-          {{ 'home.filters.groups' | translate }}
+          <!-- {{ 'home.filters.groups' | translate }} -->
+            Groups
         </button>
       </div>
     </div>

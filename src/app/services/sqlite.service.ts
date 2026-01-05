@@ -204,12 +204,41 @@ export interface GroupMemberDisplay extends IGroupMember {
   publicKeyHex?: string | null;
 }
 
+// export interface ICommunityMember {
+//   username: string;
+//   phoneNumber: string;
+//   isActive: boolean;
+//   joinedAt?: number;
+//   role?: 'admin' | 'member';
+// }
+
+// export interface ICommunity {
+//   roomId: string; // community ID (e.g., "community_1234567890")
+//   title: string; // community name
+//   description?: string; // community description
+//   avatar?: string; // community display picture URL
+//   adminIds: string[]; // list of admin user IDs
+//   createdBy: string; // creator user ID
+//   createdAt: number | Date; // creation timestamp
+//   members: Record<string, ICommunityMember>; // userId -> member details
+//   groups: Record<string, boolean>; // groupId -> true (list of group IDs in community)
+//   type: 'community';
+//   isArchived?: boolean;
+//   isPinned?: boolean;
+//   isLocked?: boolean;
+//   privacy?: 'public' | 'invite_only';
+//   settings?: {
+//     whoCanCreateGroups?: 'all' | 'admins';
+//     announcementPosting?: 'all' | 'adminsOnly';
+//   };
+// }
+
 export interface ICommunityMember {
   username: string;
   phoneNumber: string;
   isActive: boolean;
   joinedAt?: number;
-  role?: 'admin' | 'member';
+  role?: 'owner' | 'admin' | 'member'; // Added 'owner' role
 }
 
 export interface ICommunity {
@@ -217,8 +246,9 @@ export interface ICommunity {
   title: string; // community name
   description?: string; // community description
   avatar?: string; // community display picture URL
-  adminIds: string[]; // list of admin user IDs
-  createdBy: string; // creator user ID
+  ownerId: string; // CURRENT owner user ID (can change via transfer)
+  adminIds: string[]; // list of admin user IDs (excluding owner)
+  createdBy: string; // ORIGINAL creator user ID (never changes)
   createdAt: number | Date; // creation timestamp
   members: Record<string, ICommunityMember>; // userId -> member details
   groups: Record<string, boolean>; // groupId -> true (list of group IDs in community)

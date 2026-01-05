@@ -116,7 +116,7 @@
       </ion-item>
     </ion-list>
 
-   <!-- Replace the existing Community members section with this -->
+   <!-- Community members section with click handler -->
 <ion-list>
   <ion-list-header>
     <ion-label>Community members ({{ memberCount }})</ion-label>
@@ -133,25 +133,14 @@
     <ion-label>Add members</ion-label>
   </ion-item>
 
-  <!-- Current User -->
-  <!-- <ion-item>
-    <ion-avatar slot="start">
-      <img 
-        [src]="'assets/images/user.jfif'" 
-        (error)="setDefaultAvatar($event)"
-      />
-    </ion-avatar>
-    <ion-label>
-      <h3>You</h3>
-      <p class="muted" *ngIf="isCreator">Community Owner</p>
-      <p class="muted" *ngIf="!isCreator && isAdmin(currentUserId)">Community Admin</p>
-    </ion-label>
-  </ion-item> -->
-
-  <!-- Show all members for creator/admin -->
-  <!-- <ng-container *ngIf="isCreator || isAdmin(currentUserId)"> -->
+  <!-- Members list with click handler -->
   <ng-container>
-    <ion-item *ngFor="let member of communityMembers" [class.hidden]="member.user_id === currentUserId">
+    <ion-item 
+      *ngFor="let member of communityMembers" 
+      [class.hidden]="member.user_id === currentUserId"
+      button
+      (click)="openMemberActionSheet(member)"
+    >
       <ion-avatar slot="start">
         <img 
           [src]="member.avatar || 'assets/images/user.jfif'" 
@@ -160,19 +149,20 @@
       </ion-avatar>
       <ion-label>
         <div class="Encry">{{ member.username }}</div>
-        <!-- Optional: Show phone number -->
-        <!-- <p style="font-size: 12px; color: gray;">{{ member.phone }}</p> -->
       </ion-label>
       
-      <!-- Show badges on right side like group admin -->
+      <!-- ✅ Show badges based on ownerId and adminIds -->
+      <!-- Community Owner badge (based on ownerId) -->
       <ion-badge 
-        *ngIf="member.isCreator" 
+        *ngIf="member.isOwner" 
         class="admin-badge" 
         style="margin-left:6px;font-size:10px;color:red;background-color:#FFD4D4;">
         Community Owner
       </ion-badge>
+      
+      <!-- Community Admin badge (based on adminIds, excluding owner) -->
       <ion-badge 
-        *ngIf="!member.isCreator && isAdmin(member.user_id)" 
+        *ngIf="!member.isOwner && isAdmin(member.user_id)" 
         class="admin-badge" 
         style="margin-left:6px;font-size:10px;color:blue;background-color:#D4E4FF;">
         Community Admin
