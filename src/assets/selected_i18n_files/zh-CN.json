@@ -42,63 +42,63 @@
   },
   "common": { "ok": "确定", "cancel": "取消", "logout": "退出登录", "reset": "重置" },
   "settingsPage": {
-    "title": "DemmDesk (设置)",
-    "account": {
-      "title": "MyTell (账户)",
-      "description": "TellShield (隐私)、安全、更改号码"
-    },
-    "privacy": {
-      "title": "TellShield (隐私)",
-      "description": "控制您的 TellShield (隐私) 设置"
-    },
-    "avatar": {
-      "title": "TellFace (个人资料图片)",
-      "description": "更改您的 TellFace (个人资料图片)"
-    },
-    "chats": {
-      "title": "Tells (聊天)",
-      "description": "主题、壁纸、SafeDemm (备份)"
-    },
-    "accessibility": {
-      "title": "Accessibility (辅助功能)",
-      "description": "调整文字大小和显示选项"
-    },
-    "notifications": {
-      "title": "TellAlerts (通知)",
-      "description": "管理 Tell (消息)、DemmRoom (群组) 和 Connect (通话) 提醒"
-    },
-    "storage": {
-      "title": "SafeDemm (存储和数据)",
-      "description": "管理存储和网络使用"
-    },
-    "appLanguage": {
-      "title": "App Language (应用语言)",
-      "description": "选择 TellDemm 应用语言"
-    },
-    "help": {
-      "title": "DemmHelp (帮助)",
-      "description": "帮助中心、联系我们、应用信息"
-    },
-    "updates": {
-      "title": "DemmUpdate (应用更新)",
-      "description": "检查更新并启用自动更新"
-    },
-    "invite": {
-      "title": "SpreadDemm (邀请朋友)",
-      "description": "与您的 DemmList (联系人) 分享 TellDemm 应用"
-    },
-    "logout": {
-      "title": "Log Out (注销)",
-      "description": "清除应用数据并注销",
-      "confirmHeader": "确认注销",
-      "confirmMessage": "您确定要注销并清除应用数据吗？",
-      "loadingHeader": "Logging Out (正在注销)",
-      "loadingMessage": "请稍候...",
-      "successHeader": "Logged Out (已注销)",
-      "successMessage": "您已成功注销。"
-    },
-    "defaultStatus": "可用"
+  "title": "设置",
+  "account": {
+    "title": "账户",
+    "description": "隐私、安全、更改号码"
   },
+  "privacy": {
+    "title": "隐私",
+    "description": "控制您的隐私设置"
+  },
+  "avatar": {
+    "title": "头像",
+    "description": "更改您的头像"
+  },
+  "chats": {
+    "title": "聊天",
+    "description": "主题、壁纸、存储和数据"
+  },
+  "accessibility": {
+    "title": "辅助功能",
+    "description": "调整文字大小和显示选项"
+  },
+  "notifications": {
+    "title": "通知",
+    "description": "管理聊天、群组和通话通知"
+  },
+  "storage": {
+    "title": "存储与数据",
+    "description": "管理存储空间和网络使用"
+  },
+  "appLanguage": {
+    "title": "应用语言",
+    "description": "选择 TellDemm 应用语言"
+  },
+  "help": {
+    "title": "帮助",
+    "description": "帮助中心、联系我们、应用信息"
+  },
+  "updates": {
+    "title": "应用更新",
+    "description": "检查更新并启用自动更新"
+  },
+  "invite": {
+    "title": "邀请朋友",
+    "description": "与您的联系人分享 TellDemm 应用"
+  },
+  "logout": {
+    "title": "退出登录",
+    "description": "清除应用数据并退出登录",
+    "confirmHeader": "确认退出",
+    "confirmMessage": "您确定要退出登录并清除应用数据吗？",
+    "loadingHeader": "正在退出",
+    "loadingMessage": "请稍候...",
+    "successHeader": "已退出",
+    "successMessage": "您已成功退出登录。"
+  },
+  "defaultStatus": "可用"
+},
   "appUpdates": {
     "title": "应用更新",
     "version": "版本",
@@ -437,13 +437,13 @@
     }
   },
   "footerTabs": {
-    "chat": "Tells (聊天)",
-    "updates": "Echoes (更新)",
-    "communities": "DemmCircles (社区)",
-    "calls": "Connects (通话)",
+    "chat": "聊天",
+    "updates": "更新",
+    "communities": "社区",
+    "calls": "通话",
     "badges": {
-      "unreadChats": "{{count}} 未读 Tells",
-      "unreadUpdates": "{{count}} Echoes"
+      "unreadChats": "{{count}} 未读 聊天",
+      "unreadUpdates": "{{count}} 更新"
     }
   },
   "socialLinks": {
@@ -492,10 +492,10 @@
       "all": "全部",
       "read": "已读",
       "unread": "未读",
-      "groups": "DemmRoom (群组)"
+      "groups": "群组"
     },
     "groupCreator": {
-      "placeholder": "输入 DemmRoom 名称"
+      "placeholder": "输入 群组 名称"
     },
     "typing": "正在输入...",
     "time": {

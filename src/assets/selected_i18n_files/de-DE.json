@@ -42,59 +42,59 @@
   },
   "common": { "ok": "OK", "cancel": "Abbrechen", "logout": "Abmelden", "reset": "Zurücksetzen" },
   "settingsPage": {
-    "title": "DemmDesk (Einstellungen)",
+    "title": "Einstellungen",
     "account": {
-      "title": "MyTell (Konto)",
-      "description": "TellShield (Datenschutz), Sicherheit, Nummer ändern"
+      "title": "Konto",
+      "description": "Privatsphäre, Sicherheit, Nummer ändern"
     },
     "privacy": {
-      "title": "TellShield (Datenschutz)",
-      "description": "Steuern Sie Ihre TellShield (Datenschutz)-Einstellungen"
+      "title": "Datenschutz",
+      "description": "Steuern Sie Ihre Datenschutzeinstellungen"
     },
     "avatar": {
-      "title": "TellFace (Profilbild)",
-      "description": "Ändern Sie Ihr TellFace (Profilbild)"
+      "title": "Profilbild",
+      "description": "Ändern Sie Ihr Profilbild"
     },
     "chats": {
-      "title": "Tells (Chats)",
-      "description": "Thema, Hintergrundbild, SafeDemm (Backup)"
+      "title": "Chats",
+      "description": "Thema, Hintergrundbild, Backup"
     },
     "accessibility": {
-      "title": "Accessibility (Barrierefreiheit)",
+      "title": "Barrierefreiheit",
       "description": "Textgröße und Anzeigeoptionen anpassen"
     },
     "notifications": {
-      "title": "TellAlerts (Benachrichtigungen)",
-      "description": "Tell (Nachrichten), DemmRoom (Gruppe) und Connect (Anrufe) Benachrichtigungen verwalten"
+      "title": "Benachrichtigungen",
+      "description": "Nachrichten-, Gruppen- und Anrufbenachrichtigungen verwalten"
     },
     "storage": {
-      "title": "SafeDemm (Speicher & Daten)",
+      "title": "Speicher & Daten",
       "description": "Speicher und Netzwerkverbrauch verwalten"
     },
     "appLanguage": {
-      "title": "App Language (App-Sprache)",
-      "description": "Wählen Sie die Sprache der TellDemm-App"
+      "title": "App-Sprache",
+      "description": "Wählen Sie die Sprache der App"
     },
     "help": {
-      "title": "DemmHelp (Hilfe)",
+      "title": "Hilfe",
       "description": "Hilfe-Center, Kontaktieren Sie uns, App-Info"
     },
     "updates": {
-      "title": "DemmUpdate (App-Updates)",
+      "title": "App-Updates",
       "description": "Auf Updates prüfen und Auto-Update aktivieren"
     },
     "invite": {
-      "title": "SpreadDemm (Freund einladen)",
-      "description": "Teilen Sie die TellDemm-App mit Ihrer DemmList (Kontakte)"
+      "title": "Freund einladen",
+      "description": "Teilen Sie die App mit Ihren Kontakten"
     },
     "logout": {
-      "title": "Log Out (Abmelden)",
+      "title": "Abmelden",
       "description": "App-Daten löschen und abmelden",
       "confirmHeader": "Abmeldung bestätigen",
       "confirmMessage": "Sind Sie sicher, dass Sie sich abmelden und App-Daten löschen möchten?",
-      "loadingHeader": "Logging Out (Wird abgemeldet)",
+      "loadingHeader": "Abmeldung läuft",
       "loadingMessage": "Bitte warten...",
-      "successHeader": "Logged Out (Abgemeldet)",
+      "successHeader": "Abgemeldet",
       "successMessage": "Sie haben sich erfolgreich abgemeldet."
     },
     "defaultStatus": "Verfügbar"
@@ -437,13 +437,13 @@
     }
   },
   "footerTabs": {
-    "chat": "Tells (Chats)",
-    "updates": "Echoes (Updates)",
-    "communities": "DemmCircles (Gemeinschaften)",
-    "calls": "Connects (Anrufe)",
+    "chat": "Chats",
+    "updates": "Updates",
+    "communities": "Gemeinschaften",
+    "calls": "Anrufe",
     "badges": {
-      "unreadChats": "{{count}} ungelesene Tells",
-      "unreadUpdates": "{{count}} Echoes"
+      "unreadChats": "{{count}} ungelesene Chats",
+      "unreadUpdates": "{{count}} Updates"
     }
   },
   "socialLinks": {
@@ -492,10 +492,10 @@
       "all": "ALLE",
       "read": "Gelesen",
       "unread": "Ungelesen",
-      "groups": "DemmRoom (Gruppen)"
+      "groups": "Gruppen"
     },
     "groupCreator": {
-      "placeholder": "DemmRoom-Name eingeben"
+      "placeholder": "Gruppen-Name eingeben"
     },
     "typing": "tippt...",
     "time": {

@@ -42,63 +42,63 @@
   },
   "common": { "ok": "OK", "cancel": "Hủy", "logout": "Đăng xuất", "reset": "Đặt lại" },
   "settingsPage": {
-    "title": "DemmDesk (Cài đặt)",
-    "account": {
-      "title": "MyTell (Tài khoản)",
-      "description": "TellShield (Quyền riêng tư), bảo mật, thay đổi số"
-    },
-    "privacy": {
-      "title": "TellShield (Quyền riêng tư)",
-      "description": "Kiểm soát cài đặt TellShield (Quyền riêng tư) của bạn"
-    },
-    "avatar": {
-      "title": "TellFace (Ảnh đại diện)",
-      "description": "Thay đổi TellFace (Ảnh đại diện) của bạn"
-    },
-    "chats": {
-      "title": "Tells (Trò chuyện)",
-      "description": "Chủ đề, hình nền, SafeDemm (Sao lưu)"
-    },
-    "accessibility": {
-      "title": "Accessibility (Trợ năng)",
-      "description": "Điều chỉnh kích thước văn bản và tùy chọn hiển thị"
-    },
-    "notifications": {
-      "title": "TellAlerts (Thông báo)",
-      "description": "Quản lý cảnh báo Tell (Tin nhắn), DemmRoom (Nhóm) và Connect (Cuộc gọi)"
-    },
-    "storage": {
-      "title": "SafeDemm (Lưu trữ và dữ liệu)",
-      "description": "Quản lý lưu trữ và sử dụng mạng"
-    },
-    "appLanguage": {
-      "title": "App Language (Ngôn ngữ ứng dụng)",
-      "description": "Chọn ngôn ngữ ứng dụng TellDemm"
-    },
-    "help": {
-      "title": "DemmHelp (Trợ giúp)",
-      "description": "Trung tâm trợ giúp, liên hệ chúng tôi, Thông tin ứng dụng"
-    },
-    "updates": {
-      "title": "DemmUpdate (Cập nhật ứng dụng)",
-      "description": "Kiểm tra cập nhật và bật tự động cập nhật"
-    },
-    "invite": {
-      "title": "SpreadDemm (Mời bạn bè)",
-      "description": "Chia sẻ ứng dụng TellDemm với DemmList (Danh bạ) của bạn"
-    },
-    "logout": {
-      "title": "Log Out (Đăng xuất)",
-      "description": "Xóa dữ liệu ứng dụng và đăng xuất",
-      "confirmHeader": "Xác nhận đăng xuất",
-      "confirmMessage": "Bạn có chắc chắn muốn đăng xuất và xóa dữ liệu ứng dụng không?",
-      "loadingHeader": "Logging Out (Đang đăng xuất)",
-      "loadingMessage": "Vui lòng chờ...",
-      "successHeader": "Logged Out (Đã đăng xuất)",
-      "successMessage": "Bạn đã đăng xuất thành công."
-    },
-    "defaultStatus": "Có sẵn"
+  "title": "Cài đặt",
+  "account": {
+    "title": "Tài khoản",
+    "description": "Quyền riêng tư, bảo mật, thay đổi số"
   },
+  "privacy": {
+    "title": "Quyền riêng tư",
+    "description": "Kiểm soát cài đặt quyền riêng tư của bạn"
+  },
+  "avatar": {
+    "title": "Ảnh đại diện",
+    "description": "Thay đổi ảnh đại diện của bạn"
+  },
+  "chats": {
+    "title": "Trò chuyện",
+    "description": "Chủ đề, hình nền, bộ nhớ và dữ liệu"
+  },
+  "accessibility": {
+    "title": "Trợ năng",
+    "description": "Điều chỉnh kích thước chữ và tùy chọn hiển thị"
+  },
+  "notifications": {
+    "title": "Thông báo",
+    "description": "Quản lý thông báo trò chuyện, nhóm và cuộc gọi"
+  },
+  "storage": {
+    "title": "Bộ nhớ & Dữ liệu",
+    "description": "Quản lý dung lượng lưu trữ và sử dụng mạng"
+  },
+  "appLanguage": {
+    "title": "Ngôn ngữ ứng dụng",
+    "description": "Chọn ngôn ngữ ứng dụng TellDemm"
+  },
+  "help": {
+    "title": "Trợ giúp",
+    "description": "Trung tâm trợ giúp, liên hệ, thông tin ứng dụng"
+  },
+  "updates": {
+    "title": "Cập nhật ứng dụng",
+    "description": "Kiểm tra cập nhật và bật tự động cập nhật"
+  },
+  "invite": {
+    "title": "Mời bạn bè",
+    "description": "Chia sẻ ứng dụng TellDemm với danh bạ của bạn"
+  },
+  "logout": {
+    "title": "Đăng xuất",
+    "description": "Xóa dữ liệu ứng dụng và đăng xuất",
+    "confirmHeader": "Xác nhận đăng xuất",
+    "confirmMessage": "Bạn có chắc chắn muốn đăng xuất và xóa dữ liệu ứng dụng không?",
+    "loadingHeader": "Đang đăng xuất",
+    "loadingMessage": "Vui lòng chờ...",
+    "successHeader": "Đã đăng xuất",
+    "successMessage": "Bạn đã đăng xuất thành công."
+  },
+  "defaultStatus": "Có sẵn"
+},
   "accountPage": {
     "title": "Tài khoản",
     "securityNotifications": "Thông báo bảo mật",
@@ -416,13 +416,13 @@
     }
   },
   "footerTabs": {
-    "chat": "Tells (Trò chuyện)",
-    "updates": "Echoes (Cập nhật)",
-    "communities": "DemmCircles (Cộng đồng)",
-    "calls": "Connects (Cuộc gọi)",
+    "chat": "Trò chuyện",
+    "updates": "Cập nhật",
+    "communities": "Cộng đồng",
+    "calls": "Cuộc gọi",
     "badges": {
-      "unreadChats": "{{count}} Tells chưa đọc",
-      "unreadUpdates": "{{count}} Echoes"
+      "unreadChats": "{{count}} Trò chuyện chưa đọc",
+      "unreadUpdates": "{{count}} Cập nhật"
     }
   },
   "socialLinks": {
@@ -471,10 +471,10 @@
       "all": "TẤT CẢ",
       "read": "Đã đọc",
       "unread": "Chưa đọc",
-      "groups": "DemmRoom (Nhóm)"
+      "groups": "Nhóm"
     },
     "groupCreator": {
-      "placeholder": "Nhập Tên DemmRoom"
+      "placeholder": "Nhập Tên Nhóm"
     },
     "typing": "đang gõ...",
     "time": {

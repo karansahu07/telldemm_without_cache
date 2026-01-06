@@ -42,63 +42,63 @@
   },
   "common": { "ok": "حسنًا", "cancel": "إلغاء", "logout": "تسجيل الخروج", "reset": "إعادة الضبط" },
   "settingsPage": {
-    "title": "DemmDesk (إعدادات)",
-    "account": {
-      "title": "MyTell (حسابي)",
-      "description": "TellShield (الخصوصية)، الأمان، تغيير الرقم"
-    },
-    "privacy": {
-      "title": "TellShield (الخصوصية)",
-      "description": "السيطرة على إعدادات TellShield (الخصوصية) الخاصة بك"
-    },
-    "avatar": {
-      "title": "TellFace (صورة الملف الشخصي)",
-      "description": "غيّر TellFace (صورة الملف الشخصي) الخاصة بك"
-    },
-    "chats": {
-      "title": "Tells (محادثات)",
-      "description": "الثيم، خلفية الشاشة، SafeDemm (النسخ الاحتياطي)"
-    },
-    "accessibility": {
-      "title": "Accessibility (إمكانية الوصول)",
-      "description": "ضبط حجم النص وخيارات العرض"
-    },
-    "notifications": {
-      "title": "TellAlerts (إشعارات)",
-      "description": "إدارة إشعارات Tell (الرسائل)، DemmRoom (المحادثات الجماعية) و Connect (المكالمات)"
-    },
-    "storage": {
-      "title": "SafeDemm (التخزين والبيانات)",
-      "description": "إدارة التخزين واستخدام الشبكة"
-    },
-    "appLanguage": {
-      "title": "App Language (لغة التطبيق)",
-      "description": "اختر لغة تطبيق TellDemm"
-    },
-    "help": {
-      "title": "DemmHelp (المساعدة)",
-      "description": "مركز المساعدة، اتصل بنا، معلومات التطبيق"
-    },
-    "updates": {
-      "title": "DemmUpdate (تحديثات التطبيق)",
-      "description": "تحقق من التحديثات وفعّل التحديث التلقائي"
-    },
-    "invite": {
-      "title": "SpreadDemm (دعوة صديق)",
-      "description": "شارك تطبيق TellDemm مع قائمة DemmList (جهات الاتصال) الخاصة بك"
-    },
-    "logout": {
-      "title": "Log Out (تسجيل الخروج)",
-      "description": "مسح بيانات التطبيق والخروج",
-      "confirmHeader": "تأكيد تسجيل الخروج",
-      "confirmMessage": "هل أنت متأكد من رغبتك في تسجيل الخروج ومسح بيانات التطبيق؟",
-      "loadingHeader": "Logging Out (جاري تسجيل الخروج)",
-      "loadingMessage": "يرجى الانتظار...",
-      "successHeader": "Logged Out (تم تسجيل الخروج)",
-      "successMessage": "لقد تم تسجيل خروجك بنجاح."
-    },
-    "defaultStatus": "متاح"
+  "title": "الإعدادات",
+  "account": {
+    "title": "الحساب",
+    "description": "الخصوصية، الأمان، تغيير الرقم"
   },
+  "privacy": {
+    "title": "الخصوصية",
+    "description": "التحكم في إعدادات الخصوصية الخاصة بك"
+  },
+  "avatar": {
+    "title": "صورة الملف الشخصي",
+    "description": "غيّر صورة الملف الشخصي الخاصة بك"
+  },
+  "chats": {
+    "title": "المحادثات",
+    "description": "الثيم، خلفية الشاشة، النسخ الاحتياطي"
+  },
+  "accessibility": {
+    "title": "إمكانية الوصول",
+    "description": "ضبط حجم النص وخيارات العرض"
+  },
+  "notifications": {
+    "title": "الإشعارات",
+    "description": "إدارة إشعارات الرسائل، الدردشات الجماعية والمكالمات"
+  },
+  "storage": {
+    "title": "التخزين والبيانات",
+    "description": "إدارة التخزين واستخدام الشبكة"
+  },
+  "appLanguage": {
+    "title": "لغة التطبيق",
+    "description": "اختر لغة التطبيق"
+  },
+  "help": {
+    "title": "المساعدة",
+    "description": "مركز المساعدة، اتصل بنا، معلومات التطبيق"
+  },
+  "updates": {
+    "title": "تحديثات التطبيق",
+    "description": "تحقق من التحديثات وفعّل التحديث التلقائي"
+  },
+  "invite": {
+    "title": "دعوة صديق",
+    "description": "شارك التطبيق مع جهات الاتصال الخاصة بك"
+  },
+  "logout": {
+    "title": "تسجيل الخروج",
+    "description": "مسح بيانات التطبيق والخروج",
+    "confirmHeader": "تأكيد تسجيل الخروج",
+    "confirmMessage": "هل أنت متأكد من رغبتك في تسجيل الخروج ومسح بيانات التطبيق؟",
+    "loadingHeader": "جاري تسجيل الخروج",
+    "loadingMessage": "يرجى الانتظار...",
+    "successHeader": "تم تسجيل الخروج",
+    "successMessage": "لقد تم تسجيل خروجك بنجاح."
+  },
+  "defaultStatus": "متاح"
+},
   "appUpdates": {
     "title": "تحديثات التطبيق",
     "version": "الإصدار",
@@ -437,13 +437,13 @@
     }
   },
   "footerTabs": {
-    "chat": "Tells (محادثات)",
-    "updates": "Echoes (تحديثات)",
-    "communities": "DemmCircles (مجتمعات)",
-    "calls": "Connects (مكالمات)",
+    "chat": "محادثات",
+    "updates": "تحديثات",
+    "communities": "مجتمعات",
+    "calls": "مكالمات",
     "badges": {
-      "unreadChats": "{{count}} Tells غير مقروءة",
-      "unreadUpdates": "{{count}} Echoes"
+      "unreadChats": "{{count}} محادثات غير مقروءة",
+      "unreadUpdates": "{{count}} تحديثات"
     }
   },
   "socialLinks": {

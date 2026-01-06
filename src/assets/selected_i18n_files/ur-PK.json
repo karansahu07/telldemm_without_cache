@@ -42,63 +42,63 @@
   },
   "common": { "ok": "اوکے", "cancel": "منسوخ", "logout": "لاگ آؤٹ", "reset": "ری سیٹ" },
   "settingsPage": {
-    "title": "DemmDesk (ترتیبات)",
-    "account": {
-      "title": "MyTell (اکاؤنٹ)",
-      "description": "TellShield (رازداری), تحفظ, نمبر تبدیل کریں"
-    },
-    "privacy": {
-      "title": "TellShield (رازداری)",
-      "description": "اپنی TellShield (رازداری) ترتیبات کو کنٹرول کریں"
-    },
-    "avatar": {
-      "title": "TellFace (پروفائل تصویر)",
-      "description": "اپنی TellFace (پروفائل تصویر) تبدیل کریں"
-    },
-    "chats": {
-      "title": "Tells (چیٹس)",
-      "description": "تھیم، وال پیپر، SafeDemm (بیک اپ)"
-    },
-    "accessibility": {
-      "title": "Accessibility (رسائی)",
-      "description": "متن کا سائز اور ڈسپلے آپشنز ایڈجسٹ کریں"
-    },
-    "notifications": {
-      "title": "TellAlerts (نوٹیفکیشنز)",
-      "description": "Tell (پیغامات)، DemmRoom (گروپ) اور Connect (کالز) الرٹس کا انتظام کریں"
-    },
-    "storage": {
-      "title": "SafeDemm (اسٹوریج اور ڈیٹا)",
-      "description": "اسٹوریج اور نیٹ ورک استعمال کا انتظام کریں"
-    },
-    "appLanguage": {
-      "title": "App Language (ایپ زبان)",
-      "description": "TellDemm ایپ کی زبان منتخب کریں"
-    },
-    "help": {
-      "title": "DemmHelp (مدد)",
-      "description": "ہیلپ سینٹر، رابطہ کریں، ایپ انفو"
-    },
-    "updates": {
-      "title": "DemmUpdate (ایپ اپ ڈیٹ)",
-      "description": "اپ ڈیٹ چیک کریں اور آٹو-اپ ڈیٹ فعال کریں"
-    },
-    "invite": {
-      "title": "SpreadDemm (دوست کو مدعو کریں)",
-      "description": "TellDemm ایپ کو اپنے DemmList (رابطوں) کے ساتھ شیئر کریں"
-    },
-    "logout": {
-      "title": "Log Out (لاگ آؤٹ)",
-      "description": "ایپ ڈیٹا صاف کریں اور سائن آؤٹ کریں",
-      "confirmHeader": "لاگ آؤٹ کی تصدیق کریں",
-      "confirmMessage": "کیا آپ واقعی لاگ آؤٹ کرنا اور ایپ ڈیٹا صاف کرنا چاہتے ہیں؟",
-      "loadingHeader": "Logging Out (لاگ آؤٹ ہو رہا ہے)",
-      "loadingMessage": "براہ کرم انتظار کریں...",
-      "successHeader": "Logged Out (لاگ آؤٹ کیا گیا)",
-      "successMessage": "آپ کامیابی سے لاگ آؤٹ ہو گئے ہیں۔"
-    },
-    "defaultStatus": "دستیاب"
+  "title": "ترتیبات",
+  "account": {
+    "title": "اکاؤنٹ",
+    "description": "رازداری، سیکیورٹی، نمبر تبدیل کریں"
   },
+  "privacy": {
+    "title": "رازداری",
+    "description": "اپنی رازداری کی ترتیبات کو کنٹرول کریں"
+  },
+  "avatar": {
+    "title": "پروفائل تصویر",
+    "description": "اپنی پروفائل تصویر تبدیل کریں"
+  },
+  "chats": {
+    "title": "چیٹس",
+    "description": "تھیم، وال پیپر، اسٹوریج اور ڈیٹا"
+  },
+  "accessibility": {
+    "title": "رسائی",
+    "description": "متن کا سائز اور ڈسپلے کے اختیارات ایڈجسٹ کریں"
+  },
+  "notifications": {
+    "title": "اطلاعات",
+    "description": "پیغامات، گروپس اور کالز کی اطلاعات کا انتظام کریں"
+  },
+  "storage": {
+    "title": "اسٹوریج اور ڈیٹا",
+    "description": "اسٹوریج اور نیٹ ورک کے استعمال کا انتظام کریں"
+  },
+  "appLanguage": {
+    "title": "ایپ کی زبان",
+    "description": "TellDemm ایپ کی زبان منتخب کریں"
+  },
+  "help": {
+    "title": "مدد",
+    "description": "ہیلپ سینٹر، ہم سے رابطہ کریں، ایپ کی معلومات"
+  },
+  "updates": {
+    "title": "ایپ اپ ڈیٹس",
+    "description": "اپ ڈیٹس چیک کریں اور خودکار اپ ڈیٹس فعال کریں"
+  },
+  "invite": {
+    "title": "دوستوں کو مدعو کریں",
+    "description": "TellDemm ایپ اپنے رابطوں کے ساتھ شیئر کریں"
+  },
+  "logout": {
+    "title": "لاگ آؤٹ",
+    "description": "ایپ ڈیٹا صاف کریں اور لاگ آؤٹ کریں",
+    "confirmHeader": "لاگ آؤٹ کی تصدیق",
+    "confirmMessage": "کیا آپ واقعی لاگ آؤٹ کرنا اور ایپ ڈیٹا صاف کرنا چاہتے ہیں؟",
+    "loadingHeader": "لاگ آؤٹ ہو رہا ہے",
+    "loadingMessage": "براہ کرم انتظار کریں...",
+    "successHeader": "لاگ آؤٹ ہو گیا",
+    "successMessage": "آپ کامیابی کے ساتھ لاگ آؤٹ ہو گئے ہیں۔"
+  },
+  "defaultStatus": "دستیاب"
+},
   "accountPage": {
     "title": "اکاؤنٹ",
     "securityNotifications": "سیکیورٹی اطلاعات",
@@ -416,13 +416,13 @@
     }
   },
   "footerTabs": {
-    "chat": "Tells (چیٹس)",
-    "updates": "Echoes (اپ ڈیٹس)",
-    "communities": "DemmCircles (برادریاں)",
-    "calls": "Connects (کالز)",
+    "chat": "چیٹس",
+    "updates": "اپ ڈیٹس",
+    "communities": "برادریاں",
+    "calls": "کالز",
     "badges": {
-      "unreadChats": "{{count}} نہ پڑھے Tells",
-      "unreadUpdates": "{{count}} Echoes"
+      "unreadChats": "{{count}} نہ پڑھے چیٹس",
+      "unreadUpdates": "{{count}} اپ ڈیٹس"
     }
   },
   "socialLinks": {
@@ -471,10 +471,10 @@
       "all": "سب",
       "read": "پڑھا",
       "unread": "نہ پڑھا",
-      "groups": "DemmRoom (گروپس)"
+      "groups": "گروپس"
     },
     "groupCreator": {
-      "placeholder": "DemmRoom نام درج کریں"
+      "placeholder": "گروپس نام درج کریں"
     },
     "typing": "ٹائپ کر رہا ہے...",
     "time": {

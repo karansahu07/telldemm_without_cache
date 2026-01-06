@@ -42,63 +42,69 @@
   },
    "common": { "ok": "확인", "cancel": "취소", "logout": "로그아웃", "reset": "재설정" },
   "settingsPage": {
-    "title": "DemmDesk (설정)",
-    "account": {
-      "title": "MyTell (계정)",
-      "description": "TellShield (개인정보 보호), 보안, 번호 변경"
-    },
-    "privacy": {
-      "title": "TellShield (개인정보 보호)",
-      "description": "TellShield (개인정보 보호) 설정을 제어하세요"
-    },
-    "avatar": {
-      "title": "TellFace (프로필 사진)",
-      "description": "TellFace (프로필 사진) 변경"
-    },
-    "chats": {
-      "title": "Tells (채팅)",
-      "description": "테마, 배경화면, SafeDemm (백업)"
-    },
-    "accessibility": {
-      "title": "Accessibility (접근성)",
-      "description": "텍스트 크기 및 표시 옵션 조정"
-    },
-    "notifications": {
-      "title": "TellAlerts (알림)",
-      "description": "Tell (메시지), DemmRoom (그룹), Connect (통화) 알림 관리"
-    },
-    "storage": {
-      "title": "SafeDemm (저장소 및 데이터)",
-      "description": "저장소 및 네트워크 사용량 관리"
-    },
-    "appLanguage": {
-      "title": "App Language (앱 언어)",
-      "description": "TellDemm 앱 언어 선택"
-    },
-    "help": {
-      "title": "DemmHelp (도움말)",
-      "description": "도움말 센터, 문의하기, 앱 정보"
-    },
-    "updates": {
-      "title": "DemmUpdate (앱 업데이트)",
-      "description": "업데이트 확인 및 자동 업데이트 활성화"
-    },
-    "invite": {
-      "title": "SpreadDemm (친구 초대)",
-      "description": "TellDemm 앱을 DemmList (연락처)와 공유하세요"
-    },
-    "logout": {
-      "title": "Log Out (로그아웃)",
-      "description": "앱 데이터 지우기 및 로그아웃",
-      "confirmHeader": "로그아웃 확인",
-      "confirmMessage": "로그아웃하고 앱 데이터를 지우시겠습니까?",
-      "loadingHeader": "Logging Out (로그아웃 중)",
-      "loadingMessage": "잠시만 기다려 주세요...",
-      "successHeader": "Logged Out (로그아웃 완료)",
-      "successMessage": "로그아웃이 완료되었습니다."
-    },
-    "defaultStatus": "사용 가능"
+  "title": "설정",
+  "account": {
+    "title": "계정",
+    "description": "개인정보 보호, 보안, 번호 변경"
   },
+  "privacy": {
+    "title": "개인정보 보호",
+    "description": "개인정보 보호 설정을 제어하세요"
+  },
+  "avatar": {
+    "title": "프로필 사진",
+    "description": "프로필 사진 변경"
+  },
+  "chats": {
+    "title": "채팅",
+    "description": "테마, 배경화면, 백업"
+  },
+  "accessibility": {
+    "title": "접근성",
+    "description": "텍스트 크기 및 표시 옵션 조정"
+  },
+  "notifications": {
+    "title": "알림",
+    "description": "메시지, 그룹, 통화 알림 관리"
+  },
+  "storage": {
+    "title": "저장소 및 데이터",
+    "description": "저장소 및 네트워크 사용량 관리"
+  },
+  "appLanguage": {
+    "title": "앱 언어",
+    "description": "앱 언어 선택"
+  },
+  "help": {
+    "title": "도움말",
+    "description": "도움말 센터, 문의하기, 앱 정보"
+  },
+  "updates": {
+    "title": "앱 업데이트",
+    "description": "업데이트 확인 및 자동 업데이트 활성화"
+  },
+  "invite": {
+    "title": "친구 초대",
+    "description": "앱을 연락처와 공유하세요"
+  },
+  "communityGroups": {
+    "groupType": {
+      "announcement": "공지 그룹",
+      "general": "공용 그룹"
+    }
+  },
+  "logout": {
+    "title": "로그아웃",
+    "description": "앱 데이터 지우기 및 로그아웃",
+    "confirmHeader": "로그아웃 확인",
+    "confirmMessage": "로그아웃하고 앱 데이터를 지우시겠습니까?",
+    "loadingHeader": "로그아웃 중",
+    "loadingMessage": "잠시만 기다려 주세요...",
+    "successHeader": "로그아웃 완료",
+    "successMessage": "로그아웃이 완료되었습니다."
+  },
+  "defaultStatus": "사용 가능"
+},
   "appUpdates": {
     "title": "앱 업데이트",
     "version": "버전",
@@ -437,13 +443,13 @@
     }
   },
   "footerTabs": {
-    "chat": "Tells (채팅)",
-    "updates": "Echoes (업데이트)",
-    "communities": "DemmCircles (커뮤니티)",
-    "calls": "Connects (통화)",
+    "chat": "채팅",
+    "updates": "업데이트",
+    "communities": "커뮤니티",
+    "calls": "통화",
     "badges": {
-      "unreadChats": "{{count}} 읽지 않은 Tells",
-      "unreadUpdates": "{{count}} Echoes"
+      "unreadChats": "{{count}} 읽지 않은 채팅",
+      "unreadUpdates": "{{count}} 업데이트"
     }
   },
   "socialLinks": {
@@ -492,10 +498,10 @@
       "all": "전체",
       "read": "읽음",
       "unread": "읽지 않음",
-      "groups": "DemmRoom (그룹)"
+      "groups": "그룹"
     },
     "groupCreator": {
-      "placeholder": "DemmRoom 이름 입력"
+      "placeholder": "그룹 이름 입력"
     },
     "typing": "입력 중...",
     "time": {

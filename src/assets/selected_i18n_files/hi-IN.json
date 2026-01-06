@@ -42,63 +42,63 @@
   },
   "common": { "ok": "ओके", "cancel": "रद्द करें", "logout": "लॉग आउट", "reset": "रीसेट" },
   "settingsPage": {
-    "title": "DemmDesk (सेटिंग्स)",
-    "account": {
-      "title": "MyTell (खाता)",
-      "description": "TellShield (गोपनीयता), सुरक्षा, नंबर बदलें"
-    },
-    "privacy": {
-      "title": "TellShield (गोपनीयता)",
-      "description": "अपनी TellShield (गोपनीयता) सेटिंग्स नियंत्रित करें"
-    },
-    "avatar": {
-      "title": "TellFace (प्रोफ़ाइल चित्र)",
-      "description": "अपना TellFace (प्रोफ़ाइल चित्र) बदलें"
-    },
-    "chats": {
-      "title": "Tells (चैट्स)",
-      "description": "थीम, वॉलपेपर, SafeDemm (बैकअप)"
-    },
-    "accessibility": {
-      "title": "Accessibility (सुलभता)",
-      "description": "पाठ का आकार और प्रदर्शन विकल्प समायोजित करें"
-    },
-    "notifications": {
-      "title": "TellAlerts (सूचनाएँ)",
-      "description": "Tell (संदेश), DemmRoom (समूह) और Connect (कॉल) अलर्ट प्रबंधित करें"
-    },
-    "storage": {
-      "title": "SafeDemm (स्टोरेज और डेटा)",
-      "description": "स्टोरेज और नेटवर्क उपयोग प्रबंधित करें"
-    },
-    "appLanguage": {
-      "title": "App Language (ऐप भाषा)",
-      "description": "TellDemm ऐप की भाषा चुनें"
-    },
-    "help": {
-      "title": "DemmHelp (सहायता)",
-      "description": "Help Centre, संपर्क करें, App Info (ऐप जानकारी)"
-    },
-    "updates": {
-      "title": "DemmUpdate (ऐप अपडेट)",
-      "description": "अपडेट जांचें और ऑटो-अपडेट सक्षम करें"
-    },
-    "invite": {
-      "title": "SpreadDemm (मित्र को आमंत्रित करें)",
-      "description": "TellDemm ऐप अपने DemmList (संपर्कों) के साथ साझा करें"
-    },
-    "logout": {
-      "title": "Log Out (लॉग आउट)",
-      "description": "ऐप डेटा साफ़ करें और साइन आउट करें",
-      "confirmHeader": "Log Out की पुष्टि करें",
-      "confirmMessage": "क्या आप वाकई लॉग आउट करना और ऐप डेटा साफ़ करना चाहते हैं?",
-      "loadingHeader": "Logging Out (लॉग आउट हो रहा है)",
-      "loadingMessage": "कृपया प्रतीक्षा करें...",
-      "successHeader": "Logged Out (लॉग आउट किया गया)",
-      "successMessage": "आप सफलतापूर्वक लॉग आउट हो गए हैं।"
-    },
-    "defaultStatus": "उपलब्ध"
+  "title": "सेटिंग्स",
+  "account": {
+    "title": "खाता",
+    "description": "गोपनीयता, सुरक्षा, नंबर बदलें"
   },
+  "privacy": {
+    "title": "गोपनीयता",
+    "description": "अपनी गोपनीयता सेटिंग्स नियंत्रित करें"
+  },
+  "avatar": {
+    "title": "प्रोफ़ाइल चित्र",
+    "description": "अपना प्रोफ़ाइल चित्र बदलें"
+  },
+  "chats": {
+    "title": "चैट",
+    "description": "थीम, वॉलपेपर, बैकअप"
+  },
+  "accessibility": {
+    "title": "सुलभता",
+    "description": "पाठ का आकार और प्रदर्शन विकल्प समायोजित करें"
+  },
+  "notifications": {
+    "title": "सूचनाएँ",
+    "description": "संदेश, समूह और कॉल अलर्ट प्रबंधित करें"
+  },
+  "storage": {
+    "title": "स्टोरेज और डेटा",
+    "description": "स्टोरेज और नेटवर्क उपयोग प्रबंधित करें"
+  },
+  "appLanguage": {
+    "title": "ऐप भाषा",
+    "description": "ऐप की भाषा चुनें"
+  },
+  "help": {
+    "title": "सहायता",
+    "description": "सहायता केंद्र, संपर्क करें, ऐप जानकारी"
+  },
+  "updates": {
+    "title": "ऐप अपडेट",
+    "description": "अपडेट जांचें और ऑटो-अपडेट सक्षम करें"
+  },
+  "invite": {
+    "title": "मित्र को आमंत्रित करें",
+    "description": "ऐप अपने संपर्कों के साथ साझा करें"
+  },
+  "logout": {
+    "title": "लॉग आउट",
+    "description": "ऐप डेटा साफ़ करें और साइन आउट करें",
+    "confirmHeader": "लॉग आउट की पुष्टि करें",
+    "confirmMessage": "क्या आप वाकई लॉग आउट करना और ऐप डेटा साफ़ करना चाहते हैं?",
+    "loadingHeader": "लॉग आउट हो रहा है",
+    "loadingMessage": "कृपया प्रतीक्षा करें...",
+    "successHeader": "लॉग आउट किया गया",
+    "successMessage": "आप सफलतापूर्वक लॉग आउट हो गए हैं।"
+  },
+  "defaultStatus": "उपलब्ध"
+},
   "appUpdates": {
     "title": "ऐप अपडेट्स",
     "version": "संस्करण",
@@ -440,13 +440,13 @@
     }
   },
   "footerTabs": {
-    "chat": "Tells (चैट)",
-    "updates": "Echoes (अपडेट्स)",
-    "communities": "DemmCircles (समुदाय)",
-    "calls": "Connects (कॉल्स)",
+    "chat": "चैट",
+    "updates": "अपडेट्स",
+    "communities": "समुदाय",
+    "calls": "कॉल्स",
     "badges": {
-      "unreadChats": "{{count}} अपठित Tells",
-      "unreadUpdates": "{{count}} Echoes"
+      "unreadChats": "{{count}} अपठित चैट",
+      "unreadUpdates": "{{count}} अपडेट्स"
     }
   },
   "socialLinks": {
@@ -495,10 +495,10 @@
       "all": "सभी",
       "read": "पढ़ा",
       "unread": "अपढ़",
-      "groups": "DemmRoom (समूह)"
+      "groups": "समूह"
     },
     "groupCreator": {
-      "placeholder": "DemmRoom नाम दर्ज करें"
+      "placeholder": "समूह नाम दर्ज करें"
     },
     "typing": "टाइप कर रहे हैं...",
     "time": {

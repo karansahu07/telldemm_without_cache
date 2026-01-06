@@ -2,7 +2,7 @@
   <ion-toolbar class="telldemm">
     <div class="main-header">
       <ion-title>
-        <h2 class="header-name" (click)="opendummy()">Echoes (Updates)</h2>
+        <h2 class="header-name" (click)="opendummy()">Updates</h2>
       </ion-title>
 
       <ion-buttons slot="end" class="header-icons">
@@ -20,10 +20,10 @@
 <ion-content>
   <div>
     <div class="channels-main">
-      <p class="Status">MegaTells (Channels)</p>
+      <p class="Status">Channels</p>
 
       <p class="Explore" (click)="goToChannels()">
-        Explore MegaTells
+        Explore Channels
         <ion-icon name="chevron-forward-outline" [class.rotate]="isRotated"></ion-icon>
       </p>
     </div>
@@ -31,7 +31,7 @@
     <!-- --- My Channels (from backend) --- -->
     <ion-list *ngIf="!isLoadingChannels">
       <ion-list-header>
-        <ion-label>My MegaTells (Channels)</ion-label>
+        <ion-label>My Channels</ion-label>
       </ion-list-header>
 
       <ion-item *ngFor="let ch of myChannels" (click)="openChat(ch)">
@@ -50,7 +50,7 @@
       </ion-item>
 
       <ion-item *ngIf="myChannels.length === 0">
-        <ion-label>MegaTells not followed yet (You are not following any channels yet)</ion-label>
+        <ion-label>You are not following any channels yet</ion-label>
       </ion-item>
     </ion-list>
 
@@ -58,13 +58,13 @@
     <ng-container *ngIf="isLoadingChannels">
       <ion-item>
         <ion-spinner name="crescent"></ion-spinner>
-        <ion-label>Loading MegaTells (Loading channels)...</ion-label>
+        <ion-label>Loading channels...</ion-label>
       </ion-item>
     </ng-container>
 
     <!-- --- Public Channels --- -->
     <div style="margin-top: 12px;">
-      <p class="channels">Discover MegaTells (Find channels to follow)</p>
+      <p class="channels">Discover Channels (Find channels to follow)</p>
 
       <ion-list *ngIf="!isLoadingChannels">
         <ion-item *ngFor="let ch of filteredChannels" (click)="openChat(ch)">
@@ -85,11 +85,11 @@
               (click)="onFollowClick($event, ch)"
               [disabled]="loadingChannelId === ch.channel_id">
 
-              <span *ngIf="!isFollowing(ch)">Join MegaTell</span>
+              <span *ngIf="!isFollowing(ch)">Join Channel</span>
 
               <span *ngIf="isFollowing(ch)" class="following-text">
                 <ion-icon name="checkmark-done-outline"></ion-icon>
-                Following MegaTell 
+                Following Channel 
               </span>
 
             </ion-button>
@@ -97,7 +97,7 @@
         </ion-item>
 
         <ion-item *ngIf="publicChannels.length === 0">
-          <ion-label>No MegaTells Found</ion-label>
+          <ion-label>No Channels Found</ion-label>
         </ion-item>
       </ion-list>
     </div>

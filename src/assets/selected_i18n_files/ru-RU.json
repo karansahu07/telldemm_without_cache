@@ -42,63 +42,63 @@
   },
   "common": { "ok": "ОК", "cancel": "Отмена", "logout": "Выйти", "reset": "Сбросить" },
   "settingsPage": {
-    "title": "DemmDesk (Настройки)",
-    "account": {
-      "title": "MyTell (Аккаунт)",
-      "description": "TellShield (Конфиденциальность), безопасность, сменить номер"
-    },
-    "privacy": {
-      "title": "TellShield (Конфиденциальность)",
-      "description": "Управляйте настройками TellShield (Конфиденциальность)"
-    },
-    "avatar": {
-      "title": "TellFace (Фото профиля)",
-      "description": "Измените ваше TellFace (Фото профиля)"
-    },
-    "chats": {
-      "title": "Tells (Чаты)",
-      "description": "Тема, обои, SafeDemm (Резервное копирование)"
-    },
-    "accessibility": {
-      "title": "Accessibility (Доступность)",
-      "description": "Настройте размер текста и опции отображения"
-    },
-    "notifications": {
-      "title": "TellAlerts (Уведомления)",
-      "description": "Управляйте оповещениями Tell (Сообщения), DemmRoom (Группа) и Connect (Звонки)"
-    },
-    "storage": {
-      "title": "SafeDemm (Хранилище и данные)",
-      "description": "Управляйте хранилищем и использованием сети"
-    },
-    "appLanguage": {
-      "title": "App Language (Язык приложения)",
-      "description": "Выберите язык приложения TellDemm"
-    },
-    "help": {
-      "title": "DemmHelp (Помощь)",
-      "description": "Центр помощи, свяжитесь с нами, Инфо о приложении"
-    },
-    "updates": {
-      "title": "DemmUpdate (Обновления приложения)",
-      "description": "Проверьте обновления и включите автообновление"
-    },
-    "invite": {
-      "title": "SpreadDemm (Пригласить друга)",
-      "description": "Поделитесь приложением TellDemm с вашей DemmList (Контакты)"
-    },
-    "logout": {
-      "title": "Log Out (Выйти)",
-      "description": "Очистить данные приложения и выйти",
-      "confirmHeader": "Подтвердить выход",
-      "confirmMessage": "Вы уверены, что хотите выйти и очистить данные приложения?",
-      "loadingHeader": "Logging Out (Выход)",
-      "loadingMessage": "Пожалуйста, подождите...",
-      "successHeader": "Logged Out (Вышли)",
-      "successMessage": "Вы успешно вышли из системы."
-    },
-    "defaultStatus": "Доступен"
+  "title": "Настройки",
+  "account": {
+    "title": "Аккаунт",
+    "description": "Конфиденциальность, безопасность, смена номера"
   },
+  "privacy": {
+    "title": "Конфиденциальность",
+    "description": "Управление настройками конфиденциальности"
+  },
+  "avatar": {
+    "title": "Фото профиля",
+    "description": "Измените фотографию профиля"
+  },
+  "chats": {
+    "title": "Чаты",
+    "description": "Тема, обои, резервное копирование"
+  },
+  "accessibility": {
+    "title": "Доступность",
+    "description": "Настройка размера текста и параметров отображения"
+  },
+  "notifications": {
+    "title": "Уведомления",
+    "description": "Управление уведомлениями сообщений, групп и звонков"
+  },
+  "storage": {
+    "title": "Хранилище и данные",
+    "description": "Управление хранилищем и использованием сети"
+  },
+  "appLanguage": {
+    "title": "Язык приложения",
+    "description": "Выберите язык приложения"
+  },
+  "help": {
+    "title": "Помощь",
+    "description": "Центр помощи, связь с нами, информация о приложении"
+  },
+  "updates": {
+    "title": "Обновления приложения",
+    "description": "Проверка обновлений и автообновление"
+  },
+  "invite": {
+    "title": "Пригласить друга",
+    "description": "Поделитесь приложением с друзьями"
+  },
+  "logout": {
+    "title": "Выйти",
+    "description": "Очистить данные приложения и выйти из аккаунта",
+    "confirmHeader": "Подтверждение выхода",
+    "confirmMessage": "Вы уверены, что хотите выйти и очистить данные приложения?",
+    "loadingHeader": "Выход из аккаунта",
+    "loadingMessage": "Пожалуйста, подождите...",
+    "successHeader": "Выход выполнен",
+    "successMessage": "Вы успешно вышли из системы."
+  },
+  "defaultStatus": "Доступен"
+},
   "appUpdates": {
     "title": "Обновления приложения",
     "version": "Версия",
@@ -437,13 +437,13 @@
     }
   },
   "footerTabs": {
-    "chat": "Tells (Чаты)",
-    "updates": "Echoes (Обновления)",
-    "communities": "DemmCircles (Сообщества)",
-    "calls": "Connects (Звонки)",
+    "chat": "Чаты",
+    "updates": "Обновления",
+    "communities": "Сообщества",
+    "calls": "Звонки",
     "badges": {
-      "unreadChats": "{{count}} непрочитанных Tells",
-      "unreadUpdates": "{{count}} Echoes"
+      "unreadChats": "{{count}} непрочитанных Чаты",
+      "unreadUpdates": "{{count}} Обновления"
     }
   },
   "socialLinks": {
@@ -492,10 +492,10 @@
       "all": "ВСЕ",
       "read": "Прочитано",
       "unread": "Непрочитано",
-      "groups": "DemmRoom (Группы)"
+      "groups": "Группы"
     },
     "groupCreator": {
-      "placeholder": "Введите Название DemmRoom"
+      "placeholder": "Введите Название Группы"
     },
     "typing": "печатает...",
     "time": {

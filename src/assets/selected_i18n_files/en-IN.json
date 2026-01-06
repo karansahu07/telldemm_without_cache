@@ -42,33 +42,33 @@
   },
  "common": { "ok": "OK", "cancel": "Cancel", "logout": "Log Out", "reset": "Reset" },
   "settingsPage": {
-    "title": "DemmDesk (Settings)",
+    "title": "Settings",
     "account": {
-      "title": "MyTell (Account)",
-      "description": "TellShield, security, change number"
+      "title": "Account",
+      "description": "privacy, security, change number"
     },
     "privacy": {
-      "title": "TellShield (Privacy)",
-      "description": "Control your TellShield settings"
+      "title": "Privacy",
+      "description": "Control your privacy settings"
     },
     "avatar": {
-      "title": "TellFace (Avatar)",
-      "description": "Change your TellFace"
+      "title": "Avatar",
+      "description": "Change your Avatar"
     },
     "chats": {
-      "title": "Tells (Chats)",
-      "description": "Theme, wallpaper, SafeDemm"
+      "title": "Chats",
+      "description": "Theme, wallpaper, Storage & Data"
     },
     "accessibility": {
       "title": "Accessibility",
       "description": "Adjust text size and display options"
     },
     "notifications": {
-      "title": "TellAlerts (Notifications)",
-      "description": "Manage Tell, DemmRoom and Connect alerts"
+      "title": "Notifications",
+      "description": "Manage chat, group and Connect alerts"
     },
     "storage": {
-      "title": "SafeDemm (Storage & Data)",
+      "title": "Storage & Data",
       "description": "Manage storage and network usage"
     },
     "appLanguage": {
@@ -76,16 +76,16 @@
       "description": "Choose TellDemm app language"
     },
     "help": {
-      "title": "DemmHelp (Help)",
+      "title": "Help",
       "description": "Help Centre, contact us, App Info"
     },
     "updates": {
-      "title": "DemmUpdate (App Updates)",
+      "title": "App Updates",
       "description": "Check for updates and enable auto-update"
     },
     "invite": {
-      "title": "SpreadDemm (Invite a Friend)",
-      "description": "Share TellDemm app with your DemmList"
+      "title": "Invite a Friend",
+      "description": "Share TellDemm app with your ContactList"
     },
     "logout": {
       "title": "Log Out",
@@ -440,13 +440,13 @@
     }
   },
 "footerTabs": {
-    "chat": "Tells",
-    "updates": "Echoes",
-    "communities": "DemmCircles",
-    "calls": "Connects (Calls)",
+    "chat": "Chats",
+    "updates": "Updates",
+    "communities": "Communities",
+    "calls": "Calls",
     "badges": {
-      "unreadChats": "{{count}} unread Tells",
-      "unreadUpdates": "{{count}} Echoes"
+      "unreadChats": "{{count}} unread chats",
+      "unreadUpdates": "{{count}} Updates"
     }
   },
   "socialLinks": {
@@ -495,10 +495,10 @@
       "all": "ALL",
       "read": "Read",
       "unread": "Unread",
-      "groups": "DemmRooms (Groups)"
+      "groups": "Groups"
     },
     "groupCreator": {
-      "placeholder": "Enter DemmRoom (Group) Name"
+      "placeholder": "Enter Group Name"
     },
     "typing": "typing...",
     "time": {
@@ -536,65 +536,65 @@
     }
   },
 "menu": {
-  "newGroup": "New DemmRoom (Group)",
-  "newCommunity": "New DemmCircle (Community)",
-  "newBroadcast": "New MegaTell (Broadcast) (WIP)",
-  "starred": "FavTells (Starred Messages) (WIP)",
-  "readAll": "Mark all Tells as Read (Read All) (WIP)",
-  "settings": "DemmDesk (Settings)",
-  "createChannels": "Create MegaTells / Channels (Channels) (WIP)",
-  "statusPrivacy": "Echo/Pulse Privacy (Status Privacy) (WIP)",
-  "clearCallLogs": "Clear Signal Logs (Call Logs) (WIP)"
+  "newGroup": "New Group",
+  "newCommunity": "New Community",
+  "newBroadcast": "New Broadcast (WIP)",
+  "starred": "Starred Messages (WIP)",
+  "readAll": "Read All (WIP)",
+  "settings": "Settings",
+  "createChannels": "Create Channels (WIP)",
+  "statusPrivacy": "Status Privacy (WIP)",
+  "clearCallLogs": "Call Logs (WIP)"
 },
  "userabout": {
-  "members": "Members (Demmians)",
-  "group": "Group (DemmRoom)",
-  "groups": "Groups (DemmRooms)",
-  "inCommon": "In Common (Shared DemmRooms)",
+  "members": "Members",
+  "group": "Group",
+  "groups": "Groups",
+  "inCommon": "In Common",
   "toolbar": {
-    "message": "Message (DemmMessage)",
-    "call": "Call (DemmCall)",
-    "video": "Video (DemmVidCall)",
-    "add": "Add (Add Demmian)"
+    "message": "Message",
+    "call": "Call",
+    "video": "Video",
+    "add": "Add"
   },
   "defaults": {
     "heyThere": "Hey there! I am using Telldemm.",
-    "noGroupDescription": "No group description. (No DemmRoom bio)",
+    "noGroupDescription": "No group description.",
     "unknown": "Unknown (Not available)",
     "unknownDate": "Unknown Date (Date missing)",
     "unnamedGroup": "Unnamed Group (Unnamed DemmRoom)"
   },
   "updatedOn": "Updated on (Last Modified)",
-  "createdByOn": "Created by {{name}} on (DemmRoom Creation Date)",
+  "createdByOn": "Created by {{name}} on",
   "media": {
     "title": "Media, Links, and Docs (DemmVault)"
   },
-  "notifications": "Notifications (DemmAlerts)",
+  "notifications": "Notifications",
   "mediaVisibility": "Media Visibility (Auto-Save Media)",
   "encryption": {
-    "title": "Encryption (DemmShield Encryption)",
+    "title": "Encryption",
     "subtitle": "Messages and calls are end-to-end encrypted. Tap to verify. (Secure DemmRoom)"
   },
   "disappearing": "Disappearing messages (Auto-Vanish)",
   "chatLock": {
-    "title": "Chat lock (DemmLock)",
+    "title": "Chat lock",
     "subtitle": "Lock and hide this chat on this device. (Secure this DemmRoom)"
   },
   "advancedPrivacy": {
-    "title": "Advanced Chat Privacy (DemmShield Advanced)",
+    "title": "Advanced Chat Privacy",
     "off": "Off (Disabled)"
   },
-  "createGroupWith": "Create group with {{name}} (Create DemmRoom)",
-  "commonGroupWith": "Common group with {{name}} (Shared DemmRooms)",
-  "groupMembers": "Group Members (Demmians in DemmRoom)",
-  "addMembers": "Add Members (Add Demmians)",
-  "groupAdmin": "Group Admin (DemmRoom Admin)",
-  "viewPastMembers": "View Past Members (Past Demmians)",
-  "addToFavourites": "Add to Favourites (Star this Demmian)",
-  "addToList": "Add to list (Add to Custom DemmList)",
-  "block": "Block {{name}} (Block Demmian)",
-  "unblock": "Unblock {{name}} (Unblock Demmian)",
-  "report": "Report {{name}} (Report Demmian)",
+  "createGroupWith": "Create group with {{name}}",
+  "commonGroupWith": "Common group with {{name}}",
+  "groupMembers": "Group Members",
+  "addMembers": "Add Members",
+  "groupAdmin": "Group Admin",
+  "viewPastMembers": "View Past Members",
+  "addToFavourites": "Add to Favourites",
+  "addToList": "Add to list",
+  "block": "Block {{name}}",
+  "unblock": "Unblock {{name}}",
+  "report": "Report {{name}}",
   "actions": {
     "message": "Message (Send DemmMessage)",
     "dismissAdmin": "Dismiss as Admin (Remove Admin Rights)",
@@ -617,16 +617,16 @@
   },
   "alerts": {
     "block": {
-      "header": "Block Contact (Block Demmian)",
+      "header": "Block Contact",
       "message": "You will no longer receive messages or calls from {{name}}. (Communication Disabled)",
       "cta": "Block (Confirm)"
     },
     "unblock": {
-      "header": "Unblock Contact (Restore Communication)",
+      "header": "Unblock Contact",
       "message": "Are you sure you want to unblock {{name}}? (Unblock Demmian)"
     },
     "report": {
-      "header": "Report Contact (Report Demmian)",
+      "header": "Report Contact",
       "message": "The last 5 messages from {{name}} will be reported. Do you also want to block this user? (Report + Optional Block)",
       "alsoBlock": "Also block contact (Block Demmian)",
       "cta": "Report (Submit)"
@@ -698,7 +698,7 @@
       "qr": "Open QR actions",
       "menu": "Open menu"
     },
-    "newCommunity": "New DemmCircle",
+    "newCommunity": "New Community",
     "unnamedCommunity": "Unnamed Community",
     "viewAll": "View all",
     "groupType": {

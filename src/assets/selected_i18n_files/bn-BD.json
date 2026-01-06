@@ -42,63 +42,63 @@
   },
  "common": { "ok": "ওকে", "cancel": "বাতিল", "logout": "লগ আউট", "reset": "রিসেট" },
   "settingsPage": {
-    "title": "DemmDesk (সেটিংস)",
-    "account": {
-      "title": "MyTell (অ্যাকাউন্ট)",
-      "description": "TellShield (গোপনীয়তা), নিরাপত্তা, নম্বর পরিবর্তন করুন"
-    },
-    "privacy": {
-      "title": "TellShield (গোপনীয়তা)",
-      "description": "আপনার TellShield (গোপনীয়তা) সেটিংস নিয়ন্ত্রণ করুন"
-    },
-    "avatar": {
-      "title": "TellFace (প্রোফাইল ছবি)",
-      "description": "আপনার TellFace (প্রোফাইল ছবি) পরিবর্তন করুন"
-    },
-    "chats": {
-      "title": "Tells (চ্যাটস)",
-      "description": "থিম, ওয়ালপেপার, SafeDemm (ব্যাকআপ)"
-    },
-    "accessibility": {
-      "title": "Accessibility (সুবিধাবিধি)",
-      "description": "পাঠের আকার এবং প্রদর্শন বিকল্প সামঞ্জস্য করুন"
-    },
-    "notifications": {
-      "title": "TellAlerts (বিজ্ঞপ্তি)",
-      "description": "Tell (বার্তা), DemmRoom (গ্রুপ) এবং Connect (কল) সতর্কতা পরিচালনা করুন"
-    },
-    "storage": {
-      "title": "SafeDemm (স্টোরেজ এবং ডেটা)",
-      "description": "স্টোরেজ এবং নেটওয়ার্ক ব্যবহার পরিচালনা করুন"
-    },
-    "appLanguage": {
-      "title": "App Language (অ্যাপ ভাষা)",
-      "description": "TellDemm অ্যাপের ভাষা চয়ন করুন"
-    },
-    "help": {
-      "title": "DemmHelp (সহায়তা)",
-      "description": "হেল্প সেন্টার, যোগাযোগ করুন, অ্যাপ তথ্য"
-    },
-    "updates": {
-      "title": "DemmUpdate (অ্যাপ আপডেট)",
-      "description": "আপডেট চেক করুন এবং অটো-আপডেট সক্ষম করুন"
-    },
-    "invite": {
-      "title": "SpreadDemm (বন্ধুকে আমন্ত্রণ করুন)",
-      "description": "TellDemm অ্যাপটি আপনার DemmList (যোগাযোগ) এর সাথে শেয়ার করুন"
-    },
-    "logout": {
-      "title": "Log Out (লগ আউট)",
-      "description": "অ্যাপ ডেটা মুছে ফেলুন এবং সাইন আউট করুন",
-      "confirmHeader": "Log Out নিশ্চিত করুন",
-      "confirmMessage": "আপনি কি সত্যিই লগ আউট করতে এবং অ্যাপ ডেটা মুছে ফেলতে চান?",
-      "loadingHeader": "Logging Out (লগ আউট হচ্ছে)",
-      "loadingMessage": "দয়া করে অপেক্ষা করুন...",
-      "successHeader": "Logged Out (লগ আউট করা হয়েছে)",
-      "successMessage": "আপনি সফলভাবে লগ আউট করেছেন।"
-    },
-    "defaultStatus": "উপলব্ধ"
+  "title": "সেটিংস",
+  "account": {
+    "title": "অ্যাকাউন্ট",
+    "description": "গোপনীয়তা, নিরাপত্তা, নম্বর পরিবর্তন করুন"
   },
+  "privacy": {
+    "title": "গোপনীয়তা",
+    "description": "আপনার গোপনীয়তা সেটিংস নিয়ন্ত্রণ করুন"
+  },
+  "avatar": {
+    "title": "প্রোফাইল ছবি",
+    "description": "আপনার প্রোফাইল ছবি পরিবর্তন করুন"
+  },
+  "chats": {
+    "title": "চ্যাটস",
+    "description": "থিম, ওয়ালপেপার, ব্যাকআপ"
+  },
+  "accessibility": {
+    "title": "সুবিধাবিধি",
+    "description": "পাঠের আকার এবং প্রদর্শন বিকল্প সামঞ্জস্য করুন"
+  },
+  "notifications": {
+    "title": "নোটিফিকেশন",
+    "description": "বার্তা, গ্রুপ এবং কল সতর্কতা পরিচালনা করুন"
+  },
+  "storage": {
+    "title": "স্টোরেজ এবং ডেটা",
+    "description": "স্টোরেজ এবং নেটওয়ার্ক ব্যবহার পরিচালনা করুন"
+  },
+  "appLanguage": {
+    "title": "অ্যাপ ভাষা",
+    "description": "অ্যাপের ভাষা চয়ন করুন"
+  },
+  "help": {
+    "title": "সহায়তা",
+    "description": "হেল্প সেন্টার, যোগাযোগ করুন, অ্যাপ তথ্য"
+  },
+  "updates": {
+    "title": "অ্যাপ আপডেট",
+    "description": "আপডেট চেক করুন এবং অটো-আপডেট সক্ষম করুন"
+  },
+  "invite": {
+    "title": "বন্ধুকে আমন্ত্রণ করুন",
+    "description": "অ্যাপটি আপনার কনট্যাক্টের সাথে শেয়ার করুন"
+  },
+  "logout": {
+    "title": "লগ আউট",
+    "description": "অ্যাপ ডেটা মুছে ফেলুন এবং সাইন আউট করুন",
+    "confirmHeader": "লগ আউট নিশ্চিত করুন",
+    "confirmMessage": "আপনি কি সত্যিই লগ আউট করতে এবং অ্যাপ ডেটা মুছে ফেলতে চান?",
+    "loadingHeader": "লগ আউট হচ্ছে",
+    "loadingMessage": "দয়া করে অপেক্ষা করুন...",
+    "successHeader": "লগ আউট করা হয়েছে",
+    "successMessage": "আপনি সফলভাবে লগ আউট করেছেন।"
+  },
+  "defaultStatus": "উপলব্ধ"
+},
   "appUpdates": {
     "title": "অ্যাপ আপডেট",
     "version": "ভার্সন",
@@ -437,13 +437,13 @@
     }
   },
   "footerTabs": {
-    "chat": "Tells (চ্যাট)",
-    "updates": "Echoes (আপডেটস)",
-    "communities": "DemmCircles (কমিউনিটিস)",
-    "calls": "Connects (কলস)",
+    "chat": "চ্যাট",
+    "updates": "আপডেটস",
+    "communities": "কমিউনিটিস",
+    "calls": "কলস",
     "badges": {
-      "unreadChats": "{{count}} অপঠিত Tells",
-      "unreadUpdates": "{{count}} Echoes"
+      "unreadChats": "{{count}} অপঠিত চ্যাট",
+      "unreadUpdates": "{{count}} আপডেটস"
     }
   },
   "socialLinks": {
@@ -492,10 +492,10 @@
       "all": "সব",
       "read": "পড়া",
       "unread": "অপঠিত",
-      "groups": "DemmRoom (গ্রুপ)"
+      "groups": "গ্রুপ"
     },
     "groupCreator": {
-      "placeholder": "DemmRoom নাম লিখুন"
+      "placeholder": "গ্রুপ নাম লিখুন"
     },
     "typing": "টাইপিং করছে...",
     "time": {

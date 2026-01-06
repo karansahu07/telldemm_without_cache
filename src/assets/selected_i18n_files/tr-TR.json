@@ -42,63 +42,63 @@
   },
   "common": { "ok": "Tamam", "cancel": "İptal", "logout": "Çıkış Yap", "reset": "Sıfırla" },
   "settingsPage": {
-    "title": "DemmDesk (Ayarlar)",
-    "account": {
-      "title": "MyTell (Hesap)",
-      "description": "TellShield (Gizlilik), güvenlik, numara değiştir"
-    },
-    "privacy": {
-      "title": "TellShield (Gizlilik)",
-      "description": "TellShield (Gizlilik) ayarlarınızı kontrol edin"
-    },
-    "avatar": {
-      "title": "TellFace (Profil resmi)",
-      "description": "TellFace (Profil resminizi) değiştirin"
-    },
-    "chats": {
-      "title": "Tells (Sohbetler)",
-      "description": "Tema, duvar kağıdı, SafeDemm (Yedekleme)"
-    },
-    "accessibility": {
-      "title": "Accessibility (Erişilebilirlik)",
-      "description": "Metin boyutu ve ekran seçeneklerini ayarlayın"
-    },
-    "notifications": {
-      "title": "TellAlerts (Bildirimler)",
-      "description": "Tell (Mesajlar), DemmRoom (Grup) ve Connect (Aramalar) uyarılarını yönetin"
-    },
-    "storage": {
-      "title": "SafeDemm (Depolama ve veri)",
-      "description": "Depolama ve ağ kullanımını yönetin"
-    },
-    "appLanguage": {
-      "title": "App Language (Uygulama dili)",
-      "description": "TellDemm uygulama dilini seçin"
-    },
-    "help": {
-      "title": "DemmHelp (Yardım)",
-      "description": "Yardım merkezi, bize ulaşın, Uygulama bilgileri"
-    },
-    "updates": {
-      "title": "DemmUpdate (Uygulama güncellemeleri)",
-      "description": "Güncellemeleri kontrol edin ve otomatik güncellemeyi etkinleştirin"
-    },
-    "invite": {
-      "title": "SpreadDemm (Arkadaş davet et)",
-      "description": "TellDemm uygulamasını DemmList (Kişiler) ile paylaşın"
-    },
-    "logout": {
-      "title": "Log Out (Çıkış yap)",
-      "description": "Uygulama verilerini temizle ve çıkış yap",
-      "confirmHeader": "Çıkış yapmayı onayla",
-      "confirmMessage": "Uygulama verilerini temizleyip çıkış yapmak istediğinizden emin misiniz?",
-      "loadingHeader": "Logging Out (Çıkış yapılıyor)",
-      "loadingMessage": "Lütfen bekleyin...",
-      "successHeader": "Logged Out (Çıkış yapıldı)",
-      "successMessage": "Başarıyla çıkış yaptınız."
-    },
-    "defaultStatus": "Mevcut"
+  "title": "Ayarlar",
+  "account": {
+    "title": "Hesap",
+    "description": "Gizlilik, güvenlik, numara değiştir"
   },
+  "privacy": {
+    "title": "Gizlilik",
+    "description": "Gizlilik ayarlarınızı kontrol edin"
+  },
+  "avatar": {
+    "title": "Profil resmi",
+    "description": "Profil resminizi değiştirin"
+  },
+  "chats": {
+    "title": "Sohbetler",
+    "description": "Tema, duvar kağıdı, depolama ve veri"
+  },
+  "accessibility": {
+    "title": "Erişilebilirlik",
+    "description": "Metin boyutu ve ekran seçeneklerini ayarlayın"
+  },
+  "notifications": {
+    "title": "Bildirimler",
+    "description": "Mesajlar, gruplar ve aramalar için bildirimleri yönetin"
+  },
+  "storage": {
+    "title": "Depolama ve Veri",
+    "description": "Depolama ve ağ kullanımını yönetin"
+  },
+  "appLanguage": {
+    "title": "Uygulama dili",
+    "description": "Uygulama dilini seçin"
+  },
+  "help": {
+    "title": "Yardım",
+    "description": "Yardım merkezi, bize ulaşın, uygulama bilgileri"
+  },
+  "updates": {
+    "title": "Uygulama güncellemeleri",
+    "description": "Güncellemeleri kontrol edin ve otomatik güncellemeleri etkinleştirin"
+  },
+  "invite": {
+    "title": "Arkadaş davet et",
+    "description": "Uygulamayı kişilerinizle paylaşın"
+  },
+  "logout": {
+    "title": "Çıkış yap",
+    "description": "Uygulama verilerini temizle ve çıkış yap",
+    "confirmHeader": "Çıkışı onayla",
+    "confirmMessage": "Uygulama verilerini temizleyip çıkış yapmak istediğinizden emin misiniz?",
+    "loadingHeader": "Çıkış yapılıyor",
+    "loadingMessage": "Lütfen bekleyin...",
+    "successHeader": "Çıkış yapıldı",
+    "successMessage": "Başarıyla çıkış yaptınız."
+  },
+  "defaultStatus": "Mevcut"
+},
   "accountPage": {
     "title": "Hesap",
     "securityNotifications": "Güvenlik bildirimleri",
@@ -416,13 +416,13 @@
     }
   },
   "footerTabs": {
-    "chat": "Tells (Sohbetler)",
-    "updates": "Echoes (Güncellemeler)",
-    "communities": "DemmCircles (Topluluklar)",
-    "calls": "Connects (Aramalar)",
+    "chat": "Sohbetler",
+    "updates": "Güncellemeler",
+    "communities": "Topluluklar",
+    "calls": "Aramalar",
     "badges": {
-      "unreadChats": "{{count}} okunmamış Tells",
-      "unreadUpdates": "{{count}} Echoes"
+      "unreadChats": "{{count}} okunmamış Sohbetler",
+      "unreadUpdates": "{{count}} Güncellemeler"
     }
   },
   "socialLinks": {
@@ -471,10 +471,10 @@
       "all": "TÜM",
       "read": "Okundu",
       "unread": "Okunmadı",
-      "groups": "DemmRoom (Gruplar)"
+      "groups": "Gruplar"
     },
     "groupCreator": {
-      "placeholder": "DemmRoom Adını Girin"
+      "placeholder": "Gruplar Adını Girin"
     },
     "typing": "yazıyor...",
     "time": {

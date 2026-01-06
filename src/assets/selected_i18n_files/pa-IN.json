@@ -42,63 +42,63 @@
   },
   "common": { "ok": "ਓਕੇ", "cancel": "ਰੱਦ ਕਰੋ", "logout": "ਲਾਗ ਆਉਟ", "reset": "ਰੀਸੈਟ" },
   "settingsPage": {
-    "title": "DemmDesk (ਸੈਟਿੰਗਜ਼)",
-    "account": {
-      "title": "MyTell (ਖਾਤਾ)",
-      "description": "TellShield (ਗੋਪਨੀਯਤਾ), ਸੁਰੱਖਿਆ, ਨੰਬਰ ਬਦਲੋ"
-    },
-    "privacy": {
-      "title": "TellShield (ਗੋਪਨੀਯਤਾ)",
-      "description": "ਆਪਣੀਆਂ TellShield (ਗੋਪਨੀਯਤਾ) ਸੈਟਿੰਗਾਂ ਨੂੰ ਕੰਟਰੋਲ ਕਰੋ"
-    },
-    "avatar": {
-      "title": "TellFace (ਪ੍ਰੋਫਾਈਲ ਤਸਵੀਰ)",
-      "description": "ਆਪਣੀ TellFace (ਪ੍ਰੋਫਾਈਲ ਤਸਵੀਰ) ਬਦਲੋ"
-    },
-    "chats": {
-      "title": "Tells (ਚੈਟਸ)",
-      "description": "ਥੀਮ, ਵਾਲਪੇਪਰ, SafeDemm (ਬੈਕਅਪ)"
-    },
-    "accessibility": {
-      "title": "Accessibility ( ਪਹੁੰਚਯੋਗਤਾ)",
-      "description": "ਲਿਖਤ ਦਾ ਅਕਾਰ ਅਤੇ ਵਿਖਾਪਣ ਵਿਕਲਪ ਸਮਾਯੋਜ਼ਨ ਕਰੋ"
-    },
-    "notifications": {
-      "title": "TellAlerts (ਸੂਚਨਾਵਾਂ)",
-      "description": "Tell (ਸੰਦੇਸ਼), DemmRoom (ਗਰੁੱਪ) ਅਤੇ Connect (ਕਾਲ) ਅਲਰਟ ਪ੍ਰਬੰਧਨ ਕਰੋ"
-    },
-    "storage": {
-      "title": "SafeDemm (ਸਟੋਰੇਜ ਅਤੇ ਡੇਟਾ)",
-      "description": "ਸਟੋਰੇਜ ਅਤੇ ਨੈੱਟਵਰਕ ਵਰਤੋਂ ਪ੍ਰਬੰਧਨ ਕਰੋ"
-    },
-    "appLanguage": {
-      "title": "App Language (ਐਪ ਭਾਸ਼ਾ)",
-      "description": "TellDemm ਐਪ ਦੀ ਭਾਸ਼ਾ ਚੁਣੋ"
-    },
-    "help": {
-      "title": "DemmHelp (ਸਹਾਇਤਾ)",
-      "description": "ਹੈਲਪ ਸੈਂਟਰ, ਸੰਪਰਕ ਕਰੋ, ਐਪ ਜਾਣਕਾਰੀ"
-    },
-    "updates": {
-      "title": "DemmUpdate (ਐਪ ਅੱਪਡੇਟ)",
-      "description": "ਅੱਪਡੇਟ ਜਾਂਚੋ ਅਤੇ ਆਟੋ-ਅੱਪਡੇਟ ਸਮਰਥ ਕਰੋ"
-    },
-    "invite": {
-      "title": "SpreadDemm (ਮਿੱਤਰ ਨੂੰ ਆਮੰਤ੍ਰਿਤ ਕਰੋ)",
-      "description": "TellDemm ਐਪ ਨੂੰ ਆਪਣੇ DemmList (ਸੰਪਰਕਾਂ) ਨਾਲ ਸਾਂਝਾ ਕਰੋ"
-    },
-    "logout": {
-      "title": "Log Out (ਲੌਗ ਆਊਟ)",
-      "description": "ਐਪ ਡੇਟਾ ਸਾਫ਼ ਕਰੋ ਅਤੇ ਸਾਈਨ ਆਊਟ ਕਰੋ",
-      "confirmHeader": "ਲੌਗ ਆਊਟ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ",
-      "confirmMessage": "ਕੀ ਤੁਸੀਂ ਸੱਚਮੁੱਚ ਲੌਗ ਆਊਟ ਕਰਨਾ ਅਤੇ ਐਪ ਡੇਟਾ ਸਾਫ਼ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?",
-      "loadingHeader": "Logging Out (ਲੌਗ ਆਊਟ ਹੋ ਰਿਹਾ ਹੈ)",
-      "loadingMessage": "ਕਿਰਪਾ ਕਰਕੇ ਰੁਕੋ...",
-      "successHeader": "Logged Out (ਲੌਗ ਆਊਟ ਕੀਤਾ ਗਿਆ)",
-      "successMessage": "ਤੁਸੀਂ ਸਫਲਤਾਪੂਰਵਕ ਲੌਗ ਆਊਟ ਹੋ ਗਏ ਹੋ।"
-    },
-    "defaultStatus": "ਉਪਲਬਧ"
+  "title": "ਸੈਟਿੰਗਜ਼",
+  "account": {
+    "title": "ਖਾਤਾ",
+    "description": "ਗੋਪਨੀਯਤਾ, ਸੁਰੱਖਿਆ, ਨੰਬਰ ਬਦਲੋ"
   },
+  "privacy": {
+    "title": "ਗੋਪਨੀਯਤਾ",
+    "description": "ਆਪਣੀਆਂ ਗੋਪਨੀਯਤਾ ਸੈਟਿੰਗਾਂ ਨੂੰ ਕੰਟਰੋਲ ਕਰੋ"
+  },
+  "avatar": {
+    "title": "ਪ੍ਰੋਫਾਈਲ ਤਸਵੀਰ",
+    "description": "ਆਪਣੀ ਪ੍ਰੋਫਾਈਲ ਤਸਵੀਰ ਬਦਲੋ"
+  },
+  "chats": {
+    "title": "ਚੈਟਾਂ",
+    "description": "ਥੀਮ, ਵਾਲਪੇਪਰ, ਬੈਕਅਪ"
+  },
+  "accessibility": {
+    "title": "ਪਹੁੰਚਯੋਗਤਾ",
+    "description": "ਲਿਖਤ ਦਾ ਆਕਾਰ ਅਤੇ ਵਿਖਾਪਣ ਵਿਕਲਪ ਸਮਾਯੋਜਿਤ ਕਰੋ"
+  },
+  "notifications": {
+    "title": "ਸੂਚਨਾਵਾਂ",
+    "description": "ਸੰਦੇਸ਼ਾਂ, ਗਰੁੱਪਾਂ ਅਤੇ ਕਾਲਾਂ ਲਈ ਸੂਚਨਾਵਾਂ ਪ੍ਰਬੰਧਿਤ ਕਰੋ"
+  },
+  "storage": {
+    "title": "ਸਟੋਰੇਜ ਅਤੇ ਡੇਟਾ",
+    "description": "ਸਟੋਰੇਜ ਅਤੇ ਨੈੱਟਵਰਕ ਵਰਤੋਂ ਪ੍ਰਬੰਧਿਤ ਕਰੋ"
+  },
+  "appLanguage": {
+    "title": "ਐਪ ਭਾਸ਼ਾ",
+    "description": "ਐਪ ਦੀ ਭਾਸ਼ਾ ਚੁਣੋ"
+  },
+  "help": {
+    "title": "ਸਹਾਇਤਾ",
+    "description": "ਹੈਲਪ ਸੈਂਟਰ, ਸੰਪਰਕ ਕਰੋ, ਐਪ ਜਾਣਕਾਰੀ"
+  },
+  "updates": {
+    "title": "ਐਪ ਅੱਪਡੇਟ",
+    "description": "ਅੱਪਡੇਟ ਜਾਂਚੋ ਅਤੇ ਆਟੋ-ਅੱਪਡੇਟ ਚਾਲੂ ਕਰੋ"
+  },
+  "invite": {
+    "title": "ਮਿੱਤਰ ਨੂੰ ਸੱਦਾ ਦਿਓ",
+    "description": "ਐਪ ਨੂੰ ਆਪਣੇ ਸੰਪਰਕਾਂ ਨਾਲ ਸਾਂਝਾ ਕਰੋ"
+  },
+  "logout": {
+    "title": "ਲੌਗ ਆਊਟ",
+    "description": "ਐਪ ਡੇਟਾ ਸਾਫ਼ ਕਰੋ ਅਤੇ ਲੌਗ ਆਊਟ ਕਰੋ",
+    "confirmHeader": "ਲੌਗ ਆਊਟ ਦੀ ਪੁਸ਼ਟੀ",
+    "confirmMessage": "ਕੀ ਤੁਸੀਂ ਸੱਚਮੁੱਚ ਲੌਗ ਆਊਟ ਕਰਨਾ ਅਤੇ ਐਪ ਡੇਟਾ ਸਾਫ਼ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?",
+    "loadingHeader": "ਲੌਗ ਆਊਟ ਹੋ ਰਿਹਾ ਹੈ",
+    "loadingMessage": "ਕਿਰਪਾ ਕਰਕੇ ਰੁਕੋ...",
+    "successHeader": "ਲੌਗ ਆਊਟ ਹੋ ਗਿਆ",
+    "successMessage": "ਤੁਸੀਂ ਸਫਲਤਾਪੂਰਵਕ ਲੌਗ ਆਊਟ ਹੋ ਗਏ ਹੋ।"
+  },
+  "defaultStatus": "ਉਪਲਬਧ"
+},
   "appUpdates": {
     "title": "ਐਪ ਅੱਪਡੇਟਸ",
     "version": "ਵਰਜਨ",
@@ -440,13 +440,13 @@
     }
   },
   "footerTabs": {
-    "chat": "Tells (ਚੈਟ)",
-    "updates": "Echoes (ਅੱਪਡੇਟਸ)",
-    "communities": "DemmCircles (ਕਮਿਊਨਿਟੀਜ਼)",
-    "calls": "Connects (ਕਾਲਾਂ)",
+    "chat": "ਚੈਟ",
+    "updates": "ਅੱਪਡੇਟਸ",
+    "communities": "ਕਮਿਊਨਿਟੀਜ਼",
+    "calls": "ਕਾਲਾਂ",
     "badges": {
-      "unreadChats": "{{count}} ਅਪੜ੍ਹੇ Tells",
-      "unreadUpdates": "{{count}} Echoes"
+      "unreadChats": "{{count}} ਅਪੜ੍ਹੇ ਚੈਟ",
+      "unreadUpdates": "{{count}} ਅੱਪਡੇਟਸ"
     }
   },
   "socialLinks": {
@@ -495,10 +495,10 @@
       "all": "ਸਭ",
       "read": "ਪੜ੍ਹਿਆ",
       "unread": "ਅਪੜ੍ਹਿਆ",
-      "groups": "DemmRoom (ਗਰੁੱਪ)"
+      "groups": "ਗਰੁੱਪ"
     },
     "groupCreator": {
-      "placeholder": "DemmRoom ਨਾਮ ਦਾਖਲ ਕਰੋ"
+      "placeholder": "ਗਰੁੱਪ ਨਾਮ ਦਾਖਲ ਕਰੋ"
     },
     "typing": "ਲਿਖ ਰਿਹਾ ਹੈ...",
     "time": {

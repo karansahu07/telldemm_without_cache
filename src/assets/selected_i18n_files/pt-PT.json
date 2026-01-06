@@ -42,63 +42,63 @@
   },
    "common": { "ok": "OK", "cancel": "Cancelar", "logout": "Terminar sessão", "reset": "Repor" },
   "settingsPage": {
-    "title": "DemmDesk (Definições)",
-    "account": {
-      "title": "MyTell (Conta)",
-      "description": "TellShield (Privacidade), segurança, alterar número"
-    },
-    "privacy": {
-      "title": "TellShield (Privacidade)",
-      "description": "Controle as suas definições de TellShield (Privacidade)"
-    },
-    "avatar": {
-      "title": "TellFace (Foto de perfil)",
-      "description": "Altere a sua TellFace (Foto de perfil)"
-    },
-    "chats": {
-      "title": "Tells (Conversas)",
-      "description": "Tema, papel de parede, SafeDemm (Cópia de segurança)"
-    },
-    "accessibility": {
-      "title": "Accessibility (Acessibilidade)",
-      "description": "Ajuste o tamanho do texto e opções de ecrã"
-    },
-    "notifications": {
-      "title": "TellAlerts (Notificações)",
-      "description": "Gerencie alertas de Tell (Mensagens), DemmRoom (Grupo) e Connect (Chamadas)"
-    },
-    "storage": {
-      "title": "SafeDemm (Armazenamento e dados)",
-      "description": "Gerencie o armazenamento e uso de rede"
-    },
-    "appLanguage": {
-      "title": "App Language (Idioma da app)",
-      "description": "Escolha o idioma da app TellDemm"
-    },
-    "help": {
-      "title": "DemmHelp (Ajuda)",
-      "description": "Centro de ajuda, contacte-nos, Info da app"
-    },
-    "updates": {
-      "title": "DemmUpdate (Atualizações da app)",
-      "description": "Verifique atualizações e ative auto-atualização"
-    },
-    "invite": {
-      "title": "SpreadDemm (Convidar um amigo)",
-      "description": "Partilhe a app TellDemm com a sua DemmList (Contactos)"
-    },
-    "logout": {
-      "title": "Log Out (Sair)",
-      "description": "Limpe dados da app e saia",
-      "confirmHeader": "Confirmar saída",
-      "confirmMessage": "Tem a certeza de que deseja sair e limpar os dados da app?",
-      "loadingHeader": "Logging Out (A sair)",
-      "loadingMessage": "Por favor, aguarde...",
-      "successHeader": "Logged Out (Saiu)",
-      "successMessage": "Saiu com sucesso."
-    },
-    "defaultStatus": "Disponível"
+  "title": "Definições",
+  "account": {
+    "title": "Conta",
+    "description": "Privacidade, segurança, alterar número"
   },
+  "privacy": {
+    "title": "Privacidade",
+    "description": "Gerir definições de privacidade"
+  },
+  "avatar": {
+    "title": "Foto de perfil",
+    "description": "Alterar a sua foto de perfil"
+  },
+  "chats": {
+    "title": "Conversas",
+    "description": "Tema, papel de parede, cópia de segurança"
+  },
+  "accessibility": {
+    "title": "Acessibilidade",
+    "description": "Ajustar tamanho do texto e opções de ecrã"
+  },
+  "notifications": {
+    "title": "Notificações",
+    "description": "Gerir notificações de mensagens, grupos e chamadas"
+  },
+  "storage": {
+    "title": "Armazenamento e dados",
+    "description": "Gerir armazenamento e utilização da rede"
+  },
+  "appLanguage": {
+    "title": "Idioma da aplicação",
+    "description": "Escolher o idioma da aplicação"
+  },
+  "help": {
+    "title": "Ajuda",
+    "description": "Centro de ajuda, contacto e informações da aplicação"
+  },
+  "updates": {
+    "title": "Atualizações da aplicação",
+    "description": "Verificar atualizações e ativar atualização automática"
+  },
+  "invite": {
+    "title": "Convidar um amigo",
+    "description": "Partilhar a aplicação com os seus contactos"
+  },
+  "logout": {
+    "title": "Terminar sessão",
+    "description": "Limpar dados da aplicação e terminar sessão",
+    "confirmHeader": "Confirmar saída",
+    "confirmMessage": "Tem a certeza de que deseja terminar sessão e limpar os dados da aplicação?",
+    "loadingHeader": "A terminar sessão",
+    "loadingMessage": "Por favor, aguarde...",
+    "successHeader": "Sessão terminada",
+    "successMessage": "Terminou sessão com sucesso."
+  },
+  "defaultStatus": "Disponível"
+},
   "appUpdates": {
     "title": "Atualizações da app",
     "version": "Versão",
@@ -440,13 +440,13 @@
     }
   },
   "footerTabs": {
-    "chat": "Tells (Conversas)",
-    "updates": "Echoes (Atualizações)",
-    "communities": "DemmCircles (Comunidades)",
-    "calls": "Connects (Chamadas)",
+    "chat": "Conversas",
+    "updates": "Atualizações",
+    "communities": "Comunidades",
+    "calls": "Chamadas",
     "badges": {
-      "unreadChats": "{{count}} Tells não lidos",
-      "unreadUpdates": "{{count}} Echoes"
+      "unreadChats": "{{count}} Conversas não lidos",
+      "unreadUpdates": "{{count}} Atualizações"
     }
   },
   "socialLinks": {
@@ -495,10 +495,10 @@
       "all": "TUDO",
       "read": "Lido",
       "unread": "Não lido",
-      "groups": "DemmRoom (Grupos)"
+      "groups": "Grupos"
     },
     "groupCreator": {
-      "placeholder": "Introduzir Nome do DemmRoom"
+      "placeholder": "Introduzir Nome do Grupos"
     },
     "typing": "a digitar...",
     "time": {

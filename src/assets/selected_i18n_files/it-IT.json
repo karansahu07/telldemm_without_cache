@@ -42,63 +42,64 @@
   },
  "common": { "ok": "OK", "cancel": "Annulla", "logout": "Disconnetti", "reset": "Reimposta" },
   "settingsPage": {
-    "title": "DemmDesk (Impostazioni)",
-    "account": {
-      "title": "MyTell (Account)",
-      "description": "TellShield (Privacy), sicurezza, cambia numero"
-    },
-    "privacy": {
-      "title": "TellShield (Privacy)",
-      "description": "Controlla le tue impostazioni TellShield (Privacy)"
-    },
-    "avatar": {
-      "title": "TellFace (Foto del profilo)",
-      "description": "Cambia la tua TellFace (Foto del profilo)"
-    },
-    "chats": {
-      "title": "Tells (Chat)",
-      "description": "Tema, sfondo, SafeDemm (Backup)"
-    },
-    "accessibility": {
-      "title": "Accessibility (Accessibilità)",
-      "description": "Regola dimensione testo e opzioni di visualizzazione"
-    },
-    "notifications": {
-      "title": "TellAlerts (Notifiche)",
-      "description": "Gestisci avvisi Tell (Messaggi), DemmRoom (Gruppo) e Connect (Chiamate)"
-    },
-    "storage": {
-      "title": "SafeDemm (Archiviazione e dati)",
-      "description": "Gestisci archiviazione e uso rete"
-    },
-    "appLanguage": {
-      "title": "App Language (Lingua app)",
-      "description": "Scegli la lingua dell'app TellDemm"
-    },
-    "help": {
-      "title": "DemmHelp (Aiuto)",
-      "description": "Centro assistenza, contattaci, Info app"
-    },
-    "updates": {
-      "title": "DemmUpdate (Aggiornamenti app)",
-      "description": "Controlla aggiornamenti e abilita auto-aggiornamento"
-    },
-    "invite": {
-      "title": "SpreadDemm (Invita un amico)",
-      "description": "Condividi l'app TellDemm con la tua DemmList (Contatti)"
-    },
-    "logout": {
-      "title": "Log Out (Disconnetti)",
-      "description": "Cancella dati app e disconnettiti",
-      "confirmHeader": "Conferma disconnessione",
-      "confirmMessage": "Sei sicuro di voler disconnetterti e cancellare i dati dell'app?",
-      "loadingHeader": "Logging Out (Disconnessione in corso)",
-      "loadingMessage": "Attendere prego...",
-      "successHeader": "Logged Out (Disconnesso)",
-      "successMessage": "Ti sei disconnesso con successo."
-    },
-    "defaultStatus": "Disponibile"
+  "title": "Impostazioni",
+  "account": {
+    "title": "Account",
+    "description": "Privacy, sicurezza, cambia numero"
   },
+  "privacy": {
+    "title": "Privacy",
+    "description": "Gestisci le impostazioni di privacy"
+  },
+  "avatar": {
+    "title": "Foto del profilo",
+    "description": "Cambia la tua foto del profilo"
+  },
+  "chats": {
+    "title": "Chat",
+    "description": "Tema, sfondo, backup"
+  },
+  "accessibility": {
+    "title": "Accessibilità",
+    "description": "Regola dimensione testo e opzioni di visualizzazione"
+  },
+  "notifications": {
+    "title": "Notifiche",
+    "description": "Gestisci notifiche messaggi, gruppi e chiamate"
+  },
+  "storage": {
+    "title": "Archiviazione e dati",
+    "description": "Gestisci archiviazione e uso rete"
+  },
+  "appLanguage": {
+    "title": "Lingua app",
+    "description": "Scegli la lingua dell'app"
+  },
+  "help": {
+    "title": "Aiuto",
+    "description": "Centro assistenza, contattaci, info app"
+  },
+  "updates": {
+    "title": "Aggiornamenti app",
+    "description": "Controlla aggiornamenti e abilita auto-aggiornamento"
+  },
+  "invite": {
+    "title": "Invita un amico",
+    "description": "Condividi l'app con i tuoi contatti"
+  },
+  "logout": {
+    "title": "Disconnetti",
+    "description": "Cancella dati app e disconnettiti",
+    "confirmHeader": "Conferma disconnessione",
+    "confirmMessage": "Sei sicuro di voler disconnetterti e cancellare i dati dell'app?",
+    "loadingHeader": "Disconnessione in corso",
+    "loadingMessage": "Attendere prego...",
+    "successHeader": "Disconnesso",
+    "successMessage": "Ti sei disconnesso con successo."
+  },
+  "defaultStatus": "Disponibile"
+}
+,
   "appUpdates": {
     "title": "Aggiornamenti app",
     "version": "Versione",
@@ -440,13 +441,13 @@
     }
   },
   "footerTabs": {
-    "chat": "Tells (Chat)",
-    "updates": "Echoes (Aggiornamenti)",
-    "communities": "DemmCircles (Comunità)",
-    "calls": "Connects (Chiamate)",
+    "chat": "Chat",
+    "updates": "Aggiornamenti",
+    "communities": "Comunità",
+    "calls": "Chiamate",
     "badges": {
-      "unreadChats": "{{count}} Tells non letti",
-      "unreadUpdates": "{{count}} Echoes"
+      "unreadChats": "{{count}} Chat non letti",
+      "unreadUpdates": "{{count}} Aggiornamenti"
     }
   },
   "socialLinks": {
@@ -495,10 +496,10 @@
       "all": "TUTTI",
       "read": "Letto",
       "unread": "Non letto",
-      "groups": "DemmRoom (Gruppi)"
+      "groups": "Gruppi"
     },
     "groupCreator": {
-      "placeholder": "Inserisci Nome DemmRoom"
+      "placeholder": "Inserisci Nome Gruppi"
     },
     "typing": "sta digitando...",
     "time": {

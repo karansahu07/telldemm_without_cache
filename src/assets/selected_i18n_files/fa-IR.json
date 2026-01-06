@@ -47,63 +47,63 @@
     }
   },
   "settingsPage": {
-    "title": "DemmDesk (تنظیمات)",
-    "account": {
-      "title": "MyTell (حساب)",
-      "description": "TellShield (حریم خصوصی)، امنیت، تغییر شماره"
-    },
-    "privacy": {
-      "title": "TellShield (حریم خصوصی)",
-      "description": "تنظیمات TellShield (حریم خصوصی) خود را کنترل کنید"
-    },
-    "avatar": {
-      "title": "TellFace (عکس پروفایل)",
-      "description": "TellFace (عکس پروفایل) خود را تغییر دهید"
-    },
-    "chats": {
-      "title": "Tells (چت‌ها)",
-      "description": "تم، والپیپر، SafeDemm (پشتیبان‌گیری)"
-    },
-    "accessibility": {
-      "title": "Accessibility (دسترسی‌پذیری)",
-      "description": "اندازه متن و گزینه‌های نمایش را تنظیم کنید"
-    },
-    "notifications": {
-      "title": "TellAlerts (اعلان‌ها)",
-      "description": "هشدارهای Tell (پیام‌ها)، DemmRoom (گروه) و Connect (تماس‌ها) را مدیریت کنید"
-    },
-    "storage": {
-      "title": "SafeDemm (فضای ذخیره‌سازی و داده‌ها)",
-      "description": "فضای ذخیره‌سازی و استفاده از شبکه را مدیریت کنید"
-    },
-    "appLanguage": {
-      "title": "App Language (زبان اپ)",
-      "description": "زبان اپ TellDemm را انتخاب کنید"
-    },
-    "help": {
-      "title": "DemmHelp (راهنما)",
-      "description": "مرکز راهنما، تماس با ما، اطلاعات اپ"
-    },
-    "updates": {
-      "title": "DemmUpdate (به‌روزرسانی اپ)",
-      "description": "بررسی به‌روزرسانی‌ها و فعال‌سازی به‌روزرسانی خودکار"
-    },
-    "invite": {
-      "title": "SpreadDemm (دعوت از دوست)",
-      "description": "اپ TellDemm را با DemmList (مخاطبین) خود به اشتراک بگذارید"
-    },
-    "logout": {
-      "title": "Log Out (خروج)",
-      "description": "داده‌های اپ را پاک کنید و خارج شوید",
-      "confirmHeader": "تأیید خروج",
-      "confirmMessage": "آیا مطمئن هستید که می‌خواهید خارج شوید و داده‌های اپ را پاک کنید؟",
-      "loadingHeader": "Logging Out (در حال خروج)",
-      "loadingMessage": "لطفاً صبر کنید...",
-      "successHeader": "Logged Out (خروج انجام شد)",
-      "successMessage": "شما با موفقیت خارج شدید."
-    },
-    "defaultStatus": "در دسترس"
+  "title": "تنظیمات",
+  "account": {
+    "title": "حساب",
+    "description": "حریم خصوصی، امنیت و تغییر شماره"
   },
+  "privacy": {
+    "title": "حریم خصوصی",
+    "description": "تنظیمات حریم خصوصی خود را کنترل کنید"
+  },
+  "avatar": {
+    "title": "عکس پروفایل",
+    "description": "عکس پروفایل خود را تغییر دهید"
+  },
+  "chats": {
+    "title": "چت‌ها",
+    "description": "تم، والپیپر و پشتیبان‌گیری"
+  },
+  "accessibility": {
+    "title": "دسترسی‌پذیری",
+    "description": "اندازه متن و گزینه‌های نمایش را تنظیم کنید"
+  },
+  "notifications": {
+    "title": "اعلان‌ها",
+    "description": "اعلان‌های پیام‌ها، گروه‌ها و تماس‌ها را مدیریت کنید"
+  },
+  "storage": {
+    "title": "فضای ذخیره‌سازی و داده‌ها",
+    "description": "فضای ذخیره‌سازی و مصرف شبکه را مدیریت کنید"
+  },
+  "appLanguage": {
+    "title": "زبان اپ",
+    "description": "زبان اپلیکیشن را انتخاب کنید"
+  },
+  "help": {
+    "title": "راهنما",
+    "description": "مرکز راهنما، تماس با ما و اطلاعات اپ"
+  },
+  "updates": {
+    "title": "به‌روزرسانی اپ",
+    "description": "بررسی به‌روزرسانی‌ها و فعال‌سازی به‌روزرسانی خودکار"
+  },
+  "invite": {
+    "title": "دعوت از دوست",
+    "description": "اپلیکیشن را با مخاطبین خود به اشتراک بگذارید"
+  },
+  "logout": {
+    "title": "خروج",
+    "description": "داده‌های اپ را پاک کنید و خارج شوید",
+    "confirmHeader": "تأیید خروج",
+    "confirmMessage": "آیا مطمئن هستید که می‌خواهید خارج شوید و داده‌های اپ را پاک کنید؟",
+    "loadingHeader": "در حال خروج",
+    "loadingMessage": "لطفاً صبر کنید...",
+    "successHeader": "خروج انجام شد",
+    "successMessage": "شما با موفقیت خارج شدید."
+  },
+  "defaultStatus": "در دسترس"
+},
   "accountPage": {
     "title": "حساب کاربری",
     "securityNotifications": "اعلان‌های امنیتی",
@@ -418,13 +418,13 @@
     }
   },
   "footerTabs": {
-    "chat": "Tells (چت‌ها)",
-    "updates": "Echoes (به‌روزرسانی‌ها)",
-    "communities": "DemmCircles (جوامع)",
-    "calls": "Connects (تماس‌ها)",
+    "chat": "چت‌ها",
+    "updates": "به‌روزرسانی‌ها",
+    "communities": "جوامع",
+    "calls": "تماس‌ها",
     "badges": {
-      "unreadChats": "{{count}} Tells نخوانده",
-      "unreadUpdates": "{{count}} Echoes"
+      "unreadChats": "{{count}} چت‌ها نخوانده",
+      "unreadUpdates": "{{count}} به‌روزرسانی‌ها"
     }
   },
   "socialLinks": {
@@ -473,10 +473,10 @@
       "all": "همه",
       "read": "خوانده شده",
       "unread": "خوانده نشده",
-      "groups": "DemmRoom (گروه‌ها)"
+      "groups": "گروه‌ها"
     },
     "groupCreator": {
-      "placeholder": "نام DemmRoom را وارد کنید"
+      "placeholder": "نام گروه‌ها را وارد کنید"
     },
     "typing": "در حال تایپ...",
     "time": {

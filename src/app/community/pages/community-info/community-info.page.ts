@@ -250,7 +250,7 @@ export class CommunityInfoPage implements OnInit {
     // Message option - Available to everyone except self
     if (!isSelf) {
       buttons.push({
-        text: this.translate.instant('common.message') || 'Message',
+        text: this.translate.instant('message') || 'Message',
         icon: 'chatbox-outline',
         handler: () => this.messageMember(member),
       });
@@ -259,7 +259,7 @@ export class CommunityInfoPage implements OnInit {
     // Make Admin - Only for Creator when target is not admin
     if (this.isCreator && !isTargetUserAdmin && !isSelf) {
       buttons.push({
-        text: this.translate.instant('community.makeAdmin') || 'Make community admin',
+        text: this.translate.instant('Make community Admin') || 'Make community admin',
         icon: 'person-add-outline',
         handler: () => this.makeCommunityAdmin(member),
       });
@@ -268,7 +268,7 @@ export class CommunityInfoPage implements OnInit {
     // Dismiss Admin - Only for Creator when target is admin
     if (this.isCreator && isTargetUserAdmin && !isSelf) {
       buttons.push({
-        text: this.translate.instant('community.dismissAdmin') || 'Dismiss as admin',
+        text: this.translate.instant('Dismiss Admin') || 'Dismiss as admin',
         icon: 'remove-circle-outline',
         handler: () => this.dismissCommunityAdmin(member),
       });
@@ -277,7 +277,7 @@ export class CommunityInfoPage implements OnInit {
     // Remove Member - Only for Creator
     if (this.isCreator && !isSelf) {
       buttons.push({
-        text: this.translate.instant('community.removeMember') || 'Remove from community',
+        text: this.translate.instant('Remove Member') || 'Remove from community',
         icon: 'person-remove-outline',
         role: 'destructive',
         handler: () => this.removeCommunityMember(member),

@@ -42,63 +42,63 @@
   },
    "common": { "ok": "OK", "cancel": "Annuler", "logout": "Se déconnecter", "reset": "Réinitialiser" },
   "settingsPage": {
-    "title": "DemmDesk (Paramètres)",
-    "account": {
-      "title": "MyTell (Compte)",
-      "description": "TellShield (Confidentialité), sécurité, changer de numéro"
-    },
-    "privacy": {
-      "title": "TellShield (Confidentialité)",
-      "description": "Gérez vos paramètres de TellShield (Confidentialité)"
-    },
-    "avatar": {
-      "title": "TellFace (Photo de profil)",
-      "description": "Modifiez votre TellFace (Photo de profil)"
-    },
-    "chats": {
-      "title": "Tells (Discussions)",
-      "description": "Thème, fond d’écran, SafeDemm (Sauvegarde)"
-    },
-    "accessibility": {
-      "title": "Accessibilité",
-      "description": "Ajustez la taille du texte et les options d’affichage"
-    },
-    "notifications": {
-      "title": "TellAlerts (Notifications)",
-      "description": "Gérez les alertes Tell (Messages), DemmRoom (Groupes) et Connect (Appels)"
-    },
-    "storage": {
-      "title": "SafeDemm (Stockage et Données)",
-      "description": "Gérez le stockage et l’utilisation du réseau"
-    },
-    "appLanguage": {
-      "title": "Langue de l’application",
-      "description": "Choisissez la langue de l’application TellDemm"
-    },
-    "help": {
-      "title": "DemmHelp (Aide)",
-      "description": "Centre d’aide, contactez-nous, infos sur l’application"
-    },
-    "updates": {
-      "title": "DemmUpdate (Mise à jour)",
-      "description": "Vérifiez les mises à jour et activez la mise à jour automatique"
-    },
-    "invite": {
-      "title": "SpreadDemm (Inviter un ami)",
-      "description": "Partagez l’application TellDemm avec vos DemmList (Contacts)"
-    },
-    "logout": {
-      "title": "Déconnexion",
-      "description": "Effacez les données de l’application et déconnectez-vous",
-      "confirmHeader": "Confirmer la déconnexion",
-      "confirmMessage": "Voulez-vous vraiment vous déconnecter et effacer les données de l’application ?",
-      "loadingHeader": "Déconnexion en cours",
-      "loadingMessage": "Veuillez patienter…",
-      "successHeader": "Déconnecté",
-      "successMessage": "Vous vous êtes déconnecté avec succès."
-    },
-    "defaultStatus": "Disponible"
+  "title": "Paramètres",
+  "account": {
+    "title": "Compte",
+    "description": "Confidentialité, sécurité, changer de numéro"
   },
+  "privacy": {
+    "title": "Confidentialité",
+    "description": "Gérez vos paramètres de confidentialité"
+  },
+  "avatar": {
+    "title": "Photo de profil",
+    "description": "Modifiez votre photo de profil"
+  },
+  "chats": {
+    "title": "Discussions",
+    "description": "Thème, fond d’écran, sauvegarde des discussions"
+  },
+  "accessibility": {
+    "title": "Accessibilité",
+    "description": "Ajustez la taille du texte et les options d’affichage"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "description": "Gérez les alertes pour messages, groupes et appels"
+  },
+  "storage": {
+    "title": "Stockage et données",
+    "description": "Gérez le stockage et l’utilisation du réseau"
+  },
+  "appLanguage": {
+    "title": "Langue de l’application",
+    "description": "Choisissez la langue de l’application"
+  },
+  "help": {
+    "title": "Aide",
+    "description": "Centre d’aide, contactez-nous, infos sur l’application"
+  },
+  "updates": {
+    "title": "Mise à jour",
+    "description": "Vérifiez les mises à jour et activez la mise à jour automatique"
+  },
+  "invite": {
+    "title": "Inviter un ami",
+    "description": "Partagez l’application avec vos contacts"
+  },
+  "logout": {
+    "title": "Déconnexion",
+    "description": "Effacez les données de l’application et déconnectez-vous",
+    "confirmHeader": "Confirmer la déconnexion",
+    "confirmMessage": "Voulez-vous vraiment vous déconnecter et effacer les données de l’application ?",
+    "loadingHeader": "Déconnexion en cours",
+    "loadingMessage": "Veuillez patienter…",
+    "successHeader": "Déconnecté",
+    "successMessage": "Vous vous êtes déconnecté avec succès."
+  },
+  "defaultStatus": "Disponible"
+},
   "appUpdates": {
     "title": "Mises à jour de l’application",
     "version": "Version",
@@ -440,13 +440,13 @@
     }
   },
   "footerTabs": {
-    "chat": "Tells (Discussions)",
-    "updates": "Echoes (Mises à jour)",
-    "communities": "DemmCircles (Communautés)",
-    "calls": "Connects (Appels)",
+    "chat": "Discussions",
+    "updates": "Mises à jour",
+    "communities": "Communautés",
+    "calls": "Appels",
     "badges": {
-      "unreadChats": "{{count}} Tells non lus",
-      "unreadUpdates": "{{count}} Echoes"
+      "unreadChats": "{{count}} Discussions non lus",
+      "unreadUpdates": "{{count}} Mises à jour"
     }
   },
   "socialLinks": {
@@ -495,10 +495,10 @@
       "all": "TOUT",
       "read": "Lu",
       "unread": "Non lu",
-      "groups": "DemmRoom (Groupes)"
+      "groups": "Groupes"
     },
     "groupCreator": {
-      "placeholder": "Entrer Nom de DemmRoom"
+      "placeholder": "Entrer Nom de Groupes"
     },
     "typing": "tapote...",
     "time": {

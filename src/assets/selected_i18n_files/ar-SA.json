@@ -42,59 +42,59 @@
   },
   "common": { "ok": "حسنًا", "cancel": "إلغاء", "logout": "تسجيل الخروج", "reset": "إعادة الضبط" },
   "settingsPage": {
-    "title": "DemmDesk (إعدادات)",
+    "title": "الإعدادات",
     "account": {
-      "title": "MyTell (حسابي)",
-      "description": "TellShield (الخصوصية)، الأمان، تغيير الرقم"
+      "title": "الحساب",
+      "description": "الخصوصية، الأمان، تغيير الرقم"
     },
     "privacy": {
-      "title": "TellShield (الخصوصية)",
-      "description": "السيطرة على إعدادات TellShield (الخصوصية) الخاصة بك"
+      "title": "الخصوصية",
+      "description": "التحكم في إعدادات الخصوصية الخاصة بك"
     },
     "avatar": {
-      "title": "TellFace (صورة الملف الشخصي)",
-      "description": "غيّر TellFace (صورة الملف الشخصي) الخاصة بك"
+      "title": "صورة الملف الشخصي",
+      "description": "غيّر صورة الملف الشخصي الخاصة بك"
     },
     "chats": {
-      "title": "Tells (محادثات)",
-      "description": "الثيم، خلفية الشاشة، SafeDemm (النسخ الاحتياطي)"
+      "title": "المحادثات",
+      "description": "الثيم، خلفية الشاشة، النسخ الاحتياطي"
     },
     "accessibility": {
-      "title": "Accessibility (إمكانية الوصول)",
+      "title": "إمكانية الوصول",
       "description": "ضبط حجم النص وخيارات العرض"
     },
     "notifications": {
-      "title": "TellAlerts (إشعارات)",
-      "description": "إدارة إشعارات Tell (الرسائل)، DemmRoom (المحادثات الجماعية) و Connect (المكالمات)"
+      "title": "الإشعارات",
+      "description": "إدارة إشعارات الرسائل والمحادثات الجماعية والمكالمات"
     },
     "storage": {
-      "title": "SafeDemm (التخزين والبيانات)",
+      "title": "التخزين والبيانات",
       "description": "إدارة التخزين واستخدام الشبكة"
     },
     "appLanguage": {
-      "title": "App Language (لغة التطبيق)",
-      "description": "اختر لغة تطبيق TellDemm"
+      "title": "لغة التطبيق",
+      "description": "اختر لغة التطبيق"
     },
     "help": {
-      "title": "DemmHelp (المساعدة)",
+      "title": "المساعدة",
       "description": "مركز المساعدة، اتصل بنا، معلومات التطبيق"
     },
     "updates": {
-      "title": "DemmUpdate (تحديثات التطبيق)",
+      "title": "تحديثات التطبيق",
       "description": "تحقق من التحديثات وفعّل التحديث التلقائي"
     },
     "invite": {
-      "title": "SpreadDemm (دعوة صديق)",
-      "description": "شارك تطبيق TellDemm مع قائمة DemmList (جهات الاتصال) الخاصة بك"
+      "title": "دعوة صديق",
+      "description": "شارك التطبيق مع قائمة جهات الاتصال الخاصة بك"
     },
     "logout": {
-      "title": "Log Out (تسجيل الخروج)",
+      "title": "تسجيل الخروج",
       "description": "مسح بيانات التطبيق والخروج",
       "confirmHeader": "تأكيد تسجيل الخروج",
       "confirmMessage": "هل أنت متأكد من رغبتك في تسجيل الخروج ومسح بيانات التطبيق؟",
-      "loadingHeader": "Logging Out (جاري تسجيل الخروج)",
+      "loadingHeader": "جاري تسجيل الخروج",
       "loadingMessage": "يرجى الانتظار...",
-      "successHeader": "Logged Out (تم تسجيل الخروج)",
+      "successHeader": "تم تسجيل الخروج",
       "successMessage": "لقد تم تسجيل خروجك بنجاح."
     },
     "defaultStatus": "متاح"
@@ -440,13 +440,13 @@
     }
   },
   "footerTabs": {
-    "chat": "Tells (محادثات)",
-    "updates": "Echoes (تحديثات)",
-    "communities": "DemmCircles (مجتمعات)",
-    "calls": "Connects (مكالمات)",
+    "chat": "محادثات",
+    "updates": "تحديثات",
+    "communities": "مجتمعات",
+    "calls": "مكالمات",
     "badges": {
-      "unreadChats": "{{count}} Tells غير مقروءة",
-      "unreadUpdates": "{{count}} Echoes"
+      "unreadChats": "{{count}} محادثات غير مقروءة",
+      "unreadUpdates": "{{count}} تحديثات"
     }
   },
   "socialLinks": {
@@ -495,10 +495,10 @@
       "all": "الكل",
       "read": "مقروء",
       "unread": "غير مقروء",
-      "groups": "DemmRoom (غرف المجموعة)"
+      "groups": "غرف المجموعة"
     },
     "groupCreator": {
-      "placeholder": "أدخل اسم DemmRoom (المجموعة)"
+      "placeholder": "أدخل اسم غرف المجموعة (المجموعة)"
     },
     "typing": "يكتب...",
     "time": {

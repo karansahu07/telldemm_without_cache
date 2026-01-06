@@ -42,63 +42,63 @@
   },
   "common": { "ok": "OK", "cancel": "キャンセル", "logout": "ログアウト", "reset": "リセット" },
   "settingsPage": {
-    "title": "DemmDesk (設定)",
-    "account": {
-      "title": "MyTell (アカウント)",
-      "description": "TellShield (プライバシー)、セキュリティ、番号変更"
-    },
-    "privacy": {
-      "title": "TellShield (プライバシー)",
-      "description": "TellShield (プライバシー) 設定を制御する"
-    },
-    "avatar": {
-      "title": "TellFace (プロフィール写真)",
-      "description": "TellFace (プロフィール写真) を変更する"
-    },
-    "chats": {
-      "title": "Tells (チャット)",
-      "description": "テーマ、壁紙、SafeDemm (バックアップ)"
-    },
-    "accessibility": {
-      "title": "Accessibility (アクセシビリティ)",
-      "description": "テキストサイズと表示オプションを調整する"
-    },
-    "notifications": {
-      "title": "TellAlerts (通知)",
-      "description": "Tell (メッセージ)、DemmRoom (グループ)、Connect (通話) のアラートを管理する"
-    },
-    "storage": {
-      "title": "SafeDemm (ストレージとデータ)",
-      "description": "ストレージとネットワーク使用量を管理する"
-    },
-    "appLanguage": {
-      "title": "App Language (アプリ言語)",
-      "description": "TellDemm アプリの言語を選択する"
-    },
-    "help": {
-      "title": "DemmHelp (ヘルプ)",
-      "description": "ヘルプセンター、お問い合わせ、アプリ情報"
-    },
-    "updates": {
-      "title": "DemmUpdate (アプリ更新)",
-      "description": "更新を確認し、オートアップデートを有効にする"
-    },
-    "invite": {
-      "title": "SpreadDemm (友達を招待)",
-      "description": "TellDemm アプリを DemmList (連絡先) と共有する"
-    },
-    "logout": {
-      "title": "Log Out (ログアウト)",
-      "description": "アプリデータをクリアしてサインアウトする",
-      "confirmHeader": "ログアウトを確認",
-      "confirmMessage": "本当にログアウトしてアプリデータをクリアしますか？",
-      "loadingHeader": "Logging Out (ログアウト中)",
-      "loadingMessage": "しばらくお待ちください...",
-      "successHeader": "Logged Out (ログアウト完了)",
-      "successMessage": "正常にログアウトしました。"
-    },
-    "defaultStatus": "利用可能"
+  "title": "設定",
+  "account": {
+    "title": "アカウント",
+    "description": "プライバシー、セキュリティ、番号変更"
   },
+  "privacy": {
+    "title": "プライバシー",
+    "description": "プライバシー設定を制御する"
+  },
+  "avatar": {
+    "title": "プロフィール写真",
+    "description": "プロフィール写真を変更する"
+  },
+  "chats": {
+    "title": "チャット",
+    "description": "テーマ、壁紙、バックアップ"
+  },
+  "accessibility": {
+    "title": "アクセシビリティ",
+    "description": "テキストサイズと表示オプションを調整する"
+  },
+  "notifications": {
+    "title": "通知",
+    "description": "メッセージ、グループ、通話のアラートを管理する"
+  },
+  "storage": {
+    "title": "ストレージとデータ",
+    "description": "ストレージとネットワーク使用量を管理する"
+  },
+  "appLanguage": {
+    "title": "アプリ言語",
+    "description": "アプリの言語を選択する"
+  },
+  "help": {
+    "title": "ヘルプ",
+    "description": "ヘルプセンター、お問い合わせ、アプリ情報"
+  },
+  "updates": {
+    "title": "アプリ更新",
+    "description": "更新を確認し、オートアップデートを有効にする"
+  },
+  "invite": {
+    "title": "友達を招待",
+    "description": "アプリを連絡先と共有する"
+  },
+  "logout": {
+    "title": "ログアウト",
+    "description": "アプリデータをクリアしてサインアウトする",
+    "confirmHeader": "ログアウトを確認",
+    "confirmMessage": "本当にログアウトしてアプリデータをクリアしますか？",
+    "loadingHeader": "ログアウト中",
+    "loadingMessage": "しばらくお待ちください...",
+    "successHeader": "ログアウト完了",
+    "successMessage": "正常にログアウトしました。"
+  },
+  "defaultStatus": "利用可能"
+},
   "appUpdates": {
     "title": "アプリの更新",
     "version": "バージョン",
@@ -440,13 +440,13 @@
     }
   },
   "footerTabs": {
-    "chat": "Tells (チャット)",
-    "updates": "Echoes (更新)",
-    "communities": "DemmCircles (コミュニティ)",
-    "calls": "Connects (通話)",
+    "chat": "チャット",
+    "updates": "更新",
+    "communities": "コミュニティ",
+    "calls": "通話",
     "badges": {
-      "unreadChats": "{{count}} 未読 Tells",
-      "unreadUpdates": "{{count}} Echoes"
+      "unreadChats": "{{count}} 未読 チャット",
+      "unreadUpdates": "{{count}} 更新"
     }
   },
   "socialLinks": {
@@ -495,10 +495,10 @@
       "all": "すべて",
       "read": "既読",
       "unread": "未読",
-      "groups": "DemmRoom (グループ)"
+      "groups": "グループ"
     },
     "groupCreator": {
-      "placeholder": "DemmRoom名を入力"
+      "placeholder": "グループ 名を入力"
     },
     "typing": "入力中...",
     "time": {

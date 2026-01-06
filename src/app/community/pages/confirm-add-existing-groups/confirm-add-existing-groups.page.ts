@@ -10,7 +10,7 @@ import { AuthService } from 'src/app/auth/auth.service';
   templateUrl: './confirm-add-existing-groups.page.html',
   styleUrls: ['./confirm-add-existing-groups.page.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule]
+  imports: [IonicModule, CommonModule],
 })
 export class ConfirmAddExistingGroupsPage implements OnInit {
   communityId: string | null = null;
@@ -37,8 +37,14 @@ export class ConfirmAddExistingGroupsPage implements OnInit {
     const histState: any = window.history.state;
 
     this.communityId = navState?.communityId || histState?.communityId || null;
-    this.communityName = navState?.communityName || histState?.communityName || null;
-    this.groups = navState?.groups || histState?.groups || navState?.selected || histState?.selected || [];
+    this.communityName =
+      navState?.communityName || histState?.communityName || null;
+    this.groups =
+      navState?.groups ||
+      histState?.groups ||
+      navState?.selected ||
+      histState?.selected ||
+      [];
 
     if (!this.groups || this.groups.length === 0) {
       console.warn('⚠️ No groups passed to confirm page');
@@ -53,17 +59,17 @@ export class ConfirmAddExistingGroupsPage implements OnInit {
       const t = await this.toastCtrl.create({
         message: 'Community ID missing',
         duration: 2000,
-        color: 'danger'
+        color: 'danger',
       });
       await t.present();
       return;
     }
 
-    const groupIds = this.groups.map(g => g.id).filter(Boolean);
+    const groupIds = this.groups.map((g) => g.id).filter(Boolean);
     if (!groupIds.length) {
       const t = await this.toastCtrl.create({
         message: 'No groups to add',
-        duration: 1500
+        duration: 1500,
       });
       await t.present();
       return;
@@ -90,7 +96,7 @@ export class ConfirmAddExistingGroupsPage implements OnInit {
         communityId: this.communityId,
         groupIds: groupIds,
         backendCommunityId: backendCommunityId,
-        currentUserId: this.userId || undefined
+        currentUserId: this.userId || undefined,
       });
 
       // 3️⃣ Handle result
@@ -98,25 +104,29 @@ export class ConfirmAddExistingGroupsPage implements OnInit {
         const toast = await this.toastCtrl.create({
           message: result.message || 'Groups added successfully!',
           duration: 2500,
-          color: 'success'
+          color: 'success',
         });
         await toast.present();
-        
+
         // Navigate back to community detail
         this.navCtrl.navigateBack('/community-detail', {
-          state: { communityId: this.communityId }
+          queryParams: {
+            receiverId: this.communityId,
+          },
+          state: {
+            communityId: this.communityId,
+          },
         });
       } else {
         throw new Error(result.message || 'Failed to add groups');
       }
-      
     } catch (err: any) {
       console.error('addToCommunity failed:', err);
       const msg = err?.message || String(err);
       const t = await this.toastCtrl.create({
         message: `Failed to add groups: ${msg}`,
         duration: 4000,
-        color: 'danger'
+        color: 'danger',
       });
       await t.present();
     } finally {

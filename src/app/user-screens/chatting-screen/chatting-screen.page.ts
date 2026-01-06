@@ -1015,7 +1015,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async handleOption(option: string) {
-    if (option === 'Search (FindTell)') {
+    if (option === 'Search') {
       this.showSearchBar = true;
       setTimeout(() => {
         const input = document.querySelector('ion-input');
@@ -1024,7 +1024,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    if (option === 'View Contact (View Demmian)') {
+    if (option === 'View Contact') {
       const queryParams: any = {
         receiverId: this.receiverId,
         receiver_phone: this.receiver_phone,
@@ -1036,7 +1036,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // ✅ NEW: Clear Chat Option
-    if (option === 'Clear Chat (Clear DemmChat)') {
+    if (option === 'Clear Chat') {
       //console.log("clear chat calls");
       await this.handleClearChat();
       return;
@@ -1045,7 +1045,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
     const groupId = this.receiverId;
     const userId = await this.secureStorage.getItem('userId');
 
-    if (option === 'Group Info (DemmRoom Info)') {
+    if (option === 'Group Info') {
       const queryParams: any = {
         receiverId: this.chatType === 'group' ? this.roomId : this.receiverId,
         receiver_phone: this.receiver_phone,
@@ -1053,7 +1053,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
         isGroup: this.chatType === 'group',
       };
       this.router.navigate(['/profile-screen'], { queryParams });
-    } else if (option === 'Add Members (Add Demmians)') {
+    } else if (option === 'Add Members') {
       const memberPhones = this.groupMembers.map((member) => member.phone);
       this.router.navigate(['/add-members'], {
         queryParams: {
@@ -1061,7 +1061,7 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
           members: JSON.stringify(memberPhones),
         },
       });
-    } else if (option === 'Exit Group (Leave DemmRoom)') {
+    } else if (option === 'Exit Group') {
       if (!this.roomId || !this.senderId) {
         console.error('Missing groupId or userId');
         return;

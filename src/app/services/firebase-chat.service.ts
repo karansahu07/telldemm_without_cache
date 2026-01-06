@@ -2375,6 +2375,140 @@ export class FirebaseChatService {
       this._groupTitleListeners = groupListeners;
       this._communityTitleListeners = communityListeners;
 
+      // const onUserChatsChange = async (snap: DataSnapshot) => {
+      //   const updatedData: IChatMeta = snap.val() || {};
+      //   const current = [...this._conversations$.value];
+
+      //   for (const [roomId, meta] of Object.entries(updatedData)) {
+      //     const idx = current.findIndex((c) => c.roomId === roomId);
+      //     const chatMeta: IChatMeta = { ...meta, roomId };
+      //     console.log('chat changed', chatMeta);
+
+      //     try {
+      //       if (idx > -1) {
+      //         const decryptedText = await this.encryptionService.decrypt(
+      //           chatMeta.lastmessage
+      //         );
+      //         const conv = current[idx];
+      //         current[idx] = {
+      //           ...conv,
+      //           lastMessage: decryptedText ?? conv.lastMessage,
+      //           lastMessageType:
+      //             chatMeta.lastmessageType ?? conv.lastMessageType,
+      //           lastMessageAt: chatMeta.lastmessageAt
+      //             ? new Date(Number((meta as any).lastmessageAt))
+      //             : conv.lastMessageAt,
+      //           unreadCount: Number(chatMeta.unreadCount || 0),
+      //           isArchived: chatMeta.isArchived,
+      //           updatedAt: chatMeta.lastmessageAt
+      //             ? new Date(Number(chatMeta.lastmessageAt))
+      //             : conv.updatedAt,
+      //         };
+      //       } else {
+      //         console.warn(
+      //           'New room detected in userchats but not present locally:',
+      //           roomId
+      //         );
+      //         const type: IConversation['type'] = chatMeta.type || 'private';
+
+      //         try {
+      //           let newConv: IConversation | null = null;
+
+      //           if (type === 'private') {
+      //             newConv = await this.fetchPrivateConvDetails(
+      //               roomId,
+      //               chatMeta
+      //             );
+      //           } else if (type === 'group') {
+      //             newConv = await this.fetchGroupConDetails(roomId, chatMeta);
+
+      //             // 🆕 Setup listener for newly added group
+      //             if (!groupListeners.has(roomId)) {
+      //               const groupRef = rtdbRef(this.db, `groups/${roomId}/title`);
+      //               const unsubGroup = rtdbOnValue(groupRef, (titleSnap) => {
+      //                 if (titleSnap.exists()) {
+      //                   const newTitle = titleSnap.val();
+      //                   this.updateConversationTitle(roomId, newTitle);
+      //                 }
+      //               });
+      //               groupListeners.set(roomId, unsubGroup);
+      //             }
+      //           } else if (type === 'community') {
+      //             newConv = await this.fetchCommunityConvDetails(
+      //               roomId,
+      //               chatMeta
+      //             );
+
+      //             // 🆕 Setup listener for newly added community
+      //             if (!communityListeners.has(roomId)) {
+      //               const communityRef = rtdbRef(
+      //                 this.db,
+      //                 `communities/${roomId}/title`
+      //               );
+      //               const unsubCommunity = rtdbOnValue(
+      //                 communityRef,
+      //                 (titleSnap) => {
+      //                   if (titleSnap.exists()) {
+      //                     const newTitle = titleSnap.val();
+      //                     this.updateConversationTitle(roomId, newTitle);
+      //                   }
+      //                 }
+      //               );
+      //               communityListeners.set(roomId, unsubCommunity);
+      //             }
+      //           } else {
+      //             newConv = {
+      //               roomId,
+      //               type: 'private',
+      //               title: roomId,
+      //               lastMessage: chatMeta.lastmessage,
+      //               lastMessageAt: chatMeta.lastmessageAt
+      //                 ? new Date(Number(chatMeta.lastmessageAt))
+      //                 : undefined,
+      //               unreadCount: Number(chatMeta.unreadCount) || 0,
+      //             } as IConversation;
+      //           }
+
+      //           if (newConv) {
+      //             current.push(newConv);
+      //             try {
+      //               await this.sqliteService.createConversation({
+      //                 ...newConv,
+      //                 ownerId: this.senderId as string,
+      //               });
+      //             } catch (e) {
+      //               console.warn(
+      //                 'sqlite createConversation failed for new room',
+      //                 roomId,
+      //                 e
+      //               );
+      //             }
+      //           }
+      //         } catch (e) {
+      //           console.error(
+      //             'Failed to fetch details for new room',
+      //             roomId,
+      //             e
+      //           );
+      //         }
+      //       }
+      //     } catch (e) {
+      //       console.error('onUserChatsChange inner error for', roomId, e);
+      //     }
+      //   }
+
+      //   this.syncReceipt(
+      //     current
+      //       .filter((c) => (c.unreadCount || 0) > 0)
+      //       .map((c) => ({
+      //         roomId: c.roomId,
+      //         unreadCount: c.unreadCount as number,
+      //       }))
+      //   );
+
+      //   this._conversations$.next(current);
+      // };
+
       const onUserChatsChange = async (snap: DataSnapshot) => {
         const updatedData: IChatMeta = snap.val() || {};
         const current = [...this._conversations$.value];
@@ -2420,9 +2554,19 @@ export class FirebaseChatService {
                     chatMeta
                   );
                 } else if (type === 'group') {
+                  // ✅ ADD: Check if this is a system group
+                  const isSystemGroup = await this.isSystemGroupInCommunity(
+                    roomId
+                  );
+
+                  if (isSystemGroup) {
+                    console.log(`⏭️ Skipping new system group: ${roomId}`);
+                    continue; // Skip this group
+                  }
+
                   newConv = await this.fetchGroupConDetails(roomId, chatMeta);
 
-                  // 🆕 Setup listener for newly added group
+                  // Setup listener for newly added group
                   if (!groupListeners.has(roomId)) {
                     const groupRef = rtdbRef(this.db, `groups/${roomId}/title`);
                     const unsubGroup = rtdbOnValue(groupRef, (titleSnap) => {
@@ -2439,7 +2583,7 @@ export class FirebaseChatService {
                     chatMeta
                   );
 
-                  // 🆕 Setup listener for newly added community
+                  // Setup listener for newly added community
                   if (!communityListeners.has(roomId)) {
                     const communityRef = rtdbRef(
                       this.db,
@@ -4727,7 +4871,7 @@ export class FirebaseChatService {
         avatar: avatar || '',
         adminIds: [],
         createdBy,
-        ownerId : createdBy,
+        ownerId: createdBy,
         createdAt: now,
         members: {
           [createdBy]: communityMemberDetails,
@@ -5269,198 +5413,207 @@ export class FirebaseChatService {
   }
 
   async deactivateCommunity(
-  communityId: string,
-  ownerId: string
-): Promise<{ success: boolean; message: string; details?: any }> {
-  try {
-    console.log(`🔴 Starting community deactivation: ${communityId}`);
+    communityId: string,
+    ownerId: string
+  ): Promise<{ success: boolean; message: string; details?: any }> {
+    try {
+      console.log(`🔴 Starting community deactivation: ${communityId}`);
 
-    if (!communityId || !ownerId) {
-      return {
-        success: false,
-        message: 'Invalid community ID or owner ID',
-      };
-    }
-
-    const db = getDatabase();
-    const communityRef = ref(db, `communities/${communityId}`);
-    const communitySnap = await get(communityRef);
-
-    if (!communitySnap.exists()) {
-      return {
-        success: false,
-        message: 'Community not found',
-      };
-    }
-
-    const communityData = communitySnap.val();
-
-    // ❌ Only owner can deactivate
-    const currentOwnerId = communityData.ownerId || communityData.createdBy;
-    if (currentOwnerId !== ownerId) {
-      return {
-        success: false,
-        message: 'Only the owner can deactivate the community',
-      };
-    }
-
-    const updates: Record<string, any> = {};
-
-    /* ---------------------------------------------------
-     * 1️⃣ Get all members, groups, and system groups
-     * --------------------------------------------------- */
-    const members = communityData.members || {};
-    const memberIds = Object.keys(members);
-
-    const allGroups = communityData.groups || {};
-    const allGroupIds = Object.keys(allGroups);
-
-    const announcementGroupId = `${communityId}_announcement`;
-    const generalGroupId = `${communityId}_general`;
-
-    console.log(`📊 Community has ${memberIds.length} members`);
-    console.log(`📊 Community has ${allGroupIds.length} groups`);
-
-    /* ---------------------------------------------------
-     * 2️⃣ Remove community from ALL users' userchats
-     * --------------------------------------------------- */
-    for (const userId of memberIds) {
-      updates[`userchats/${userId}/${communityId}`] = null;
-    }
-    console.log(`✅ Step 2: Removed community from ${memberIds.length} users' userchats`);
-
-    /* ---------------------------------------------------
-     * 3️⃣ Get announcement group members and remove
-     * --------------------------------------------------- */
-    const announcementGroupRef = ref(db, `groups/${announcementGroupId}`);
-    const announcementSnap = await get(announcementGroupRef);
-
-    if (announcementSnap.exists()) {
-      const announcementData = announcementSnap.val();
-      const announcementMembers = announcementData.members || {};
-      const announcementMemberIds = Object.keys(announcementMembers);
-
-      // Remove announcement group from all members' userchats
-      for (const userId of announcementMemberIds) {
-        updates[`userchats/${userId}/${announcementGroupId}`] = null;
+      if (!communityId || !ownerId) {
+        return {
+          success: false,
+          message: 'Invalid community ID or owner ID',
+        };
       }
 
-      // Delete announcement group completely
-      updates[`groups/${announcementGroupId}`] = null;
+      const db = getDatabase();
+      const communityRef = ref(db, `communities/${communityId}`);
+      const communitySnap = await get(communityRef);
 
-      console.log(`✅ Step 3: Removed announcement group from ${announcementMemberIds.length} users`);
-    }
-
-    /* ---------------------------------------------------
-     * 4️⃣ Get general group members and remove
-     * --------------------------------------------------- */
-    const generalGroupRef = ref(db, `groups/${generalGroupId}`);
-    const generalSnap = await get(generalGroupRef);
-
-    if (generalSnap.exists()) {
-      const generalData = generalSnap.val();
-      const generalMembers = generalData.members || {};
-      const generalMemberIds = Object.keys(generalMembers);
-
-      // Remove general group from all members' userchats
-      for (const userId of generalMemberIds) {
-        updates[`userchats/${userId}/${generalGroupId}`] = null;
+      if (!communitySnap.exists()) {
+        return {
+          success: false,
+          message: 'Community not found',
+        };
       }
 
-      // Delete general group completely
-      updates[`groups/${generalGroupId}`] = null;
+      const communityData = communitySnap.val();
 
-      console.log(`✅ Step 4: Removed general group from ${generalMemberIds.length} users`);
-    }
-
-    /* ---------------------------------------------------
-     * 5️⃣ Unlink ALL groups from community (remove communityId)
-     * --------------------------------------------------- */
-    for (const groupId of allGroupIds) {
-      // Skip announcement and general (already deleted)
-      if (groupId === announcementGroupId || groupId === generalGroupId) {
-        continue;
+      // ❌ Only owner can deactivate
+      const currentOwnerId = communityData.ownerId || communityData.createdBy;
+      if (currentOwnerId !== ownerId) {
+        return {
+          success: false,
+          message: 'Only the owner can deactivate the community',
+        };
       }
 
-      // Remove communityId from group
-      updates[`groups/${groupId}/communityId`] = null;
+      const updates: Record<string, any> = {};
+
+      /* ---------------------------------------------------
+       * 1️⃣ Get all members, groups, and system groups
+       * --------------------------------------------------- */
+      const members = communityData.members || {};
+      const memberIds = Object.keys(members);
+
+      const allGroups = communityData.groups || {};
+      const allGroupIds = Object.keys(allGroups);
+
+      const announcementGroupId = `${communityId}_announcement`;
+      const generalGroupId = `${communityId}_general`;
+
+      console.log(`📊 Community has ${memberIds.length} members`);
+      console.log(`📊 Community has ${allGroupIds.length} groups`);
+
+      /* ---------------------------------------------------
+       * 2️⃣ Remove community from ALL users' userchats
+       * --------------------------------------------------- */
+      for (const userId of memberIds) {
+        updates[`userchats/${userId}/${communityId}`] = null;
+      }
+      console.log(
+        `✅ Step 2: Removed community from ${memberIds.length} users' userchats`
+      );
+
+      /* ---------------------------------------------------
+       * 3️⃣ Get announcement group members and remove
+       * --------------------------------------------------- */
+      const announcementGroupRef = ref(db, `groups/${announcementGroupId}`);
+      const announcementSnap = await get(announcementGroupRef);
+
+      if (announcementSnap.exists()) {
+        const announcementData = announcementSnap.val();
+        const announcementMembers = announcementData.members || {};
+        const announcementMemberIds = Object.keys(announcementMembers);
+
+        // Remove announcement group from all members' userchats
+        for (const userId of announcementMemberIds) {
+          updates[`userchats/${userId}/${announcementGroupId}`] = null;
+        }
+
+        // Delete announcement group completely
+        updates[`groups/${announcementGroupId}`] = null;
+
+        console.log(
+          `✅ Step 3: Removed announcement group from ${announcementMemberIds.length} users`
+        );
+      }
+
+      /* ---------------------------------------------------
+       * 4️⃣ Get general group members and remove
+       * --------------------------------------------------- */
+      const generalGroupRef = ref(db, `groups/${generalGroupId}`);
+      const generalSnap = await get(generalGroupRef);
+
+      if (generalSnap.exists()) {
+        const generalData = generalSnap.val();
+        const generalMembers = generalData.members || {};
+        const generalMemberIds = Object.keys(generalMembers);
+
+        // Remove general group from all members' userchats
+        for (const userId of generalMemberIds) {
+          updates[`userchats/${userId}/${generalGroupId}`] = null;
+        }
+
+        // Delete general group completely
+        updates[`groups/${generalGroupId}`] = null;
+
+        console.log(
+          `✅ Step 4: Removed general group from ${generalMemberIds.length} users`
+        );
+      }
+
+      /* ---------------------------------------------------
+       * 5️⃣ Unlink ALL groups from community (remove communityId)
+       * --------------------------------------------------- */
+      for (const groupId of allGroupIds) {
+        // Skip announcement and general (already deleted)
+        if (groupId === announcementGroupId || groupId === generalGroupId) {
+          continue;
+        }
+
+        // Remove communityId from group
+        updates[`groups/${groupId}/communityId`] = null;
+      }
+      console.log(
+        `✅ Step 5: Unlinked ${allGroupIds.length - 2} groups from community`
+      );
+
+      /* ---------------------------------------------------
+       * 6️⃣ Mark community as deactivated (for audit/backup)
+       * OR delete community completely (choose one)
+       * --------------------------------------------------- */
+
+      // OPTION A: Soft delete (mark as deactivated, keep data)
+      updates[`communities/${communityId}/isDeactivated`] = true;
+      updates[`communities/${communityId}/deactivatedAt`] = Date.now();
+      updates[`communities/${communityId}/deactivatedBy`] = ownerId;
+      updates[`communities/${communityId}/members`] = null;
+      updates[`communities/${communityId}/groups`] = null;
+
+      // OPTION B: Hard delete (completely remove community)
+      // Uncomment below and comment out Option A if you want hard delete
+      // updates[`communities/${communityId}`] = null;
+
+      console.log(`✅ Step 6: Marked community as deactivated`);
+
+      /* ---------------------------------------------------
+       * 7️⃣ Remove from usersInCommunity index (for all members)
+       * --------------------------------------------------- */
+      for (const userId of memberIds) {
+        updates[`usersInCommunity/${userId}/joinedCommunities/${communityId}`] =
+          null;
+      }
+      console.log(`✅ Step 7: Cleaned up usersInCommunity index`);
+
+      /* ---------------------------------------------------
+       * 8️⃣ Apply all updates atomically
+       * --------------------------------------------------- */
+      await update(ref(db), updates);
+
+      console.log(`✅ Community ${communityId} deactivated successfully`);
+
+      return {
+        success: true,
+        message: 'Community deactivated successfully',
+        details: {
+          communityId,
+          membersRemoved: memberIds.length,
+          groupsUnlinked: allGroupIds.length - 2, // Exclude announcement & general
+          systemGroupsDeleted: 2, // Announcement + General
+        },
+      };
+    } catch (error) {
+      console.error('❌ Error deactivating community:', error);
+      return {
+        success: false,
+        message: 'Failed to deactivate community. Please try again.',
+      };
     }
-    console.log(`✅ Step 5: Unlinked ${allGroupIds.length - 2} groups from community`);
-
-    /* ---------------------------------------------------
-     * 6️⃣ Mark community as deactivated (for audit/backup)
-     * OR delete community completely (choose one)
-     * --------------------------------------------------- */
-    
-    // OPTION A: Soft delete (mark as deactivated, keep data)
-    updates[`communities/${communityId}/isDeactivated`] = true;
-    updates[`communities/${communityId}/deactivatedAt`] = Date.now();
-    updates[`communities/${communityId}/deactivatedBy`] = ownerId;
-    updates[`communities/${communityId}/members`] = null;
-    updates[`communities/${communityId}/groups`] = null;
-
-    // OPTION B: Hard delete (completely remove community)
-    // Uncomment below and comment out Option A if you want hard delete
-    // updates[`communities/${communityId}`] = null;
-
-    console.log(`✅ Step 6: Marked community as deactivated`);
-
-    /* ---------------------------------------------------
-     * 7️⃣ Remove from usersInCommunity index (for all members)
-     * --------------------------------------------------- */
-    for (const userId of memberIds) {
-      updates[`usersInCommunity/${userId}/joinedCommunities/${communityId}`] = null;
-    }
-    console.log(`✅ Step 7: Cleaned up usersInCommunity index`);
-
-    /* ---------------------------------------------------
-     * 8️⃣ Apply all updates atomically
-     * --------------------------------------------------- */
-    await update(ref(db), updates);
-
-    console.log(`✅ Community ${communityId} deactivated successfully`);
-
-    return {
-      success: true,
-      message: 'Community deactivated successfully',
-      details: {
-        communityId,
-        membersRemoved: memberIds.length,
-        groupsUnlinked: allGroupIds.length - 2, // Exclude announcement & general
-        systemGroupsDeleted: 2, // Announcement + General
-      },
-    };
-  } catch (error) {
-    console.error('❌ Error deactivating community:', error);
-    return {
-      success: false,
-      message: 'Failed to deactivate community. Please try again.',
-    };
   }
-}
 
-/**
- * ✅ HELPER: Delete community chat from local state
- * Call this after successful deactivation to update UI
- */
-public removeCommunityFromLocalState(communityId: string): void {
-  try {
-    // Remove from conversations array
-    const existingConvs = this._conversations$.value.filter(
-      (conv) => conv.roomId !== communityId
-    );
-    this._conversations$.next(existingConvs);
+  /**
+   * ✅ HELPER: Delete community chat from local state
+   * Call this after successful deactivation to update UI
+   */
+  public removeCommunityFromLocalState(communityId: string): void {
+    try {
+      // Remove from conversations array
+      const existingConvs = this._conversations$.value.filter(
+        (conv) => conv.roomId !== communityId
+      );
+      this._conversations$.next(existingConvs);
 
-    // Clear messages from local map
-    const messageMap = new Map(this._messages$.value);
-    messageMap.delete(communityId);
-    this._messages$.next(messageMap);
+      // Clear messages from local map
+      const messageMap = new Map(this._messages$.value);
+      messageMap.delete(communityId);
+      this._messages$.next(messageMap);
 
-    console.log(`✅ Removed community ${communityId} from local state`);
-  } catch (error) {
-    console.error('Error removing community from local state:', error);
+      console.log(`✅ Removed community ${communityId} from local state`);
+    } catch (error) {
+      console.error('Error removing community from local state:', error);
+    }
   }
-}
 
   // async exitCommunity(
   //   communityId: string,
@@ -5661,386 +5814,451 @@ public removeCommunityFromLocalState(communityId: string): void {
   }
 
   /**
- * Promote a member to admin
- */
-async promoteMemberToAdmin(
-  communityId: string,
-  currentOwnerId: string,
-  targetUserId: string
-): Promise<{ success: boolean; message: string }> {
-  try {
-    // Get community reference - UPDATED PATH
-    const communityRef = ref(this.db, `communities/${communityId}`);
-    const communitySnapshot = await get(communityRef);
+   * Promote a member to admin
+   */
+  async promoteMemberToAdmin(
+    communityId: string,
+    currentOwnerId: string,
+    targetUserId: string
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      // Get community reference - UPDATED PATH
+      const communityRef = ref(this.db, `communities/${communityId}`);
+      const communitySnapshot = await get(communityRef);
 
-    if (!communitySnapshot.exists()) {
-      return { success: false, message: 'Community not found' };
+      if (!communitySnapshot.exists()) {
+        return { success: false, message: 'Community not found' };
+      }
+
+      const community = communitySnapshot.val();
+
+      // Verify current user is owner
+      const ownerId = community.ownerId || community.createdBy;
+      if (ownerId !== currentOwnerId) {
+        return { success: false, message: 'Only owner can promote to admin' };
+      }
+
+      // Check if target is already owner
+      if (ownerId === targetUserId) {
+        return { success: false, message: 'User is already the owner' };
+      }
+
+      // Check if already admin
+      const adminIds = community.adminIds || [];
+      if (adminIds.includes(targetUserId)) {
+        return { success: false, message: 'User is already an admin' };
+      }
+
+      // Check if member exists in community
+      if (!community.members || !community.members[targetUserId]) {
+        return {
+          success: false,
+          message: 'User is not a member of this community',
+        };
+      }
+
+      // Add to adminIds array
+      const updatedAdminIds = [...adminIds, targetUserId];
+
+      // Update community document - UPDATED PATH
+      const updates: any = {};
+      updates[`communities/${communityId}/adminIds`] = updatedAdminIds;
+      updates[`communities/${communityId}/members/${targetUserId}/role`] =
+        'admin';
+
+      await update(ref(this.db), updates);
+
+      // Update in currentConversations if needed
+      this.updateLocalConversation(communityId, {
+        adminIds: updatedAdminIds,
+      });
+
+      return {
+        success: true,
+        message: 'Member promoted to admin successfully',
+      };
+    } catch (error) {
+      console.error('Error promoting member to admin:', error);
+      return { success: false, message: 'Failed to promote member to admin' };
     }
-
-    const community = communitySnapshot.val();
-
-    // Verify current user is owner
-    const ownerId = community.ownerId || community.createdBy;
-    if (ownerId !== currentOwnerId) {
-      return { success: false, message: 'Only owner can promote to admin' };
-    }
-
-    // Check if target is already owner
-    if (ownerId === targetUserId) {
-      return { success: false, message: 'User is already the owner' };
-    }
-
-    // Check if already admin
-    const adminIds = community.adminIds || [];
-    if (adminIds.includes(targetUserId)) {
-      return { success: false, message: 'User is already an admin' };
-    }
-
-    // Check if member exists in community
-    if (!community.members || !community.members[targetUserId]) {
-      return { success: false, message: 'User is not a member of this community' };
-    }
-
-    // Add to adminIds array
-    const updatedAdminIds = [...adminIds, targetUserId];
-
-    // Update community document - UPDATED PATH
-    const updates: any = {};
-    updates[`communities/${communityId}/adminIds`] = updatedAdminIds;
-    updates[`communities/${communityId}/members/${targetUserId}/role`] = 'admin';
-
-    await update(ref(this.db), updates);
-
-    // Update in currentConversations if needed
-    this.updateLocalConversation(communityId, {
-      adminIds: updatedAdminIds,
-    });
-
-    return { success: true, message: 'Member promoted to admin successfully' };
-  } catch (error) {
-    console.error('Error promoting member to admin:', error);
-    return { success: false, message: 'Failed to promote member to admin' };
   }
-}
 
-/**
- * Transfer community ownership
- */
-async transferCommunityOwnership(
-  communityId: string,
-  currentOwnerId: string,
-  newOwnerId: string
-): Promise<{ success: boolean; message: string }> {
-  try {
-    const communityRef = ref(this.db, `communities/${communityId}`);
-    const communitySnapshot = await get(communityRef);
+  /**
+   * Transfer community ownership
+   */
+  async transferCommunityOwnership(
+    communityId: string,
+    currentOwnerId: string,
+    newOwnerId: string
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      const communityRef = ref(this.db, `communities/${communityId}`);
+      const communitySnapshot = await get(communityRef);
 
-    if (!communitySnapshot.exists()) {
-      return { success: false, message: 'Community not found' };
+      if (!communitySnapshot.exists()) {
+        return { success: false, message: 'Community not found' };
+      }
+
+      const community = communitySnapshot.val();
+
+      // Verify current user is owner
+      const currentOwner = community.ownerId || community.createdBy;
+      if (currentOwner !== currentOwnerId) {
+        return { success: false, message: 'Only owner can transfer ownership' };
+      }
+
+      // Verify new owner is an admin
+      const adminIds = community.adminIds || [];
+      if (!adminIds.includes(newOwnerId)) {
+        return {
+          success: false,
+          message:
+            'New owner must be an admin first. Please promote them to admin.',
+        };
+      }
+
+      // Remove new owner from adminIds
+      const updatedAdminIds = adminIds.filter(
+        (id: string) => id !== newOwnerId
+      );
+
+      // Add current owner to adminIds
+      updatedAdminIds.push(currentOwnerId);
+
+      // Prepare update object - UPDATED PATH
+      const updates: any = {};
+      updates[`communities/${communityId}/ownerId`] = newOwnerId;
+      updates[`communities/${communityId}/adminIds`] = updatedAdminIds;
+      updates[`communities/${communityId}/members/${newOwnerId}/role`] =
+        'owner';
+      updates[`communities/${communityId}/members/${currentOwnerId}/role`] =
+        'admin';
+
+      // Update community
+      await update(ref(this.db), updates);
+
+      // Update in currentConversations
+      this.updateLocalConversation(communityId, {
+        ownerId: newOwnerId,
+        adminIds: updatedAdminIds,
+      });
+
+      return {
+        success: true,
+        message: 'Ownership transferred successfully',
+      };
+    } catch (error) {
+      console.error('Error transferring ownership:', error);
+      return { success: false, message: 'Failed to transfer ownership' };
     }
+  }
 
-    const community = communitySnapshot.val();
+  /**
+   * Combined: Promote to admin and transfer ownership
+   */
+  async promoteAndTransferOwnership(
+    communityId: string,
+    currentOwnerId: string,
+    newOwnerId: string
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      const communityRef = ref(this.db, `communities/${communityId}`);
+      const communitySnapshot = await get(communityRef);
 
-    // Verify current user is owner
-    const currentOwner = community.ownerId || community.createdBy;
-    if (currentOwner !== currentOwnerId) {
-      return { success: false, message: 'Only owner can transfer ownership' };
+      if (!communitySnapshot.exists()) {
+        return { success: false, message: 'Community not found' };
+      }
+
+      const community = communitySnapshot.val();
+
+      // Verify current user is owner
+      const currentOwner = community.ownerId || community.createdBy;
+      if (currentOwner !== currentOwnerId) {
+        return { success: false, message: 'Only owner can transfer ownership' };
+      }
+
+      // Check if target is current owner
+      if (currentOwnerId === newOwnerId) {
+        return { success: false, message: 'You are already the owner' };
+      }
+
+      // Check if member exists
+      if (!community.members || !community.members[newOwnerId]) {
+        return {
+          success: false,
+          message: 'User is not a member of this community',
+        };
+      }
+
+      const adminIds = community.adminIds || [];
+      let updatedAdminIds = [...adminIds];
+
+      // If not already admin, they will become one temporarily (then owner)
+      if (!updatedAdminIds.includes(newOwnerId)) {
+        updatedAdminIds.push(newOwnerId);
+      }
+
+      // Remove new owner from adminIds (they'll be owner)
+      updatedAdminIds = updatedAdminIds.filter(
+        (id: string) => id !== newOwnerId
+      );
+
+      // Add current owner to adminIds
+      if (!updatedAdminIds.includes(currentOwnerId)) {
+        updatedAdminIds.push(currentOwnerId);
+      }
+
+      // Update everything using multi-path update - UPDATED PATH
+      const updates: any = {};
+      updates[`communities/${communityId}/ownerId`] = newOwnerId;
+      updates[`communities/${communityId}/adminIds`] = updatedAdminIds;
+      updates[`communities/${communityId}/members/${newOwnerId}/role`] =
+        'owner';
+      updates[`communities/${communityId}/members/${currentOwnerId}/role`] =
+        'admin';
+
+      await update(ref(this.db), updates);
+
+      // Update in currentConversations
+      this.updateLocalConversation(communityId, {
+        ownerId: newOwnerId,
+        adminIds: updatedAdminIds,
+      });
+
+      return {
+        success: true,
+        message: 'Ownership transferred successfully',
+      };
+    } catch (error) {
+      console.error('Error in promoteAndTransferOwnership:', error);
+      return { success: false, message: 'Failed to transfer ownership' };
     }
+  }
 
-    // Verify new owner is an admin
-    const adminIds = community.adminIds || [];
-    if (!adminIds.includes(newOwnerId)) {
-      return { 
-        success: false, 
-        message: 'New owner must be an admin first. Please promote them to admin.' 
+  /**
+   * Helper: Update local conversation cache
+   */
+  private updateLocalConversation(communityId: string, updates: any) {
+    const index = this.currentConversations.findIndex(
+      (c) => c.roomId === communityId
+    );
+    if (index !== -1) {
+      this.currentConversations[index] = {
+        ...this.currentConversations[index],
+        ...updates,
       };
     }
-
-    // Remove new owner from adminIds
-    const updatedAdminIds = adminIds.filter((id: string) => id !== newOwnerId);
-    
-    // Add current owner to adminIds
-    updatedAdminIds.push(currentOwnerId);
-
-    // Prepare update object - UPDATED PATH
-    const updates: any = {};
-    updates[`communities/${communityId}/ownerId`] = newOwnerId;
-    updates[`communities/${communityId}/adminIds`] = updatedAdminIds;
-    updates[`communities/${communityId}/members/${newOwnerId}/role`] = 'owner';
-    updates[`communities/${communityId}/members/${currentOwnerId}/role`] = 'admin';
-
-    // Update community
-    await update(ref(this.db), updates);
-
-    // Update in currentConversations
-    this.updateLocalConversation(communityId, {
-      ownerId: newOwnerId,
-      adminIds: updatedAdminIds,
-    });
-
-    return { 
-      success: true, 
-      message: 'Ownership transferred successfully' 
-    };
-  } catch (error) {
-    console.error('Error transferring ownership:', error);
-    return { success: false, message: 'Failed to transfer ownership' };
   }
-}
 
-/**
- * Combined: Promote to admin and transfer ownership
- */
-async promoteAndTransferOwnership(
-  communityId: string,
-  currentOwnerId: string,
-  newOwnerId: string
-): Promise<{ success: boolean; message: string }> {
-  try {
-    const communityRef = ref(this.db, `communities/${communityId}`);
-    const communitySnapshot = await get(communityRef);
+  /**
+   * Make a user a community admin
+   * @param communityId - The community ID
+   * @param userId - The user ID to make admin
+   * @returns Promise<boolean> - Success status
+   */
+  async makeCommunityAdmin(
+    communityId: string,
+    userId: string
+  ): Promise<boolean> {
+    try {
+      const db = getDatabase();
+      const adminIdsRef = ref(db, `communities/${communityId}/adminIds`);
 
-    if (!communitySnapshot.exists()) {
-      return { success: false, message: 'Community not found' };
-    }
+      // Get current admin IDs
+      const snapshot = await get(adminIdsRef);
+      let adminIds = snapshot.exists() ? snapshot.val() : {};
 
-    const community = communitySnapshot.val();
-
-    // Verify current user is owner
-    const currentOwner = community.ownerId || community.createdBy;
-    if (currentOwner !== currentOwnerId) {
-      return { success: false, message: 'Only owner can transfer ownership' };
-    }
-
-    // Check if target is current owner
-    if (currentOwnerId === newOwnerId) {
-      return { success: false, message: 'You are already the owner' };
-    }
-
-    // Check if member exists
-    if (!community.members || !community.members[newOwnerId]) {
-      return { success: false, message: 'User is not a member of this community' };
-    }
-
-    const adminIds = community.adminIds || [];
-    let updatedAdminIds = [...adminIds];
-
-    // If not already admin, they will become one temporarily (then owner)
-    if (!updatedAdminIds.includes(newOwnerId)) {
-      updatedAdminIds.push(newOwnerId);
-    }
-
-    // Remove new owner from adminIds (they'll be owner)
-    updatedAdminIds = updatedAdminIds.filter((id: string) => id !== newOwnerId);
-    
-    // Add current owner to adminIds
-    if (!updatedAdminIds.includes(currentOwnerId)) {
-      updatedAdminIds.push(currentOwnerId);
-    }
-
-    // Update everything using multi-path update - UPDATED PATH
-    const updates: any = {};
-    updates[`communities/${communityId}/ownerId`] = newOwnerId;
-    updates[`communities/${communityId}/adminIds`] = updatedAdminIds;
-    updates[`communities/${communityId}/members/${newOwnerId}/role`] = 'owner';
-    updates[`communities/${communityId}/members/${currentOwnerId}/role`] = 'admin';
-
-    await update(ref(this.db), updates);
-
-    // Update in currentConversations
-    this.updateLocalConversation(communityId, {
-      ownerId: newOwnerId,
-      adminIds: updatedAdminIds,
-    });
-
-    return { 
-      success: true, 
-      message: 'Ownership transferred successfully' 
-    };
-  } catch (error) {
-    console.error('Error in promoteAndTransferOwnership:', error);
-    return { success: false, message: 'Failed to transfer ownership' };
-  }
-}
-
-/**
- * Helper: Update local conversation cache
- */
-private updateLocalConversation(communityId: string, updates: any) {
-  const index = this.currentConversations.findIndex(c => c.roomId === communityId);
-  if (index !== -1) {
-    this.currentConversations[index] = {
-      ...this.currentConversations[index],
-      ...updates,
-    };
-  }
-}
-
-/**
- * Make a user a community admin
- * @param communityId - The community ID
- * @param userId - The user ID to make admin
- * @returns Promise<boolean> - Success status
- */
-async makeCommunityAdmin(communityId: string, userId: string): Promise<boolean> {
-  try {
-    const db = getDatabase();
-    const adminIdsRef = ref(db, `communities/${communityId}/adminIds`);
-    
-    // Get current admin IDs
-    const snapshot = await get(adminIdsRef);
-    let adminIds = snapshot.exists() ? snapshot.val() : {};
-    
-    // Check if user is already an admin
-    const adminIdsArray = Object.values(adminIds).map(id => String(id));
-    if (adminIdsArray.includes(String(userId))) {
-      console.log('User is already an admin');
-      return true;
-    }
-    
-    // Add new admin ID
-    const newIndex = Object.keys(adminIds).length;
-    adminIds[newIndex] = String(userId);
-    
-    // Update Firebase
-    await set(adminIdsRef, adminIds);
-    
-    console.log(`✅ Successfully made user ${userId} a community admin`);
-    return true;
-  } catch (error) {
-    console.error('❌ Error making community admin:', error);
-    return false;
-  }
-}
-
-/**
- * Dismiss a user as community admin
- * @param communityId - The community ID
- * @param userId - The user ID to dismiss as admin
- * @returns Promise<boolean> - Success status
- */
-async dismissCommunityAdmin(communityId: string, userId: string): Promise<boolean> {
-  try {
-    const db = getDatabase();
-    const adminIdsRef = ref(db, `communities/${communityId}/adminIds`);
-    
-    // Get current admin IDs
-    const snapshot = await get(adminIdsRef);
-    if (!snapshot.exists()) {
-      console.log('No admin IDs found');
-      return false;
-    }
-    
-    const adminIds = snapshot.val();
-    
-    // Convert to array and filter out the user
-    const adminIdsArray = Object.values(adminIds).map(id => String(id));
-    const updatedArray = adminIdsArray.filter(id => String(id) !== String(userId));
-    
-    // Check if user was actually an admin
-    if (adminIdsArray.length === updatedArray.length) {
-      console.log('User was not an admin');
-      return true; // Not an error, just already not an admin
-    }
-    
-    // Convert back to object format for Firebase
-    const updatedAdminIds = updatedArray.reduce((acc, id, index) => {
-      acc[index] = id;
-      return acc;
-    }, {} as any);
-    
-    // Update Firebase
-    await set(adminIdsRef, updatedAdminIds);
-    
-    console.log(`✅ Successfully dismissed user ${userId} as community admin`);
-    return true;
-  } catch (error) {
-    console.error('❌ Error dismissing community admin:', error);
-    return false;
-  }
-}
-
-/**
- * Remove a member from community
- * @param communityId - The community ID
- * @param userId - The user ID to remove
- * @returns Promise<boolean> - Success status
- */
-async removeCommunityMember(communityId: string, userId: string): Promise<boolean> {
-  try {
-    const db = getDatabase();
-    
-    // Mark member as inactive instead of deleting
-    const memberRef = ref(db, `communities/${communityId}/members/${userId}`);
-    
-    // Check if member exists
-    const snapshot = await get(memberRef);
-    if (!snapshot.exists()) {
-      console.log('Member not found in community');
-      return false;
-    }
-    
-    // Update member status to inactive
-    await update(memberRef, { 
-      isActive: false,
-      removedAt: new Date().toISOString()
-    });
-    
-    // Also remove from adminIds if they are an admin
-    const adminIdsRef = ref(db, `communities/${communityId}/adminIds`);
-    const adminSnapshot = await get(adminIdsRef);
-    
-    if (adminSnapshot.exists()) {
-      const adminIds = adminSnapshot.val();
-      const adminIdsArray = Object.values(adminIds).map(id => String(id));
-      
+      // Check if user is already an admin
+      const adminIdsArray = Object.values(adminIds).map((id) => String(id));
       if (adminIdsArray.includes(String(userId))) {
-        // Remove from admin list
-        const updatedArray = adminIdsArray.filter(id => String(id) !== String(userId));
-        const updatedAdminIds = updatedArray.reduce((acc, id, index) => {
-          acc[index] = id;
-          return acc;
-        }, {} as any);
-        
-        await set(adminIdsRef, updatedAdminIds);
-        console.log(`✅ Also removed user ${userId} from admin list`);
+        console.log('User is already an admin');
+        return true;
       }
-    }
-    
-    console.log(`✅ Successfully removed member ${userId} from community`);
-    return true;
-  } catch (error) {
-    console.error('❌ Error removing community member:', error);
-    return false;
-  }
-}
 
-/**
- * Get community admin details for permission checks
- * @param communityId - The community ID
- * @param currentUserId - Current user's ID
- * @param targetUserId - Target user's ID
- * @returns Promise with admin check details
- */
-async getCommunityAdminCheckDetails(
-  communityId: string,
-  currentUserId: string,
-  targetUserId: string
-): Promise<{
-  adminIds: string[];
-  isCurrentUserAdmin: boolean;
-  isCurrentUserCreator: boolean;
-  isTargetUserAdmin: boolean;
-  isSelf: boolean;
-}> {
-  try {
-    const db = getDatabase();
-    
-    // Get community details
-    const communityRef = ref(db, `communities/${communityId}`);
-    const snapshot = await get(communityRef);
-    
-    if (!snapshot.exists()) {
+      // Add new admin ID
+      const newIndex = Object.keys(adminIds).length;
+      adminIds[newIndex] = String(userId);
+
+      // Update Firebase
+      await set(adminIdsRef, adminIds);
+
+      console.log(`✅ Successfully made user ${userId} a community admin`);
+      return true;
+    } catch (error) {
+      console.error('❌ Error making community admin:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Dismiss a user as community admin
+   * @param communityId - The community ID
+   * @param userId - The user ID to dismiss as admin
+   * @returns Promise<boolean> - Success status
+   */
+  async dismissCommunityAdmin(
+    communityId: string,
+    userId: string
+  ): Promise<boolean> {
+    try {
+      const db = getDatabase();
+      const adminIdsRef = ref(db, `communities/${communityId}/adminIds`);
+
+      // Get current admin IDs
+      const snapshot = await get(adminIdsRef);
+      if (!snapshot.exists()) {
+        console.log('No admin IDs found');
+        return false;
+      }
+
+      const adminIds = snapshot.val();
+
+      // Convert to array and filter out the user
+      const adminIdsArray = Object.values(adminIds).map((id) => String(id));
+      const updatedArray = adminIdsArray.filter(
+        (id) => String(id) !== String(userId)
+      );
+
+      // Check if user was actually an admin
+      if (adminIdsArray.length === updatedArray.length) {
+        console.log('User was not an admin');
+        return true; // Not an error, just already not an admin
+      }
+
+      // Convert back to object format for Firebase
+      const updatedAdminIds = updatedArray.reduce((acc, id, index) => {
+        acc[index] = id;
+        return acc;
+      }, {} as any);
+
+      // Update Firebase
+      await set(adminIdsRef, updatedAdminIds);
+
+      console.log(
+        `✅ Successfully dismissed user ${userId} as community admin`
+      );
+      return true;
+    } catch (error) {
+      console.error('❌ Error dismissing community admin:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Remove a member from community
+   * @param communityId - The community ID
+   * @param userId - The user ID to remove
+   * @returns Promise<boolean> - Success status
+   */
+  async removeCommunityMember(
+    communityId: string,
+    userId: string
+  ): Promise<boolean> {
+    try {
+      const db = getDatabase();
+
+      // Mark member as inactive instead of deleting
+      const memberRef = ref(db, `communities/${communityId}/members/${userId}`);
+
+      // Check if member exists
+      const snapshot = await get(memberRef);
+      if (!snapshot.exists()) {
+        console.log('Member not found in community');
+        return false;
+      }
+
+      // Update member status to inactive
+      await update(memberRef, {
+        isActive: false,
+        removedAt: new Date().toISOString(),
+      });
+
+      // Also remove from adminIds if they are an admin
+      const adminIdsRef = ref(db, `communities/${communityId}/adminIds`);
+      const adminSnapshot = await get(adminIdsRef);
+
+      if (adminSnapshot.exists()) {
+        const adminIds = adminSnapshot.val();
+        const adminIdsArray = Object.values(adminIds).map((id) => String(id));
+
+        if (adminIdsArray.includes(String(userId))) {
+          // Remove from admin list
+          const updatedArray = adminIdsArray.filter(
+            (id) => String(id) !== String(userId)
+          );
+          const updatedAdminIds = updatedArray.reduce((acc, id, index) => {
+            acc[index] = id;
+            return acc;
+          }, {} as any);
+
+          await set(adminIdsRef, updatedAdminIds);
+          console.log(`✅ Also removed user ${userId} from admin list`);
+        }
+      }
+
+      console.log(`✅ Successfully removed member ${userId} from community`);
+      return true;
+    } catch (error) {
+      console.error('❌ Error removing community member:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get community admin details for permission checks
+   * @param communityId - The community ID
+   * @param currentUserId - Current user's ID
+   * @param targetUserId - Target user's ID
+   * @returns Promise with admin check details
+   */
+  async getCommunityAdminCheckDetails(
+    communityId: string,
+    currentUserId: string,
+    targetUserId: string
+  ): Promise<{
+    adminIds: string[];
+    isCurrentUserAdmin: boolean;
+    isCurrentUserCreator: boolean;
+    isTargetUserAdmin: boolean;
+    isSelf: boolean;
+  }> {
+    try {
+      const db = getDatabase();
+
+      // Get community details
+      const communityRef = ref(db, `communities/${communityId}`);
+      const snapshot = await get(communityRef);
+
+      if (!snapshot.exists()) {
+        return {
+          adminIds: [],
+          isCurrentUserAdmin: false,
+          isCurrentUserCreator: false,
+          isTargetUserAdmin: false,
+          isSelf: false,
+        };
+      }
+
+      const communityData = snapshot.val();
+      const adminIds = communityData.adminIds
+        ? Object.values(communityData.adminIds).map((id: any) => String(id))
+        : [];
+      const creatorId = String(communityData.createdBy || '');
+
+      const isCurrentUserAdmin = adminIds.includes(String(currentUserId));
+      const isCurrentUserCreator = String(currentUserId) === creatorId;
+      const isTargetUserAdmin = adminIds.includes(String(targetUserId));
+      const isSelf = String(currentUserId) === String(targetUserId);
+
+      return {
+        adminIds,
+        isCurrentUserAdmin,
+        isCurrentUserCreator,
+        isTargetUserAdmin,
+        isSelf,
+      };
+    } catch (error) {
+      console.error('Error getting community admin check details:', error);
       return {
         adminIds: [],
         isCurrentUserAdmin: false,
@@ -6049,146 +6267,117 @@ async getCommunityAdminCheckDetails(
         isSelf: false,
       };
     }
-    
-    const communityData = snapshot.val();
-    const adminIds = communityData.adminIds 
-      ? Object.values(communityData.adminIds).map((id: any) => String(id))
-      : [];
-    const creatorId = String(communityData.createdBy || '');
-    
-    const isCurrentUserAdmin = adminIds.includes(String(currentUserId));
-    const isCurrentUserCreator = String(currentUserId) === creatorId;
-    const isTargetUserAdmin = adminIds.includes(String(targetUserId));
-    const isSelf = String(currentUserId) === String(targetUserId);
-    
-    return {
-      adminIds,
-      isCurrentUserAdmin,
-      isCurrentUserCreator,
-      isTargetUserAdmin,
-      isSelf,
-    };
-  } catch (error) {
-    console.error('Error getting community admin check details:', error);
-    return {
-      adminIds: [],
-      isCurrentUserAdmin: false,
-      isCurrentUserCreator: false,
-      isTargetUserAdmin: false,
-      isSelf: false,
-    };
   }
-}
 
-/**
- * Transfer community ownership to a new owner
- * - Changes ownerId to new owner
- * - Makes old owner an admin
- * - Removes new owner from adminIds
- * - createdBy remains unchanged (original creator)
- * 
- * @param communityId - The community ID
- * @param currentOwnerId - Current owner's user ID
- * @param newOwnerId - New owner's user ID (must be an admin)
- * @returns Promise<boolean> - Success status
- */
-// async transferCommunityOwnership(
-//   communityId: string,
-//   currentOwnerId: string,
-//   newOwnerId: string
-// ): Promise<boolean> {
-//   try {
-//     const db = getDatabase();
-//     const communityRef = ref(db, `communities/${communityId}`);
+  /**
+   * Transfer community ownership to a new owner
+   * - Changes ownerId to new owner
+   * - Makes old owner an admin
+   * - Removes new owner from adminIds
+   * - createdBy remains unchanged (original creator)
+   *
+   * @param communityId - The community ID
+   * @param currentOwnerId - Current owner's user ID
+   * @param newOwnerId - New owner's user ID (must be an admin)
+   * @returns Promise<boolean> - Success status
+   */
+  // async transferCommunityOwnership(
+  //   communityId: string,
+  //   currentOwnerId: string,
+  //   newOwnerId: string
+  // ): Promise<boolean> {
+  //   try {
+  //     const db = getDatabase();
+  //     const communityRef = ref(db, `communities/${communityId}`);
 
-//     // Get current community data
-//     const snapshot = await get(communityRef);
-//     if (!snapshot.exists()) {
-//       console.error('Community not found');
-//       return false;
-//     }
+  //     // Get current community data
+  //     const snapshot = await get(communityRef);
+  //     if (!snapshot.exists()) {
+  //       console.error('Community not found');
+  //       return false;
+  //     }
 
-//     const communityData = snapshot.val();
+  //     const communityData = snapshot.val();
 
-//     // Verify current user is the owner
-//     if (String(communityData.ownerId) !== String(currentOwnerId)) {
-//       console.error('Current user is not the owner');
-//       return false;
-//     }
+  //     // Verify current user is the owner
+  //     if (String(communityData.ownerId) !== String(currentOwnerId)) {
+  //       console.error('Current user is not the owner');
+  //       return false;
+  //     }
 
-//     // Get current admin IDs
-//     const adminIds = communityData.adminIds || {};
-//     const adminIdsArray = Object.values(adminIds).map((id: any) => String(id));
+  //     // Get current admin IDs
+  //     const adminIds = communityData.adminIds || {};
+  //     const adminIdsArray = Object.values(adminIds).map((id: any) => String(id));
 
-//     // Verify new owner is an admin
-//     if (!adminIdsArray.includes(String(newOwnerId))) {
-//       console.error('New owner must be an admin');
-//       return false;
-//     }
+  //     // Verify new owner is an admin
+  //     if (!adminIdsArray.includes(String(newOwnerId))) {
+  //       console.error('New owner must be an admin');
+  //       return false;
+  //     }
 
-//     // Remove new owner from admin list
-//     const updatedAdminIdsArray = adminIdsArray.filter(
-//       (id) => String(id) !== String(newOwnerId)
-//     );
+  //     // Remove new owner from admin list
+  //     const updatedAdminIdsArray = adminIdsArray.filter(
+  //       (id) => String(id) !== String(newOwnerId)
+  //     );
 
-//     // Add old owner to admin list (if not already there)
-//     if (!updatedAdminIdsArray.includes(String(currentOwnerId))) {
-//       updatedAdminIdsArray.push(String(currentOwnerId));
-//     }
+  //     // Add old owner to admin list (if not already there)
+  //     if (!updatedAdminIdsArray.includes(String(currentOwnerId))) {
+  //       updatedAdminIdsArray.push(String(currentOwnerId));
+  //     }
 
-//     // Convert back to object format for Firebase
-//     const updatedAdminIds = updatedAdminIdsArray.reduce(
-//       (acc, id, index) => {
-//         acc[index] = id;
-//         return acc;
-//       },
-//       {} as any
-//     );
+  //     // Convert back to object format for Firebase
+  //     const updatedAdminIds = updatedAdminIdsArray.reduce(
+  //       (acc, id, index) => {
+  //         acc[index] = id;
+  //         return acc;
+  //       },
+  //       {} as any
+  //     );
 
-//     // Prepare update data
-//     const updateData = {
-//       ownerId: String(newOwnerId), // ✅ NEW owner
-//       adminIds: updatedAdminIds, // ✅ Updated admin list
-//       // createdBy remains unchanged - it's the ORIGINAL creator
-//       updatedAt: new Date().toISOString(),
-//     };
+  //     // Prepare update data
+  //     const updateData = {
+  //       ownerId: String(newOwnerId), // ✅ NEW owner
+  //       adminIds: updatedAdminIds, // ✅ Updated admin list
+  //       // createdBy remains unchanged - it's the ORIGINAL creator
+  //       updatedAt: new Date().toISOString(),
+  //     };
 
-//     // Update Firebase
-//     await update(communityRef, updateData);
+  //     // Update Firebase
+  //     await update(communityRef, updateData);
 
-//     console.log('✅ Community ownership transferred successfully', {
-//       communityId,
-//       oldOwner: currentOwnerId,
-//       newOwner: newOwnerId,
-//       originalCreator: communityData.createdBy, // This never changes
-//     });
+  //     console.log('✅ Community ownership transferred successfully', {
+  //       communityId,
+  //       oldOwner: currentOwnerId,
+  //       newOwner: newOwnerId,
+  //       originalCreator: communityData.createdBy, // This never changes
+  //     });
 
-//     return true;
-//   } catch (error) {
-//     console.error('❌ Error transferring community ownership:', error);
-//     return false;
-//   }
-// }
+  //     return true;
+  //   } catch (error) {
+  //     console.error('❌ Error transferring community ownership:', error);
+  //     return false;
+  //   }
+  // }
 
-// /**
-//  * Get community details (helper method if not already present)
-//  */
-// async getCommunityDetails(communityId: string): Promise<any> {
-//   try {
-//     const db = getDatabase();
-//     const communityRef = ref(db, `communities/${communityId}`);
-//     const snapshot = await get(communityRef);
+  // /**
+  //  * Get community details (helper method if not already present)
+  //  */
+  // async getCommunityDetails(communityId: string): Promise<any> {
+  //   try {
+  //     const db = getDatabase();
+  //     const communityRef = ref(db, `communities/${communityId}`);
+  //     const snapshot = await get(communityRef);
 
-//     if (!snapshot.exists()) {
-//       return null;
-//     }
+  //     if (!snapshot.exists()) {
+  //       return null;
+  //     }
 
-//     return snapshot.val();
-//   } catch (error) {
-//     console.error('Error getting community details:', error);
-//     return null;
-//   }
-// }
+  //     return snapshot.val();
+  //   } catch (error) {
+  //     console.error('Error getting community details:', error);
+  //     return null;
+  //   }
+  // }
 
   /**
    * Check if user is member of a community
@@ -8649,76 +8838,76 @@ async getCommunityAdminCheckDetails(
   }
 
   /**
- * Get message receipts from Firebase
- * @param roomId - The room/conversation ID
- * @param messageKey - The message key
- * @returns Promise with receipts data
- */
-async getMessageReceipts(roomId: string, messageKey: string): Promise<any> {
-  try {
-    const db = getDatabase();
-    const receiptsRef = ref(db, `messages/${roomId}/${messageKey}/receipts`);
-    const snapshot = await get(receiptsRef);
-    
-    if (snapshot.exists()) {
-      return snapshot.val();
-    }
-    return null;
-  } catch (error) {
-    console.error('Error fetching message receipts:', error);
-    throw error;
-  }
-}
+   * Get message receipts from Firebase
+   * @param roomId - The room/conversation ID
+   * @param messageKey - The message key
+   * @returns Promise with receipts data
+   */
+  async getMessageReceipts(roomId: string, messageKey: string): Promise<any> {
+    try {
+      const db = getDatabase();
+      const receiptsRef = ref(db, `messages/${roomId}/${messageKey}/receipts`);
+      const snapshot = await get(receiptsRef);
 
-/**
- * Get user name by user ID
- * @param userId - The user ID
- * @returns Promise with user name
- */
-async getUserName(userId: string): Promise<string> {
-  try {
-    const db = getDatabase();
-    const userRef = ref(db, `users/${userId}/name`);
-    const snapshot = await get(userRef);
-    
-    if (snapshot.exists()) {
-      return snapshot.val();
+      if (snapshot.exists()) {
+        return snapshot.val();
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching message receipts:', error);
+      throw error;
     }
-    return userId; // Return userId if name not found
-  } catch (error) {
-    console.error('Error fetching user name:', error);
-    return userId; // Return userId on error
   }
-}
 
-/**
- * Alternative: Get multiple user names at once (more efficient for group chats)
- * @param userIds - Array of user IDs
- * @returns Promise with map of userId -> userName
- */
-async getUserNames(userIds: string[]): Promise<Map<string, string>> {
-  const userNames = new Map<string, string>();
-  
-  try {
-    const db = getDatabase();
-    
-    // Fetch all users in parallel
-    const promises = userIds.map(async (userId) => {
+  /**
+   * Get user name by user ID
+   * @param userId - The user ID
+   * @returns Promise with user name
+   */
+  async getUserName(userId: string): Promise<string> {
+    try {
+      const db = getDatabase();
       const userRef = ref(db, `users/${userId}/name`);
       const snapshot = await get(userRef);
-      const name = snapshot.exists() ? snapshot.val() : userId;
-      userNames.set(userId, name);
-    });
-    
-    await Promise.all(promises);
-    return userNames;
-  } catch (error) {
-    console.error('Error fetching user names:', error);
-    // Return map with userIds as fallback
-    userIds.forEach(id => userNames.set(id, id));
-    return userNames;
+
+      if (snapshot.exists()) {
+        return snapshot.val();
+      }
+      return userId; // Return userId if name not found
+    } catch (error) {
+      console.error('Error fetching user name:', error);
+      return userId; // Return userId on error
+    }
   }
-}
+
+  /**
+   * Alternative: Get multiple user names at once (more efficient for group chats)
+   * @param userIds - Array of user IDs
+   * @returns Promise with map of userId -> userName
+   */
+  async getUserNames(userIds: string[]): Promise<Map<string, string>> {
+    const userNames = new Map<string, string>();
+
+    try {
+      const db = getDatabase();
+
+      // Fetch all users in parallel
+      const promises = userIds.map(async (userId) => {
+        const userRef = ref(db, `users/${userId}/name`);
+        const snapshot = await get(userRef);
+        const name = snapshot.exists() ? snapshot.val() : userId;
+        userNames.set(userId, name);
+      });
+
+      await Promise.all(promises);
+      return userNames;
+    } catch (error) {
+      console.error('Error fetching user names:', error);
+      // Return map with userIds as fallback
+      userIds.forEach((id) => userNames.set(id, id));
+      return userNames;
+    }
+  }
 
   // =====================
   // ====== STATE ========
@@ -8771,7 +8960,7 @@ async getUserNames(userIds: string[]): Promise<Map<string, string>> {
   // SET
   setSelectedGroupMembers(members: any[]) {
     this.selectedGroupMembers = members;
-    console.log("selected group members are :",this.selectedGroupMembers)
+    console.log('selected group members are :', this.selectedGroupMembers);
   }
 
   // GET
@@ -8784,22 +8973,22 @@ async getUserNames(userIds: string[]): Promise<Map<string, string>> {
     this.selectedGroupMembers = [];
   }
 
-  private currentCommunityContext: { 
-  communityId: string; 
-  communityName: string | null 
-} | null = null;
+  private currentCommunityContext: {
+    communityId: string;
+    communityName: string | null;
+  } | null = null;
 
-setCurrentCommunityContext(context: any): void {
-  this.currentCommunityContext = context;
-}
+  setCurrentCommunityContext(context: any): void {
+    this.currentCommunityContext = context;
+  }
 
-getCurrentCommunityContext(): any {
-  return this.currentCommunityContext;
-}
+  getCurrentCommunityContext(): any {
+    return this.currentCommunityContext;
+  }
 
-clearCurrentCommunityContext(): void {
-  this.currentCommunityContext = null;
-}
+  clearCurrentCommunityContext(): void {
+    this.currentCommunityContext = null;
+  }
 
   // =====================
   // ======= LEGACY ======

@@ -28,19 +28,19 @@ export class ChatOptionsPopoverComponent {
   get menuOptions() {
   if (this.chatType === 'group') {
     return [
-      'Group Info (DemmRoom Info)',
-      'Group Media (DemmVault)',
-      'Search (FindTell)',
-      'Add Members (Add Demmians)',
-      'Exit Group (Leave DemmRoom)',
-      'Clear Chat (Clear DemmChat)'
+      'Group Info',
+      'Group Media',
+      'Search',
+      'Add Members',
+      'Exit Group',
+      'Clear Chat'
     ];
   } else {
     return [
-      'View Contact (View Demmian)',
-      'Search (FindTell)',
-      'Mute Notifications (QuietTell) wip',
-      'Clear Chat (Clear DemmChat)'
+      'View Contact',
+      'Search',
+      'Mute Notifications wip',
+      'Clear Chat'
     ];
   }
 }
