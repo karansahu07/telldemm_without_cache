@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { Post } from './post';
+import { FileStorage } from './file-storage';
 
-describe('Post', () => {
-  let service: Post;
+describe('FileStorage', () => {
+  let service: FileStorage;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(Post);
+    service = TestBed.inject(FileStorage);
   });
 
   it('should be created', () => {

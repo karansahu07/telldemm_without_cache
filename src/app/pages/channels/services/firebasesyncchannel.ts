@@ -11,12 +11,7 @@ export class ChannelFirebaseSyncService implements OnDestroy {
 
   private myChannelsRef: any;
   private discoverChannelsRef: any;
-
-  // 🔁 Write queue for offline actions
-  private writeQueue: Array<{
-    type: 'follow' | 'unfollow' | 'syncMy' | 'syncDiscover';
-    payload: any;
-  }> = [];
+  private isOnline: boolean = true;
 
   constructor(
     private db: Database,
@@ -83,11 +78,19 @@ export class ChannelFirebaseSyncService implements OnDestroy {
       const snapshot = await get(ref(this.db, 'channels'));
       const allChannels = snapshot.val() || {};
 
-      return channelIds
+      const channels = channelIds
         .map(id => allChannels[id]?.meta)
         .filter(Boolean);
+
+      // 🔹 Cache individual channels to PouchDB
+      for (const channel of channels) {
+        await this.pouchDb.saveChannel(channel);
+      }
+
+      return channels;
     } catch (err) {
       console.error('❌ Failed to fetch channels from Firebase:', err);
+      
       // Try to get from PouchDB cache
       const cachedChannels: Channel[] = [];
       for (const id of channelIds) {
@@ -99,7 +102,7 @@ export class ChannelFirebaseSyncService implements OnDestroy {
   }
 
   /* =========================
-     WRITE - WITH QUEUE
+     WRITE - WITH UNIFIED QUEUE
      ========================= */
 
   /**
@@ -108,27 +111,33 @@ export class ChannelFirebaseSyncService implements OnDestroy {
   async syncMyChannels(uid: string, channels: Channel[]) {
     const payload: any = {};
 
+    // Build Firebase payload
     channels.forEach(ch => {
       payload[ch.channel_id] = true;
-      this.upsertChannelMeta(ch); // Cache individual channels
     });
 
-    // 🔹 Always save to PouchDB first
+    // 🔹 Always save to PouchDB first (offline-first)
     await this.pouchDb.saveMyChannels(uid, channels);
 
+    // 🔹 Cache individual channels
+    for (const ch of channels) {
+      await this.upsertChannelMeta(ch);
+    }
+
     // 🔹 Try Firebase or queue
-    if (navigator.onLine) {
+    if (this.isOnline) {
       try {
         await update(ref(this.db), {
           [`channel_userdata/${uid}/my_channels`]: payload
         });
+        console.log('✅ Synced my channels to Firebase');
       } catch (error) {
         console.error('❌ Firebase sync failed, queuing:', error);
-        this.enqueueWrite('syncMy', { uid, channels });
+        await this.enqueueChannelSync('my', uid, channels);
       }
     } else {
       console.log('📴 Offline: queuing my channels sync');
-      this.enqueueWrite('syncMy', { uid, channels });
+      await this.enqueueChannelSync('my', uid, channels);
     }
   }
 
@@ -140,25 +149,30 @@ export class ChannelFirebaseSyncService implements OnDestroy {
 
     channels.forEach(ch => {
       payload[ch.channel_id] = true;
-      this.upsertChannelMeta(ch);
     });
 
     // 🔹 Always save to PouchDB first
     await this.pouchDb.saveDiscoverChannels(uid, channels);
 
+    // 🔹 Cache individual channels
+    for (const ch of channels) {
+      await this.upsertChannelMeta(ch);
+    }
+
     // 🔹 Try Firebase or queue
-    if (navigator.onLine) {
+    if (this.isOnline) {
       try {
         await update(ref(this.db), {
           [`channel_userdata/${uid}/discover_channels`]: payload
         });
+        console.log('✅ Synced discover channels to Firebase');
       } catch (error) {
         console.error('❌ Firebase sync failed, queuing:', error);
-        this.enqueueWrite('syncDiscover', { uid, channels });
+        await this.enqueueChannelSync('discover', uid, channels);
       }
     } else {
       console.log('📴 Offline: queuing discover channels sync');
-      this.enqueueWrite('syncDiscover', { uid, channels });
+      await this.enqueueChannelSync('discover', uid, channels);
     }
   }
 
@@ -166,30 +180,30 @@ export class ChannelFirebaseSyncService implements OnDestroy {
    * Follow Channel (with offline queue)
    */
   async followChannel(uid: string, channel: Channel) {
+    // 🔹 Cache channel metadata
     await this.upsertChannelMeta(channel);
     
-    // 🔹 Queue the action to PouchDB
+    // 🔹 Queue to unified PouchDB queue
     await this.pouchDb.enqueueAction({
-      type: 'follow',
-      channelId: channel.channel_id,
-      userId: uid,
-      channel,
+      type: 'channel_follow',
+      channelId: String(channel.channel_id),
+      data: { uid, channel },
       timestamp: Date.now()
     });
 
-    if (navigator.onLine) {
+    // 🔹 Try immediate execution if online
+    if (this.isOnline) {
       try {
         await update(ref(this.db), {
           [`channel_userdata/${uid}/my_channels/${channel.channel_id}`]: true,
           [`channel_userdata/${uid}/discover_channels/${channel.channel_id}`]: null
         });
+        console.log('✅ Follow synced to Firebase');
       } catch (error) {
-        console.error('❌ Follow failed, queued for retry:', error);
-        this.enqueueWrite('follow', { uid, channel });
+        console.error('❌ Follow failed, will retry when online:', error);
       }
     } else {
       console.log('📴 Offline: follow action queued');
-      this.enqueueWrite('follow', { uid, channel });
     }
   }
 
@@ -197,27 +211,27 @@ export class ChannelFirebaseSyncService implements OnDestroy {
    * Unfollow Channel (with offline queue)
    */
   async unfollowChannel(uid: string, channelId: number) {
-    // 🔹 Queue the action to PouchDB
+    // 🔹 Queue to unified PouchDB queue
     await this.pouchDb.enqueueAction({
-      type: 'unfollow',
-      channelId,
-      userId: uid,
+      type: 'channel_unfollow',
+      channelId: String(channelId),
+      data: { uid, channelId },
       timestamp: Date.now()
     });
 
-    if (navigator.onLine) {
+    // 🔹 Try immediate execution if online
+    if (this.isOnline) {
       try {
         await update(ref(this.db), {
           [`channel_userdata/${uid}/my_channels/${channelId}`]: null,
           [`channel_userdata/${uid}/discover_channels/${channelId}`]: true
         });
+        console.log('✅ Unfollow synced to Firebase');
       } catch (error) {
-        console.error('❌ Unfollow failed, queued for retry:', error);
-        this.enqueueWrite('unfollow', { uid, channelId });
+        console.error('❌ Unfollow failed, will retry when online:', error);
       }
     } else {
       console.log('📴 Offline: unfollow action queued');
-      this.enqueueWrite('unfollow', { uid, channelId });
     }
   }
 
@@ -225,11 +239,11 @@ export class ChannelFirebaseSyncService implements OnDestroy {
    * Cache individual channel metadata
    */
   private async upsertChannelMeta(channel: Channel) {
-    // 🔹 Save to PouchDB
+    // 🔹 Always save to PouchDB first
     await this.pouchDb.saveChannel(channel);
 
-    // 🔹 Try Firebase
-    if (navigator.onLine) {
+    // 🔹 Try Firebase if online
+    if (this.isOnline) {
       try {
         await update(ref(this.db), {
           [`channels/${channel.channel_id}/meta`]: {
@@ -238,7 +252,8 @@ export class ChannelFirebaseSyncService implements OnDestroy {
             channel_dp: channel.channel_dp,
             followers_count: channel.followers_count || 0,
             created_by: channel.created_by || 0,
-            creator_name: channel.creator_name || ''
+            creator_name: channel.creator_name || '',
+            is_verified: channel.is_verified || false
           }
         });
       } catch (error) {
@@ -248,70 +263,97 @@ export class ChannelFirebaseSyncService implements OnDestroy {
   }
 
   /* =========================
-     WRITE QUEUE MANAGEMENT
+     QUEUE HELPERS
      ========================= */
 
-  private enqueueWrite(type: string, payload: any) {
-    this.writeQueue.push({ type: type as any, payload });
+  /**
+   * Helper to enqueue channel sync actions
+   */
+  private async enqueueChannelSync(type: 'my' | 'discover', uid: string, channels: Channel[]) {
+    await this.pouchDb.enqueueAction({
+      type: type === 'my' ? 'channel_follow' : 'channel_unfollow',
+      data: { uid, channels, syncType: type },
+      timestamp: Date.now()
+    });
   }
 
-  private async flushQueue() {
-    if (!navigator.onLine || this.writeQueue.length === 0) return;
+  /**
+   * Flush queued channel actions
+   * Called by PostService or can be called manually
+   */
+  async flushChannelQueue() {
+    if (!this.isOnline) return;
 
-    console.log(`🔄 Flushing ${this.writeQueue.length} queued operations...`);
+    const queue = await this.pouchDb.getQueue();
+    
+    // Filter only channel actions
+    const channelActions = queue.filter(a => 
+      a.type === 'channel_follow' || 
+      a.type === 'channel_unfollow'
+    );
 
-    while (this.writeQueue.length > 0) {
-      const item = this.writeQueue.shift();
-      if (!item) continue;
+    if (channelActions.length === 0) return;
+
+    console.log(`🔄 Flushing ${channelActions.length} channel actions...`);
+
+    for (let i = channelActions.length - 1; i >= 0; i--) {
+      const action = channelActions[i];
 
       try {
-        switch (item.type) {
-          case 'follow':
-            await update(ref(this.db), {
-              [`channel_userdata/${item.payload.uid}/my_channels/${item.payload.channel.channel_id}`]: true,
-              [`channel_userdata/${item.payload.uid}/discover_channels/${item.payload.channel.channel_id}`]: null
-            });
-            break;
+        if (action.type === 'channel_follow') {
+          const { uid, channel } = action.data;
 
-          case 'unfollow':
+          if (channel) {
+            // Single follow
             await update(ref(this.db), {
-              [`channel_userdata/${item.payload.uid}/my_channels/${item.payload.channelId}`]: null,
-              [`channel_userdata/${item.payload.uid}/discover_channels/${item.payload.channelId}`]: true
+              [`channel_userdata/${uid}/my_channels/${channel.channel_id}`]: true,
+              [`channel_userdata/${uid}/discover_channels/${channel.channel_id}`]: null
             });
-            break;
+          } else if (action.data.channels) {
+            // Bulk sync
+            const payload: any = {};
+            action.data.channels.forEach((ch: Channel) => {
+              payload[ch.channel_id] = true;
+            });
+            await update(ref(this.db), {
+              [`channel_userdata/${uid}/my_channels`]: payload
+            });
+          }
+        } 
+        else if (action.type === 'channel_unfollow') {
+          const { uid, channelId, channels } = action.data;
 
-          case 'syncMy':
-            const myPayload: any = {};
-            item.payload.channels.forEach((ch: Channel) => {
-              myPayload[ch.channel_id] = true;
+          if (channelId) {
+            // Single unfollow
+            await update(ref(this.db), {
+              [`channel_userdata/${uid}/my_channels/${channelId}`]: null,
+              [`channel_userdata/${uid}/discover_channels/${channelId}`]: true
+            });
+          } else if (channels) {
+            // Bulk sync
+            const payload: any = {};
+            channels.forEach((ch: Channel) => {
+              payload[ch.channel_id] = true;
             });
             await update(ref(this.db), {
-              [`channel_userdata/${item.payload.uid}/my_channels`]: myPayload
+              [`channel_userdata/${uid}/discover_channels`]: payload
             });
-            break;
-
-          case 'syncDiscover':
-            const discoverPayload: any = {};
-            item.payload.channels.forEach((ch: Channel) => {
-              discoverPayload[ch.channel_id] = true;
-            });
-            await update(ref(this.db), {
-              [`channel_userdata/${item.payload.uid}/discover_channels`]: discoverPayload
-            });
-            break;
+          }
         }
 
-        console.log(`✅ Synced queued ${item.type}`);
-      } catch (error) {
-        console.error(`❌ Failed to sync ${item.type}, re-queuing:`, error);
-        this.writeQueue.unshift(item); // Put it back
-        break; // Stop processing if one fails
-      }
-    }
+        console.log(`✅ Synced queued ${action.type}`);
 
-    // 🔹 Clear PouchDB queue after successful flush
-    if (this.writeQueue.length === 0) {
-      await this.pouchDb.clearQueue();
+        // Remove from queue
+        const queueIndex = queue.indexOf(action);
+        if (queueIndex !== -1) {
+          await this.pouchDb.removeFromQueue(queueIndex);
+        }
+
+      } catch (error) {
+        console.error(`❌ Failed to sync ${action.type}:`, error);
+        // Keep in queue for retry
+        break;
+      }
     }
   }
 
@@ -320,9 +362,30 @@ export class ChannelFirebaseSyncService implements OnDestroy {
      ========================= */
 
   private monitorConnection() {
+    // Monitor Firebase connection
+    const connectedRef = ref(this.db, '.info/connected');
+    onValue(connectedRef, (snapshot) => {
+      const wasOnline = this.isOnline;
+      this.isOnline = snapshot.val() === true;
+
+      if (this.isOnline && !wasOnline) {
+        console.log('🟢 Firebase connected → flushing channel queue');
+        this.flushChannelQueue();
+      } else if (!this.isOnline) {
+        console.log('📴 Firebase disconnected');
+      }
+    });
+
+    // Monitor browser online/offline
     window.addEventListener('online', () => {
-      console.log('🟢 Back online → flushing queue');
-      this.flushQueue();
+      console.log('🟢 Browser online → flushing channel queue');
+      this.isOnline = true;
+      this.flushChannelQueue();
+    });
+
+    window.addEventListener('offline', () => {
+      console.log('📴 Browser offline');
+      this.isOnline = false;
     });
   }
 
@@ -348,6 +411,28 @@ export class ChannelFirebaseSyncService implements OnDestroy {
   }
 
   /* =========================
+     UTILITY METHODS
+     ========================= */
+
+  /**
+   * Get current online status
+   */
+  isConnected(): boolean {
+    return this.isOnline;
+  }
+
+  /**
+   * Get queued channel actions
+   */
+  async getQueuedChannelActions() {
+    const queue = await this.pouchDb.getQueue();
+    return queue.filter(a => 
+      a.type === 'channel_follow' || 
+      a.type === 'channel_unfollow'
+    );
+  }
+
+  /* =========================
      LEGACY METHODS
      ========================= */
 
@@ -370,6 +455,8 @@ export class ChannelFirebaseSyncService implements OnDestroy {
   }
 
   updateLastSync(uid: string) {
+    if (!this.isOnline) return Promise.resolve();
+    
     return update(ref(this.db), {
       [`channel_userdata/${uid}/meta/last_sync`]: Date.now()
     });

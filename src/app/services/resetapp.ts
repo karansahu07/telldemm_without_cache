@@ -166,6 +166,7 @@ import { AuthService } from '../auth/auth.service';
 import { FcmService } from './fcm-service';
 import { SqliteService } from './sqlite.service';
 import { FirebaseChatService } from './firebase-chat.service';
+import { ChannelPouchDbService } from '../pages/channels/services/pouch-db';
 // import { App } from '@capacitor/app';
 // import { CapacitorSQLite } from '@capacitor-community/sqlite';
 
@@ -177,7 +178,8 @@ export class Resetapp {
     private authService: AuthService,
     private fcmService: FcmService,
     private sqliteService: SqliteService,
-    private firebasechatservice : FirebaseChatService
+    private firebasechatservice : FirebaseChatService,
+    private channelPouchDb:ChannelPouchDbService
   ) {}
 
   /** Clear LocalStorage */
@@ -258,6 +260,10 @@ async resetApp() {
   await this.clearCapacitorStorage();
   await this.clearSecureStorage();
   await this.clearFileSystem();
+
+    // 🔥 Step 3: Clear PouchDB
+  console.log('🗑️ Clearing PouchDB...');
+  await this.channelPouchDb.clearAll();
 
   console.log('🗑️ Resetting SQLite database...');
   await this.sqliteService.resetDB();

@@ -1,18 +1,18 @@
 // src/app/pages/channels/channel-feed/channel-feed.page.ts
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { IonicModule, ModalController, ActionSheetController } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { ChannelService, Channel } from '../services/channel';
-import { forkJoin, firstValueFrom } from 'rxjs';
+import { forkJoin, firstValueFrom, Subscription } from 'rxjs';
 import { PostService } from '../services/post';
 import { EmojiPickerModalComponent } from 'src/app/components/emoji-picker-modal/emoji-picker-modal.component';
 import { AuthService } from 'src/app/auth/auth.service';
-import { Storage } from '@ionic/storage-angular';
-import { Subscription } from 'rxjs';
-
+import { ChannelPouchDbService } from '../services/pouch-db';
+import { FileStorageService } from '../services/file-storage';
+// import { PostPouchDbService } from '../services/post-pouch-db.service';
 
 interface ReactionMap {
   [emoji: string]: number;
@@ -28,9 +28,11 @@ export interface Post {
   body: string;
   image?: string;
   media_id?: string;
-  created_by: number;  // User ID who created the post
+  created_by: number;
   user_reactions?: { [userId: string]: UserReaction };
   timestamp?: number;
+  pendingImageId?:string;
+  isPending?: boolean; // For optimistic posts
 }
 
 @Component({
@@ -40,7 +42,7 @@ export interface Post {
   standalone: true,
   imports: [IonicModule, CommonModule, FormsModule],
 })
-export class ChannelFeedPage implements OnInit {
+export class ChannelFeedPage implements OnInit, OnDestroy {
   channelId!: string | null;
   channel: Channel | null = null;
   posts: Post[] = [];
@@ -50,7 +52,10 @@ export class ChannelFeedPage implements OnInit {
   uploadProgress: number = 0;
   isUploading: boolean = false;
   isMuted: boolean = false;
+  isOnline: boolean = true;
 
+  // Track Blob URLs for cleanup
+  private blobURLs: Set<string> = new Set();
   // Reaction popup
   showReactionPopup: boolean = false;
   popupX = 0;
@@ -70,13 +75,13 @@ export class ChannelFeedPage implements OnInit {
   private touchStartX: number = 0;
   private touchStartY: number = 0;
   private postsSub?: Subscription;
-
+  private connectionSub?: Subscription;
 
   // Cache for media URLs
   private mediaCache: Map<string, string> = new Map();
 
   currentUserId!: any;
-  canCreatePost: boolean = false;  // ADD THIS
+  canCreatePost: boolean = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -87,196 +92,479 @@ export class ChannelFeedPage implements OnInit {
     private modalController: ModalController,
     private actionSheetController: ActionSheetController,
     private authService: AuthService,
-    private storage: Storage
+    private postPouchDb: ChannelPouchDbService,
+    private fileStorage: FileStorageService  // ✅ Add this
   ) {
-    this.currentUserId = this.authService.authData?.userId || 0;  // ADD THIS
-    // this.currentUserId = "76";  // ADD THIS
-    // this.storage.create();
-
+    this.currentUserId = this.authService.authData?.userId || 0;
   }
-  isOnline: boolean = true;
-//   ngOnInit() {
-//     this.channelId = this.route.snapshot.queryParamMap.get('channelId') || '0';
-//     if (!this.channelId) return;
 
-//     this.fetchChannelDetails();
+  /* =========================
+     LIFECYCLE - OFFLINE-FIRST
+     ========================= */
 
-//     this.postService.getPosts(this.channelId).subscribe((rawPosts) => {
-//       this.resolveMediaUrls(rawPosts).then((resolvedPosts) => {
-//         this.posts = resolvedPosts;
-//         console.log('[UI] posts received:', resolvedPosts.length);
-//         this.cdr.detectChanges();
-//       });
-//     });
-//     // this.postsSub = this.postService
-//     //   .getPosts(this.channelId)
-//     //   .subscribe((rawPosts) => {
-//     //     this.resolveMediaUrls(rawPosts).then((resolvedPosts) => {
-//     //       this.posts = resolvedPosts;
-//     //       this.cdr.detectChanges();
-//     //     });
-//     //   });
-// // this.postsSub = this.postService
-// //   .getPosts(this.channelId)
-// //   .subscribe(posts => {
-// //     console.log('[UI] posts received:', posts.length);
-// //     // ...
-// //   });
+  ngOnInit() {
+    // Setup will happen in ionViewWillEnter
+  }
 
+  async ionViewWillEnter() {
+    this.channelId = this.route.snapshot.queryParamMap.get('channelId') || '0';
+    if (!this.channelId) return;
 
-//     // Monitor connection status
-//     this.postService.getConnectionStatus().subscribe(isConnected => {
-//       this.isOnline = isConnected;
-//       // console.log('Connection status:', isConnected ? 'Online' : 'Offline');
-//       this.cdr.detectChanges();
-//     });
-//   }
+    // 1️⃣ Fetch channel details
+    await this.fetchChannelDetails();
 
-ngOnInit() {
-  // this.channelId = this.route.snapshot.queryParamMap.get('channelId') || '0';
-  // if (!this.channelId) return;
+    // 2️⃣ Load cached media URLs first
+    await this.loadCachedMediaUrls();
 
-  // this.fetchChannelDetails();
+    // 3️⃣ Subscribe to posts (loads from cache immediately)
+    this.subscribeToPosts();
 
-  // // Subscribe and retain reference
-  // this.postsSub = this.postService
-  //   .getPosts(this.channelId)
-  //   .subscribe(async (rawPosts) => {
-  //     // For offline cold start, rawPosts will be whatever was returned by getCachedPosts
-  //     const resolvedPosts = await this.resolveMediaUrls(rawPosts);
-  //     console.log("rawPosts",rawPosts);
-
-  //     console.log("resolvedPosts",resolvedPosts);
-  //     this.posts = resolvedPosts;
-  //     this.cdr.detectChanges();
-  //   });
-
-  // this.postService.getConnectionStatus().subscribe(isConnected => {
-  //   this.isOnline = isConnected;
-  //   this.cdr.detectChanges();
-  // });
-}
-
-
-ionViewWillEnter(){
- this.channelId = this.route.snapshot.queryParamMap.get('channelId') || '0';
-  if (!this.channelId) return;
-
-  this.fetchChannelDetails();
-
-  // Subscribe and retain reference
-  this.postsSub = this.postService
-    .getPosts(this.channelId)
-    .subscribe(async (rawPosts) => {
-      // For offline cold start, rawPosts will be whatever was returned by getCachedPosts
-      const resolvedPosts = await this.resolveMediaUrls(rawPosts);
-      console.log("rawPosts",rawPosts);
-
-      console.log("resolvedPosts",resolvedPosts);
-      this.posts = resolvedPosts;
-      this.cdr.detectChanges();
-    });
-
-  this.postService.getConnectionStatus().subscribe(isConnected => {
-    this.isOnline = isConnected;
-    this.cdr.detectChanges();
-  });
-
-  this.testStorage();
-}
-
-async testStorage() {
-  await this.storage.set('test_key', [{ hello: 'world' }]);
-  const val = await this.storage.get('test_key');
-  console.log('[testStorage] value', val);
-}
-
-
-  ngOnDestroy() {
-    // if (this.postsSub) {
-    //   this.postsSub.unsubscribe();
-    // }
-
-    // if (this.channelId) {
-    //   this.postService.cleanupPostsListener(this.channelId);
-    // }
+    // 4️⃣ Monitor connection status
+    this.subscribeToConnection();
   }
 
   ionViewWillLeave() {
-    // if (this.postsSub) {
-    //   this.postsSub.unsubscribe();
-    //   this.postsSub = undefined;
-    // }
+    this.cleanup();
+  }
 
-    // if (this.channelId) {
-    //   this.postService.cleanupPostsListener(this.channelId);
-    // }
+  ngOnDestroy() {
+     // ✅ IMPORTANT: Revoke all Blob URLs to free memory
+    this.revokeBlobURLs();
+    this.cleanup();
   }
 
 
-  // ============================
-  // REACTION MANAGEMENT
-  // ============================
-
-  async openReactionPicker(post: Post) {
-    const modal = await this.modalController.create({
-      component: EmojiPickerModalComponent,
-      cssClass: 'emoji-picker-modal'
+   /**
+   * Revoke all Blob URLs to prevent memory leaks
+   */
+  private revokeBlobURLs() {
+    this.blobURLs.forEach(url => {
+      URL.revokeObjectURL(url);
     });
+    this.blobURLs.clear();
+    console.log('🧹 Revoked all Blob URLs');
+  }
 
-    await modal.present();
-    const result = await modal.onWillDismiss();
+  private cleanup() {
+    if (this.postsSub) {
+      this.postsSub.unsubscribe();
+      this.postsSub = undefined;
+    }
 
-    if (result?.data?.emoji) {
-      await this.addOrUpdateReaction(post, result.data.emoji);
+    if (this.connectionSub) {
+      this.connectionSub.unsubscribe();
+      this.connectionSub = undefined;
+    }
+
+    if (this.channelId) {
+      this.postService.cleanupPostsListener(this.channelId);
     }
   }
 
-  // Add or update reaction (one per user)
+  /* =========================
+     DATA LOADING
+     ========================= */
+
+  // private subscribeToPosts() {
+  //   if (!this.channelId) return;
+
+  //   this.postsSub = this.postService
+  //     .getPosts(this.channelId)
+  //     .subscribe(async (rawPosts) => {
+  //       console.log(`📱 Received ${rawPosts.length} posts`);
+
+  //       // Resolve media URLs (from cache or API)
+  //       const resolvedPosts = await this.resolveMediaUrls(rawPosts);
+        
+  //       this.posts = resolvedPosts;
+  //       this.cdr.detectChanges();
+  //     });
+  // }
+
+  // In channel-feed.page.ts
+
+private subscribeToPosts() {
+  if (!this.channelId) return;
+
+  this.postsSub = this.postService
+    .getPosts(this.channelId)
+    .subscribe(async (rawPosts) => {
+      console.log(`📱 Received ${rawPosts.length} posts`);
+
+      if (rawPosts.length === 0 && !this.isOnline) {
+        // Show "No cached posts" message
+        console.log('📴 Offline with no cached posts');
+      }
+
+      // Resolve media URLs (from cache or API)
+      const resolvedPosts = await this.resolveMediaUrls(rawPosts);
+      
+      this.posts = resolvedPosts;
+      this.cdr.detectChanges();
+    });
+}
+
+
+// In channel-feed.page.ts
+
+async debugCacheStatus() {
+  if (!this.channelId) return;
+  
+  console.log('=== CACHE DEBUG ===');
+  
+  // Check if posts are in cache
+  const cached = await this.postPouchDb.getPosts(this.channelId);
+  console.log('Cached posts:', cached.length);
+  console.log('Cached data:', cached);
+  
+  // Check DB stats
+  const stats = await this.postPouchDb.getStats();
+  console.log('DB stats:', stats);
+  
+  // Full DB dump
+  await this.postPouchDb.debugDump();
+}
+
+  private subscribeToConnection() {
+    this.connectionSub = this.postService
+      .getConnectionStatus()
+      .subscribe(isConnected => {
+        this.isOnline = isConnected;
+        console.log(`Connection: ${isConnected ? '🟢 Online' : '📴 Offline'}`);
+        this.cdr.detectChanges();
+      });
+  }
+
+  private async fetchChannelDetails() {
+    if (!this.channelId) return;
+
+    // 1️⃣ Try to load from PouchDB cache first (instant)
+    const cachedChannel = await this.postPouchDb.getChannel(Number(this.channelId));
+    if (cachedChannel) {
+      console.log('📱 Loaded channel from cache');
+      this.channel = cachedChannel;
+      this.canCreatePost = this.channel.created_by == this.currentUserId;
+      this.isMuted = false;
+      this.cdr.detectChanges();
+    }
+
+    // 2️⃣ Then fetch from backend (background refresh)
+    try {
+      const response = await firstValueFrom(
+        this.channelService.getChannel(Number(this.channelId))
+      );
+
+      if (response.status && response.channel) {
+        console.log('🌐 Loaded channel from backend');
+        this.channel = response.channel;
+        this.canCreatePost = this.channel.created_by == this.currentUserId;
+        this.isMuted = false;
+
+        // 3️⃣ Cache to PouchDB for next time
+        await this.postPouchDb.saveChannel(this.channel);
+        
+        this.cdr.detectChanges();
+      }
+    } catch (error) {
+      console.error('❌ Failed to fetch channel details from backend:', error);
+      
+      // If we have cached data, we're good
+      if (cachedChannel) {
+        console.log('📴 Using cached channel data (backend unavailable)');
+      } else {
+        console.error('❌ No cached channel data available');
+      }
+    }
+  }
+
+   dumpDbToConsole() {
+    this.postPouchDb.consoleDumpAll();
+  }
+
+  /* =========================
+     MEDIA URL RESOLUTION
+     ========================= */
+
+  /**
+   * Load media URLs from PouchDB cache
+   * Pre-populates mediaCache for faster media display
+   */
+  private async loadCachedMediaUrls() {
+    if (!this.channelId) return;
+
+    console.log('📱 Loading cached media URLs...');
+
+    try {
+      // Get all posts from cache
+      const cachedPosts = await this.postPouchDb.getPosts(this.channelId);
+      
+      // Extract unique media IDs
+      const mediaIds = cachedPosts
+        .filter(p => p.media_id && p.media_id !== 'pending_upload')
+        .map(p => p.media_id!);
+
+      // Remove duplicates
+      const uniqueMediaIds = [...new Set(mediaIds)];
+
+      if (uniqueMediaIds.length === 0) {
+        console.log('📱 No media IDs found in cache');
+        return;
+      }
+
+      // Load URLs in parallel for better performance
+      const urlPromises = uniqueMediaIds.map(id => 
+        this.postPouchDb.getMediaUrl(id)
+      );
+      const urls = await Promise.all(urlPromises);
+
+      let loadedCount = 0;
+      urls.forEach((url, index) => {
+        if (url) {
+          this.mediaCache.set(uniqueMediaIds[index], url);
+          loadedCount++;
+        }
+      });
+
+      console.log(`📱 Loaded ${loadedCount}/${uniqueMediaIds.length} media URLs from cache`);
+
+    } catch (error) {
+      console.error('❌ Failed to load cached media URLs:', error);
+    }
+  }
+
+  /* =========================
+     MEDIA URL RESOLUTION - UPDATED
+     ========================= */
+
+  /**
+   * Resolve media URLs (including pending Blob URLs from IndexedDB)
+   */
+  private async resolveMediaUrls(rawPosts: Post[]): Promise<Post[]> {
+    const resolvedPosts: Post[] = [];
+
+    for (const post of rawPosts) {
+      let resolvedPost = { ...post };
+
+      // 1️⃣ Check if this is a pending post with file in IndexedDB
+      if (post.isPending && post.pendingImageId) {
+        try {
+          const blobUrl = await this.fileStorage.getFileURL(post.pendingImageId);
+          
+          if (blobUrl) {
+            resolvedPost.image = blobUrl;
+            this.blobURLs.add(blobUrl); // Track for cleanup
+            console.log(`📱 Using Blob URL from IndexedDB: ${post.pendingImageId}`);
+          } else {
+            console.warn(`⚠️ File not found in IndexedDB: ${post.pendingImageId}`);
+          }
+        } catch (error) {
+          console.error('❌ Failed to get Blob URL from IndexedDB:', error);
+        }
+      }
+      // 2️⃣ Check if already in memory cache
+      else if (post.media_id && this.mediaCache.has(post.media_id)) {
+        resolvedPost.image = this.mediaCache.get(post.media_id);
+      }
+      // 3️⃣ Try PouchDB cache for server URLs
+      else if (post.media_id && post.media_id !== 'pending_upload') {
+        const cachedUrl = await this.postPouchDb.getMediaUrl(post.media_id);
+        
+        if (cachedUrl) {
+          this.mediaCache.set(post.media_id, cachedUrl);
+          resolvedPost.image = cachedUrl;
+          console.log(`📱 Using cached server URL: ${post.media_id}`);
+        }
+        // 4️⃣ Fetch from API if online and not cached
+        else if (this.isOnline) {
+          try {
+            const response = await this.postService.getFreshMediaUrl(post.media_id);
+            
+            if (response?.downloadUrl) {
+              this.mediaCache.set(post.media_id, response.downloadUrl);
+              resolvedPost.image = response.downloadUrl;
+              console.log(`🌐 Fetched server URL: ${post.media_id}`);
+            }
+          } catch (err) {
+            console.error('❌ Failed to fetch media URL:', err);
+          }
+        } else {
+          console.log(`📴 Offline: Cannot fetch media URL for ${post.media_id}`);
+        }
+      }
+
+      resolvedPosts.push(resolvedPost);
+    }
+
+    return resolvedPosts;
+  }
+
+  /* =========================
+     SEND POST
+     ========================= */
+
+/* =========================
+     SEND POST - NO CHANGES NEEDED
+     ========================= */
+
+  async sendPost() {
+    if (!this.channelId) return;
+    if (!this.newMessage && !this.selectedFile) return;
+
+    this.isUploading = true;
+    this.uploadProgress = 0;
+
+    try {
+      // PostService handles IndexedDB storage automatically
+      await this.postService.createPost(
+        this.channelId,
+        this.newMessage,
+        this.selectedFile,
+        this.currentUserId,
+        (progress: number) => {
+          this.uploadProgress = progress;
+          this.cdr.detectChanges();
+        }
+      );
+
+      console.log('✅ Post sent successfully');
+
+    } catch (error) {
+      console.error('❌ Post creation failed:', error);
+      
+      if (!this.isOnline) {
+        console.log('📴 Post will be sent when back online');
+      }
+    } finally {
+      this.isUploading = false;
+      this.uploadProgress = 0;
+      this.newMessage = '';
+      this.selectedImage = null;
+      this.selectedFile = undefined;
+      this.cdr.detectChanges();
+    }
+  }
+
+
+   /* =========================
+     DEBUG & UTILITY METHODS
+     ========================= */
+
+  /**
+   * Debug: Check storage status
+   */
+  async debugStorageStatus() {
+    console.log('=== STORAGE DEBUG ===');
+    
+    // Check IndexedDB file storage
+    const fileUsage = await this.fileStorage.getStorageUsage();
+    console.log('📊 IndexedDB Files:', fileUsage);
+    
+    // Check PouchDB cache
+    const cachedPosts = await this.postPouchDb.getPosts(this.channelId!);
+    console.log('📱 Cached posts:', cachedPosts.length);
+    
+    // Check queue
+    const queueStatus = await this.postService.getQueueStatus();
+    console.log('📝 Queue status:', queueStatus);
+    
+    // Check full storage status
+    const storageStatus = await this.postService.getStorageStatus();
+    console.log('💾 Full storage status:', storageStatus);
+  }
+
+  /**
+   * Debug: List all files in IndexedDB
+   */
+  async debugListFiles() {
+    const files = await this.fileStorage.getAllFiles();
+    console.log('📂 Files in IndexedDB:', files);
+    
+    files.forEach(file => {
+      console.log(`  - ${file.id}: ${file.fileName} (${this.formatBytes(file.fileSize)})`);
+    });
+  }
+
+    /**
+   * Cleanup old data
+   */
+  async cleanupOldData() {
+    try {
+      const result = await this.postService.cleanupOldData(7);
+      console.log(`✅ Cleaned up ${result.deletedFiles} old files`);
+      
+      // Reload posts to reflect changes
+      this.subscribeToPosts();
+    } catch (error) {
+      console.error('❌ Failed to cleanup old data:', error);
+    }
+  }
+
+  /**
+   * Clear all offline data (for testing)
+   */
+  async clearAllOfflineData() {
+    try {
+      await this.postService.clearAllOfflineData();
+      console.log('✅ Cleared all offline data');
+      
+      // Revoke Blob URLs
+      this.revokeBlobURLs();
+      
+      // Reload
+      this.posts = [];
+      this.cdr.detectChanges();
+    } catch (error) {
+      console.error('❌ Failed to clear offline data:', error);
+    }
+  }
+
+  private formatBytes(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  }
+
+  /* =========================
+     REACTIONS
+     ========================= */
+
+  async react(post: Post, emoji: string) {
+    await this.addOrUpdateReaction(post, emoji);
+  }
+
   async addOrUpdateReaction(post: Post, emoji: string) {
     if (!this.channelId) return;
 
-    await this.postService.addOrUpdateReaction(
-      this.channelId,
-      post.id,
-      emoji,
-      this.currentUserId
-    );
+    try {
+      await this.postService.addOrUpdateReaction(
+        this.channelId,
+        post.id,
+        emoji,
+        this.currentUserId
+      );
 
-    this.showReactionPopup = false;
+      this.showReactionPopup = false;
+    } catch (error) {
+      console.error('❌ Failed to add reaction:', error);
+    }
   }
 
-  // Show all reactions modal/page
-  async showAllReactions(post: Post) {
-    // TODO: Implement a modal showing all users who reacted
-    // For now, show action sheet with basic info
-    const reactions = this.getAggregatedReactions(post);
-    const totalReactions = Object.values(reactions).reduce((sum, count) => sum + count, 0);
+  async removeReaction(post: Post) {
+    if (!this.channelId) return;
 
-    const actionSheet = await this.actionSheetController.create({
-      header: `${totalReactions} Reaction${totalReactions !== 1 ? 's' : ''}`,
-      subHeader: 'Show all reactions',
-      buttons: [
-        ...Object.entries(reactions).map(([emoji, count]) => ({
-          text: `${emoji} ${count} ${count === 1 ? 'person' : 'people'}`,
-          icon: 'people-outline',
-          handler: () => {
-            // Navigate to detailed reactions page
-            // console.log('Show users for reaction:', emoji);
-          }
-        })),
-        {
-          text: 'Cancel',
-          icon: 'close',
-          role: 'cancel'
-        }
-      ]
-    });
-
-    await actionSheet.present();
+    try {
+      await this.postService.removeReaction(
+        this.channelId,
+        post.id,
+        this.currentUserId
+      );
+    } catch (error) {
+      console.error('❌ Failed to remove reaction:', error);
+    }
   }
 
-  // Show action sheet for reaction management
   async showReactionActionSheet(post: Post, emoji: string) {
     const currentUserReaction = await this.postService.getUserReaction(
       this.channelId!,
@@ -318,49 +606,20 @@ async testStorage() {
     await actionSheet.present();
   }
 
-  // Remove reaction
-  async removeReaction(post: Post) {
-    if (!this.channelId) return;
-    await this.postService.removeReaction(this.channelId, post.id, this.currentUserId);
-  }
+  async showAllReactions(post: Post) {
+    const reactions = this.getAggregatedReactions(post);
+    const totalReactions = Object.values(reactions).reduce((sum, count) => sum + count, 0);
 
-  // Get aggregated reactions for display
-  getAggregatedReactions(post: Post): ReactionMap {
-    return this.postService.aggregateReactions(post.user_reactions || null);
-  }
-
-  // Check if current user has reacted
-  async hasUserReacted(post: Post): Promise<boolean> {
-    if (!this.channelId) return false;
-    const reaction = await this.postService.getUserReaction(this.channelId, post.id, this.currentUserId);
-    return reaction !== null;
-  }
-
-  // ============================
-  // FORWARD FUNCTIONALITY
-  // ============================
-
-  async forwardPost(post: Post) {
     const actionSheet = await this.actionSheetController.create({
-      header: 'Forward to',
+      header: `${totalReactions} Reaction${totalReactions !== 1 ? 's' : ''}`,
       buttons: [
-        {
-          text: 'Forward to another channel',
-          icon: 'paper-plane-outline',
+        ...Object.entries(reactions).map(([emoji, count]) => ({
+          text: `${emoji} ${count} ${count === 1 ? 'person' : 'people'}`,
+          icon: 'people-outline',
           handler: () => {
-            // Navigate to channel selector
-            // console.log('Forward to channel');
+            console.log('Show users for reaction:', emoji);
           }
-        },
-        {
-          text: 'Share outside app',
-          icon: 'share-outline',
-          handler: () => {
-            // Use Share API
-            //  console.log('Share to channel');
-            // this.sharePost(post);
-          }
-        },
+        })),
         {
           text: 'Cancel',
           icon: 'close',
@@ -372,215 +631,37 @@ async testStorage() {
     await actionSheet.present();
   }
 
-  async sharePost(post: Post) {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: this.channel?.channel_name || 'Channel Post',
-          text: post.body,
-          url: post.image || ''
-        });
-      } catch (err) {
-        // console.log('Share cancelled or failed:', err);
-      }
-    }
+  getAggregatedReactions(post: Post): ReactionMap {
+    return this.postService.aggregateReactions(post.user_reactions || null);
   }
 
-  // ============================
-  // EXISTING METHODS
-  // ============================
-
-  async onHeaderClick() {
-      await this.storage.set('test_key', [{ hello: 'world' }]);
-  const val = await this.storage.get('test_key');
-  console.log('[testStorage] value', val);
-    // if (this.channel && this.channel.channel_id) {
-    //   this.router.navigate(['/channel-detail'], {
-    //     queryParams: { channelId: this.channel.channel_id }
-    //   });
-    // }
+  async hasUserReacted(post: Post): Promise<boolean> {
+    if (!this.channelId) return false;
+    const reaction = await this.postService.getUserReaction(
+      this.channelId,
+      post.id,
+      this.currentUserId
+    );
+    return reaction !== null;
   }
 
-  private fetchChannelDetails() {
-    if (!this.channelId) return;
-    this.channelService.getChannel(Number(this.channelId)).subscribe({
-      next: (response) => {
-        if (response.status && response.channel) {
-          this.channel = response.channel;
-          // console.log("channel createdby", this.channel.created_by);//channel createdby 52
-          // Check if current user is channel creator
-          this.canCreatePost = this.channel.created_by == this.currentUserId;
-
-          //  console.log('Channel created by:', this.channel.created_by);
-          // console.log('Current user:', this.currentUserId);
-          // console.log('Can create post:', this.canCreatePost);
-          this.isMuted = false;
-          this.cdr.detectChanges();
-        }
-      },
-      error: (error) => {
-        console.error('Failed to fetch channel details:', error);
-      }
+  async openReactionPicker(post: Post) {
+    const modal = await this.modalController.create({
+      component: EmojiPickerModalComponent,
+      cssClass: 'emoji-picker-modal'
     });
-  }
 
-  async toggleMute() {
-    this.isMuted = !this.isMuted;
-    this.cdr.detectChanges();
-  }
+    await modal.present();
+    const result = await modal.onWillDismiss();
 
-  // private async resolveMediaUrls(rawPosts: Post[]): Promise<Post[]> {
-  //   const postsWithMedia = rawPosts.filter(p => p.media_id && !this.mediaCache.has(p.media_id));
-  //   const unresolvedMediaIds = postsWithMedia.map(p => p.media_id!);
-
-  //   if (unresolvedMediaIds.length > 0) {
-  //     const urlObservables = unresolvedMediaIds.map(id =>
-  //       this.postService.getFreshMediaUrl(id)
-  //     );
-
-  //     let responses: any[] = [];
-  //     try {
-  //       responses = await firstValueFrom(forkJoin(urlObservables));
-  //     } catch (err) {
-  //       console.error('Failed to resolve some media URLs:', err);
-  //       responses = [];
-  //     }
-
-  //     responses.forEach((res, index) => {
-  //       if (res && res.downloadUrl) {
-  //         this.mediaCache.set(unresolvedMediaIds[index], res.downloadUrl);
-  //       }
-  //     });
-  //   }
-
-  //   return rawPosts.map(p => ({
-  //     ...p,
-  //     image: p.media_id ? this.mediaCache.get(p.media_id) : undefined
-  //   }));
-  // }
-  // private async resolveMediaUrls(rawPosts: Post[]): Promise<Post[]> {
-
-  //   // 1️⃣ Load cached URLs from Storage FIRST (offline safe)
-  //   for (const post of rawPosts) {
-  //     if (post.media_id && !this.mediaCache.has(post.media_id)) {
-  //       const cachedUrl = await this.storage.get(`media_${post.media_id}`);
-  //       if (cachedUrl) {
-  //         this.mediaCache.set(post.media_id, cachedUrl);
-  //       }
-  //     }
-  //   }
-
-  //   // 2️⃣ Find media still unresolved (not cached anywhere)
-  //   const unresolvedMediaIds = rawPosts
-  //     .filter(p => p.media_id && !this.mediaCache.has(p.media_id))
-  //     .map(p => p.media_id!);
-
-  //   // 3️⃣ Fetch from API ONLY if needed
-  //   if (unresolvedMediaIds.length > 0) {
-
-  //     const urlObservables = unresolvedMediaIds.map(id =>
-  //       this.postService.getFreshMediaUrl(id)
-  //     );
-
-  //     let responses: any[] = [];
-  //     try {
-  //       responses = await firstValueFrom(forkJoin(urlObservables));
-  //     } catch (err) {
-  //       console.error('Failed to resolve media URLs:', err);
-  //       responses = [];
-  //     }
-
-  //     // 4️⃣ Save URLs to memory + persistent storage
-  //     for (let i = 0; i < responses.length; i++) {
-  //       const res = responses[i];
-  //       if (res?.downloadUrl) {
-  //         const mediaId = unresolvedMediaIds[i];
-
-  //         this.mediaCache.set(mediaId, res.downloadUrl);
-  //         await this.storage.set(`media_${mediaId}`, res.downloadUrl);
-  //       }
-  //     }
-  //   }
-
-  //   // 5️⃣ Attach image URLs to posts
-  //   return rawPosts.map(p => ({
-  //     ...p,
-  //     image: p.media_id ? this.mediaCache.get(p.media_id) : undefined
-  //   }));
-  // }
-private async resolveMediaUrls(rawPosts: Post[]): Promise<Post[]> {
-  const postsWithMedia = rawPosts.filter(
-    p => p.media_id && !this.mediaCache.has(p.media_id)
-  );
-  const unresolvedMediaIds = postsWithMedia.map(p => p.media_id!);
-
-  if (!this.isOnline || unresolvedMediaIds.length === 0) {
-    return rawPosts.map(p => ({
-      ...p,
-      image: p.media_id ? this.mediaCache.get(p.media_id) : undefined
-    }));
-  }
-
-  const urlObservables = unresolvedMediaIds.map(id =>
-    this.postService.getFreshMediaUrl(id)
-  );
-
-  let responses: any[] = [];
-  try {
-    responses = await firstValueFrom(forkJoin(urlObservables));
-  } catch (err) {
-    console.error('Failed to resolve some media URLs:', err);
-    responses = [];
-  }
-
-  responses.forEach((res, index) => {
-    if (res && res.downloadUrl) {
-      this.mediaCache.set(unresolvedMediaIds[index], res.downloadUrl);
-    }
-  });
-
-  return rawPosts.map(p => ({
-    ...p,
-    image: p.media_id ? this.mediaCache.get(p.media_id) : undefined
-  }));
-}
-
-
-
-
-
-  async testAddPost() {
-    if (!this.channelId) return;
-    try {
-      await this.postService.createPost(this.channelId, 'This is a test post', undefined, this.currentUserId);
-    } catch (error) {
-      console.error('Test post failed:', error);
+    if (result?.data?.emoji) {
+      await this.addOrUpdateReaction(post, result.data.emoji);
     }
   }
 
-  selectMedia() {
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    // fileInput.accept = 'image/*,video/*';
-    fileInput.accept = 'image/*';
-    fileInput.onchange = (event: any) => {
-      const file = event.target.files[0];
-      if (!file) return;
-      this.selectedFile = file;
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.selectedImage = reader.result as string;
-      };
-      reader.readAsDataURL(file);
-    };
-    fileInput.click();
-  }
-
-  clearMedia() {
-    this.selectedImage = null;
-    this.selectedFile = undefined;
-    this.newMessage = '';
-  }
+  /* =========================
+     TOUCH INTERACTIONS
+     ========================= */
 
   onTouchStart(ev: TouchEvent, post: Post) {
     this.isLongPress = false;
@@ -636,10 +717,6 @@ private async resolveMediaUrls(rawPosts: Post[]): Promise<Post[]> {
     this.showReactionPopup = false;
   }
 
-  react(post: Post, emoji: string) {
-    this.addOrUpdateReaction(post, emoji);
-  }
-
   async onDoubleTap(post: Post) {
     const now = Date.now();
     if (now - this.lastTapTime < 300) {
@@ -648,6 +725,89 @@ private async resolveMediaUrls(rawPosts: Post[]): Promise<Post[]> {
     }
     this.lastTapTime = now;
   }
+
+  /* =========================
+     MEDIA SELECTION
+     ========================= */
+
+  selectMedia() {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.onchange = (event: any) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      this.selectedFile = file;
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.selectedImage = reader.result as string;
+        this.cdr.detectChanges();
+      };
+      reader.readAsDataURL(file);
+    };
+    fileInput.click();
+  }
+
+  clearMedia() {
+    this.selectedImage = null;
+    this.selectedFile = undefined;
+    this.newMessage = '';
+  }
+
+  isImage(file: File): boolean {
+    return file && file.type.startsWith('image/');
+  }
+
+  /* =========================
+     FORWARD & OTHER ACTIONS
+     ========================= */
+
+  async forwardPost(post: Post) {
+    const actionSheet = await this.actionSheetController.create({
+      header: 'Forward to',
+      buttons: [
+        {
+          text: 'Forward to another channel',
+          icon: 'paper-plane-outline',
+          handler: () => {
+            console.log('Forward to channel');
+          }
+        },
+        {
+          text: 'Share outside app',
+          icon: 'share-outline',
+          handler: () => {
+            this.sharePost(post);
+          }
+        },
+        {
+          text: 'Cancel',
+          icon: 'close',
+          role: 'cancel'
+        }
+      ]
+    });
+
+    await actionSheet.present();
+  }
+
+  async sharePost(post: Post) {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: this.channel?.channel_name || 'Channel Post',
+          text: post.body,
+          url: post.image || ''
+        });
+      } catch (err) {
+        console.log('Share cancelled or failed:', err);
+      }
+    }
+  }
+
+  /* =========================
+     MULTI-SELECT
+     ========================= */
 
   enableSelectMode(post: Post) {
     this.selectionMode = true;
@@ -663,44 +823,30 @@ private async resolveMediaUrls(rawPosts: Post[]): Promise<Post[]> {
     }
   }
 
-  async sendPost() {
-    if (!this.channelId) return;
-    if (!this.newMessage && !this.selectedFile) return;
-    this.isUploading = true;
-    this.uploadProgress = 0;
-    try {
-      await this.postService.createPost(
-        this.channelId,
-        this.newMessage,
-        this.selectedFile,
-        this.currentUserId,
-        (progress: number) => {
-          this.uploadProgress = progress;
-        }
-      );
-    } catch (error) {
-      console.error('Post creation failed:', error);
-      return;
-    } finally {
-      this.isUploading = false;
-      this.uploadProgress = 0;
-    }
-    this.newMessage = '';
-    this.selectedImage = null;
-    this.selectedFile = undefined;
+  /* =========================
+     UI HELPERS
+     ========================= */
+
+  async toggleMute() {
+    this.isMuted = !this.isMuted;
+    this.cdr.detectChanges();
+
+
   }
 
-  isImage(file: File): boolean {
-    return file && file.type.startsWith('image/');
+  async onHeaderClick() {
+    if (this.channel && this.channel.channel_id) {
+      this.router.navigate(['/channel-detail'], {
+        queryParams: { channelId: this.channel.channel_id }
+      });
+    }
   }
 
   getUserInitial(userId: number): string {
-    // You can fetch from user service or use channel name
     return this.channel?.channel_name?.[0] || 'U';
   }
 
   getUserName(userId: number): string {
-    // You can fetch from user service or use channel name
     return this.channel?.channel_name || 'Channel Admin';
   }
 }

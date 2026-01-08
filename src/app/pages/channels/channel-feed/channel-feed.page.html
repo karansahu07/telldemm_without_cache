@@ -31,6 +31,11 @@
         <ion-icon slot="icon-only" [name]="isMuted ? 'notifications-off-outline' : 'notifications-outline'"></ion-icon>
       </ion-button>
 
+      <!-- <ion-button expand="block" color="primary" (click)="dumpDbToConsole()">
+        Dump
+      </ion-button>
+
+<ion-button (click)="debugCacheStatus()">Debug Cache</ion-button> -->
       <ion-button>
         <ion-icon slot="icon-only" name="ellipsis-vertical"></ion-icon>
       </ion-button>
@@ -57,10 +62,9 @@
 
     <!-- POSTS -->
     <!-- <div *ngFor="let p of posts" class="post-bubble" [class.sent]="p.isSent" [class.received]="!p.isSent" -->
-     <div *ngFor="let p of posts" class="post-bubble" 
-     [class.sent]="p.created_by === currentUserId" 
-     [class.received]="p.created_by !== currentUserId"
-      (touchstart)="onTouchStart($event, p)" (touchmove)="onTouchMove($event)" (touchend)="onTouchEnd(p)">
+    <div *ngFor="let p of posts" class="post-bubble" [class.sent]="p.created_by === currentUserId"
+      [class.received]="p.created_by !== currentUserId" (touchstart)="onTouchStart($event, p)"
+      (touchmove)="onTouchMove($event)" (touchend)="onTouchEnd(p)">
 
       <!-- Multi-select checkbox -->
       <div *ngIf="selectionMode" class="checkbox-container">
@@ -89,7 +93,7 @@
               {{ p.timestamp | date:'shortTime' }}
             </span>
             <!-- <span *ngIf="p.isSent" class="read-status">✓✓</span> -->
-             <span *ngIf="p.created_by === currentUserId" class="read-status">✓✓</span>
+            <span *ngIf="p.created_by === currentUserId" class="read-status">✓✓</span>
           </div>
         </div>
       </div>
@@ -117,9 +121,9 @@
   </div>
 
   <div *ngIf="!canCreatePost" class="read-only-banner">
-  <ion-icon name="eye-outline"></ion-icon>
-  <span>View only - You can react to posts</span>
-</div>
+    <ion-icon name="eye-outline"></ion-icon>
+    <span>View only - You can react to posts</span>
+  </div>
 </ion-content>
 
 <!-- INPUT BAR -->

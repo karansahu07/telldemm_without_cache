@@ -1,9 +1,0 @@
-<ion-card routerLink="/channels/detail/{{channel.id}}">
-  <ion-item lines="none">
-    <ion-avatar slot="start"><img [src]="channel.avatar || 'assets/default-avatar.png'"/></ion-avatar>
-    <ion-label>
-      <h3>{{channel.name}}</h3>
-      <p>{{channel.followers | number}} followers</p>
-    </ion-label>
-  </ion-item>
-</ion-card>
