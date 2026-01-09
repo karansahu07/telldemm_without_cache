@@ -357,75 +357,164 @@
         <div class="text-bg-white date-label">{{ group.date }}</div>
       </div>
 
-      <ng-container *ngFor="let msg of group.messages">
-        <div
-          class="msg-row"
-          [ngClass]="{
-       'align-end': msg.sender === senderId,
-       'align-start': msg.sender !== senderId,
-       'selected': isSelected(msg),
+<ng-container *ngFor="let msg of group.messages">
+  <div
+    class="msg-row"
+    [ngClass]="{
+      'align-end': msg.sender === senderId,
+      'align-start': msg.sender !== senderId,
+      'selected': isSelected(msg),
        'pinned-message-highlight': pinnedMessage && pinnedMessage.messageId === msg.message_id
-     }"
-          *ngIf="!isMessageHiddenForUser(msg)"
-          style="display: flex; flex-direction: column; margin: 5px 0"
-          (touchstart)="startLongPress(msg)"
-          (touchend)="cancelLongPress()"
-          (touchmove)="cancelLongPress()"
-          (click)="onMessageClick(msg)"
+    }"
+    *ngIf="!isMessageHiddenForUser(msg)"
+    style="display: flex; flex-direction: column; margin: 5px 0"
+    (touchstart)="startLongPress(msg)"
+    (touchend)="cancelLongPress()"
+    (touchmove)="cancelLongPress()"
+    (click)="onMessageClick(msg)"
+  >
+
+    <!-- ================= AUDIO ONLY (NO MESSAGE BUBBLE) ================= -->
+    <ng-container *ngIf="msg.attachment?.type === 'audio'; else normalMessage">
+
+      <div
+        class="wa-audio-wrapper"
+        [class.my-audio]="msg.isMe"
+        [class.other-audio]="!msg.isMe"
+        (click)="$event.stopPropagation()"
+      >
+        <!-- ▶ Play / Pause -->
+        <button
+          class="wa-play-btn"
+          (click)="toggleMsgAudio(msg, audioEl)"
         >
-          <!-- ===== MESSAGE BUBBLE ===== -->
-          <div
-            class="message-bubble"
-            (click)="openAttachmentModal(msg)"
-            [attr.data-msg-key]="msg.msgId"
-            [class.my-message]="msg.isMe"
-            [ngClass]="[
-        msg.isMe ? 'sender-message' : 'receiver-message',
-        msg.fadeOut ? 'fade-out' : ''
-       ]"
+          <ion-icon
+            [name]="msg._isPlaying ? 'pause' : 'play'"
+          ></ion-icon>
+        </button>
+
+        <!-- Fake Waveform -->
+        <div class="wa-waveform">
+          <span
+            class="dot"
+            *ngFor="let i of [].constructor(28)"
+            [class.active]="msg._isPlaying"
+          ></span>
+        </div>
+
+        <!-- Current Time -->
+        <span class="wa-time">
+          {{ msg._currentTime  }}
+        </span>
+
+        <!-- Speed / Avatar -->
+        <ng-container *ngIf="!msg._isPlaying; else speedTpl">
+          <div class="wa-dp">
+            <img
+              [src]="currentConv?.avatar || 'assets/images/default-avatar.png'"
+              (error)="setDefaultAvatar($event)"
+            />
+            <ion-icon name="mic" class="mic-icon"></ion-icon>
+          </div>
+        </ng-container>
+
+        <ng-template #speedTpl>
+          <button
+            class="wa-speed"
+            (click)="toggleMsgSpeed(msg, audioEl)"
           >
-            <!-- Forwarded Label -->
-            <div *ngIf="msg.isForwarded" class="forwarded-label">
+            {{ msg._speed || '1x' }}
+          </button>
+        </ng-template>
+
+        <!-- ✅ TIME + TICKS INSIDE AUDIO -->
+        <div class="wa-audio-meta">
+          <span class="time">{{ msg.time }}</span>
+
+          <ng-container
+            *ngIf="getStatusIconDescriptorByMsgId(msg.msgId) as icon"
+          >
+            <ion-icon
+              [name]="icon.name"
+              [ngClass]="icon.cls"
+            ></ion-icon>
+          </ng-container>
+        </div>
+
+        <!-- Hidden Audio -->
+      <audio
+  #audioEl
+  [src]="msg.attachment?.localUrl?.startsWith('https://')
+    ? msg.attachment?.localUrl
+    : escapeUrl(msg.attachment?.cdnUrl)"
+  (loadedmetadata)="onMsgAudioLoaded(msg, audioEl)"
+  (timeupdate)="updateMsgAudioTime(msg, audioEl)"
+  (pause)="onMsgAudioPaused(msg)"
+  (ended)="resetMsgAudio(msg)"
+></audio>
+
+      </div>
+
+    </ng-container>
+
+    <!-- ================= NORMAL MESSAGE (UNCHANGED) ================= -->
+    <ng-template #normalMessage>
+
+      <div
+        class="message-bubble"
+        (click)="openAttachmentModal(msg)"
+        [attr.data-msg-key]="msg.msgId"
+        [class.my-message]="msg.isMe"
+        [ngClass]="[
+          msg.isMe ? 'sender-message' : 'receiver-message',
+          msg.fadeOut ? 'fade-out' : ''
+        ]"
+      >
+
+        <!-- 🔁 EVERYTHING BELOW IS YOUR ORIGINAL CODE (UNCHANGED) -->
+
+        <!-- Forwarded Label -->
+        <div *ngIf="msg.isForwarded" class="forwarded-label">
               <ion-icon
                 name="arrow-undo-outline"
                 class="forwarded-icon"
               ></ion-icon>
-              Forwarded
-            </div>
+          Forwarded
+        </div>
 
-            <!-- Group Sender Name -->
-            <span
-              *ngIf="chatType === 'group' && msg.sender !== senderId"
-              style="font-size: 10px; color: #bc8c2c"
-            >
-              {{ getSenderDisplayName(msg) }}
-            </span>
+        <!-- Group Sender Name -->
+        <span
+          *ngIf="chatType === 'group' && msg.sender !== senderId"
+          style="font-size: 10px; color: #bc8c2c"
+        >
+          {{ getSenderDisplayName(msg) }}
+        </span>
 
-            <!-- Replied Message -->
-            <div
-              class="replied-message"
-              *ngIf="msg.replyToMsgId"
-              (click)="scrollToRepliedMessage(msg.replyToMsgId)"
-            >
-              <ng-container
-                *ngIf="getRepliedMessage(msg.replyToMsgId) as repliedMsg"
-              >
+        <!-- Replied Message -->
+        <div
+          class="replied-message"
+          *ngIf="msg.replyToMsgId"
+          (click)="scrollToRepliedMessage(msg.replyToMsgId)"
+        >
+          <ng-container
+            *ngIf="getRepliedMessage(msg.replyToMsgId) as repliedMsg"
+          >
                 <div
                   class="replied-container"
                   (click)="scrollToRepliedMessage(msg.replyToMsgId)"
                 >
-                  <div class="replied-header">
+              <div class="replied-header">
                     <ion-icon
                       name="arrow-undo-outline"
                       class="reply-icon"
                     ></ion-icon>
                     <span class="replied-sender">
-                      {{ repliedMsg.isMe ? 'You' : currentConv?.title }}
-                    </span>
-                  </div>
+                  {{ repliedMsg.isMe ? 'You' : currentConv?.title }}
+                </span>
+              </div>
                   <div class="replied-content">
                     <div class="replied-text" *ngIf="repliedMsg.text">
-                      {{ getReplyPreviewText(repliedMsg) }}
+                {{ getReplyPreviewText(repliedMsg) }}
                     </div>
                     <div
                       class="replied-attachment"
@@ -434,10 +523,10 @@
                       <ion-icon name="attach-outline"></ion-icon>
                       {{ getReplyPreviewText(repliedMsg) }}
                     </div>
-                  </div>
-                </div>
-              </ng-container>
+              </div>
             </div>
+          </ng-container>
+        </div>
 
             <!-- Normal Message -->
             <ng-container *ngIf="!msg.isDeleted">
@@ -559,34 +648,34 @@
                   *ngIf="msg.text"
                   style="margin-top: 5px"
                 >
-                  {{ msg.text }}
-                </ion-text>
+          {{ msg.text }}
+        </ion-text>
               </ng-container>
             </ng-container>
 
-            <!-- Timestamp -->
-            <p class="time-stamp status-container">
+        <!-- Timestamp -->
+        <p class="time-stamp status-container">
               <ion-icon
                 *ngIf="msg.isPinned"
                 name="pin"
                 class="pin-indicator-timestamp"
               ></ion-icon>
-              {{ msg.time }}
+          {{ msg.time }}
               <span
                 *ngIf="msg.isEdit"
                 style="font-size: 11px; color: gray; margin-left: 4px"
                 >(edited)</span
               >
-              <ng-container
-                *ngIf="getStatusIconDescriptorByMsgId(msg.msgId) as icon"
-              >
-                <ion-icon
-                  [name]="icon.name"
-                  [ngClass]="icon.cls"
+          <ng-container
+            *ngIf="getStatusIconDescriptorByMsgId(msg.msgId) as icon"
+          >
+            <ion-icon
+              [name]="icon.name"
+              [ngClass]="icon.cls"
                   [attr.title]="icon.title"
-                ></ion-icon>
-              </ng-container>
-            </p>
+            ></ion-icon>
+          </ng-container>
+        </p>
 
             <!-- 🟡 COMPACT REACTION BADGE (WhatsApp style) -->
             <div
@@ -609,14 +698,16 @@
                 {{ getReactionsCount(msg) }}
               </span>
             </div>
-          </div>
+      </div>
 
-          <!-- 🟢 FLOATING REACTION BAR -->
-          <div
-            class="reaction-bar"
-            *ngIf="isQuickReactionOpen(msg)"
-            [class.right]="msg.sender === senderId"
-            [class.left]="msg.sender !== senderId"
+    </ng-template>
+
+    <!-- Floating Reaction Bar (UNCHANGED) -->
+    <div
+      class="reaction-bar"
+      *ngIf="isQuickReactionOpen(msg)"
+      [class.right]="msg.sender === senderId"
+      [class.left]="msg.sender !== senderId"
             (click)="$event.stopPropagation()"
             style="z-index: 1000; position: relative"
           >
@@ -661,10 +752,10 @@
               (click)="openEmojiKeyboard(msg); $event.stopPropagation()"
             >
               ＋
-            </button>
-          </div>
-        </div>
-      </ng-container>
+            </button>   
+    </div>
+  </div>
+</ng-container>
     </div>
   </div>
 </ion-content>
@@ -1152,12 +1243,10 @@
       <!-- ✅ UPDATED: Disabled when translation card is visible -->
       <ion-col size="auto" style="display: flex; align-items: center">
         <!-- ✅ MIC BUTTON (when no text) -->
-        <ion-button
-          *ngIf="!showSendButton"
-          class="mic-button"
-          shape="round"
-          [disabled]="iBlocked || translationCard?.visible"
-        >
+ <ion-button *ngIf="!showSendButton" class="mic-button" shape="round"
+          [disabled]="iBlocked || translationCard?.visible" (touchstart)="startRecording($event)"
+          (touchmove)="onRecordingTouchMove($event)" (touchend)="stopRecording()" (touchcancel)="cancelRecording()"
+          (mousedown)="startRecording($event)" (mouseup)="stopRecording()" [class.recording]="isRecording">
           <ion-icon slot="icon-only" name="mic"></ion-icon>
         </ion-button>
 
@@ -1189,6 +1278,101 @@
 </div>
 <!-- ========================= -->
 
+<!-- 🎤 Recording Overlay (shown when not in preview mode) -->
+<div class="recording-overlay" *ngIf="isRecording && !showRecordingPreview">
+  <div class="recording-content">
+    <div class="recording-timer">
+      <div class="recording-pulse"></div>
+      <span class="recording-time">{{ recordingTime }}</span>
+    </div>
+    <div class="recording-actions">
+      <ion-button fill="clear" color="danger" (click)="cancelRecording()">
+        <!-- class="cancel-recordingz-btn" -->
+
+        <!-- <ion-icon name="close-circle" slot="start"></ion-icon> -->
+      </ion-button>
+      <div class="slide-cancel-hint">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+        <span>Slide left to cancel</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 🎤 WhatsApp-style Recording Preview -->
+<div class="recording-preview-overlay" [class.paused]="isRecordingPaused" *ngIf="showRecordingPreview">
+
+  <div class="recording-preview-container">
+
+    <!-- First Row: Timer and Waveform -->
+<div class="recording-preview-row-1">
+
+  <!-- ▶️ LISTEN PLAY / PAUSE (ONLY AFTER RECORDING) -->
+<ion-button
+  *ngIf="recordingPhase !== 'recording'"
+  fill="outline"
+  size="small"
+  class="preview-listen-btn"
+  (click)="toggleListen()"
+>
+  <ion-icon
+    [name]="recordingPhase === 'listening' ? 'pause' : 'play'"
+    slot="icon-only">
+  </ion-icon>
+</ion-button>
+
+  <div class="waveform-container">
+    <div class="waveform"
+      [class.recording]="isRecording && !isRecordingPaused"
+      [class.playing]="recordingPhase === 'listening'">
+      <div class="waveform-bar"
+        *ngFor="let i of [].constructor(40)">
+      </div>
+    </div>
+  </div>
+    <div class="recording-preview-timer">
+    <span class="timer-text">{{ recordingTime }}</span>
+  </div>
+</div>
+
+    <!-- Second Row: Delete, Play, Send -->
+    <div class="recording-preview-row-2">
+
+      <ion-button fill="clear" color="danger" (click)="deleteRecordingPreview()" class="preview-delete-btn">
+        <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+
+<!-- 🎙 RECORD PAUSE / RESUME (ONLY WHILE RECORDING) -->
+<ion-button
+  fill="solid"
+  color="medium"
+  class="preview-record-control-btn"
+  (click)="recordingPhase === 'recording' ? pauseRecording() : resumeRecording()"
+>
+  <ion-icon
+    name="mic"
+    slot="icon-only">
+  </ion-icon>
+</ion-button>
+
+      <ion-button fill="clear" color="primary" (click)="sendRecordingFromPreview()" class="preview-send-btn">
+        <ion-icon name="send" slot="icon-only"></ion-icon>
+      </ion-button>
+    </div>
+
+    <!-- Hidden audio element for playback (only when recording is stopped) -->
+   <audio
+  #previewAudio
+  *ngIf="selectedAttachment?.type === 'audio' && !isRecording"
+  [src]="selectedAttachment?.previewUrl"
+  (loadedmetadata)="onPreviewLoadedMetadata()"
+  (timeupdate)="onPreviewTimeUpdate()"
+  (ended)="onPreviewEnded()"
+  style="display:none">
+</audio>
+  </div>
+</div>
+
 <ion-popover
   [isOpen]="showPopover"
   [event]="popoverEvent"
@@ -1205,3 +1389,13 @@
     ></ion-datetime>
   </ng-template>
 </ion-popover>
+<!-- 🎤 MICROPHONE PERMISSION PROMPT -->
+<ion-alert
+  [isOpen]="showMicPermissionPrompt"
+  header="Microphone Access Required"
+  message="Allow microphone access to record voice messages."
+  [buttons]="micPermissionButtons"
+  backdropDismiss="false"
+></ion-alert>
+
+

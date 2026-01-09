@@ -30,6 +30,7 @@ dependencies {
     implementation project(':capawesome-capacitor-file-picker')
     implementation project(':capacitor-native-settings')
     implementation project(':capacitor-secure-storage-plugin')
+    implementation project(':capacitor-voice-recorder')
 
 }
 

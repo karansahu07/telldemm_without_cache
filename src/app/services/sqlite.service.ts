@@ -133,6 +133,22 @@ export interface IMessage {
       }[];
     };
   };
+         /* ==================================================
+     🔽 UI-ONLY (WhatsApp-style audio playback)
+     These are NEVER sent to backend
+     ================================================== */
+
+  /** audio is currently playing */
+  _isPlaying?: boolean;
+
+  /** formatted current time like 00:12 */
+  _currentTime?: string;
+
+  /** playback speed label: "1x" | "1.5x" | "2x" */
+  _speed?: '1x' | '1.5x' | '2x';
+
+  /** optional cache of audio duration */
+  _duration?: string;
 }
 
 export interface IAttachment {
@@ -145,6 +161,7 @@ export interface IAttachment {
   caption?: string;
   localUrl?: string;
   cdnUrl?: string;
+   duration?: number;
 }
 
 export interface IConversation {
