@@ -6,9 +6,7 @@
       </ion-title>
 
       <ion-buttons slot="end" class="header-icons">
-        <ion-button
-          (click)="presentPopover($event)"
-        >
+        <ion-button (click)="presentPopover($event)">
           <!-- <img src="assets/images/dots (1).svg" alt="" /> -->
           <i class="fa-solid fa-ellipsis-vertical homemainicons"></i>
         </ion-button>
@@ -29,12 +27,15 @@
     </div>
 
     <!-- --- My Channels (from backend) --- -->
-    <ion-list *ngIf="!isLoadingChannels">
+    <!-- <ion-list *ngIf="!isLoadingChannels">
+       -->
+    <ion-list [class.hidden]="isLoadingChannels">
+
       <ion-list-header>
         <ion-label>My Channels</ion-label>
       </ion-list-header>
 
-      <ion-item *ngFor="let ch of myChannels" (click)="openChat(ch)">
+      <ion-item *ngFor="let ch of myChannels; trackBy: trackByChannelId" (click)="openChat(ch)">
         <ion-avatar slot="start">
           <img [src]="ch.channel_dp  || 'assets/images/user.jfif'" />
         </ion-avatar>
@@ -55,19 +56,26 @@
     </ion-list>
 
     <!-- Loading -->
-    <ng-container *ngIf="isLoadingChannels">
+    <!-- <ng-container *ngIf="isLoadingChannels">
       <ion-item>
         <ion-spinner name="crescent"></ion-spinner>
         <ion-label>Loading channels...</ion-label>
       </ion-item>
-    </ng-container>
+    </ng-container> -->
+    <ion-spinner class="loading-overlay" [class.visible]="isLoadingChannels">
+    </ion-spinner>
+    
+
 
     <!-- --- Public Channels --- -->
     <div style="margin-top: 12px;">
       <p class="channels">Discover Channels (Find channels to follow)</p>
 
-      <ion-list *ngIf="!isLoadingChannels">
-        <ion-item *ngFor="let ch of filteredChannels" (click)="openChat(ch)">
+      <!-- <ion-list *ngIf="!isLoadingChannels">
+         -->
+      <ion-list [class.hidden]="isLoadingChannels">
+
+        <ion-item *ngFor="let ch of filteredChannels; trackBy: trackByChannelId" (click)="openChat(ch)">
           <ion-avatar slot="start">
             <img [src]="ch.channel_dp || 'assets/images/user.jfif'" />
           </ion-avatar>
@@ -78,18 +86,14 @@
           </ion-label>
 
           <div slot="end" class="chat-meta">
-            <ion-button
-              fill="clear"
-              size="small"
-              color="primary"
-              (click)="onFollowClick($event, ch)"
+            <ion-button fill="clear" size="small" color="primary" (click)="onFollowClick($event, ch)"
               [disabled]="loadingChannelId === ch.channel_id">
 
               <span *ngIf="!isFollowing(ch)">Join Channel</span>
 
               <span *ngIf="isFollowing(ch)" class="following-text">
                 <ion-icon name="checkmark-done-outline"></ion-icon>
-                Following Channel 
+                Following Channel
               </span>
 
             </ion-button>

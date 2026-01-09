@@ -10,6 +10,7 @@ import { AuthService } from 'src/app/auth/auth.service';
 import { AddChannelModalComponent } from 'src/app/pages/channels/modals/add-channel-modal/add-channel-modal.component';
 import { ChannelFirebaseSyncService } from 'src/app/pages/channels/services/firebasesyncchannel';
 import { ChannelPouchDbService } from 'src/app/pages/channels/services/pouch-db';
+import { ChannelUiStateService } from 'src/app/pages/channels/services/channel-ui-state';
 // import { ChannelPouchDbService } from 'src/app/services/channel-pouch-db.service';
 
 register();
@@ -44,27 +45,43 @@ export class StatusScreenPage implements OnInit, OnDestroy {
     private authService: AuthService,
     private modalCtrl: ModalController,
     private channelFirebase: ChannelFirebaseSyncService,
-    private pouchDb: ChannelPouchDbService
+    private pouchDb: ChannelPouchDbService,
+    private channelUiState: ChannelUiStateService
   ) { }
 
-  ngOnInit() {
-    // Setup will happen in ionViewWillEnter
-  }
+
+ngOnInit() {
+  this.channelUiState.isLoading$.subscribe(v => {
+    this.isLoadingChannels = v;
+  });
+}
+
 
   /* =========================
      LIFECYCLE - OFFLINE-FIRST STRATEGY
      ========================= */
 
-  async ionViewWillEnter() {
-    // 🔹 STEP 1: Load from PouchDB IMMEDIATELY (instant UI)
-    await this.loadFromCache();
+  private firebaseListening = false;
 
-    // 🔹 STEP 2: Setup Firebase listeners (background sync)
-    this.listenFromFirebase();
-
-    // 🔹 STEP 3: Sync from backend (background refresh)
-    this.syncFromBackend();
+  
+async ionViewWillEnter() {
+  if (!this.channelUiState.hasLoadedOnce()) {
+    this.channelUiState.startInitialLoad();
   }
+
+  await this.loadFromCache(); // NO loading toggle inside
+
+  this.channelUiState.finishInitialLoad();
+
+  if (!this.firebaseListening) {
+    this.firebaseListening = true;
+    this.listenFromFirebase();
+  }
+
+  this.syncFromBackend(); // silent
+}
+
+
 
   ionViewWillLeave() {
     this.cleanupFirebaseListeners();
@@ -77,66 +94,110 @@ export class StatusScreenPage implements OnInit, OnDestroy {
   /* =========================
      OFFLINE-FIRST DATA LOADING
      ========================= */
+private firstLoadDone = false;
 
-  /**
-   * 🔹 Load from PouchDB cache FIRST (instant)
-   */
+
+
   private async loadFromCache() {
-    console.log('📱 Loading channels from PouchDB cache...');
 
-    try {
-      const [cachedMyChannels, cachedDiscoverChannels] = await Promise.all([
-        this.pouchDb.getMyChannels(this.userId),
-        this.pouchDb.getDiscoverChannels(this.userId)
-      ]);
+  // ✅ Show loading ONLY on very first load
+  if (!this.firstLoadDone) {
+    // this.isLoadingChannels = true;
+  }
 
-      if (cachedMyChannels.length > 0) {
-        this.myChannels = cachedMyChannels;
-        this.followedChannelIds = new Set(
-          cachedMyChannels.map(c => c.channel_id)
-        );
-        console.log(`✅ Loaded ${cachedMyChannels.length} my channels from cache`);
+  const [cachedMyChannels, cachedDiscoverChannels] = await Promise.all([
+    this.pouchDb.getMyChannels(this.userId),
+    this.pouchDb.getDiscoverChannels(this.userId)
+  ]);
+
+  if (this.myChannels.length === 0 && cachedMyChannels.length > 0) {
+    this.myChannels = cachedMyChannels;
+  }
+
+  if (this.publicChannels.length === 0 && cachedDiscoverChannels.length > 0) {
+    this.publicChannels = cachedDiscoverChannels;
+  }
+
+  this.updateFilteredChannels();
+
+  // ✅ Mark first load complete
+  this.firstLoadDone = true;
+
+  // ✅ Hide loading permanently
+  // this.isLoadingChannels = false;
+}
+
+
+  trackByChannelId(index: number, channel: Channel) {
+    return channel.channel_id;
+  }
+
+
+
+  private patchChannels(
+    target: Channel[],
+    incoming: Channel[]
+  ) {
+    const map = new Map(target.map(c => [c.channel_id, c]));
+
+    // Update & add
+    incoming.forEach(ch => {
+      if (map.has(ch.channel_id)) {
+        Object.assign(map.get(ch.channel_id)!, ch);
+      } else {
+        target.push(ch);
       }
+    });
 
-      if (cachedDiscoverChannels.length > 0) {
-        this.publicChannels = cachedDiscoverChannels;
-        this.updateFilteredChannels();
-        console.log(`✅ Loaded ${cachedDiscoverChannels.length} discover channels from cache`);
+    // Remove deleted
+    for (let i = target.length - 1; i >= 0; i--) {
+      if (!incoming.find(c => c.channel_id === target[i].channel_id)) {
+        target.splice(i, 1);
       }
-
-      if (cachedMyChannels.length === 0 && cachedDiscoverChannels.length === 0) {
-        console.log('📭 No cached data, showing loading state');
-        this.isLoadingChannels = true;
-      }
-
-    } catch (error) {
-      console.error('❌ Failed to load from cache:', error);
-      this.isLoadingChannels = true;
     }
   }
 
-  /**
-   * 🔥 Setup Firebase listeners (auto-updates UI when data changes)
-   */
+
+  private myChannelsInitialized = false;
+  private discoverChannelsInitialized = false;
+
   private listenFromFirebase() {
-    // Firebase listeners automatically cache to PouchDB
+
     this.channelFirebase.listenMyChannels(this.userId, channels => {
-      console.log('🔥 Firebase update: My Channels');
-      this.myChannels = channels;
+
+      if (!this.myChannelsInitialized) {
+        this.myChannelsInitialized = true;
+        this.patchChannels(this.myChannels, channels);
+      } else {
+        this.patchChannels(this.myChannels, channels);
+      }
+
       this.followedChannelIds = new Set(
-        channels.map(c => c.channel_id)
+        this.myChannels.map(c => c.channel_id)
       );
-      this.updateFilteredChannels();
-      this.isLoadingChannels = false;
+
+      // this.updateFilteredChannels();
+      this.patchFilteredChannels();
+
+      // this.isLoadingChannels = false;
     });
 
     this.channelFirebase.listenDiscoverChannels(this.userId, channels => {
-      console.log('🔥 Firebase update: Discover Channels');
-      this.publicChannels = channels;
-      this.updateFilteredChannels();
-      this.isLoadingChannels = false;
+
+      if (!this.discoverChannelsInitialized) {
+        this.discoverChannelsInitialized = true;
+        this.patchChannels(this.publicChannels, channels);
+      } else {
+        this.patchChannels(this.publicChannels, channels);
+      }
+
+      // this.updateFilteredChannels();
+      this.patchFilteredChannels();
+
+      // this.isLoadingChannels = false;
     });
   }
+
 
   /**
    * 🌐 Sync from backend API (background refresh)
@@ -199,21 +260,16 @@ export class StatusScreenPage implements OnInit, OnDestroy {
      ========================= */
 
   async reload() {
-    console.log('🔄 Manual reload triggered');
-    
-    // Show loading
-    this.isLoadingChannels = true;
-
-    // Load from cache first
     await this.loadFromCache();
-
-    // Then sync from backend
     this.syncFromBackend();
+  }
 
-    // Hide loading after brief delay
-    setTimeout(() => {
-      this.isLoadingChannels = false;
-    }, 500);
+  private patchFilteredChannels() {
+    const allowed = this.publicChannels.filter(
+      ch => !this.followedChannelIds.has(ch.channel_id)
+    );
+
+    this.patchChannels(this.filteredChannels, allowed);
   }
 
   /* =========================
@@ -261,7 +317,9 @@ export class StatusScreenPage implements OnInit, OnDestroy {
       );
     }
 
-    this.updateFilteredChannels();
+    // this.updateFilteredChannels();
+    this.patchFilteredChannels();
+
 
     // 2️⃣ Update Firebase + PouchDB (with offline queue)
     if (wasFollowing) {
@@ -285,14 +343,14 @@ export class StatusScreenPage implements OnInit, OnDestroy {
       next: () => {
         console.log(`✅ Backend confirmed ${wasFollowing ? 'unfollow' : 'follow'}`);
         this.presentToast(
-          wasFollowing 
-            ? `Unfollowed ${channel.channel_name}` 
+          wasFollowing
+            ? `Unfollowed ${channel.channel_name}`
             : `Following ${channel.channel_name}`
         );
       },
       error: (err) => {
         console.error('❌ Backend operation failed, reverting:', err);
-        
+
         // 4️⃣ Revert optimistic update on failure
         this.revertOptimisticUpdate(channel, wasFollowing);
 
@@ -332,7 +390,9 @@ export class StatusScreenPage implements OnInit, OnDestroy {
       }
     }
 
-    this.updateFilteredChannels();
+    // this.updateFilteredChannels();
+    this.patchFilteredChannels();
+
   }
 
   /* =========================
