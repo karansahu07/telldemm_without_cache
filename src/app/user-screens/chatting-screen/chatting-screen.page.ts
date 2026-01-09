@@ -710,6 +710,16 @@ seekMsgAudio(event: Event, audio: HTMLAudioElement) {
   // 🎤 VOICE RECORDING METHODS   
   // ========================================
 
+  onPreviewMicTap() {
+  // 📳 Same subtle vibration as hold mic
+  if (this.platform.is('capacitor')) {
+    navigator.vibrate?.(20);
+  }
+
+  // Resume recording
+  this.resumeRecording();
+}
+
 async startRecording(event?: any) {
   // 🔒 Record when the user touches down - start hold timer
   this.micHoldStartTime = Date.now();
@@ -772,6 +782,9 @@ async startRecording(event?: any) {
   // 🎙️ UI before recording
   // ------------------------------------------------
   this.isRecording = true;
+  if (this.platform.is('capacitor')) {
+  navigator.vibrate?.(20);
+}
   // If starting fresh (not resuming), reset segments
   if (!this.isRecordingPaused) {
     this.audioSegments = [];
@@ -930,9 +943,10 @@ async stopRecording() {
       fileSize: this.combinedAudioBlob!.size,
       previewUrl,
     };
-    // ✅ Show WhatsApp-style recording preview
-    this.showRecordingPreview = true;
-    this.isRecordingPaused = true;
+if (!this.hasSwipedUp) {
+  await this.sendRecordingFromPreview();
+  return;
+}
     this.hasSwipedUp = false;
     console.log('✅ Recording ready in inline preview (multi-segment)');
 

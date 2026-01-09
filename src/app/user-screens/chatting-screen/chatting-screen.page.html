@@ -1285,9 +1285,9 @@
       <div class="recording-pulse"></div>
       <span class="recording-time">{{ recordingTime }}</span>
     </div>
-    <div class="recording-actions">
+    <div class="recording-actionys">
       <ion-button fill="clear" color="danger" (click)="cancelRecording()">
-        <!-- class="cancel-recordingz-btn" -->
+        <!-- class="cancel-recordyingz-btn" -->
 
         <!-- <ion-icon name="close-circle" slot="start"></ion-icon> -->
       </ion-button>
@@ -1322,43 +1322,56 @@
 </ion-button>
 
   <div class="waveform-container">
-    <div class="waveform"
-      [class.recording]="isRecording && !isRecordingPaused"
-      [class.playing]="recordingPhase === 'listening'">
+   <div class="waveform"
+  [class.recording]="isRecording && !isRecordingPaused"
+  [class.playing]="recordingPhase === 'listening'"
+  [class.listening]="recordingPhase === 'listening'">
       <div class="waveform-bar"
         *ngFor="let i of [].constructor(40)">
       </div>
     </div>
-  </div>
     <div class="recording-preview-timer">
     <span class="timer-text">{{ recordingTime }}</span>
+  </div>
   </div>
 </div>
 
     <!-- Second Row: Delete, Play, Send -->
-    <div class="recording-preview-row-2">
+ <div class="recording-preview-row-2">
 
-      <ion-button fill="clear" color="danger" (click)="deleteRecordingPreview()" class="preview-delete-btn">
-        <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
-      </ion-button>
+  <ion-button fill="clear" color="danger"
+    (click)="deleteRecordingPreview()"
+    class="preview-delete-btn">
+    <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+  </ion-button>
 
-<!-- 🎙 RECORD PAUSE / RESUME (ONLY WHILE RECORDING) -->
-<ion-button
-  fill="solid"
-  color="medium"
-  class="preview-record-control-btn"
-  (click)="recordingPhase === 'recording' ? pauseRecording() : resumeRecording()"
->
-  <ion-icon
-    name="mic"
-    slot="icon-only">
-  </ion-icon>
-</ion-button>
+  <!-- ▶ RESUME / PLAY (|| style) -->
+  <div
+    *ngIf="recordingPhase !== 'paused'"
+    class="preview-resume-bars"
+    (click)="recordingPhase === 'recording'
+      ? pauseRecording()
+      : toggleListen()">
+    <span></span>
+    <span></span>
+  </div>
 
-      <ion-button fill="clear" color="primary" (click)="sendRecordingFromPreview()" class="preview-send-btn">
-        <ion-icon name="send" slot="icon-only"></ion-icon>
-      </ion-button>
-    </div>
+  <!-- 🎙 MIC (ONLY WHEN PAUSED) -->
+<div
+  *ngIf="recordingPhase === 'paused'"
+  class="preview-mic-only"
+  (click)="onPreviewMicTap()">
+  <ion-icon name="mic"></ion-icon>
+</div>
+
+  <ion-button fill="clear" color="primary"
+    (click)="sendRecordingFromPreview()"
+    class="preview-send-btn">
+    <ion-icon name="send" slot="icon-only"></ion-icon>
+  </ion-button>
+
+</div>
+
 
     <!-- Hidden audio element for playback (only when recording is stopped) -->
    <audio
