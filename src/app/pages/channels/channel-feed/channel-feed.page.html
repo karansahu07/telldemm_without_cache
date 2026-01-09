@@ -99,11 +99,14 @@
       </div>
 
       <!-- REACTIONS BAR WITH FORWARD (ALWAYS VISIBLE) -->
+      <!-- REACTIONS BAR WITH FORWARD (SHOW OFFLINE STATE) -->
       <div class="reactions-bar">
         <!-- Show reactions if any exist -->
         <div class="reactions-wrapper">
           <div class="reactions-list" *ngIf="getAggregatedReactions(p) | keyvalue as reactions">
-            <div class="reaction-item" *ngFor="let r of reactions" (click)="showReactionActionSheet(p, r.key)">
+            <div class="reaction-item" *ngFor="let r of reactions"
+              (click)="isOnline ? showReactionActionSheet(p, r.key) : showOfflineToast('Reactions unavailable offline')"
+              [class.disabled]="!isOnline">
               <span class="emoji">{{ r.key }}</span>
               <span class="count">{{ r.value }}</span>
             </div>
@@ -120,10 +123,12 @@
 
   </div>
 
-  <div *ngIf="!canCreatePost" class="read-only-banner">
-    <ion-icon name="eye-outline"></ion-icon>
-    <span>View only - You can react to posts</span>
-  </div>
+  <!-- Update the read-only banner to mention reactions are disabled -->
+<div *ngIf="!canCreatePost || !isOnline" class="read-only-banner">
+  <ion-icon [name]="!isOnline ? 'cloud-offline-outline' : 'eye-outline'"></ion-icon>
+  <span *ngIf="!isOnline">Offline - View only</span>
+  <span *ngIf="canCreatePost && isOnline">View only - You can react to posts</span>
+</div>
 </ion-content>
 
 <!-- INPUT BAR -->

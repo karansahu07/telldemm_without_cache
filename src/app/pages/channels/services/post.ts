@@ -17,7 +17,6 @@ import { environment } from 'src/environments/environment.prod';
 import { AuthService } from 'src/app/auth/auth.service';
 import { ChannelPouchDbService, CachedPost, PendingAction } from './pouch-db';
 import { FileStorageService } from './file-storage';
-// import { ChannelPouchDbService, CachedPost, PendingAction } from 'src/app/services/channel-pouch-db.service';
 
 export interface UserReaction {
   emoji: string;
@@ -42,43 +41,13 @@ export class PostService {
     private http: HttpClient,
     private authService: AuthService,
     private pouchDb: ChannelPouchDbService,
-    private fileStorage: FileStorageService  // ✅ Add this
+    private fileStorage: FileStorageService
   ) {
     this.currentUserId = this.authService.authData?.userId || 0;
     this.monitorConnection();
   }
 
   /* =========================
-     CONNECTION MONITORING
-     ========================= */
-
-  // private monitorConnection() {
-  //   const connectedRef = ref(this.db, '.info/connected');
-
-  //   onValue(connectedRef, (snapshot) => {
-  //     const isConnected = snapshot.val() === true;
-  //     this.isOnlineSubject.next(isConnected);
-
-  //     if (isConnected) {
-  //       console.log('🟢 Firebase connected, flushing queue...');
-  //       this.flushQueue();
-  //     } else {
-  //       console.log('📴 Firebase disconnected');
-  //     }
-  //   });
-
-  //   // Also monitor browser online/offline
-  //   window.addEventListener('online', () => {
-  //     console.log('🟢 Browser online');
-  //     this.flushQueue();
-  //   });
-
-  //   window.addEventListener('offline', () => {
-  //     console.log('📴 Browser offline');
-  //   });
-  // }
-
-   /* =========================
      CONNECTION MONITORING
      ========================= */
 
@@ -107,139 +76,12 @@ export class PostService {
     });
   }
 
-
-
   getConnectionStatus(): Observable<boolean> {
     return this.isOnlineSubject.asObservable();
   }
 
-
-
-
   /* =========================
-       CREATE POST - UPDATED WITH FILE STORAGE
-       ========================= */
-
-  // async createPost(
-  //   channelId: string,
-  //   body: string,
-  //   file?: File,
-  //   senderId?: number,
-  //   progressCallback?: (progress: number) => void
-  // ): Promise<void> {
-  //   // Generate unique IDs
-  //   const tempPostId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  //   const tempImageId = file ? `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` : undefined;
-
-  //   // // 1️⃣ Store file in IndexedDB (as Blob - efficient!)
-  //   // let objectURL: string | undefined;
-  //   // if (file && tempImageId) {
-  //   //   try {
-  //   //     await this.fileStorage.storeFile(tempImageId, file);
-  //   //     objectURL = await this.fileStorage.getFileURL(tempImageId);
-  //   //     console.log(`✅ Image stored in IndexedDB: ${tempImageId}`);
-  //   //   } catch (error) {
-  //   //     console.error('❌ Failed to store image in IndexedDB:', error);
-  //   //     // Continue without image
-  //   //   }
-  //   // }
-
-  //   let objectURL: string | undefined;
-
-  //   if (file && tempImageId) {
-  //     try {
-  //       await this.fileStorage.storeFile(tempImageId, file);
-
-  //       const url = await this.fileStorage.getFileURL(tempImageId);
-  //       objectURL = url ?? undefined;
-
-  //       console.log(`✅ Image stored in IndexedDB: ${tempImageId}`);
-  //     } catch (error) {
-  //       console.error('❌ Failed to store image in IndexedDB:', error);
-  //     }
-  //   }
-
-  //   // 2️⃣ Create optimistic post with Blob URL
-  //   const optimisticPost: CachedPost = {
-  //     id: tempPostId,
-  //     body,
-  //     created_by: senderId || this.currentUserId,
-  //     timestamp: Date.now(),
-  //     user_reactions: {},
-  //     isPending: true,
-  //     pendingImageId: tempImageId, // Link to IndexedDB file
-  //     image: objectURL, // Blob URL for instant display
-  //     media_id: tempImageId ? 'pending_upload' : undefined
-  //   };
-
-  //   // 3️⃣ Add optimistic post to cache (shows immediately in UI)
-  //   const existingPosts = await this.pouchDb.getPosts(channelId);
-  //   await this.pouchDb.savePosts(channelId, [...existingPosts, optimisticPost], true);
-  //   console.log('✅ Optimistic post added to cache');
-
-  //   // 4️⃣ Queue the action (store file ID, not the File object)
-  //   const action: PendingAction = {
-  //     type: 'post_create',
-  //     channelId,
-  //     data: {
-  //       body,
-  //       fileId: tempImageId, // Store ID reference instead of File
-  //       senderId,
-  //       tempPostId,
-  //       tempImageId
-  //     },
-  //     timestamp: Date.now()
-  //   };
-
-  //   await this.pouchDb.enqueueAction(action);
-  //   console.log(`📝 Post queued: ${tempPostId}`);
-
-  //   // 5️⃣ Try immediate execution if online
-  //   if (this.isOnlineSubject.value) {
-  //     try {
-  //       // Retrieve file from IndexedDB
-  //       let fileToUpload: File | undefined;
-  //       if (tempImageId) {
-  //         const storedBlob = await this.fileStorage.getFile(tempImageId);
-  //         if (storedBlob) {
-  //           const fileInfo = await this.fileStorage.getFileInfo(tempImageId);
-  //           fileToUpload = new File(
-  //             [storedBlob],
-  //             fileInfo?.fileName || `image_${tempImageId}`,
-  //             { type: storedBlob.type }
-  //           );
-  //         }
-  //       }
-
-  //       await this.executeCreatePost(
-  //         { ...action, data: { ...action.data, file: fileToUpload } },
-  //         progressCallback
-  //       );
-
-  //       // ✅ Success - Clean up
-  //       await this.removeActionFromQueue(tempPostId);
-  //       await this.removeOptimisticPost(channelId, tempPostId);
-
-  //       if (tempImageId) {
-  //         await this.fileStorage.deleteFile(tempImageId);
-  //         console.log(`🧹 Cleaned up IndexedDB file: ${tempImageId}`);
-  //       }
-
-  //       console.log(`✅ Post created successfully: ${tempPostId}`);
-
-  //     } catch (error) {
-  //       console.error('❌ Failed to create post immediately, will retry later:', error);
-  //       // Optimistic post stays visible, will sync when back online
-  //     }
-  //   } else {
-  //     console.log('📴 Offline: Post queued (visible with Blob URL)');
-  //   }
-  // }
-
-
-// Also update createPost to pass file correctly
-/* =========================
-     CREATE POST
+     CREATE POST - UPDATED
      ========================= */
 
   async createPost(
@@ -262,12 +104,11 @@ export class PostService {
       tempImageId
     });
 
-    // 1️⃣ Store file in IndexedDB if exists
+    // 1️⃣ ✅ ALWAYS Store file in IndexedDB (even when online!)
     let objectURL: string | undefined;
     if (file && tempImageId) {
       try {
         await this.fileStorage.storeFile(tempImageId, file);
-        // objectURL = await this.fileStorage.getFileURL(tempImageId);
         const url = await this.fileStorage.getFileURL(tempImageId);
         objectURL = url ?? undefined;
         console.log(`✅ Image stored in IndexedDB: ${tempImageId}`);
@@ -338,17 +179,28 @@ export class PostService {
           }
         }
 
-        await this.executeCreatePost(
+        // ✅ NEW: Execute with callback to get real post data
+        const realPost = await this.executeCreatePost(
           { ...action, data: { ...action.data, file: fileToUpload } },
           progressCallback
         );
+        
+        // ✅ NEW: Download server image for offline access
+        if (realPost?.media_id) {
+          await this.downloadAndCacheServerImage(realPost.media_id, channelId);
+        }
         
         // Clean up
         await this.removeActionFromQueue(tempPostId);
         await this.removeOptimisticPost(channelId, tempPostId);
         
+        // ✅ Keep temp file until server image is downloaded
+        // Delete in background after delay
         if (tempImageId) {
-          await this.fileStorage.deleteFile(tempImageId);
+          setTimeout(async () => {
+            await this.fileStorage.deleteFile(tempImageId);
+            console.log(`🧹 Deleted temp file: ${tempImageId}`);
+          }, 5000); // 5 second delay
         }
         
         console.log(`✅ Post created: ${tempPostId}`);
@@ -361,18 +213,69 @@ export class PostService {
     }
   }
 
-
-
-  /**
-   * Remove a specific action from queue by its unique ID
-   */
   /* =========================
-      HELPER METHODS
-      ========================= */
+     ✅ NEW: DOWNLOAD SERVER IMAGE
+     ========================= */
 
   /**
-   * Remove a specific action from queue by its unique ID
+   * Download server image and store in IndexedDB for offline access
    */
+  private async downloadAndCacheServerImage(
+    mediaId: string,
+    channelId: string
+  ): Promise<void> {
+    try {
+      console.log(`⬇️ Downloading server image: ${mediaId}`);
+      
+      // Get download URL
+      const response = await this.getFreshMediaUrl(mediaId);
+      
+      if (!response?.downloadUrl) {
+        console.error('❌ No download URL available');
+        return;
+      }
+
+      // Download image as blob
+      const imageResponse = await fetch(response.downloadUrl);
+      if (!imageResponse.ok) {
+        throw new Error('Failed to download image');
+      }
+
+      const blob = await imageResponse.blob();
+      
+      // Store in IndexedDB with server media_id
+      const serverFileId = `server_${mediaId}`;
+      await this.fileStorage.storeFile(
+        serverFileId,
+        new File([blob], `${mediaId}.jpg`, { type: blob.type })
+      );
+      
+      console.log(`✅ Downloaded and cached server image: ${mediaId}`);
+
+      // ✅ Update cached posts to use local file
+      const posts = await this.pouchDb.getPosts(channelId);
+      const updated = posts.map(post => {
+        if (post.media_id === mediaId) {
+          return {
+            ...post,
+            pendingImageId: serverFileId // Now points to local copy
+          };
+        }
+        return post;
+      });
+
+      await this.pouchDb.savePosts(channelId, updated, true);
+
+    } catch (error) {
+      console.error('⚠️ Failed to download server image:', error);
+      // Don't throw - this is optimization only
+    }
+  }
+
+  /* =========================
+     HELPER METHODS
+     ========================= */
+
   private async removeActionFromQueue(tempPostId: string): Promise<void> {
     const queue = await this.pouchDb.getQueue();
     const index = queue.findIndex(
@@ -383,11 +286,6 @@ export class PostService {
       await this.pouchDb.removeFromQueue(index);
     }
   }
-
-
-  /**
-   * Remove optimistic post from cache
-   */
 
   private async removeOptimisticPost(channelId: string, tempPostId: string): Promise<void> {
     try {
@@ -402,214 +300,7 @@ export class PostService {
     }
   }
 
-  /**
-   * Execute the actual post creation
-   */
-  // private async executeCreatePost(
-  //   action: PendingAction,
-  //   progressCallback?: (progress: number) => void
-  // ): Promise<void> {
-  //   const { body, file, senderId, tempPostId } = action.data;
-  //   let mediaId: string | null = null;
-
-  //   try {
-  //     // Upload file if exists
-  //     if (file) {
-  //       const uploadPayload = {
-  //         channel_id: parseInt(action.channelId!),
-  //         sender_id: senderId,
-  //         media_type: file.type.startsWith('image/') ? 'image' : 'video',
-  //         file_size: file.size,
-  //         content_type: file.type,
-  //         metadata: { caption: body }
-  //       };
-
-  //       const uploadResponse = await this.http.post<any>(this.UPLOAD_API, uploadPayload).toPromise();
-  //       if (!uploadResponse.status) throw new Error('Failed to get upload URL');
-
-  //       mediaId = uploadResponse.media_id;
-
-  //       await new Promise<void>((resolve, reject) => {
-  //         this.http.put(uploadResponse.upload_url, file, {
-  //           observe: 'events',
-  //           reportProgress: true
-  //         }).subscribe({
-  //           next: (event: any) => {
-  //             if (event.type === HttpEventType.UploadProgress && progressCallback) {
-  //               progressCallback(Math.round(100 * event.loaded / (event.total || 1)));
-  //             } else if (event.type === HttpEventType.Response) {
-  //               resolve();
-  //             }
-  //           },
-  //           error: reject
-  //         });
-  //       });
-  //     }
-
-  //     // Create post in Firebase
-  //     const postsRef = ref(this.db, `channels/${action.channelId}/posts`);
-  //     const newPostRef = push(postsRef);
-
-  //     await set(newPostRef, {
-  //       body,
-  //       media_id: mediaId,
-  //       created_by: senderId || this.currentUserId,
-  //       timestamp: Date.now(),
-  //       user_reactions: {}
-  //     });
-
-  //     console.log(`✅ Post created successfully with ID: ${newPostRef.key}`);
-
-  //     // 5️⃣ Remove pending post after success
-  //     // Important: Remove BEFORE Firebase listener picks up the new post
-  //     await this.pouchDb.removePendingPost(tempPostId);
-
-  //     console.log(`🧹 Removed pending post: ${tempPostId}`);
-
-  //   } catch (error) {
-  //     console.error('❌ Failed to create post:', error);
-
-  //     // Increment retry count
-  //     action.retryCount = (action.retryCount || 0) + 1;
-
-  //     // If too many retries, give up
-  //     if (action.retryCount > 3) {
-  //       console.error('❌ Post creation failed after 3 retries, removing pending post');
-  //       await this.pouchDb.removePendingPost(tempPostId);
-  //     }
-
-  //     throw error;
-  //   }
-  // }
-
-  //   private async executeCreatePost(
-  //   action: PendingAction,
-  //   progressCallback?: (progress: number) => void
-  // ): Promise<void> {
-  //   const { body, file, senderId } = action.data;
-  //   let mediaId: string | null = null;
-
-  //   try {
-  //     // Upload file if exists
-  //     if (file) {
-  //       const uploadPayload = {
-  //         channel_id: parseInt(action.channelId!),
-  //         sender_id: senderId,
-  //         media_type: file.type.startsWith('image/') ? 'image' : 'video',
-  //         file_size: file.size,
-  //         content_type: file.type,
-  //         metadata: { caption: body }
-  //       };
-
-  //       const uploadResponse = await this.http.post<any>(this.UPLOAD_API, uploadPayload).toPromise();
-  //       if (!uploadResponse.status) throw new Error('Failed to get upload URL');
-
-  //       mediaId = uploadResponse.media_id;
-
-  //       await new Promise<void>((resolve, reject) => {
-  //         this.http.put(uploadResponse.upload_url, file, {
-  //           observe: 'events',
-  //           reportProgress: true
-  //         }).subscribe({
-  //           next: (event: any) => {
-  //             if (event.type === HttpEventType.UploadProgress && progressCallback) {
-  //               progressCallback(Math.round(100 * event.loaded / (event.total || 1)));
-  //             } else if (event.type === HttpEventType.Response) {
-  //               resolve();
-  //             }
-  //           },
-  //           error: reject
-  //         });
-  //       });
-  //     }
-
-  //     // Create post in Firebase
-  //     const postsRef = ref(this.db, `channels/${action.channelId}/posts`);
-  //     const newPostRef = push(postsRef);
-
-  //     await set(newPostRef, {
-  //       body,
-  //       media_id: mediaId,
-  //       created_by: senderId || this.currentUserId,
-  //       timestamp: Date.now(),
-  //       user_reactions: {}
-  //     });
-
-  //     console.log(`✅ Post created successfully with ID: ${newPostRef.key}`);
-
-  //   } catch (error) {
-  //     console.error('❌ Failed to create post:', error);
-
-  //     // Increment retry count
-  //     action.retryCount = (action.retryCount || 0) + 1;
-
-  //     // If too many retries, give up
-  //     if (action.retryCount > 3) {
-  //       console.error('❌ Post creation failed after 3 retries');
-  //     }
-
-  //     throw error;
-  //   }
-  // }
-
-
-  //   getPosts(channelId: string): Observable<CachedPost[]> {
-  //   const postsRef = ref(this.db, `channels/${channelId}/posts`);
-  //   this.postsRefMap.set(channelId, postsRef);
-
-  //   return new Observable((observer) => {
-  //     let isFirstEmit = true;
-
-  //     // 1️⃣ Load from PouchDB cache immediately (offline-first)
-  //     this.pouchDb.getPosts(channelId).then(cachedPosts => {
-  //       if (cachedPosts.length > 0) {
-  //         console.log(`📱 Loaded ${cachedPosts.length} posts from cache`);
-  //         observer.next(cachedPosts);
-  //         isFirstEmit = false;
-  //       }
-  //     });
-
-  //     // 2️⃣ Setup Firebase listener (real-time updates)
-  //     onValue(postsRef, async (snapshot) => {
-  //       const data = snapshot.val() || {};
-  //       const firebasePosts: CachedPost[] = Object.keys(data)
-  //         .map(id => ({ id, ...data[id] }))
-  //         .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
-
-  //       console.log(`🔥 Firebase: ${firebasePosts.length} posts`);
-
-  //       // Cache to PouchDB
-  //       await this.pouchDb.savePosts(channelId, firebasePosts);
-
-  //       observer.next(firebasePosts);
-  //       isFirstEmit = false;
-
-  //     }, (error) => {
-  //       console.error('❌ Firebase error, using cache only:', error);
-
-  //       // On error, load from cache if we haven't emitted yet
-  //       if (isFirstEmit) {
-  //         this.pouchDb.getPosts(channelId).then(cachedPosts => {
-  //           observer.next(cachedPosts);
-  //         });
-  //       }
-  //     });
-  //   });
-  // }
-
-  // In post.ts - Replace the getPosts() method
-  // In post.ts - Replace flushQueue() method
-
-
-  /**
-   * Flush queued actions when connection is restored
-   */
   /* =========================
-      QUEUE FLUSHING - UPDATED
-      ========================= */
-
-  // Update flushQueue to properly retrieve files
-/* =========================
      QUEUE MANAGEMENT
      ========================= */
 
@@ -643,17 +334,24 @@ export class PostService {
               }
             }
 
-            await this.executeCreatePost({
+            const realPost = await this.executeCreatePost({
               ...action,
               data: { ...action.data, file: fileToUpload }
             });
+            
+            // ✅ Download server image
+            if (realPost?.media_id) {
+              await this.downloadAndCacheServerImage(realPost.media_id, action.channelId!);
+            }
             
             // Clean up
             await this.pouchDb.removeFromQueue(i);
             await this.removeOptimisticPost(action.channelId!, action.data.tempPostId);
             
             if (action.data.fileId) {
-              await this.fileStorage.deleteFile(action.data.fileId);
+              setTimeout(async () => {
+                await this.fileStorage.deleteFile(action.data.fileId);
+              }, 5000);
             }
             
             console.log(`✅ Synced post: ${action.data.tempPostId}`);
@@ -701,19 +399,15 @@ export class PostService {
       }
     }
   }
-  // Also update executeCreatePost to not handle queue removal
 
-  /**
- * Execute the actual post creation with proper error handling
- */
   /* =========================
-     EXECUTE CREATE POST
+     EXECUTE CREATE POST - UPDATED TO RETURN POST DATA
      ========================= */
 
   private async executeCreatePost(
     action: PendingAction,
     progressCallback?: (progress: number) => void
-  ): Promise<void> {
+  ): Promise<any> {
     const { body, file, senderId } = action.data;
     let mediaId: string | null = null;
 
@@ -819,6 +513,12 @@ export class PostService {
 
       console.log(`✅ Post created in Firebase: ${newPostRef.key}`);
 
+      // ✅ Return post data for further processing
+      return {
+        id: newPostRef.key,
+        ...postData
+      };
+
     } catch (error: any) {
       console.error('❌ Failed to create post:', {
         error: error.message,
@@ -828,11 +528,8 @@ export class PostService {
     }
   }
 
-
-  // In post.ts - Replace getPosts() method
-
- /* =========================
-     GET POSTS
+  /* =========================
+     GET POSTS - UPDATED
      ========================= */
 
   getPosts(channelId: string): Observable<CachedPost[]> {
@@ -860,6 +557,19 @@ export class PostService {
 
         console.log(`🔥 Firebase: ${firebasePosts.length} posts`);
 
+        // ✅ Download any missing server images in background
+        for (const post of firebasePosts) {
+          if (post.media_id && !post.isPending) {
+            const serverFileId = `server_${post.media_id}`;
+            const exists = await this.fileStorage.fileExists(serverFileId);
+            
+            if (!exists && this.isOnlineSubject.value) {
+              // Download in background
+              this.downloadAndCacheServerImage(post.media_id, channelId);
+            }
+          }
+        }
+
         await this.pouchDb.savePosts(channelId, firebasePosts);
         observer.next(firebasePosts);
         hasEmitted = true;
@@ -884,131 +594,8 @@ export class PostService {
     }
   }
 
-  /**
-   * Helper to load and emit cached posts
-   */
-  private async loadAndEmitCache(
-    channelId: string,
-    observer: any
-  ): Promise<void> {
-    try {
-      const cachedPosts = await this.pouchDb.getPosts(channelId);
-
-      if (cachedPosts.length > 0) {
-        console.log(`📱 Emitting ${cachedPosts.length} cached posts`);
-        observer.next(cachedPosts);
-      } else {
-        console.log('📱 No cached posts found');
-        observer.next([]);
-      }
-    } catch (error) {
-      console.error('❌ Failed to load cached posts:', error);
-      observer.next([]);
-    }
-  }
-
-  /**
-   * Alternative: Simpler implementation with better offline handling
-   */
-  getPostsSimplified(channelId: string): Observable<CachedPost[]> {
-    return new Observable((observer) => {
-      const postsRef = ref(this.db, `channels/${channelId}/posts`);
-      this.postsRefMap.set(channelId, postsRef);
-
-      // Load cache immediately
-      this.pouchDb.getPosts(channelId).then(cachedPosts => {
-        console.log(`📱 Loaded ${cachedPosts.length} posts from cache`);
-        observer.next(cachedPosts);
-      });
-
-      // Setup Firebase listener (will update when online)
-      const unsubscribe = onValue(
-        postsRef,
-        async (snapshot) => {
-          const data = snapshot.val() || {};
-          const firebasePosts: CachedPost[] = Object.keys(data)
-            .map(id => ({ id, ...data[id] }))
-            .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
-
-          console.log(`🔥 Firebase: ${firebasePosts.length} posts`);
-
-          // Save to cache
-          await this.pouchDb.savePosts(channelId, firebasePosts);
-
-          // Emit to UI
-          observer.next(firebasePosts);
-        },
-        (error) => {
-          // Firebase error - silently continue using cache
-          console.error('❌ Firebase error (using cache):', error);
-        }
-      );
-
-      return () => unsubscribe();
-    });
-  }
-
-  /**
-   * Check if Firebase data is different from cached data
-   */
-  private hasDataChanged(cached: CachedPost[], firebase: CachedPost[]): boolean {
-    // Quick checks first
-    if (cached.length !== firebase.length) return true;
-
-    // Create maps for efficient comparison
-    const cachedMap = new Map(cached.map(p => [p.id, p]));
-    const firebaseMap = new Map(firebase.map(p => [p.id, p]));
-
-    // Check if any post IDs are different
-    for (const id of firebaseMap.keys()) {
-      if (!cachedMap.has(id)) return true;
-    }
-
-    // Check if any post content is different
-    for (const [id, firebasePost] of firebaseMap.entries()) {
-      const cachedPost = cachedMap.get(id);
-      if (!cachedPost) return true;
-
-      // Compare key fields that matter
-      if (
-        cachedPost.body !== firebasePost.body ||
-        cachedPost.media_id !== firebasePost.media_id ||
-        cachedPost.timestamp !== firebasePost.timestamp ||
-        JSON.stringify(cachedPost.user_reactions) !== JSON.stringify(firebasePost.user_reactions)
-      ) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  /**
-   * Load posts from cache (including pending)
-   */
-  // private async loadCachedPosts(channelId: string): Promise<CachedPost[]> {
-  //   const [cached, pending] = await Promise.all([
-  //     this.pouchDb.getPosts(channelId),
-  //     this.pouchDb.getPendingPosts(channelId)
-  //   ]);
-
-  //   return [...cached, ...pending];
-  // }
-
-  // cleanupPostsListener(channelId: string) {
-  //   const ref = this.postsRefMap.get(channelId);
-  //   if (ref) {
-  //     off(ref);
-  //     this.postsRefMap.delete(channelId);
-  //   }
-  // }
-
   /* =========================
-     MEDIA URL MANAGEMENT
-     ========================= */
-
-    /* =========================
-     MEDIA & REACTIONS (Keep existing code)
+     MEDIA & REACTIONS
      ========================= */
 
   async getFreshMediaUrl(mediaId: string): Promise<{ downloadUrl: string }> {
@@ -1034,13 +621,9 @@ export class PostService {
   }
 
   /* =========================
-     REACTIONS (WITH QUEUE)
+     REACTIONS (Keep as is)
      ========================= */
 
-
-  /**
-   * Enhanced reactions with immediate queue cleanup
-   */
   async addOrUpdateReaction(
     channelId: string,
     postId: string,
@@ -1053,17 +636,14 @@ export class PostService {
       `channels/${channelId}/posts/${postId}/user_reactions/${uid}`
     );
 
-    // Check existing reaction
     const snapshot = await get(userReactionRef);
     const existingReaction = snapshot.val() as UserReaction | null;
 
     if (existingReaction?.emoji === emoji) {
-      // Toggle off - remove reaction
       await this.removeReaction(channelId, postId, userId);
       return;
     }
 
-    // Create unique action ID
     const tempActionId = `reaction_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     const action: PendingAction = {
@@ -1076,7 +656,6 @@ export class PostService {
 
     await this.pouchDb.enqueueAction(action);
 
-    // Try immediate execution if online
     if (this.isOnlineSubject.value) {
       try {
         await set(userReactionRef, {
@@ -1084,7 +663,6 @@ export class PostService {
           timestamp: Date.now()
         });
 
-        // ✅ Remove from queue after success
         await this.removeActionFromQueue(tempActionId);
         console.log('✅ Reaction added and removed from queue');
 
@@ -1118,8 +696,6 @@ export class PostService {
     if (this.isOnlineSubject.value) {
       try {
         await remove(userReactionRef);
-
-        // ✅ Remove from queue after success
         await this.removeActionFromQueue(tempActionId);
         console.log('✅ Reaction removed and removed from queue');
 
@@ -1130,8 +706,6 @@ export class PostService {
       console.log('📴 Offline: Reaction removal queued');
     }
   }
-
-
 
   async getUserReaction(
     channelId: string,
@@ -1165,8 +739,6 @@ export class PostService {
     return aggregated;
   }
 
-
-
   /* =========================
      UTILITY
      ========================= */
@@ -1179,7 +751,6 @@ export class PostService {
   async getQueueStatus() {
     const queue = await this.pouchDb.getQueue();
 
-    // Filter only post-related actions
     const postActions = queue.filter(a =>
       a.type === 'post_create' ||
       a.type === 'reaction_add' ||
@@ -1192,22 +763,11 @@ export class PostService {
     };
   }
 
-  /**
-   * Get all queued actions (including channel actions)
-   */
   async getAllQueuedActions() {
     const queue = await this.pouchDb.getQueue();
     return queue;
   }
 
-
-  /* =========================
-    CLEANUP & UTILITY
-    ========================= */
-
-  /**
-   * Get storage status
-   */
   async getStorageStatus() {
     const [fileUsage, queueStatus] = await Promise.all([
       this.fileStorage.getStorageUsage(),
@@ -1220,9 +780,6 @@ export class PostService {
     };
   }
 
-  /**
-   * Clear all offline data
-   */
   async clearAllOfflineData() {
     await Promise.all([
       this.fileStorage.clearAllFiles(),
@@ -1231,9 +788,6 @@ export class PostService {
     console.log('✅ Cleared all offline data');
   }
 
-  /**
-   * Cleanup old data
-   */
   async cleanupOldData(daysOld: number = 7) {
     const [deletedFiles] = await Promise.all([
       this.fileStorage.clearOldFiles(daysOld),

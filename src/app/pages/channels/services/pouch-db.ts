@@ -1,18 +1,6 @@
 import { Injectable } from '@angular/core';
 import PouchDB from 'pouchdb';
 import { Channel } from './channel';
-// import { Channel } from '../pages/channels/services/channel';
-
-// export interface CachedPost {
-//   id: string;
-//   body: string;
-//   image?: string;
-//   media_id?: string;
-//   created_by: number;
-//   user_reactions?: { [userId: string]: any };
-//   timestamp?: number;
-//   isPending?: boolean;
-// }
 
 // In pouch-db.ts
 export interface CachedPost {
@@ -24,7 +12,7 @@ export interface CachedPost {
   user_reactions?: { [userId: string]: any };
   timestamp?: number;
   isPending?: boolean;
-  pendingImageId?: string; // ✅ Add this if not already present
+  pendingImageId?: string; 
 }
 
 export interface PendingAction {
@@ -362,61 +350,8 @@ async saveChannel(channel: Channel, immediate: boolean = false): Promise<void> {
     }
   }
 
-  /* =========================
-     POSTS - PENDING (Optimistic)
-     ========================= */
 
-  // async savePendingPost(channelId: string, post: CachedPost): Promise<void> {
-  //   try {
-  //     const docId = `pending_post_${post.id}`;
-      
-  //     await this.db.put({
-  //       _id: docId,
-  //       ...post,
-  //       channelId,
-  //       isPending: true,
-  //       timestamp: Date.now()
-  //     });
 
-  //     console.log('📝 Saved pending post:', post.id);
-  //   } catch (error) {
-  //     console.error('❌ Failed to save pending post:', error);
-  //   }
-  // }
-
-  // async getPendingPosts(channelId: string): Promise<CachedPost[]> {
-  //   try {
-  //     const result = await this.db.allDocs({
-  //       include_docs: true,
-  //       startkey: `pending_post_`,
-  //       endkey: `pending_post_\ufff0`
-  //     });
-
-  //     return result.rows
-  //       .map((row: any) => row.doc)
-  //       .filter((doc: any) => doc.channelId === channelId)
-  //       .map((doc: any) => {
-  //         const { _id, _rev, channelId, isPending, ...post } = doc;
-  //         return post;
-  //       });
-  //   } catch (error) {
-  //     console.error('❌ Failed to get pending posts:', error);
-  //     return [];
-  //   }
-  // }
-
-  // async removePendingPost(postId: string): Promise<void> {
-  //   try {
-  //     const docId = `pending_post_${postId}`;
-  //     const doc = await this.db.get(docId);
-  //     await this.db.remove(doc);
-  //     console.log('✅ Removed pending post:', postId);
-  //   } catch (err: any) {
-  //     if (err.status !== 404) {
-  //       console.error('❌ Failed to remove pending post:', err);
-  //     }
-  //   }
-  // }
 
   /* =========================
      MEDIA URL CACHE

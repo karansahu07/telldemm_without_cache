@@ -13,6 +13,8 @@ import { AuthService } from 'src/app/auth/auth.service';
 import { ChannelPouchDbService } from '../services/pouch-db';
 import { FileStorageService } from '../services/file-storage';
 // import { PostPouchDbService } from '../services/post-pouch-db.service';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 
 interface ReactionMap {
   [emoji: string]: number;
@@ -164,25 +166,6 @@ export class ChannelFeedPage implements OnInit, OnDestroy {
   /* =========================
      DATA LOADING
      ========================= */
-
-  // private subscribeToPosts() {
-  //   if (!this.channelId) return;
-
-  //   this.postsSub = this.postService
-  //     .getPosts(this.channelId)
-  //     .subscribe(async (rawPosts) => {
-  //       console.log(`📱 Received ${rawPosts.length} posts`);
-
-  //       // Resolve media URLs (from cache or API)
-  //       const resolvedPosts = await this.resolveMediaUrls(rawPosts);
-        
-  //       this.posts = resolvedPosts;
-  //       this.cdr.detectChanges();
-  //     });
-  // }
-
-  // In channel-feed.page.ts
-
 private subscribeToPosts() {
   if (!this.channelId) return;
 
@@ -336,67 +319,107 @@ async debugCacheStatus() {
      MEDIA URL RESOLUTION - UPDATED
      ========================= */
 
-  /**
-   * Resolve media URLs (including pending Blob URLs from IndexedDB)
-   */
-  private async resolveMediaUrls(rawPosts: Post[]): Promise<Post[]> {
-    const resolvedPosts: Post[] = [];
+  // In channel-feed.page.ts
+// Replace your resolveMediaUrls method with this:
 
-    for (const post of rawPosts) {
-      let resolvedPost = { ...post };
+/**
+ * Resolve media URLs with multiple fallback layers
+ */
+private async resolveMediaUrls(rawPosts: Post[]): Promise<Post[]> {
+  const resolvedPosts: Post[] = [];
 
-      // 1️⃣ Check if this is a pending post with file in IndexedDB
-      if (post.isPending && post.pendingImageId) {
-        try {
-          const blobUrl = await this.fileStorage.getFileURL(post.pendingImageId);
-          
+  for (const post of rawPosts) {
+    let resolvedPost = { ...post };
+
+    // 1️⃣ PENDING POST: Check IndexedDB for temp file
+    if (post.isPending && post.pendingImageId) {
+      try {
+        const blobUrl = await this.fileStorage.getFileURL(post.pendingImageId);
+        
+        if (blobUrl) {
+          resolvedPost.image = blobUrl;
+          this.blobURLs.add(blobUrl);
+          console.log(`📱 Pending image: ${post.pendingImageId}`);
+        } else {
+          console.warn(`⚠️ Pending file not found: ${post.pendingImageId}`);
+        }
+      } catch (error) {
+        console.error('❌ Failed to get pending file:', error);
+      }
+    }
+    // 2️⃣ SERVER POST: Multiple fallback layers
+    else if (post.media_id && !post.isPending) {
+      let imageResolved = false;
+
+      // Layer 1: Check if we have server image stored locally
+      const serverFileId = `server_${post.media_id}`;
+      try {
+        const exists = await this.fileStorage.fileExists(serverFileId);
+        
+        if (exists) {
+          const blobUrl = await this.fileStorage.getFileURL(serverFileId);
           if (blobUrl) {
             resolvedPost.image = blobUrl;
-            this.blobURLs.add(blobUrl); // Track for cleanup
-            console.log(`📱 Using Blob URL from IndexedDB: ${post.pendingImageId}`);
-          } else {
-            console.warn(`⚠️ File not found in IndexedDB: ${post.pendingImageId}`);
+            this.blobURLs.add(blobUrl);
+            console.log(`📱 Using local server image: ${post.media_id}`);
+            imageResolved = true;
+          }
+        }
+      } catch (error) {
+        console.error('⚠️ Failed to check local server image:', error);
+      }
+
+      // Layer 2: Memory cache
+      if (!imageResolved && this.mediaCache.has(post.media_id)) {
+        resolvedPost.image = this.mediaCache.get(post.media_id);
+        console.log(`💾 Using memory cache: ${post.media_id}`);
+        imageResolved = true;
+      }
+
+      // Layer 3: PouchDB URL cache
+      if (!imageResolved) {
+        try {
+          const cachedUrl = await this.postPouchDb.getMediaUrl(post.media_id);
+          
+          if (cachedUrl) {
+            this.mediaCache.set(post.media_id, cachedUrl);
+            resolvedPost.image = cachedUrl;
+            console.log(`📱 Using cached URL: ${post.media_id}`);
+            imageResolved = true;
           }
         } catch (error) {
-          console.error('❌ Failed to get Blob URL from IndexedDB:', error);
-        }
-      }
-      // 2️⃣ Check if already in memory cache
-      else if (post.media_id && this.mediaCache.has(post.media_id)) {
-        resolvedPost.image = this.mediaCache.get(post.media_id);
-      }
-      // 3️⃣ Try PouchDB cache for server URLs
-      else if (post.media_id && post.media_id !== 'pending_upload') {
-        const cachedUrl = await this.postPouchDb.getMediaUrl(post.media_id);
-        
-        if (cachedUrl) {
-          this.mediaCache.set(post.media_id, cachedUrl);
-          resolvedPost.image = cachedUrl;
-          console.log(`📱 Using cached server URL: ${post.media_id}`);
-        }
-        // 4️⃣ Fetch from API if online and not cached
-        else if (this.isOnline) {
-          try {
-            const response = await this.postService.getFreshMediaUrl(post.media_id);
-            
-            if (response?.downloadUrl) {
-              this.mediaCache.set(post.media_id, response.downloadUrl);
-              resolvedPost.image = response.downloadUrl;
-              console.log(`🌐 Fetched server URL: ${post.media_id}`);
-            }
-          } catch (err) {
-            console.error('❌ Failed to fetch media URL:', err);
-          }
-        } else {
-          console.log(`📴 Offline: Cannot fetch media URL for ${post.media_id}`);
+          console.error('⚠️ Failed to get cached URL:', error);
         }
       }
 
-      resolvedPosts.push(resolvedPost);
+      // Layer 4: Fetch from API if online
+      if (!imageResolved && this.isOnline) {
+        try {
+          const response = await this.postService.getFreshMediaUrl(post.media_id);
+          
+          if (response?.downloadUrl) {
+            this.mediaCache.set(post.media_id, response.downloadUrl);
+            await this.postPouchDb.cacheMediaUrl(post.media_id, response.downloadUrl);
+            resolvedPost.image = response.downloadUrl;
+            console.log(`🌐 Fetched from server: ${post.media_id}`);
+            imageResolved = true;
+          }
+        } catch (err) {
+          console.error('❌ Failed to fetch media URL:', err);
+        }
+      }
+
+      // If still not resolved and offline
+      if (!imageResolved && !this.isOnline) {
+        console.log(`📴 Offline: Cannot load image ${post.media_id}`);
+      }
     }
 
-    return resolvedPosts;
+    resolvedPosts.push(resolvedPost);
   }
+
+  return resolvedPosts;
+}
 
   /* =========================
      SEND POST
@@ -530,40 +553,151 @@ async debugCacheStatus() {
      REACTIONS
      ========================= */
 
+  // async react(post: Post, emoji: string) {
+  //   await this.addOrUpdateReaction(post, emoji);
+  // }
   async react(post: Post, emoji: string) {
-    await this.addOrUpdateReaction(post, emoji);
+  // Check if online before allowing reaction
+  if (!this.isOnline) {
+    this.showOfflineToast('Cannot react while offline');
+    return;
+  }
+  
+  await this.addOrUpdateReaction(post, emoji);
+}
+
+
+
+  // async addOrUpdateReaction(post: Post, emoji: string) {
+  //   if (!this.channelId) return;
+
+  //   try {
+  //     await this.postService.addOrUpdateReaction(
+  //       this.channelId,
+  //       post.id,
+  //       emoji,
+  //       this.currentUserId
+  //     );
+
+  //     this.showReactionPopup = false;
+  //   } catch (error) {
+  //     console.error('❌ Failed to add reaction:', error);
+  //   }
+  // }
+async addOrUpdateReaction(post: Post, emoji: string) {
+  if (!this.channelId) return;
+
+  // Double-check online status
+  if (!this.isOnline) {
+    this.showOfflineToast('Cannot react while offline');
+    this.showReactionPopup = false;
+    return;
   }
 
-  async addOrUpdateReaction(post: Post, emoji: string) {
-    if (!this.channelId) return;
+  try {
+    await this.postService.addOrUpdateReaction(
+      this.channelId,
+      post.id,
+      emoji,
+      this.currentUserId
+    );
 
-    try {
-      await this.postService.addOrUpdateReaction(
-        this.channelId,
-        post.id,
-        emoji,
-        this.currentUserId
-      );
-
-      this.showReactionPopup = false;
-    } catch (error) {
-      console.error('❌ Failed to add reaction:', error);
-    }
+    this.showReactionPopup = false;
+  } catch (error) {
+    console.error('❌ Failed to add reaction:', error);
+    this.showOfflineToast('Failed to add reaction');
   }
+}
+  // async removeReaction(post: Post) {
+  //   if (!this.channelId) return;
+
+  //   try {
+  //     await this.postService.removeReaction(
+  //       this.channelId,
+  //       post.id,
+  //       this.currentUserId
+  //     );
+  //   } catch (error) {
+  //     console.error('❌ Failed to remove reaction:', error);
+  //   }
+  // }
 
   async removeReaction(post: Post) {
-    if (!this.channelId) return;
+  if (!this.channelId) return;
 
-    try {
-      await this.postService.removeReaction(
-        this.channelId,
-        post.id,
-        this.currentUserId
-      );
-    } catch (error) {
-      console.error('❌ Failed to remove reaction:', error);
-    }
+  // Check if online
+  if (!this.isOnline) {
+    this.showOfflineToast('Cannot remove reaction while offline');
+    return;
   }
+
+  try {
+    await this.postService.removeReaction(
+      this.channelId,
+      post.id,
+      this.currentUserId
+    );
+  } catch (error) {
+    console.error('❌ Failed to remove reaction:', error);
+    this.showOfflineToast('Failed to remove reaction');
+  }
+}
+
+// Update touch handlers to check online status
+async openReactionPopup(ev: TouchEvent, post: Post) {
+  // Check if online before showing popup
+  if (!this.isOnline) {
+    this.showOfflineToast('Reactions unavailable offline');
+    return;
+  }
+
+  ev.preventDefault();
+  this.activePost = post;
+  const target = ev.target as HTMLElement;
+  const postBubble = target.closest('.post-bubble') as HTMLElement;
+
+  if (postBubble) {
+    const rect = postBubble.getBoundingClientRect();
+    this.popupX = rect.left + (rect.width / 2) - 140;
+    this.popupY = rect.top - 70;
+
+    if (this.popupX < 10) this.popupX = 10;
+    if (this.popupX + 280 > window.innerWidth) {
+      this.popupX = window.innerWidth - 290;
+    }
+    if (this.popupY < 10) this.popupY = rect.bottom + 10;
+  }
+  this.showReactionPopup = true;
+  await Haptics.impact({ style: ImpactStyle.Medium });
+}
+
+async onDoubleTap(post: Post) {
+  // Check if online before double-tap reaction
+  if (!this.isOnline) {
+    this.showOfflineToast('Reactions unavailable offline');
+    return;
+  }
+
+  const now = Date.now();
+  if (now - this.lastTapTime < 300) {
+    await Haptics.impact({ style: ImpactStyle.Light });
+    await this.addOrUpdateReaction(post, '❤️');
+  }
+  this.lastTapTime = now;
+}
+
+// Add helper method for showing toast
+ async showOfflineToast(message: string) {
+  const toast = document.createElement('ion-toast');
+  toast.message = message;
+  toast.duration = 2000;
+  toast.color = 'warning';
+  toast.position = 'bottom';
+  toast.icon = 'cloud-offline-outline';
+  
+  document.body.appendChild(toast);
+  await toast.present();
+}
 
   async showReactionActionSheet(post: Post, emoji: string) {
     const currentUserReaction = await this.postService.getUserReaction(
@@ -692,61 +826,135 @@ async debugCacheStatus() {
     this.isLongPress = false;
   }
 
-  async openReactionPopup(ev: TouchEvent, post: Post) {
-    ev.preventDefault();
-    this.activePost = post;
-    const target = ev.target as HTMLElement;
-    const postBubble = target.closest('.post-bubble') as HTMLElement;
+  // async openReactionPopup(ev: TouchEvent, post: Post) {
+  //   ev.preventDefault();
+  //   this.activePost = post;
+  //   const target = ev.target as HTMLElement;
+  //   const postBubble = target.closest('.post-bubble') as HTMLElement;
 
-    if (postBubble) {
-      const rect = postBubble.getBoundingClientRect();
-      this.popupX = rect.left + (rect.width / 2) - 140;
-      this.popupY = rect.top - 70;
+  //   if (postBubble) {
+  //     const rect = postBubble.getBoundingClientRect();
+  //     this.popupX = rect.left + (rect.width / 2) - 140;
+  //     this.popupY = rect.top - 70;
 
-      if (this.popupX < 10) this.popupX = 10;
-      if (this.popupX + 280 > window.innerWidth) {
-        this.popupX = window.innerWidth - 290;
-      }
-      if (this.popupY < 10) this.popupY = rect.bottom + 10;
-    }
-    this.showReactionPopup = true;
-    await Haptics.impact({ style: ImpactStyle.Medium });
-  }
+  //     if (this.popupX < 10) this.popupX = 10;
+  //     if (this.popupX + 280 > window.innerWidth) {
+  //       this.popupX = window.innerWidth - 290;
+  //     }
+  //     if (this.popupY < 10) this.popupY = rect.bottom + 10;
+  //   }
+  //   this.showReactionPopup = true;
+  //   await Haptics.impact({ style: ImpactStyle.Medium });
+  // }
 
   closePopup() {
     this.showReactionPopup = false;
   }
 
-  async onDoubleTap(post: Post) {
-    const now = Date.now();
-    if (now - this.lastTapTime < 300) {
-      await Haptics.impact({ style: ImpactStyle.Light });
-      await this.addOrUpdateReaction(post, '❤️');
-    }
-    this.lastTapTime = now;
-  }
+  // async onDoubleTap(post: Post) {
+  //   const now = Date.now();
+  //   if (now - this.lastTapTime < 300) {
+  //     await Haptics.impact({ style: ImpactStyle.Light });
+  //     await this.addOrUpdateReaction(post, '❤️');
+  //   }
+  //   this.lastTapTime = now;
+  // }
 
   /* =========================
      MEDIA SELECTION
      ========================= */
 
-  selectMedia() {
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = 'image/*';
-    fileInput.onchange = (event: any) => {
-      const file = event.target.files[0];
-      if (!file) return;
-      this.selectedFile = file;
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.selectedImage = reader.result as string;
-        this.cdr.detectChanges();
-      };
-      reader.readAsDataURL(file);
-    };
-    fileInput.click();
+  // selectMedia() {
+  //   const fileInput = document.createElement('input');
+  //   fileInput.type = 'file';
+  //   fileInput.accept = 'image/*';
+  //   fileInput.onchange = (event: any) => {
+  //     const file = event.target.files[0];
+  //     if (!file) return;
+  //     this.selectedFile = file;
+  //     const reader = new FileReader();
+  //     reader.onload = () => {
+  //       this.selectedImage = reader.result as string;
+  //       this.cdr.detectChanges();
+  //     };
+  //     reader.readAsDataURL(file);
+  //   };
+  //   fileInput.click();
+  // }
+
+  // Replace your selectMedia() method with this:
+async selectMedia() {
+  try {
+    // Request permissions first
+    const permissions = await Camera.requestPermissions();
+    
+    if (permissions.photos === 'granted' || permissions.camera === 'granted') {
+      // Show action sheet to choose camera or gallery
+      const actionSheet = await this.actionSheetController.create({
+        header: 'Select Image',
+        buttons: [
+          {
+            text: 'Take Photo',
+            icon: 'camera-outline',
+            handler: () => {
+              this.captureImage(CameraSource.Camera);
+            }
+          },
+          {
+            text: 'Choose from Gallery',
+            icon: 'images-outline',
+            handler: () => {
+              this.captureImage(CameraSource.Photos);
+            }
+          },
+          {
+            text: 'Cancel',
+            icon: 'close',
+            role: 'cancel'
+          }
+        ]
+      });
+
+      await actionSheet.present();
+    } else {
+      console.error('Camera permissions not granted');
+      // Show alert to user
+    }
+  } catch (error) {
+    console.error('Error selecting media:', error);
   }
+}
+
+async captureImage(source: CameraSource) {
+  try {
+    const image = await Camera.getPhoto({
+      quality: 90,
+      allowEditing: false,
+      resultType: CameraResultType.Uri, // Use Uri for native
+      source: source
+    });
+
+    if (image.webPath) {
+      // Convert to Blob for native platforms
+      const response = await fetch(image.webPath);
+      const blob = await response.blob();
+      
+      // Create File object
+      const fileName = `image_${Date.now()}.${image.format || 'jpg'}`;
+      this.selectedFile = new File([blob], fileName, { 
+        type: `image/${image.format || 'jpeg'}` 
+      });
+
+      // Set preview
+      this.selectedImage = image.webPath;
+      this.cdr.detectChanges();
+      
+      console.log('✅ Image selected:', fileName);
+    }
+  } catch (error) {
+    console.error('Error capturing image:', error);
+  }
+}
 
   clearMedia() {
     this.selectedImage = null;
