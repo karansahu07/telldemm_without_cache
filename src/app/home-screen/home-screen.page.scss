@@ -696,99 +696,98 @@ ion-modal .pre-model {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-/* Add these styles to your home-screen.page.scss file */
 
 /* Chat row hover and active states */
-// ion-item {
-//   --padding-start: 10px;
-//   --inner-padding-end: 10px;
-//   --background: var(--ion-background-color);
-//   --color: var(--ion-text-color);
-//   --inner-border-width: 0px;
-//   --border-style: none;
-//   --border-width: 0;
-//   cursor: pointer;
-//   transition: all 0.2s ease-in-out;
-//   position: relative;
+ion-item {
+  --padding-start: 10px;
+  --inner-padding-end: 10px;
+  --background: var(--ion-background-color);
+  --color: var(--ion-text-color);
+  --inner-border-width: 0px;
+  --border-style: none;
+  --border-width: 0;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  position: relative;
   
-//   /* Hover effect */
-//   &:hover {
-//     --background: rgba(var(--ion-color-primary-rgb), 0.08);
-//     transform: scale(1.01);
-//   }
+  /* Hover effect */
+  &:hover {
+    --background: rgba(var(--ion-color-primary-rgb), 0.08);
+    transform: scale(1.01);
+  }
   
-//   /* Active/Click effect */
-//   &:active {
-//     --background: rgba(var(--ion-color-primary-rgb), 0.15);
-//     transform: scale(0.99);
-//   }
+  /* Active/Click effect */
+  &:active {
+    --background: rgba(var(--ion-color-primary-rgb), 0.15);
+    transform: scale(0.99);
+  }
   
-//   /* Selected state */
-//   &.selected {
-//     background-color: rgba(56, 128, 255, 0.1);
-//   }
+  /* Selected state */
+  &.selected {
+    background-color: rgba(56, 128, 255, 0.1);
+  }
   
-//   /* Archived state */
-//   &.archived {
-//     opacity: 0.7;
-//   }
-// }
+  /* Archived state */
+  &.archived {
+    opacity: 0.7;
+  }
+}
 
-// /* Alternative ripple effect on click */
-// ion-item::part(native) {
-//   position: relative;
-//   overflow: hidden;
-// }
+/* Alternative ripple effect on click */
+ion-item::part(native) {
+  position: relative;
+  overflow: hidden;
+}
 
-// /* Add a subtle border on hover for better visibility */
-// ion-item:hover::after {
-//   content: '';
-//   position: absolute;
-//   left: 0;
-//   right: 0;
-//   bottom: 0;
-//   height: 2px;
-//   background: linear-gradient(
-//     90deg,
-//     transparent,
-//     var(--ion-color-primary),
-//     transparent
-//   );
-//   animation: slideIn 0.3s ease-out;
-// }
+/* Add a subtle border on hover for better visibility */
+ion-item:hover::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--ion-color-primary),
+    transparent
+  );
+  animation: slideIn 0.3s ease-out;
+}
 
-// @keyframes slideIn {
-//   from {
-//     transform: translateX(-100%);
-//     opacity: 0;
-//   }
-//   to {
-//     transform: translateX(0);
-//     opacity: 1;
-//   }
-// }
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
 
-// /* Click ripple effect */
-// ion-item.clicking {
-//   --background: rgba(var(--ion-color-primary-rgb), 0.1);
-// }
+/* Click ripple effect */
+ion-item.clicking {
+  --background: rgba(var(--ion-color-primary-rgb), 0.1);
+}
 
-// /* Avatar hover effect */
-// ion-avatar {
-//   transition: transform 0.2s ease;
-// }
+/* Avatar hover effect */
+ion-avatar {
+  transition: transform 0.2s ease;
+}
 
-// ion-item:hover ion-avatar {
-//   transform: scale(1.05);
-// }
+ion-item:hover ion-avatar {
+  transform: scale(1.05);
+}
 
-// /* Dark mode support */
-// @media (prefers-color-scheme: dark) {
-//   ion-item:hover {
-//     --background: rgba(255, 255, 255, 0.05);
-//   }
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  ion-item:hover {
+    --background: rgba(255, 255, 255, 0.05);
+  }
   
-//   ion-item:active {
-//     --background: rgba(255, 255, 255, 0.1);
-//   }
-// }
+  ion-item:active {
+    --background: rgba(255, 255, 255, 0.1);
+  }
+}

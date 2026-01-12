@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import {
   AlertController,
   IonicModule,
@@ -16,29 +16,24 @@ import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 import { ApiService } from '../services/api/api.service';
 import { FirebaseChatService } from '../services/firebase-chat.service';
-import { firstValueFrom, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { EncryptionService } from '../services/encryption.service';
 import { Capacitor } from '@capacitor/core';
 import { SecureStorageService } from '../services/secure-storage/secure-storage.service';
-import { decodeBase64 } from '../utils/decodeBase64.util';
 import { AuthService } from '../auth/auth.service';
 import { Observable } from 'rxjs';
-import { onValue } from '@angular/fire/database';
 import { Database } from '@angular/fire/database';
 import { ContactSyncService } from '../services/contact-sync.service';
-import { NavigationEnd } from '@angular/router';
-import { filter } from 'rxjs/operators';
-import { Device, DeviceInfo } from '@capacitor/device';
+import { Device } from '@capacitor/device';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { FcmService } from '../services/fcm-service';
-import Cropper from 'cropperjs';
+import { NetworkService } from '../services/network-connection/network.service';
 
 // Firebase modular imports
 import {
   getDatabase,
   ref as rtdbRef,
   onValue as rtdbOnValue,
-  off as rtdbOff,
   get,
   update,
   remove,
@@ -49,11 +44,12 @@ import { Resetapp } from '../services/resetapp';
 import { VersionCheck } from '../services/version-check';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { MenuHomePopoverComponent } from '../components/menu-home-popover/menu-home-popover.component';
-import { CommunityChat, GroupChat } from 'src/types';
+import { CommunityChat } from 'src/types';
 
 import { SqliteService, IConversation } from '../services/sqlite.service';
 import { ImageCropperModalComponent } from 'src/app/components/image-cropper-modal/image-cropper-modal.component';
 import { CropResult } from 'src/types';
+import { ChatPouchDb } from '../services/chat-pouch-db';
 
 @Component({
   selector: 'app-home-screen',
@@ -69,45 +65,28 @@ import { CropResult } from 'src/types';
   ],
 })
 export class HomeScreenPage implements OnInit, OnDestroy {
+  // Search & Filter
   searchText = '';
   selectedFilter = 'all';
+
+  // User Info
   currUserId: string | null = null;
   senderUserId: string | null = null;
-
-  scannedText = '';
-  capturedImage = '';
-  chatList: any[] = [];
-  toggleGroupCreator = false;
-  newGroupName = '';
-  unreadSubs: Subscription[] = [];
-  selectedImage: string | null = null;
-  showPopup = false;
   sender_name: string | undefined;
 
-  private avatarErrorIds = new Set<string>();
+  // UI State
   isLoading: boolean = true;
+  isChatsLoaded: boolean = false;
+  showPopup = false;
+  showPreviewModal: boolean = false;
+  isOffline: boolean = false; // 🔥 NEW: Offline indicator
 
-  // typing listeners: map roomId -> unsubscribe fn
-  private typingUnsubs: Map<string, () => void> = new Map();
-  private communityUnreadSubs: Map<string, any> = new Map();
-
+  // Selection Mode
   selectedChats: any[] = [];
   selectedConversations: Set<string> = new Set();
   private longPressTimer: any = null;
-  private readonly MAX_PINNED = 3;
-  private pinUnsub: (() => void) | null = null;
-  private archiveUnsub: (() => void) | null = null;
 
-  // private archiveUnsub: (() => void) | null = null;
-
-  // maps to track counts
-  private archivedMap: Record<
-    string,
-    { archivedAt: number; isArchived: boolean }
-  > = {};
-  private lockedMap: Record<string, { lockedAt: number; isLocked: boolean }> =
-    {};
-
+  // Conversations
   conversations: (IConversation & {
     isTyping: boolean;
     isSelected: boolean;
@@ -115,12 +94,31 @@ export class HomeScreenPage implements OnInit, OnDestroy {
   })[] = [];
   archievedCount: number = 0;
 
+  // Attachment & Preview
   selectedAttachment: any = null;
-  showPreviewModal: boolean = false;
+  selectedChat: any = null;
+  selectedImage: string | null = null;
   messageText = '';
-  isSending = false;
-  receiver_name = '';
 
+  // Maps & Sets
+  private avatarErrorIds = new Set<string>();
+  private typingUnsubs: Map<string, () => void> = new Map();
+  private communityUnreadSubs: Map<string, any> = new Map();
+  private archivedMap: Record<
+    string,
+    { archivedAt: number; isArchived: boolean }
+  > = {};
+  private lockedMap: Record<string, { lockedAt: number; isLocked: boolean }> =
+    {};
+
+  // Subscriptions
+  unreadSubs: Subscription[] = [];
+  private pinUnsub: (() => void) | null = null;
+  private archiveUnsub: (() => void) | null = null;
+  private networkSub: Subscription | null = null; // 🔥 NEW: Network subscription
+
+  // Constants
+  private readonly MAX_PINNED = 3;
   private readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   private readonly ALLOWED_IMAGE_TYPES = [
     'image/jpeg',
@@ -128,11 +126,20 @@ export class HomeScreenPage implements OnInit, OnDestroy {
     'image/webp',
   ];
 
-  isChatsLoaded: boolean = false;
-  selectedChat: any = null;
-
-  typingUsers$ : any;
-  isTyping$ : any;
+  // Legacy compatibility (kept for HTML template)
+  chatList: any[] = [];
+  toggleGroupCreator = false;
+  newGroupName = '';
+  scannedText = '';
+  capturedImage = '';
+  isSending = false;
+  receiver_name = '';
+  typingUsers$: any;
+  isTyping$: any;
+  private isInitialLoadComplete = false;
+  private conversationsSubscription: any = null;
+  private prefetchedConversations = new Map<string, any>();
+  private prefetchTimeout: any = null;
 
   constructor(
     private router: Router,
@@ -154,117 +161,269 @@ export class HomeScreenPage implements OnInit, OnDestroy {
     private modalController: ModalController,
     private alertController: AlertController,
     private fcmService: FcmService,
+    private networkService: NetworkService,
+    private cdr: ChangeDetectorRef,
+    private chatPouchDb : ChatPouchDb
   ) {}
 
   async ngOnInit() {
     this.currUserId = this.authService.authData?.phone_number || '';
     this.senderUserId = this.authService.authData?.userId || '';
     this.isLoading = true;
-
     this.trackRouteChanges();
-    // this.sqlite.getMessages('78_76', 100, 0).then(console.log).catch(console.error)
-  }
 
-  // 1) First check server for force-logout decision every time user revisits home
-  async ionViewWillEnter() {
-    try {
-      // await this.initApp()
-      await this.checkAndUpdateNotificationPermission();
-      await this.firebaseChatService.closeChat();
-
-      console.info('Loading home page ....');
-      await this.firebaseChatService.initApp(
-        this.authService.senderId as string
-      );
-
-      this.firebaseChatService.conversations.subscribe((convs) => {
-        this.archievedCount = convs.filter((c) => c.isArchived).length || 0;
-        // console.log('this archievwed count', this.archievedCount);
-        this.conversations = convs
-          .map((c) => ({
-            ...c,
-            // unreadCount : c.unreadCount || 0,
-            isTyping: false,
-            isSelected: false,
-            lastMessage: c.lastMessage ?? 'hello this is last message', // use actual lastMessage if available
-            isSelfChat: this.isSelfChat(c),
-          }))
-          .filter((c) => !c.isLocked && !c.isArchived);
-
-        this.isChatsLoaded = true;
-        console.log('Conversations updated:', convs);
-        console.log('this.conversations:', this.conversations);
-      });
-      this.isLoading = false;
-      console.info('Loading home page complete!');
-
-      this.senderUserId =
-        this.authService.authData?.userId || this.senderUserId || '';
-      await this.checkForceLogout(); // will show popup & call resetApp() if server says force_logout === 0
-    } catch (err) {
-      console.warn('checkForceLogout error (ignored):', err);
-    }
-
-    const verified = await this.verifyDeviceOnEnter();
-    if (!verified) return;
-
-    this.clearChatData();
-    this.sender_name = this.authService.authData?.name || '';
-    await this.sqlite.printAllTables();
-    // this.typingUsers$ = this.firebaseChatService.getTypingStatusForRoom(this.roomId);
-// this.isTyping$ = this.firebaseChatService.isAnyoneTypingInRoom(this.roomId);
+    // 🔥 NEW: Setup network monitoring
+    this.setupNetworkMonitoring();
   }
 
   /**
- * ✅ Check notification permission and update Firebase isPermission flag
- */
-private async checkAndUpdateNotificationPermission(): Promise<void> {
+   * 🔥 NEW: Setup network status monitoring
+   */
+  private setupNetworkMonitoring(): void {
+    this.networkSub = this.networkService.isOnline$.subscribe(
+      async (isOnline) => {
+        const wasOffline = this.isOffline;
+        this.isOffline = !isOnline;
+
+        console.log(
+          `🌐 Network status changed: ${isOnline ? 'ONLINE' : 'OFFLINE'}`
+        );
+
+        if (isOnline && wasOffline) {
+          // Just came back online - sync data
+          console.log('📡 Back online - syncing data...');
+          await this.showToast('Back online - syncing...', 'success');
+          await this.syncDataWhenOnline();
+        } else if (!isOnline && !wasOffline) {
+          // Just went offline
+          console.log('📴 Went offline - using cached data');
+          await this.showToast('You are offline', 'warning');
+        }
+      }
+    );
+
+    // Set initial state
+    this.isOffline = !this.networkService.isOnline.value;
+  }
+
+  /**
+   * 🔥 NEW: Sync data when coming back online
+   */
+  private async syncDataWhenOnline(): Promise<void> {
+    try {
+      if (!this.authService.senderId) return;
+
+      // Process pending actions from queue
+      await this.firebaseChatService.processPendingActions?.();
+
+      // Refresh conversations from server
+      await this.firebaseChatService.syncConversationWithServer();
+
+      console.log('✅ Data synced successfully');
+    } catch (error) {
+      console.error('❌ Error syncing data:', error);
+    }
+  }
+
+  async ionViewWillEnter() {
   try {
-    const userId = this.senderUserId || this.authService.authData?.userId;
-    
-    if (!userId) {
-      console.warn('⚠️ Cannot check notification permission: userId is missing');
-      return;
+    if (!this.isInitialLoadComplete) {
+      this.isLoading = true;
     }
 
-    console.log('🔔 Checking notification permission status...');
-    
-    // Check current permission status
-    const permStatus = await PushNotifications.checkPermissions();
-    console.log('📱 Current permission status:', permStatus.receive);
-    
-    const isGranted = permStatus.receive === 'granted';
-    
-    // Update Firebase isPermission flag
-    await this.fcmService.updatePermissionStatus(userId, isGranted);
-    
-    console.log(`✅ Firebase isPermission updated to: ${isGranted}`);
-    
-  } catch (error) {
-    console.error('❌ Error checking/updating notification permission:', error);
+    await this.firebaseChatService.closeChat();
+
+    if (!this.isInitialLoadComplete) {
+      console.info('🚀 First time initialization...');
+
+      const isOnline = this.networkService.isOnline.value;
+      console.log(`📡 Network status: ${isOnline ? 'ONLINE' : 'OFFLINE'}`);
+
+      // 🔥 NEW: Load from PouchDB FIRST (instant)
+      await this.loadChatsFromCache();
+
+      // Initialize app (triggers background sync)
+      await this.initializeApp();
+
+      // Subscribe to conversations
+      if (!this.conversationsSubscription) {
+        this.conversationsSubscription =
+          this.firebaseChatService.conversations.subscribe((convs) => {
+            this.archievedCount = convs.filter((c) => c.isArchived).length || 0;
+
+            this.conversations = convs
+              .map((c) => ({
+                ...c,
+                isTyping: false,
+                isSelected: false,
+                lastMessage: c.lastMessage ?? '',
+                isSelfChat: this.isSelfChat(c),
+              }))
+              .filter((c) => !c.isLocked && !c.isArchived);
+
+            this.isChatsLoaded = true;
+            this.cdr.detectChanges();
+            console.log(`📊 Conversations updated: ${this.conversations.length}`);
+          });
+      }
+
+      if (isOnline) {
+        await this.performOnlineChecks();
+      }
+
+      this.isInitialLoadComplete = true;
+    }
+
+    this.isLoading = false;
+    this.senderUserId = this.authService.authData?.userId || this.senderUserId || '';
+    this.sender_name = this.authService.authData?.name || '';
+
+    this.clearChatSelection();
+  } catch (err) {
+    console.warn('❌ ionViewWillEnter error:', err);
+    this.isLoading = false;
+
+    if (!this.networkService.isOnline.value) {
+      await this.showToast('Using cached data (offline)', 'warning');
+    } else {
+      await this.showToast('Failed to load some data', 'danger');
+    }
   }
 }
 
+  private async loadChatsFromCache(): Promise<void> {
+  try {
+    console.log('📦 Loading chats from PouchDB cache...');
+    
+    const cachedConversations = await this.chatPouchDb.getConversations(
+      this.authService.senderId as string
+    );
 
-  //typing status get
-  getTypingStatusForConv(roomId : string){
-    return this.firebaseChatService.getTypingStatusForRoom(roomId)
+    if (cachedConversations.length > 0) {
+      // Update conversations immediately
+      this.conversations = cachedConversations
+        .map((c) => ({
+          ...c,
+          isTyping: false,
+          isSelected: false,
+          lastMessage: c.lastMessage ?? '',
+          isSelfChat: this.isSelfChat(c),
+        }))
+        .filter((c) => !c.isLocked && !c.isArchived);
+
+      this.archievedCount = cachedConversations.filter((c) => c.isArchived).length || 0;
+      this.isChatsLoaded = true;
+
+      console.log(`✅ Loaded ${this.conversations.length} chats from cache`);
+    } else {
+      console.log('📭 No cached chats found');
+    }
+  } catch (error) {
+    console.error('❌ Error loading from cache:', error);
+    // Don't throw - let the app continue with server sync
+  }
+}
+
+  /**
+   * 🔥 NEW: Initialize app with network awareness
+   */
+private async initializeApp(): Promise<void> {
+  try {
+    const isOnline = this.networkService.isOnline.value;
+
+    if (isOnline) {
+      // Only check notification permission when online
+      await this.checkAndUpdateNotificationPermission();
+    }
+
+    // Initialize Firebase chat service (will sync in background)
+    await this.firebaseChatService.initApp(
+      this.authService.senderId as string
+    );
+  } catch (error) {
+    console.error('❌ initializeApp error:', error);
+    // Don't throw - allow app to continue with cached data
+    await this.showToast('Using cached data', 'warning');
+  }
+}
+
+  /**
+   * 🔥 NEW: Perform online-only checks
+   */
+  private async performOnlineChecks(): Promise<void> {
+    try {
+      // Sequential checks (don't block UI if they fail)
+      await this.checkForceLogout().catch((err) =>
+        console.warn('Force logout check failed:', err)
+      );
+
+      const verified = await this.verifyDeviceOnEnter().catch((err) => {
+        console.warn('Device verification failed:', err);
+        return true; // Continue even if verification fails
+      });
+
+      if (!verified) {
+        console.warn('⚠️ Device verification failed');
+      }
+    } catch (error) {
+      console.warn('❌ performOnlineChecks error:', error);
+      // Don't throw - allow app to continue with cached data
+    }
   }
 
+  /**
+   * ✅ Check notification permission and update Firebase (ONLINE ONLY)
+   */
+  private async checkAndUpdateNotificationPermission(): Promise<void> {
+    try {
+      // 🔥 Skip if offline
+      if (!this.networkService.isOnline.value) {
+        console.log('⚠️ Skipping notification check - device is offline');
+        return;
+      }
+
+      const userId = this.senderUserId || this.authService.authData?.userId;
+
+      if (!userId) {
+        console.warn(
+          '⚠️ Cannot check notification permission: userId is missing'
+        );
+        return;
+      }
+
+      console.log('🔔 Checking notification permission status...');
+
+      const permStatus = await PushNotifications.checkPermissions();
+      const isGranted = permStatus.receive === 'granted';
+
+      await this.fcmService.updatePermissionStatus(userId, isGranted);
+
+      console.log(`✅ Firebase isPermission updated to: ${isGranted}`);
+    } catch (error) {
+      console.error(
+        '❌ Error checking/updating notification permission:',
+        error
+      );
+      // Don't throw - this is not critical
+    }
+  }
+
+  /**
+   * ✅ Get typing status for conversation
+   */
+  getTypingStatusForConv(roomId: string) {
+    return this.firebaseChatService.getTypingStatusForRoom(roomId);
+  }
+
+  /**
+   * ✅ Check if chat is self chat
+   */
   isSelfChat(chat: any): boolean {
-    // Only check for private chats
-    if (chat.type !== 'private') {
+    if (chat.type !== 'private' || !chat.roomId || !this.senderUserId) {
       return false;
     }
 
-    if (!chat.roomId || !this.senderUserId) {
-      return false;
-    }
-
-    // Split roomId (format: userId1_userId2)
     const parts = chat.roomId.split('_');
-
-    // Check if both parts are the same user
     return (
       parts.length === 2 &&
       parts[0] === this.senderUserId &&
@@ -272,26 +431,36 @@ private async checkAndUpdateNotificationPermission(): Promise<void> {
     );
   }
 
+  /**
+   * ✅ Show new chat prompt
+   */
   get showNewChatPrompt(): boolean {
     return (
       !this.isLoading &&
       this.firebaseChatService.currentConversations.length === 0
     );
-    // !this.searchText.trim();
   }
 
+  /**
+   * ✅ Verify device on enter (ONLINE ONLY)
+   */
   async verifyDeviceOnEnter(): Promise<boolean> {
+    // 🔥 Skip if offline
+    if (!this.networkService.isOnline.value) {
+      console.log('⚠️ Skipping device verification - device is offline');
+      return true;
+    }
+
     if (!this.senderUserId) {
       console.warn('Skipping device verification: senderUserId is missing');
       return false;
     }
 
     try {
-      // 1️⃣ Get device info (with web fallback)
-      let info: any;
       const platform = Capacitor.getPlatform();
+      let info: any;
+
       if (platform === 'web') {
-        // Fallback for web platform
         info = {
           model: navigator.userAgent.includes('Mobile')
             ? 'Mobile Web'
@@ -300,59 +469,43 @@ private async checkAndUpdateNotificationPermission(): Promise<void> {
           osVersion: 'N/A',
           uuid: localStorage.getItem('device_uuid') || crypto.randomUUID(),
         };
-        // Persist UUID if new
         if (!localStorage.getItem('device_uuid')) {
           localStorage.setItem('device_uuid', info.uuid);
         }
       } else {
         info = await Device.getInfo();
       }
-      //console.log('Device info retrieved:', info);
 
-      // 2️⃣ Get current app version (with web fallback)
-      let appVersion = '1.0.0'; // Default fallback
+      let appVersion = '1.0.0';
       if (platform !== 'web') {
         try {
           const versionResult = await this.versionService.checkVersion();
           appVersion = versionResult.currentVersion || '1.0.0';
         } catch (versionErr) {
           console.warn('Version check failed:', versionErr);
-          appVersion = '1.0.0';
         }
       } else {
-        // For web, use a placeholder or read from manifest.json if needed
         appVersion = 'web.1.0.0';
       }
-      //console.log('App version retrieved:', appVersion);
 
-      // 3️⃣ Use persistent UUID
-      let uuid =
+      const uuid =
         localStorage.getItem('device_uuid') || info.uuid || crypto.randomUUID();
       if (!localStorage.getItem('device_uuid')) {
         localStorage.setItem('device_uuid', uuid);
       }
-      //console.log('UUID used:', uuid);
 
-      // 4️⃣ Create device payload
-      const devicePayload = {
-        device_uuid: uuid,
-        device_model: info.model,
-        os_name: info.operatingSystem,
-        os_version: info.osVersion,
-        app_version: appVersion,
-      };
-
-      // 5️⃣ Prepare payload
       const payload = {
         user_id: this.senderUserId,
-        device_details: devicePayload, // Note: device_details expects an object, not array like in OTP
+        device_details: {
+          device_uuid: uuid,
+          device_model: info.model,
+          os_name: info.operatingSystem,
+          os_version: info.osVersion,
+          app_version: appVersion,
+        },
       };
-      //console.log('📨 Device verification payload:', payload);
 
-      // 6️⃣ Call backend API
-      //console.log('🔄 Calling verifyDevice API...');
       const res: any = await this.authService.verifyDevice(payload);
-      //console.log('✅ API Response:', res);
 
       if (res.device_mismatch) {
         const backButtonHandler = (ev: any) =>
@@ -376,7 +529,6 @@ private async checkAndUpdateNotificationPermission(): Promise<void> {
         });
 
         await alert.present();
-
         alert.onDidDismiss().then(() => {
           document.removeEventListener('ionBackButton', backButtonHandler);
         });
@@ -384,16 +536,24 @@ private async checkAndUpdateNotificationPermission(): Promise<void> {
         return false;
       }
 
-      //console.log('✅ Device verified:', res.message);
       return true;
     } catch (err) {
-      console.error('Verify Device API error:', err); // Changed to error for visibility
-      return false;
+      console.error('Verify Device API error:', err);
+      return true; // 🔥 Allow app to continue even if verification fails
     }
   }
 
+  /**
+   * ✅ Check force logout (ONLINE ONLY)
+   */
   private async checkForceLogout(): Promise<void> {
     try {
+      // 🔥 Skip if offline
+      if (!this.networkService.isOnline.value) {
+        console.log('⚠️ Skipping force logout check - device is offline');
+        return;
+      }
+
       const uidStr = this.senderUserId || this.authService.authData?.userId;
       const uid = Number(uidStr);
       if (!uid) return;
@@ -403,7 +563,6 @@ private async checkAndUpdateNotificationPermission(): Promise<void> {
           if (!res) return;
           const force = Number(res.force_logout);
 
-          // force === 1 → show alert and reset
           if (force === 1) {
             const alert = await this.alertCtrl.create({
               header: this.translate.instant('home.logout.header'),
@@ -423,16 +582,22 @@ private async checkAndUpdateNotificationPermission(): Promise<void> {
             await alert.present();
           }
         },
-        error: () => {},
+        error: (err) => {
+          console.warn('Force logout check failed:', err);
+        },
       });
-    } catch {}
+    } catch (error) {
+      console.warn('checkForceLogout error:', error);
+    }
   }
 
+  /**
+   * ✅ Clear chat data
+   */
   private clearChatData() {
     this.unreadSubs.forEach((sub) => sub.unsubscribe());
     this.unreadSubs = [];
 
-    // stop typing listeners
     this.typingUnsubs.forEach((unsub) => {
       try {
         unsub();
@@ -443,9 +608,13 @@ private async checkAndUpdateNotificationPermission(): Promise<void> {
     this.chatList = [];
   }
 
+  /**
+   * ✅ Component cleanup
+   */
   ngOnDestroy() {
     this.unreadSubs.forEach((sub) => sub.unsubscribe());
     this.unreadSubs = [];
+
     this.typingUnsubs.forEach((unsub) => {
       try {
         unsub();
@@ -463,13 +632,31 @@ private async checkAndUpdateNotificationPermission(): Promise<void> {
     } catch {}
     this.archiveUnsub = null;
 
-     if (this.firebaseChatService._userChatsListener) {
-    try {
-      this.firebaseChatService._userChatsListener();
-    } catch {}
-  }
+    if (this.conversationsSubscription) {
+      this.conversationsSubscription.unsubscribe();
+      this.conversationsSubscription = null;
+    }
+
+    // 🔥 NEW: Cleanup network subscription
+    if (this.networkSub) {
+      this.networkSub.unsubscribe();
+      this.networkSub = null;
+    }
+
+    if (this.firebaseChatService._userChatsListener) {
+      try {
+        this.firebaseChatService._userChatsListener();
+      } catch {}
+    }
   }
 
+  // ========================================
+  // 🎯 POPUP & NAVIGATION
+  // ========================================
+
+  /**
+   * ✅ Navigate to user profile
+   */
   goToUserAbout() {
     this.showPopup = false;
 
@@ -477,25 +664,8 @@ private async checkAndUpdateNotificationPermission(): Promise<void> {
       try {
         const chat = this.selectedChat;
 
-        if (!chat) {
-          console.error('❌ No chat selected');
-          const toast = await this.toastCtrl.create({
-            message: 'Chat not found',
-            duration: 2000,
-            color: 'warning',
-          });
-          await toast.present();
-          return;
-        }
-
-        if (!chat.roomId) {
-          console.error('❌ Chat missing roomId');
-          const toast = await this.toastCtrl.create({
-            message: 'Invalid chat data',
-            duration: 2000,
-            color: 'warning',
-          });
-          await toast.present();
+        if (!chat?.roomId) {
+          await this.showToast('Invalid chat data', 'warning');
           return;
         }
 
@@ -508,37 +678,29 @@ private async checkAndUpdateNotificationPermission(): Promise<void> {
           receiverId =
             parts.find((p: string) => p !== this.senderUserId) ??
             parts[parts.length - 1];
-        } else if (chat.type === 'group') {
-          receiverId = chat.roomId;
-        } else if (chat.type === 'community') {
-          receiverId = chat.roomId;
         } else {
-          console.error('❌ Unknown chat type:', chat.type);
-          return;
+          receiverId = chat.roomId;
         }
 
-        const queryParams: any = {
-          receiverId: receiverId,
-          isGroup: chat.type === 'group',
-        };
-
-        this.router.navigate(['/profile-screen'], { queryParams });
+        this.router.navigate(['/profile-screen'], {
+          queryParams: {
+            receiverId: receiverId,
+            isGroup: chat.type === 'group',
+          },
+        });
 
         this.selectedChat = null;
         this.selectedImage = null;
       } catch (error) {
         console.error('❌ Error opening profile:', error);
-
-        const toast = await this.toastCtrl.create({
-          message: 'Failed to open profile',
-          duration: 2000,
-          color: 'danger',
-        });
-        await toast.present();
+        await this.showToast('Failed to open profile', 'danger');
       }
     }, 100);
   }
 
+  /**
+   * ✅ Navigate to user chat
+   */
   async goToUserchat() {
     this.showPopup = false;
 
@@ -546,25 +708,8 @@ private async checkAndUpdateNotificationPermission(): Promise<void> {
       try {
         const chat = this.selectedChat;
 
-        if (!chat) {
-          console.error('❌ No chat selected');
-          const toast = await this.toastCtrl.create({
-            message: 'Chat not found',
-            duration: 2000,
-            color: 'warning',
-          });
-          await toast.present();
-          return;
-        }
-
-        if (!chat.roomId) {
-          console.error('❌ Chat missing roomId');
-          const toast = await this.toastCtrl.create({
-            message: 'Invalid chat data',
-            duration: 2000,
-            color: 'warning',
-          });
-          await toast.present();
+        if (!chat?.roomId) {
+          await this.showToast('Invalid chat data', 'warning');
           return;
         }
 
@@ -575,9 +720,8 @@ private async checkAndUpdateNotificationPermission(): Promise<void> {
           const receiverId =
             parts.find((p: string) => p !== this.senderUserId) ??
             parts[parts.length - 1];
-
           this.router.navigate(['/chatting-screen'], {
-            queryParams: { receiverId: receiverId },
+            queryParams: { receiverId },
           });
         } else if (chat.type === 'group') {
           this.router.navigate(['/chatting-screen'], {
@@ -587,26 +731,23 @@ private async checkAndUpdateNotificationPermission(): Promise<void> {
           this.router.navigate(['/community-detail'], {
             queryParams: { receiverId: chat.roomId },
           });
-        } else {
-          console.warn('⚠️ Unknown chat type:', chat.type);
         }
 
         this.selectedChat = null;
         this.selectedImage = null;
       } catch (error) {
         console.error('❌ Error opening chat:', error);
-
-        const toast = await this.toastCtrl.create({
-          message: 'Failed to open chat',
-          duration: 2000,
-          color: 'danger',
-        });
-        await toast.present();
+        await this.showToast('Failed to open chat', 'danger');
       }
     }, 100);
   }
 
   goToUsercall() {
+    // 🔥 Check network before allowing calls
+    if (this.isOffline) {
+      this.showToast('Calls require internet connection', 'warning');
+      return;
+    }
     this.showPopup = false;
     setTimeout(() => {
       // this.router.navigate(['/calls-screen']);
@@ -614,74 +755,70 @@ private async checkAndUpdateNotificationPermission(): Promise<void> {
   }
 
   goToUservideocall() {
+    // 🔥 Check network before allowing video calls
+    if (this.isOffline) {
+      this.showToast('Video calls require internet connection', 'warning');
+      return;
+    }
     this.showPopup = false;
     setTimeout(() => {
       // this.router.navigate(['/calling-screen']);
     }, 100);
   }
 
+  /**
+   * ✅ Open image popup
+   */
   openImagePopup(chat: any) {
-    if (!chat) {
-      console.error('❌ No chat object provided');
-      this.toastCtrl
-        .create({
-          message: 'Unable to open chat details',
-          duration: 2000,
-          color: 'warning',
-        })
-        .then((t) => t.present());
-      return;
-    }
-
-    if (!chat.roomId) {
-      console.error('❌ Chat missing roomId:', chat);
-      this.toastCtrl
-        .create({
-          message: 'Invalid chat data',
-          duration: 2000,
-          color: 'warning',
-        })
-        .then((t) => t.present());
+    if (!chat?.roomId) {
+      this.showToast('Invalid chat data', 'warning');
       return;
     }
 
     this.selectedChat = chat;
     this.selectedImage = chat.avatar || 'assets/images/user.jfif';
-
     this.showPopup = true;
   }
 
+  /**
+   * ✅ Close image popup
+   */
   closeImagePopup() {
     this.selectedImage = null;
     this.selectedChat = null;
     this.showPopup = false;
   }
 
-  /* ===== Selection mode logic ===== */
+  // ========================================
+  // 🎯 SELECTION MODE
+  // ========================================
 
+  /**
+   * ✅ Handle chat row click
+   */
   onChatRowClick(chat: any, ev: Event) {
     if (this.selectedChats.length > 0) {
-      // console.log('this selectedChats', this.selectedChats);
       this.toggleChatSelection(chat, ev);
       return;
     }
     this.openChat(chat);
   }
 
+  /**
+   * ✅ Check if conversation is selected
+   */
   isConvSelected(roomId: string): boolean {
     return this.selectedConversations.has(roomId);
   }
 
+  /**
+   * ✅ Check if chat is selected
+   */
   isChatSelected(chat: any): boolean {
     if (chat.roomId) {
       return this.selectedConversations.has(chat.roomId);
     }
-    return this.selectedChats.some((c) => {
-      const sameId = c.receiver_Id === chat.receiver_Id;
-      const sameGroup = !!c.group === !!chat.group;
-      const sameCommunity = !!c.isCommunity === !!chat.isCommunity;
-      return sameId && sameGroup && sameCommunity;
-    });
+    return this.selectedChats.some((c) => this.sameItem(c, chat));
   }
 
   get selectedCount(): number {
@@ -692,155 +829,76 @@ private async checkAndUpdateNotificationPermission(): Promise<void> {
     return this.selectedChats.length > 0;
   }
 
-  // toggleChatSelection(chat: any, ev?: Event) {
-  //   if (ev) ev.stopPropagation();
-
-  //   const isCommunity = !!chat.isCommunity;
-  //   const already = this.selectedChats.find((c) => this.sameItem(c, chat));
-
-  //   // --- COMMUNITY SELECTION RULES ---
-  //   if (isCommunity) {
-  //     if (this.hasNonCommunitySelected()) return;
-
-  //     const previouslySelectedCommunity = this.selectedChats.find(
-  //       (c) => !!c.isCommunity
-  //     );
-
-  //     if (already) {
-  //       // Unselect
-  //       this.selectedChats = this.selectedChats.filter(
-  //         (c) => !this.sameItem(c, chat)
-  //       );
-  //       if (chat.roomId) this.selectedConversations.delete(chat.roomId);
-  //     } else if (previouslySelectedCommunity) {
-  //       // Switch to this community
-  //       if (previouslySelectedCommunity.roomId) {
-  //         this.selectedConversations.delete(previouslySelectedCommunity.roomId);
-  //       }
-  //       this.selectedChats = [chat];
-  //       if (chat.roomId) this.selectedConversations.add(chat.roomId);
-  //     } else {
-  //       // First community
-  //       this.selectedChats = [chat];
-  //       if (chat.roomId) this.selectedConversations.add(chat.roomId);
-  //     }
-
-  //     if (this.selectedChats.length === 0) this.cancelHomeLongPress();
-  //     return;
-  //   }
-
-  //   // --- NON-COMMUNITY (PRIVATE/GROUP) RULES ---
-  //   if (this.hasCommunitySelected()) {
-  //     // Clear community selection
-  //     this.selectedChats.forEach((c) => {
-  //       if (c.roomId) this.selectedConversations.delete(c.roomId);
-  //     });
-  //     this.selectedChats = [];
-  //   }
-
-  //   if (already) {
-  //     // Toggle off
-  //     this.selectedChats = this.selectedChats.filter(
-  //       (c) => !this.sameItem(c, chat)
-  //     );
-  //     if (chat.roomId) this.selectedConversations.delete(chat.roomId);
-  //     if (this.selectedChats.length === 0) this.cancelHomeLongPress();
-  //   } else {
-  //     // Add
-  //     this.selectedChats.push(chat);
-  //     if (chat.roomId) this.selectedConversations.add(chat.roomId);
-  //   }
-  // }
-
-  // /** selection guards */
-  // private hasCommunitySelected(): boolean {
-  //   return this.selectedChats.some((c) => !!c.isCommunity);
-  // }
-
-  // private hasNonCommunitySelected(): boolean {
-  //   return this.selectedChats.some((c) => !c.isCommunity);
-  // }
-
+  /**
+   * ✅ Toggle chat selection
+   */
   toggleChatSelection(chat: any, ev?: Event) {
-  if (ev) ev.stopPropagation();
+    if (ev) ev.stopPropagation();
 
-  const isCommunity = chat.type === 'community';
-  const already = this.selectedChats.find((c) => this.sameItem(c, chat));
+    const isCommunity = chat.type === 'community';
+    const already = this.selectedChats.find((c) => this.sameItem(c, chat));
 
-  // ✅ COMMUNITY SELECTION RULES
-  if (isCommunity) {
-    // ✅ If any non-community chat is selected, don't allow community selection
-    if (this.hasNonCommunitySelected()) {
-      console.log('❌ Cannot select community while other chats are selected');
+    if (isCommunity) {
+      if (this.hasNonCommunitySelected()) {
+        console.log(
+          '❌ Cannot select community while other chats are selected'
+        );
+        return;
+      }
+
+      const previouslySelectedCommunity = this.selectedChats.find(
+        (c) => c.type === 'community'
+      );
+
+      if (already) {
+        this.selectedChats = this.selectedChats.filter(
+          (c) => !this.sameItem(c, chat)
+        );
+        if (chat.roomId) this.selectedConversations.delete(chat.roomId);
+      } else if (previouslySelectedCommunity) {
+        if (previouslySelectedCommunity.roomId) {
+          this.selectedConversations.delete(previouslySelectedCommunity.roomId);
+        }
+        this.selectedChats = [chat];
+        if (chat.roomId) this.selectedConversations.add(chat.roomId);
+      } else {
+        this.selectedChats = [chat];
+        if (chat.roomId) this.selectedConversations.add(chat.roomId);
+      }
+
+      if (this.selectedChats.length === 0) this.cancelHomeLongPress();
       return;
     }
 
-    const previouslySelectedCommunity = this.selectedChats.find(
-      (c) => c.type === 'community'
-    );
+    if (this.hasCommunitySelected()) {
+      console.log('❌ Cannot select other chats while community is selected');
+      return;
+    }
 
     if (already) {
-      // ✅ Deselect this community
       this.selectedChats = this.selectedChats.filter(
         (c) => !this.sameItem(c, chat)
       );
       if (chat.roomId) this.selectedConversations.delete(chat.roomId);
-    } else if (previouslySelectedCommunity) {
-      // ✅ Switch to this community (replace previous)
-      if (previouslySelectedCommunity.roomId) {
-        this.selectedConversations.delete(previouslySelectedCommunity.roomId);
-      }
-      this.selectedChats = [chat];
-      if (chat.roomId) this.selectedConversations.add(chat.roomId);
+      if (this.selectedChats.length === 0) this.cancelHomeLongPress();
     } else {
-      // ✅ First community selection
-      this.selectedChats = [chat];
+      this.selectedChats.push(chat);
       if (chat.roomId) this.selectedConversations.add(chat.roomId);
     }
-
-    if (this.selectedChats.length === 0) this.cancelHomeLongPress();
-    return;
   }
 
-  // ✅ NON-COMMUNITY (PRIVATE/GROUP) SELECTION RULES
-  
-  // ✅ If a community is already selected, don't allow other selections
-  if (this.hasCommunitySelected()) {
-    console.log('❌ Cannot select other chats while community is selected');
-    return;
+  private hasCommunitySelected(): boolean {
+    return this.selectedChats.some((c) => c.type === 'community');
   }
 
-  if (already) {
-    // ✅ Toggle off (deselect)
-    this.selectedChats = this.selectedChats.filter(
-      (c) => !this.sameItem(c, chat)
-    );
-    if (chat.roomId) this.selectedConversations.delete(chat.roomId);
-    if (this.selectedChats.length === 0) this.cancelHomeLongPress();
-  } else {
-    // ✅ Add to selection
-    this.selectedChats.push(chat);
-    if (chat.roomId) this.selectedConversations.add(chat.roomId);
+  private hasNonCommunitySelected(): boolean {
+    return this.selectedChats.some((c) => c.type !== 'community');
   }
-}
-
-/** ✅ Check if community is selected */
-private hasCommunitySelected(): boolean {
-  return this.selectedChats.some((c) => c.type === 'community');
-}
-
-/** ✅ Check if non-community chats are selected */
-private hasNonCommunitySelected(): boolean {
-  return this.selectedChats.some((c) => c.type !== 'community');
-}
 
   private sameItem(a: any, b: any): boolean {
-    // Prefer roomId comparison
     if (a?.roomId && b?.roomId) {
       return a.roomId === b.roomId;
     }
-
-    // Fallback to old logic
     return (
       a?.receiver_Id === b?.receiver_Id &&
       !!a?.group === !!b?.group &&
@@ -848,14 +906,18 @@ private hasNonCommunitySelected(): boolean {
     );
   }
 
-  // ✅ Fix: Clear selection (sync both arrays)
+  /**
+   * ✅ Clear selection
+   */
   clearChatSelection() {
     this.selectedChats = [];
     this.selectedConversations.clear();
     this.cancelHomeLongPress();
   }
 
-  // ✅ Unchanged: Long press handlers
+  /**
+   * ✅ Start long press
+   */
   startHomeLongPress(chat: any) {
     this.cancelHomeLongPress();
     this.longPressTimer = setTimeout(() => {
@@ -869,6 +931,9 @@ private hasNonCommunitySelected(): boolean {
     }, 500);
   }
 
+  /**
+   * ✅ Cancel long press
+   */
   cancelHomeLongPress() {
     if (this.longPressTimer) {
       clearTimeout(this.longPressTimer);
@@ -876,238 +941,153 @@ private hasNonCommunitySelected(): boolean {
     }
   }
 
-  /* ===== Selection meta (for header icon logic) ===== */
-  // get selectionMeta() {
-  //   const sel = this.selectedChats || [];
-  //   // console.log({sel})
-  //   const count = sel.length;
-  //   const includesCommunity = sel.some((c) => c.isCommunity);
-  //   const includesGroup = sel.some((c) => c.group && !c.isCommunity);
-  //   const includesUser = sel.some((c) => !c.group && !c.isCommunity);
-  //   const onlyUsers =
-  //     includesUser &&
-  //     !includesGroup &&
-  //     !includesCommunity &&
-  //     sel.every((c) => !c.group && !c.isCommunity);
-  //   return {
-  //     count,
-  //     includesCommunity,
-  //     includesGroup,
-  //     includesUser,
-  //     isSingleUser: count === 1 && onlyUsers && !(sel[0]?.isPinned === true),
-  //     isSinglePinned: count === 1 && onlyUsers && sel[0]?.isPinned === true,
-  //     isMultiUsersOnly: count > 1 && onlyUsers,
-  //   };
-  // }
+  /**
+   * ✅ Selection metadata
+   */
+  get selectionMeta() {
+    const sel = this.selectedChats || [];
+    const count = sel.length;
 
-get selectionMeta() {
-  const sel = this.selectedChats || [];
-  const count = sel.length;
-  
-  // Debug logging
-  // if (count > 0) {
-  //   console.log('Selected Chat:', sel[0]);
-  //   console.log('isPinned value:', sel[0]?.isPinned);
-  //   console.log('isPinned type:', typeof sel[0]?.isPinned);
-  //   console.log('Chat type:', sel[0]?.type);
-  // }
+    const includesCommunity = sel.some((c) => c.type === 'community');
+    const includesGroup = sel.some((c) => c.type === 'group');
+    const includesPrivate = sel.some((c) => c.type === 'private');
 
-  // ✅ Check for types
-  const includesCommunity = sel.some((c) => c.type === 'community');
-  const includesGroup = sel.some((c) => c.type === 'group');
-  const includesPrivate = sel.some((c) => c.type === 'private');
+    const isSingleSelection = count === 1;
+    const singleChat = isSingleSelection ? sel[0] : null;
+    const isChatPinned = singleChat?.isPinned === true;
 
-  // ✅ Check if single selection exists and is pinned
-  const isSingleSelection = count === 1;
-  const singleChat = isSingleSelection ? sel[0] : null;
-  const isChatPinned = singleChat?.isPinned === true;
+    const isSinglePrivate = isSingleSelection && singleChat?.type === 'private';
+    const isSingleGroup = isSingleSelection && singleChat?.type === 'group';
 
-  // ✅ Single chat categories
-  const isSinglePrivate = isSingleSelection && singleChat?.type === 'private';
-  const isSingleGroup = isSingleSelection && singleChat?.type === 'group';
+    const isMultiPrivateOnly =
+      count > 1 &&
+      includesPrivate &&
+      !includesGroup &&
+      !includesCommunity &&
+      sel.every((c) => c.type === 'private');
 
-  // ✅ Multiple private chats only (no groups/communities)
-  const isMultiPrivateOnly = 
-    count > 1 && 
-    includesPrivate && 
-    !includesGroup && 
-    !includesCommunity &&
-    sel.every((c) => c.type === 'private');
+    const isMultiGroupsOnly =
+      count > 1 &&
+      includesGroup &&
+      !includesPrivate &&
+      !includesCommunity &&
+      sel.every((c) => c.type === 'group');
 
-  // ✅ Multiple groups only (no private/communities)
-  const isMultiGroupsOnly = 
-    count > 1 && 
-    includesGroup && 
-    !includesPrivate && 
-    !includesCommunity &&
-    sel.every((c) => c.type === 'group');
+    const isMixedPrivateAndGroups =
+      count > 1 && includesPrivate && includesGroup && !includesCommunity;
 
-  // ✅ Mixed selection (private + groups, no communities)
-  const isMixedPrivateAndGroups = 
-    count > 1 &&
-    includesPrivate && 
-    includesGroup && 
-    !includesCommunity;
-
-  // console.log('Selection Analysis:', {
-  //   isSingleSelection,
-  //   isChatPinned,
-  //   isSinglePrivate,
-  //   isSingleGroup,
-  //   isMultiPrivateOnly,
-  //   isMultiGroupsOnly,
-  //   isMixedPrivateAndGroups
-  // });
-
-  return {
-    count,
-    includesCommunity,
-    includesGroup,
-    includesPrivate,
-
-    // ✅ Single private chat - PINNED
-    isSinglePrivatePinned: isSinglePrivate && isChatPinned,
-    
-    // ✅ Single private chat - NOT PINNED
-    isSinglePrivateUnpinned: isSinglePrivate && !isChatPinned,
-
-    // ✅ Single group chat - PINNED
-    isSingleGroupPinned: isSingleGroup && isChatPinned,
-    
-    // ✅ Single group chat - NOT PINNED
-    isSingleGroupUnpinned: isSingleGroup && !isChatPinned,
-
-    // ✅ Multiple private chats only
-    isMultiPrivateOnly,
-
-    // ✅ Multiple groups only
-    isMultiGroupsOnly,
-
-    // ✅ Mixed private and groups
-    isMixedPrivateAndGroups,
-
-    // ✅ Legacy properties (kept for backward compatibility)
-    isSingleUser: isSinglePrivate && !isChatPinned,
-    isSinglePinned: (isSinglePrivate || isSingleGroup) && isChatPinned,
-    isMultiUsersOnly: isMultiPrivateOnly,
-  };
-}
-
-  // async onPinSelected() {
-  //   const userId = this.senderUserId || this.authService.authData?.userId || '';
-  //   if (!userId) {
-  //     this.clearChatSelection();
-  //     return;
-  //   }
-  //   await this.firebaseChatService.setPinConversation(
-  //     this.selectedChats.map((c) => c.roomId)
-  //   );
-  //   this.clearChatSelection();
-  // }
-
-  async onPinSelected() {
-    console.log("this unpin function called pin chat function")
-  const userId = this.senderUserId || this.authService.authData?.userId || '';
-  if (!userId) {
-    this.clearChatSelection();
-    return;
+    return {
+      count,
+      includesCommunity,
+      includesGroup,
+      includesPrivate,
+      isSinglePrivatePinned: isSinglePrivate && isChatPinned,
+      isSinglePrivateUnpinned: isSinglePrivate && !isChatPinned,
+      isSingleGroupPinned: isSingleGroup && isChatPinned,
+      isSingleGroupUnpinned: isSingleGroup && !isChatPinned,
+      isMultiPrivateOnly,
+      isMultiGroupsOnly,
+      isMixedPrivateAndGroups,
+      // Legacy properties
+      isSingleUser: isSinglePrivate && !isChatPinned,
+      isSinglePinned: (isSinglePrivate || isSingleGroup) && isChatPinned,
+      isMultiUsersOnly: isMultiPrivateOnly,
+    };
   }
 
-  // ✅ Call with error handling
-  const result = await this.firebaseChatService.setPinConversation(
-    this.selectedChats.map((c) => c.roomId),
-    true // pin = true
-  );
+  // ========================================
+  // 🎯 SELECTION ACTIONS
+  // ========================================
 
-  // ✅ Show error message if pin limit exceeded
-  if (!result.success && result.message) {
-    const alert = await this.alertCtrl.create({
-      header: 'Cannot Pin',
-      message: result.message,
-      buttons: ['OK'],
+  /**
+   * ✅ Pin selected chats
+   */
+  async onPinSelected() {
+    const userId = this.senderUserId || this.authService.authData?.userId || '';
+    if (!userId) {
+      this.clearChatSelection();
+      return;
+    }
+
+    const result = await this.firebaseChatService.setPinConversation(
+      this.selectedChats.map((c) => c.roomId),
+      true
+    );
+
+    if (!result.success && result.message) {
+      const alert = await this.alertCtrl.create({
+        header: 'Cannot Pin',
+        message: result.message,
+        buttons: ['OK'],
+      });
+      await alert.present();
+    }
+
+    this.clearChatSelection();
+  }
+
+  /**
+   * ✅ Unpin selected chats
+   */
+  async onUnpinSelected() {
+    const userId = this.senderUserId || this.authService.authData?.userId || '';
+    if (!userId) {
+      this.clearChatSelection();
+      return;
+    }
+
+    await this.firebaseChatService.setPinConversation(
+      this.selectedChats.map((c) => c.roomId),
+      false
+    );
+
+    this.clearChatSelection();
+  }
+
+  /**
+   * ✅ Delete multiple chats
+   */
+  async deleteMultipleChats() {
+    if (!this.selectedChats || this.selectedChats.length === 0) {
+      return;
+    }
+
+    const alert = await this.alertController.create({
+      header: 'Delete Chats',
+      message: 'Are you sure you want to delete selected chats?',
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+        },
+        {
+          text: 'Delete',
+          role: 'destructive',
+          handler: async () => {
+            try {
+              await this.firebaseChatService.deleteChats(
+                this.selectedChats.map((c) => c.roomId)
+              );
+              this.clearChatSelection();
+            } catch (error) {
+              console.error('Error deleting chats:', error);
+            }
+          },
+        },
+      ],
     });
+
     await alert.present();
   }
 
-  this.clearChatSelection();
-}
-
-  // async onUnpinSelected() {
-  //   // console.log("the unpin function is selected")
-  //   const userId = this.senderUserId || this.authService.authData?.userId || '';
-  //   if (!userId) {
-  //     this.clearChatSelection();
-  //     return;
-  //   }
-  //   await this.firebaseChatService.setPinConversation(
-  //     this.selectedChats.map((c) => c.roomId),
-  //     false
-  //   );
-  //   this.clearChatSelection();
-  // }
-
-  async onUnpinSelected() {
-    console.log("this unpin function called")
-  const userId = this.senderUserId || this.authService.authData?.userId || '';
-  if (!userId) {
-    this.clearChatSelection();
-    return;
-  }
-
-  // ✅ Call unpin (pin = false)
-  await this.firebaseChatService.setPinConversation(
-    this.selectedChats.map((c) => c.roomId),
-    false // pin = false
-  );
-
-  this.clearChatSelection();
-}
-
-  // delete chat code start
-
-  async deleteMultipleChats() {
-  if (!this.selectedChats || this.selectedChats.length === 0) {
-    return;
-  }
-
-  const alert = await this.alertController.create({
-    header: 'Delete Chats',
-    message: 'Are you sure you want to delete selected chats?',
-    buttons: [
-      {
-        text: 'Cancel',
-        role: 'cancel',
-        handler: () => {
-          console.log('Delete cancelled');
-        }
-      },
-      {
-        text: 'Delete',
-        role: 'destructive',
-        handler: async () => {
-          try {
-            console.log('multiple delete confirmed');
-
-            await this.firebaseChatService.deleteChats(
-              this.selectedChats.map(c => c.roomId)
-            );
-
-            this.clearChatSelection();
-          } catch (error) {
-            console.error('Error deleting chats:', error);
-          }
-        }
-      }
-    ]
-  });
-
-  await alert.present();
-}
-
-
+  /**
+   * ✅ Delete selected chats
+   */
   async onDeleteSelected() {
     try {
-      const deletables = this.selectedChats.filter((c) => !c.isCommunity);
+      const deletables = this.selectedChats.filter(
+        (c) => c.type !== 'community'
+      );
 
       if (deletables.length === 0) {
         const alert = await this.alertCtrl.create({
@@ -1127,24 +1107,13 @@ get selectionMeta() {
             ? 'Delete this chat?'
             : `Delete ${deletables.length} chats?`,
         buttons: [
-          {
-            text: 'Cancel',
-            role: 'cancel',
-          },
+          { text: 'Cancel', role: 'cancel' },
           {
             text: 'Delete',
             handler: async () => {
               await this.deleteChatsForMe(deletables);
             },
           },
-          // Delete for Everyone - only for single private chat
-          // ...(deletables.length === 1 && !deletables[0].group ? [{
-          //   text: 'Delete for Everyone',
-          //   cssClass: 'danger-button',
-          //   handler: async () => {
-          //     await this.deleteChatsForEveryone(deletables);
-          //   }
-          // }] : [])
         ],
       });
 
@@ -1155,7 +1124,9 @@ get selectionMeta() {
     }
   }
 
-  // Delete for Me (soft delete) - UPDATED
+  /**
+   * ✅ Delete chats for me
+   */
   private async deleteChatsForMe(chats: any[]) {
     try {
       const userId = this.senderUserId;
@@ -1166,24 +1137,18 @@ get selectionMeta() {
           ? chat.receiver_Id
           : this.getRoomId(userId, chat.receiver_Id);
 
-        // Firebase soft delete
         await this.firebaseChatService.deleteChatForUser(roomId, userId);
 
-        // ✅ Remove from local chatList (row + placeholder)
         this.chatList = this.chatList.filter((c) => {
-          if (chat.group && c.group) {
+          if (chat.group && c.group) return c.receiver_Id !== chat.receiver_Id;
+          if (chat.isCommunity && c.isCommunity)
             return c.receiver_Id !== chat.receiver_Id;
-          }
-          if (chat.isCommunity && c.isCommunity) {
-            return c.receiver_Id !== chat.receiver_Id;
-          }
           if (!chat.group && !chat.isCommunity && !c.group && !c.isCommunity) {
             return c.receiver_Id !== chat.receiver_Id;
           }
           return true;
         });
 
-        // cleanup listeners
         this.stopTypingListenerForChat(chat);
         const unreadSub = this.unreadSubs.find(() => true);
         if (unreadSub) {
@@ -1192,45 +1157,16 @@ get selectionMeta() {
         }
       }
 
-      //console.log('✅ Chats deleted for me (placeholders removed)');
       this.clearChatSelection();
     } catch (error) {
       console.error('❌ Error deleting chats:', error);
     }
   }
 
-  // Delete for Everyone (hard delete) - same as before
-  private async deleteChatsForEveryone(chats: any[]) {
-    try {
-      const userId = this.senderUserId;
-      if (!userId) return;
-
-      for (const chat of chats) {
-        if (chat.group) {
-          await this.firebaseChatService.deleteGroup(chat.receiver_Id);
-        } else {
-          const roomId = this.getRoomId(userId, chat.receiver_Id);
-          await this.firebaseChatService.deleteChatPermanently(roomId);
-        }
-
-        // Remove from local chatList
-        this.chatList = this.chatList.filter(
-          (c) =>
-            !(c.receiver_Id === chat.receiver_Id && !!c.group === !!chat.group)
-        );
-
-        this.stopTypingListenerForChat(chat);
-      }
-
-      //console.log('✅ Chats deleted for everyone');
-      this.clearChatSelection();
-    } catch (error) {
-      console.error('❌ Error deleting chats permanently:', error);
-    }
-  }
-  //delete chat code end here
+  /**
+   * ✅ Mute selected
+   */
   async onMuteSelected() {
-    // const c = this.selectedChats[0]; if (c) c.muted = true;
     const alert = await this.alertCtrl.create({
       header: 'Mute notification',
       message: 'Work in progress',
@@ -1240,6 +1176,9 @@ get selectionMeta() {
     this.clearChatSelection();
   }
 
+  /**
+   * ✅ Archive selected
+   */
   async onArchievedSelected() {
     try {
       const userId =
@@ -1249,14 +1188,10 @@ get selectionMeta() {
         return;
       }
 
-      const archivables = this.selectedChats.filter((c) => !c.isCommunity);
-
-      console.log({ archivables });
       await this.firebaseChatService.setArchiveConversation(
         this.selectedChats.map((c) => c.roomId)
       );
       this.clearChatSelection();
-      return;
     } catch (error) {
       console.error('❌ Error archiving chats:', error);
     }
@@ -1265,6 +1200,7 @@ get selectionMeta() {
   get lockedCount(): number {
     return Object.values(this.lockedMap).filter((v) => v?.isLocked).length;
   }
+
   get archivedCount(): number {
     return Object.values(this.archivedMap).filter((v) => v?.isArchived).length;
   }
@@ -1272,321 +1208,179 @@ get selectionMeta() {
   openLockedChats() {
     this.router.navigate(['/locked-chats']);
   }
+
   openArchived() {
     this.router.navigate(['/archieved-screen']);
   }
 
-  // async onMoreSelected(ev: any) {
-  //   const sel = this.selectedChats || [];
-  //   console.log({ sel });
+  /**
+   * ✅ More options menu
+   */
+  async onMoreSelected(ev: any) {
+    const sel = this.selectedChats || [];
 
-  //   const users = sel.filter((c) => c.type === 'private');
-  //   const groups = sel.filter(
-  //     (c) => c.type === 'group' || c.type === 'community'
-  //   );
+    const users = sel.filter((c) => c.type === 'private');
+    const groups = sel.filter((c) => c.type === 'group');
+    const communities = sel.filter((c) => c.type === 'community');
 
-  //   const isSingleUser = users.length === 1 && groups.length === 0;
-  //   const isMultiUsers = users.length > 1 && groups.length === 0;
-  //   const isSingleGroup = groups.length === 1 && users.length === 0;
-  //   const isMultiGroups = groups.length > 1 && users.length === 0;
-  //   const isMixedChats = users.length > 0 && groups.length > 0;
+    const isSingleUser =
+      users.length === 1 && groups.length === 0 && communities.length === 0;
+    const isMultiUsers =
+      users.length > 1 && groups.length === 0 && communities.length === 0;
+    const isSingleGroup =
+      groups.length === 1 && users.length === 0 && communities.length === 0;
+    const isMultiGroups =
+      groups.length > 1 && users.length === 0 && communities.length === 0;
+    const isSingleCommunity =
+      communities.length === 1 && users.length === 0 && groups.length === 0;
+    const isMixedChats =
+      users.length > 0 && groups.length > 0 && communities.length === 0;
 
-  //   const unreadOf = (x: any) => Number(x?.unreadCount || 0) > 0;
+    const unreadOf = (x: any) => Number(x?.unreadCount || 0) > 0;
+    const single = sel.length === 1 ? sel[0] : null;
+    const canMarkReadSingle = !!single && unreadOf(single);
+    const canMarkUnreadSingle = !!single && !unreadOf(single);
+    const anyUnreadSelected = sel.some(unreadOf);
+    const allSelectedRead = sel.length > 0 && sel.every((x) => !unreadOf(x));
+    const canMarkReadMulti = !single && anyUnreadSelected;
+    const canMarkUnreadMulti = !single && allSelectedRead;
 
-  //   const single = sel.length === 1 ? sel[0] : null;
-  //   const canMarkReadSingle = !!single && unreadOf(single);
-  //   const canMarkUnreadSingle = !!single && !unreadOf(single);
+    let isCurrentUserMember = false;
+    let canDeleteGroup = false;
 
-  //   const anyUnreadSelected = sel.some(unreadOf);
-  //   const allSelectedRead = sel.length > 0 && sel.every((x) => !unreadOf(x));
-  //   const canMarkReadMulti = !single && anyUnreadSelected;
-  //   const canMarkUnreadMulti = !single && allSelectedRead;
+    if (isSingleGroup && groups[0]) {
+      const selectedGroup = groups[0];
+      const currentUserId = this.senderUserId;
 
-  //   const pop = await this.popoverCtrl.create({
-  //     component: MenuHomePopoverComponent,
-  //     event: ev,
-  //     translucent: true,
-  //     componentProps: {
-  //       canLock: true,
-  //       allSelected: this.areAllVisibleSelected(),
-  //       isAllSelectedMode: this.areAllVisibleSelected(),
-
-  //       isSingleUser,
-  //       isMultiUsers,
-  //       isSingleGroup,
-  //       isMultiGroups,
-  //       isMixedChats,
-
-  //       canMarkReadSingle,
-  //       canMarkUnreadSingle,
-  //       canMarkReadMulti,
-  //       canMarkUnreadMulti,
-  //     },
-  //   });
-  //   await pop.present();
-
-  //   const { data } = await pop.onDidDismiss();
-  //   if (!data?.action) return;
-
-  //   switch (data.action) {
-  //     case 'viewContact':
-  //       this.openSelectedContactProfile();
-  //       break;
-
-  //     case 'groupInfo':
-  //       this.openSelectedGroupInfo();
-  //       break;
-
-  //     case 'markUnread':
-  //       this.markAsUnread();
-  //       break;
-  //     case 'markRead':
-  //       this.markRoomAsRead();
-  //       break;
-  //     case 'selectAll':
-  //       this.selectAllVisible();
-  //       break;
-  //     case 'lockChat':
-  //     case 'lockChats':
-  //       break;
-  //     case 'favorite':
-  //       break;
-  //     case 'addToList':
-  //       break;
-  //     case 'exitGroup':
-  //       await this.confirmAndExitSingleSelectedGroup();
-  //       break;
-  //     case 'exitGroups':
-  //       await this.confirmAndExitMultipleSelectedGroups();
-  //       break;
-  //     case 'exitCommunity':
-  //       break;
-  //     case 'communityInfo':
-  //       break;
-  //   }
-  // }
-
-async onMoreSelected(ev: any) {
-  const sel = this.selectedChats || [];
-  console.log({ sel });
-
-  const users = sel.filter((c) => c.type === 'private');
-  const groups = sel.filter((c) => c.type === 'group');
-  const communities = sel.filter((c) => c.type === 'community');
-
-  const isSingleUser = users.length === 1 && groups.length === 0 && communities.length === 0;
-  const isMultiUsers = users.length > 1 && groups.length === 0 && communities.length === 0;
-  const isSingleGroup = groups.length === 1 && users.length === 0 && communities.length === 0;
-  const isMultiGroups = groups.length > 1 && users.length === 0 && communities.length === 0;
-  const isSingleCommunity = communities.length === 1 && users.length === 0 && groups.length === 0;
-  const isMixedChats = users.length > 0 && groups.length > 0 && communities.length === 0;
-
-  const unreadOf = (x: any) => Number(x?.unreadCount || 0) > 0;
-
-  const single = sel.length === 1 ? sel[0] : null;
-  const canMarkReadSingle = !!single && unreadOf(single);
-  const canMarkUnreadSingle = !!single && !unreadOf(single);
-
-  const anyUnreadSelected = sel.some(unreadOf);
-  const allSelectedRead = sel.length > 0 && sel.every((x) => !unreadOf(x));
-  const canMarkReadMulti = !single && anyUnreadSelected;
-  const canMarkUnreadMulti = !single && allSelectedRead;
-
-  // ✅ NEW: Check if current user is a member of selected group(s)
-  let isCurrentUserMember = false;
-  let canDeleteGroup = false;
-
-  if (isSingleGroup && groups[0]) {
-    const selectedGroup = groups[0];
-    const currentUserId = this.senderUserId;
-    
-    // Check if members array exists and includes current user
-    if (selectedGroup.members && Array.isArray(selectedGroup.members)) {
-      isCurrentUserMember = selectedGroup.members.includes(currentUserId);
-      canDeleteGroup = !isCurrentUserMember; // Can delete if NOT a member
+      if (selectedGroup.members && Array.isArray(selectedGroup.members)) {
+        isCurrentUserMember = selectedGroup.members.includes(currentUserId);
+        canDeleteGroup = !isCurrentUserMember;
+      }
     }
-    
-    console.log('Current User ID:', currentUserId);
-    console.log('Group Members:', selectedGroup.members);
-    console.log('Is Member:', isCurrentUserMember);
-    console.log('Can Delete:', canDeleteGroup);
-  }
 
-  // ✅ NEW: Check community membership (communities have adminIds array)
-  let isCommunityAdmin = false;
-  let isCommunityMember = false;
+    let isCommunityAdmin = false;
+    let isCommunityMember = false;
 
-  if (isSingleCommunity && communities[0]) {
-    const selectedCommunity = communities[0];
-    const currentUserId = this.senderUserId;
-    
-    // Check if user is admin
-    if (selectedCommunity.adminIds && Array.isArray(selectedCommunity.adminIds)) {
-      isCommunityAdmin = selectedCommunity.adminIds.includes(currentUserId);
+    if (isSingleCommunity && communities[0]) {
+      const selectedCommunity = communities[0];
+      const currentUserId = this.senderUserId;
+
+      if (
+        selectedCommunity.adminIds &&
+        Array.isArray(selectedCommunity.adminIds)
+      ) {
+        isCommunityAdmin = selectedCommunity.adminIds.includes(currentUserId);
+      }
+
+      if (
+        selectedCommunity.members &&
+        Array.isArray(selectedCommunity.members)
+      ) {
+        isCommunityMember = selectedCommunity.members.includes(currentUserId);
+      }
     }
-    
-    // Check if user is member
-    if (selectedCommunity.members && Array.isArray(selectedCommunity.members)) {
-      isCommunityMember = selectedCommunity.members.includes(currentUserId);
-    }
-    
-    console.log('Community Admin Status:', isCommunityAdmin);
-    console.log('Community Member Status:', isCommunityMember);
-  }
 
-  const pop = await this.popoverCtrl.create({
-    component: MenuHomePopoverComponent,
-    event: ev,
-    translucent: true,
-    componentProps: {
-      canLock: true,
-      allSelected: this.areAllVisibleSelected(),
-      isAllSelectedMode: this.areAllVisibleSelected(),
-
-      isSingleUser,
-      isMultiUsers,
-      isSingleGroup,
-      isMultiGroups,
-      isMixedChats,
-      isSingleCommunity, // ✅ NEW
-
-      canMarkReadSingle,
-      canMarkUnreadSingle,
-      canMarkReadMulti,
-      canMarkUnreadMulti,
-
-      // ✅ Group membership flags
-      isCurrentUserMember,
-      canDeleteGroup,
-
-      // ✅ NEW: Community flags
-      isCommunityAdmin,
-      isCommunityMember,
-    },
-  });
-  await pop.present();
-
-  const { data } = await pop.onDidDismiss();
-  if (!data?.action) return;
-
-  switch (data.action) {
-    case 'viewContact':
-      this.openSelectedContactProfile();
-      break;
-
-    case 'groupInfo':
-      this.openSelectedGroupInfo();
-      break;
-
-    case 'markUnread':
-      this.markAsUnread();
-      break;
-    case 'markRead':
-      this.markRoomAsRead();
-      break;
-    case 'selectAll':
-      this.selectAllVisible();
-      break;
-    case 'lockChat':
-    case 'lockChats':
-      break;
-    case 'favorite':
-      break;
-    case 'addToList':
-      break;
-    
-    // ✅ Exit group (only if user is a member)
-    case 'exitGroup':
-      await this.confirmAndExitSingleSelectedGroup();
-      break;
-    case 'exitGroups':
-      await this.confirmAndExitMultipleSelectedGroups();
-      break;
-    
-    // ✅ Delete group (only if user is NOT a member)
-    case 'deleteGroup':
-      await this.confirmAndDeleteGroup();
-      break;
-    
-    case 'block':
-      // Handle block user logic here
-      console.log('Block user action');
-      break;
-    
-    case 'exitCommunity':
-      break;
-    case 'communityInfo':
-      break;
-  }
-}
-
-// ✅ NEW: Method to delete a group
-private async confirmAndDeleteGroup(): Promise<void> {
-  const groups = this.selectedChats.filter((c) => c.type === 'group');
-  const group = groups[0];
-  
-  if (!group) return;
-
-  const alert = await this.alertCtrl.create({
-    header: 'Delete Group',
-    message: `Are you sure you want to delete "${group.title}"? This action cannot be undone.`,
-    buttons: [
-      { text: 'Cancel', role: 'cancel' },
-      {
-        text: 'Delete',
-        cssClass: 'danger-button',
-        handler: async () => {
-          try {
-            // Delete the group from Firebase
-            await this.firebaseChatService.deleteGroup(group.roomId);
-            
-            // Remove from local chatList
-            this.chatList = this.chatList.filter(
-              (c) => !(c.receiver_Id === group.receiver_Id && c.group)
-            );
-            
-            // Remove from conversations
-            this.conversations = this.conversations.filter(
-              (c) => c.roomId !== group.roomId
-            );
-            
-            // Cleanup listeners
-            this.stopTypingListenerForChat(group);
-            
-            this.clearChatSelection();
-
-            const toast = await this.toastCtrl.create({
-              message: 'Group deleted successfully',
-              duration: 2000,
-              color: 'success',
-            });
-            await toast.present();
-            
-          } catch (error) {
-            console.error('Error deleting group:', error);
-            
-            const toast = await this.toastCtrl.create({
-              message: 'Failed to delete group',
-              duration: 2000,
-              color: 'danger',
-            });
-            await toast.present();
-          }
-        },
+    const pop = await this.popoverCtrl.create({
+      component: MenuHomePopoverComponent,
+      event: ev,
+      translucent: true,
+      componentProps: {
+        canLock: true,
+        allSelected: this.areAllVisibleSelected(),
+        isAllSelectedMode: this.areAllVisibleSelected(),
+        isSingleUser,
+        isMultiUsers,
+        isSingleGroup,
+        isMultiGroups,
+        isMixedChats,
+        isSingleCommunity,
+        canMarkReadSingle,
+        canMarkUnreadSingle,
+        canMarkReadMulti,
+        canMarkUnreadMulti,
+        isCurrentUserMember,
+        canDeleteGroup,
+        isCommunityAdmin,
+        isCommunityMember,
       },
-    ],
-  });
-  
-  await alert.present();
-}
+    });
+    await pop.present();
 
-  private openSelectedContactProfile(): void {
-    // //console.log("selectedChats",this.selectedChats);
-    // const sel = this.selectedChats.filter((c) => c.type === 'private');
-    //  console.log("selected contact",sel)
+    const { data } = await pop.onDidDismiss();
+    if (!data?.action) return;
+
+    const actionHandlers: Record<string, () => Promise<void>> = {
+      viewContact: () => this.openSelectedContactProfile(),
+      groupInfo: () => this.openSelectedGroupInfo(),
+      markUnread: () => this.markAsUnread(),
+      markRead: () => this.markRoomAsRead(),
+      selectAll: async () => this.selectAllVisible(),
+      exitGroup: () => this.confirmAndExitSingleSelectedGroup(),
+      exitGroups: () => this.confirmAndExitMultipleSelectedGroups(),
+      deleteGroup: () => this.confirmAndDeleteGroup(),
+      block: async () => {
+        console.log('Block user action');
+      },
+    };
+
+    const handler = actionHandlers[data.action];
+    if (handler) {
+      await handler();
+    }
+  }
+
+  /**
+   * ✅ Confirm and delete group
+   */
+  private async confirmAndDeleteGroup(): Promise<void> {
+    const groups = this.selectedChats.filter((c) => c.type === 'group');
+    const group = groups[0];
+
+    if (!group) return;
+
+    const alert = await this.alertCtrl.create({
+      header: 'Delete Group',
+      message: `Are you sure you want to delete "${group.title}"? This action cannot be undone.`,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Delete',
+          cssClass: 'danger-button',
+          handler: async () => {
+            try {
+              await this.firebaseChatService.deleteGroup(group.roomId);
+
+              this.chatList = this.chatList.filter(
+                (c) => !(c.receiver_Id === group.receiver_Id && c.group)
+              );
+
+              this.conversations = this.conversations.filter(
+                (c) => c.roomId !== group.roomId
+              );
+
+              this.stopTypingListenerForChat(group);
+              this.clearChatSelection();
+
+              await this.showToast('Group deleted successfully', 'success');
+            } catch (error) {
+              console.error('Error deleting group:', error);
+              await this.showToast('Failed to delete group', 'danger');
+            }
+          },
+        },
+      ],
+    });
+
+    await alert.present();
+  }
+
+  /**
+   * ✅ Open selected contact profile
+   */
+  private async openSelectedContactProfile(): Promise<void> {
     const chat = this.selectedChats[0];
-    this.firebaseChatService.openChat(chat);
-    console.log({ chat });
+    await this.firebaseChatService.openChat(chat);
+
     if (!chat) return;
 
     const parts = chat.roomId.split('_');
@@ -1594,102 +1388,69 @@ private async confirmAndDeleteGroup(): Promise<void> {
       parts.find((p: string | null) => p !== this.senderUserId) ??
       parts[parts.length - 1];
 
-    // console.log({receiverId})
-
-    const queryParams: any = {
-      receiverId: receiverId,
-    };
-
-    this.router.navigate(['/profile-screen'], { queryParams });
+    this.router.navigate(['/profile-screen'], { queryParams: { receiverId } });
     this.clearChatSelection();
   }
 
-  private openSelectedGroupInfo(): void {
-    // console.log("this group info options is selected")
-    // const sel = this.selectedChats.filter((c) => c.group && !c.isCommunity);
+  /**
+   * ✅ Open selected group info
+   */
+  private async openSelectedGroupInfo(): Promise<void> {
     const chat = this.selectedChats[0];
-    this.firebaseChatService.openChat(chat);
-    console.log({ chat });
+    await this.firebaseChatService.openChat(chat);
+
     if (!chat) return;
 
-    const queryParams: any = {
-      receiverId: chat.roomId,
-      isGroup: chat.type === 'group',
-    };
-
-    this.router.navigate(['/profile-screen'], { queryParams });
+    this.router.navigate(['/profile-screen'], {
+      queryParams: {
+        receiverId: chat.roomId,
+        isGroup: chat.type === 'group',
+      },
+    });
     this.clearChatSelection();
   }
 
-  // returns only the currently visible chats that are NOT communities
   private get visibleNonCommunityChats(): any[] {
     return this.filteredChats.filter((c) => c.type !== 'community');
   }
 
-  // are all visible non-community chats currently selected?
-  // private areAllVisibleSelected(): boolean {
-  //   const visible = this.visibleNonCommunityChats;
-  //   if (visible.length === 0) return false;
-  //   // compare by receiver_Id + group flag (community already excluded)
-  //   const key = (c: any) => `${c.receiver_Id}::${!!c.group}`;
-  //   // console.log({key});
-  //   const selectedKeys = new Set(this.selectedChats.map(key));
-  //   return visible.every((c) => selectedKeys.has(key(c)));
-  // }
-
   private areAllVisibleSelected(): boolean {
-  const visible = this.visibleNonCommunityChats;
-  if (visible.length === 0) return false;
-  
-  // Use roomId for comparison (more reliable than receiver_Id)
-  const visibleRoomIds = new Set(visible.map(c => c.roomId));
-  const selectedRoomIds = new Set(this.selectedChats.map(c => c.roomId));
-  
-  // Check if all visible chats are selected
-  return visible.every((c) => selectedRoomIds.has(c.roomId));
-}
+    const visible = this.visibleNonCommunityChats;
+    if (visible.length === 0) return false;
 
-
-  // select all visible (non-community) chats; if already all selected, clear selection (toggle behavior)
-  // private selectAllVisible(): void {
-  //   if (this.areAllVisibleSelected()) {
-  //     this.clearChatSelection();
-  //     return;
-  //   }
-  //   this.selectedChats = [...this.visibleNonCommunityChats];
-  // }
+    const selectedRoomIds = new Set(this.selectedChats.map((c) => c.roomId));
+    return visible.every((c) => selectedRoomIds.has(c.roomId));
+  }
 
   private selectAllVisible(): void {
-  if (this.areAllVisibleSelected()) {
-    // If all are already selected, clear selection (toggle behavior)
-    this.clearChatSelection();
-    return;
-  }
-  
-  // Select all visible non-community chats
-  const nonCommunityChats = this.visibleNonCommunityChats;
-  
-  // Clear existing selection first
-  this.selectedChats = [];
-  this.selectedConversations.clear();
-  
-  // Add all non-community chats to selection
-  nonCommunityChats.forEach(chat => {
-    this.selectedChats.push(chat);
-    if (chat.roomId) {
-      this.selectedConversations.add(chat.roomId);
+    if (this.areAllVisibleSelected()) {
+      this.clearChatSelection();
+      return;
     }
-  });
-  
-  console.log(`✅ Selected ${this.selectedChats.length} chats (excluding communities)`);
-}
 
-  /** Exit ONE selected group (with confirm) */
+    const nonCommunityChats = this.visibleNonCommunityChats;
+
+    this.selectedChats = [];
+    this.selectedConversations.clear();
+
+    nonCommunityChats.forEach((chat) => {
+      this.selectedChats.push(chat);
+      if (chat.roomId) {
+        this.selectedConversations.add(chat.roomId);
+      }
+    });
+
+    console.log(
+      `✅ Selected ${this.selectedChats.length} chats (excluding communities)`
+    );
+  }
+
+  /**
+   * ✅ Exit single group
+   */
   private async confirmAndExitSingleSelectedGroup(): Promise<void> {
     const sel = this.selectedChats.filter((c) => c.type == 'group');
-    console.log({ sel });
     const chat = sel[0];
-    console.log({ chat });
     if (!chat) return;
 
     const alert = await this.alertCtrl.create({
@@ -1701,7 +1462,7 @@ private async confirmAndDeleteGroup(): Promise<void> {
           text: 'Exit',
           handler: async () => {
             await this.exitGroup(chat.roomId);
-            // remove row from UI
+
             this.chatList = this.chatList.filter(
               (c) =>
                 !(
@@ -1710,15 +1471,8 @@ private async confirmAndDeleteGroup(): Promise<void> {
                   !c.isCommunity
                 )
             );
+
             this.stopTypingListenerForChat(chat);
-            // unsubscribe unread for this group
-            this.unreadSubs = this.unreadSubs.filter((s) => {
-              try {
-                /* keep; we don’t track per-row ref here */ return true;
-              } catch {
-                return true;
-              }
-            });
             this.clearChatSelection();
 
             const t = await this.alertCtrl.create({
@@ -1734,7 +1488,9 @@ private async confirmAndDeleteGroup(): Promise<void> {
     await alert.present();
   }
 
-  /** Exit MANY selected groups (with confirm) */
+  /**
+   * ✅ Exit multiple groups
+   */
   private async confirmAndExitMultipleSelectedGroups(): Promise<void> {
     const groups = this.selectedChats.filter((c) => c.group && !c.isCommunity);
     if (groups.length === 0) return;
@@ -1749,10 +1505,11 @@ private async confirmAndDeleteGroup(): Promise<void> {
           handler: async () => {
             let success = 0,
               fail = 0;
+
             for (const g of groups) {
               try {
                 await this.exitGroup(g.receiver_Id);
-                // remove from UI and cleanup listeners
+
                 this.chatList = this.chatList.filter(
                   (c) =>
                     !(
@@ -1761,6 +1518,7 @@ private async confirmAndDeleteGroup(): Promise<void> {
                       !c.isCommunity
                     )
                 );
+
                 this.stopTypingListenerForChat(g);
                 success++;
               } catch (e) {
@@ -1768,6 +1526,7 @@ private async confirmAndDeleteGroup(): Promise<void> {
                 fail++;
               }
             }
+
             this.clearChatSelection();
 
             const msg =
@@ -1787,25 +1546,21 @@ private async confirmAndDeleteGroup(): Promise<void> {
     await alert.present();
   }
 
-  /** Core: exit a group and reassign admin if needed */
+  /**
+   * ✅ Exit group core logic
+   */
   private async exitGroup(groupId: string): Promise<void> {
     const userId = this.senderUserId || this.authService.authData?.userId || '';
     if (!groupId || !userId) throw new Error('Missing groupId/userId');
 
-    // const db = getDatabase();
-
-    // 🔹 Read my member record
     const memberPath = `groups/${groupId}/members/${userId}`;
     const memberSnap = await get(rtdbRef(this.db, memberPath));
-    if (!memberSnap.exists()) {
-      // already not a member
-      return;
-    }
+
+    if (!memberSnap.exists()) return;
 
     const myMember = memberSnap.val();
     const wasAdmin = String(myMember?.role || '').toLowerCase() === 'admin';
 
-    // 🔹 Move to pastmembers, then remove from members
     const pastMemberPath = `groups/${groupId}/pastmembers/${userId}`;
     const updatedMember = {
       ...myMember,
@@ -1823,19 +1578,18 @@ private async confirmAndDeleteGroup(): Promise<void> {
       })(),
     ]);
 
-    // 🔹 If I was admin, check if any admins remain
     if (wasAdmin) {
       const membersSnap = await get(
         rtdbRef(this.db, `groups/${groupId}/members`)
       );
+
       if (membersSnap.exists()) {
         const members = membersSnap.val() || {};
-        const remainingIds: string[] = Object.keys(members).filter(
+        const remainingIds = Object.keys(members).filter(
           (mid) => String(mid) !== String(userId)
         );
 
         if (remainingIds.length > 0) {
-          // check if another admin already exists
           const otherAdmins = remainingIds.filter(
             (mid) => String(members[mid]?.role || '').toLowerCase() === 'admin'
           );
@@ -1852,15 +1606,11 @@ private async confirmAndDeleteGroup(): Promise<void> {
               rtdbRef(this.db, `groups/${groupId}/members/${newAdminId}`),
               { role: 'admin' }
             );
-            //console.log(`Assigned new admin: ${newAdminId}`);
-          } else {
-            //console.log('Another admin already exists, no reassignment needed.');
           }
         }
       }
     }
 
-    // 🔹 Optional: clear my unread count node
     try {
       await this.firebaseChatService.resetUnreadCount(groupId, userId);
     } catch (e) {
@@ -1868,26 +1618,25 @@ private async confirmAndDeleteGroup(): Promise<void> {
     }
   }
 
+  /**
+   * ✅ Mark room as read
+   */
   async markRoomAsRead() {
-    console.log('message object is called 1');
     const me = this.senderUserId || this.authService.authData?.userId || '';
     if (!me) return;
 
     const selected = this.selectedChats || [];
     const roomIds = selected.filter((c) => !c.isCommunity).map((c) => c.roomId);
 
-    // optimistic UI
     selected.forEach((c) => {
       c.unreadCount = 0;
       c.unread = false;
     });
-    console.log('message object is called 2', roomIds);
 
     for (const roomId of roomIds) {
       try {
         const metaPath = `userchats/${me}/${roomId}`;
         const meta = await this.firebaseChatService.fetchOnce(metaPath);
-        console.log('message object is called 3');
 
         const unreadCount = Number((meta && meta.unreadCount) || 0);
         if (!unreadCount) continue;
@@ -1896,8 +1645,8 @@ private async confirmAndDeleteGroup(): Promise<void> {
           roomId,
           unreadCount
         );
-
         const messagesObj = messagesSnap.exists() ? messagesSnap.val() : {};
+
         const messages = Object.keys(messagesObj)
           .map((k) => ({
             ...messagesObj[k],
@@ -1907,22 +1656,30 @@ private async confirmAndDeleteGroup(): Promise<void> {
           .sort((a, b) => a.timestamp - b.timestamp);
 
         for (const m of messages) {
-          if (m.msgId) console.log('message object is called');
-          await this.firebaseChatService.markAsRead(m.msgId, roomId as string);
+          if (m.msgId) {
+            await this.firebaseChatService.markAsRead(
+              m.msgId,
+              roomId as string
+            );
+          }
         }
+
         this.firebaseChatService.setUnreadCount(roomId);
       } catch (err) {
         console.error(`Error processing room ${roomId}`, err);
       }
     }
+
     this.clearChatSelection();
   }
 
+  /**
+   * ✅ Mark as unread
+   */
   async markAsUnread() {
     const me = this.senderUserId || this.authService.authData?.userId || '';
     if (!me) return;
 
-    // Build roomIds for selected chats (ignore communities)
     const roomIds = (this.selectedChats || [])
       .filter((c) => !c.isCommunity)
       .map((c) => c.roomId);
@@ -1936,93 +1693,53 @@ private async confirmAndDeleteGroup(): Promise<void> {
     this.clearChatSelection();
   }
 
-  async prepareAndNavigateToChat(chat: any) {
-    try {
-      if (!chat) return;
-
-      const receiverIdRaw = chat.receiver_Id || chat.receiverId || '';
-      const isGroup = !!chat.group;
-      const backendPhoneRaw =
-        chat.receiver_phone || chat.phone_number || chat.phone || '';
-      const deviceName = chat.name || '';
-      const backendName = chat.name || '';
-      const displayNameFromDeviceOrBackend =
-        deviceName || backendPhoneRaw || backendName || 'Unknown';
-
-      const cleanPhone = !isGroup
-        ? this.normalizePhone(backendPhoneRaw || receiverIdRaw)
-        : null;
-
-      const receiverNameToSave =
-        deviceName && deviceName !== 'Unknown'
-          ? deviceName
-          : backendPhoneRaw
-          ? backendPhoneRaw
-          : backendName || 'Unknown';
-
-      if (isGroup) {
-        await this.secureStorage.setItem(
-          'receiver_name',
-          chat.group_name || receiverNameToSave
-        );
-        await this.secureStorage.setItem('receiver_phone', chat.receiver_Id);
-        this.router.navigate(['/chatting-screen'], {
-          queryParams: { receiverId: receiverIdRaw, isGroup: true },
-        });
-      } else {
-        const phoneToSave = cleanPhone || receiverIdRaw;
-        await this.secureStorage.setItem('receiver_name', receiverNameToSave);
-        await this.secureStorage.setItem('receiver_phone', phoneToSave);
-
-        this.router.navigate(['/chatting-screen'], {
-          queryParams: { receiverId: phoneToSave, receiver_phone: phoneToSave },
-        });
-      }
-    } catch (err) {
-      console.error('Error preparing navigation to chat:', err);
-    }
-  }
-
-  private normalizePhone(num?: string): string {
-    if (!num) return '';
-    return num.replace(/\D/g, '').slice(-10);
-  }
+  // ========================================
+  // 🎯 CHAT OPERATIONS
+  // ========================================
 
   /**
-   * ---------- Chat loading (users) ----------
+   * ✅ Get chat avatar URL
    */
-
   getChatAvatarUrl(chat: any): string | null {
-    console.log('display chat from home page', chat);
     const id = chat.group ? chat.receiver_Id : chat.receiver_Id;
     if (id && this.avatarErrorIds.has(String(id))) return null;
 
     const url = chat.avatar;
-
     return url && String(url).trim() ? url : null;
   }
 
+  /**
+   * ✅ Get chat alt text
+   */
   getChatAlt(chat: any): string {
     const name = chat.group ? chat.group_name || chat.name : chat.name;
     return name || this.translate.instant('home.alt.profile');
   }
 
+  /**
+   * ✅ Get chat initial
+   */
   getChatInitial(chat: any): string {
     const name = (chat.group ? chat.group_name || chat.name : chat.name) || '';
     const letter = name.trim().charAt(0);
     return letter ? letter.toUpperCase() : '?';
   }
 
+  /**
+   * ✅ Handle avatar error
+   */
   onAvatarError(chat: any): void {
     const id = chat.group ? chat.receiver_Id : chat.receiver_Id;
     if (id) this.avatarErrorIds.add(String(id));
   }
 
+  /**
+   * ✅ User rooms observable
+   */
   userRooms(): Observable<string[]> {
     return new Observable((observer) => {
       const chatsRef = rtdbRef(getDatabase(), 'roomIds');
 
-      // Firebase listener
       const unsub = rtdbOnValue(chatsRef, (snapshot: any) => {
         const data = snapshot.val();
         observer.next(!!data ? Object.keys(data) : []);
@@ -2043,7 +1760,6 @@ private async confirmAndDeleteGroup(): Promise<void> {
   }
 
   private trackRouteChanges() {
-    // this.versionService.checkVersion();
     this.versionService.checkAndNotify();
   }
 
@@ -2063,6 +1779,9 @@ private async confirmAndDeleteGroup(): Promise<void> {
     return s.length <= max ? s : s.slice(0, max - 1) + '…';
   }
 
+  /**
+   * ✅ Get preview text
+   */
   getPreviewText(chat: any): string {
     try {
       const type = (chat?.lastMessageType || '').toString().toLowerCase();
@@ -2070,25 +1789,27 @@ private async confirmAndDeleteGroup(): Promise<void> {
       if (type && this.mediaPreviewLabels[type]) {
         return this.mediaPreviewLabels[type];
       }
+
       const lm = chat?.lastMessage;
       if (lm && typeof lm === 'string') {
         if (/^(https?:\/\/)|mediaId|data:image\/|^\/?uploads\//i.test(lm)) {
-          // assume image/file generic
           return this.mediaPreviewLabels['file'];
         }
       }
-      const text = lm ?? '';
-      return this.truncatePreview(text);
+
+      return this.truncatePreview(lm ?? '');
     } catch (err) {
       console.warn('getPreviewText error', err);
       return '';
     }
   }
 
+  /**
+   * ✅ Format timestamp
+   */
   formatTimestamp(timestamp: string): string {
     const date = new Date(timestamp);
     const now = new Date();
-
     const isToday = date.toDateString() === now.toDateString();
 
     const yesterday = new Date();
@@ -2102,7 +1823,6 @@ private async confirmAndDeleteGroup(): Promise<void> {
         hour12: true,
       });
     } else if (isYesterday) {
-      // return 'Yesterday';
       return this.translate.instant('home.time.yesterday');
     } else if (date.getFullYear() === now.getFullYear()) {
       return date.toLocaleDateString([], { day: 'numeric', month: 'short' });
@@ -2111,22 +1831,21 @@ private async confirmAndDeleteGroup(): Promise<void> {
     }
   }
 
+  /**
+   * ✅ Get timestamp
+   */
   getTimeStamp(lastMessageAt: string | Date | undefined): string {
     if (!lastMessageAt) return '';
 
     const date = new Date(lastMessageAt);
     const now = new Date();
-
-    // Check if the date is today
     const isToday = date.toDateString() === now.toDateString();
 
-    // Check if the date is yesterday
     const yesterday = new Date();
     yesterday.setDate(now.getDate() - 1);
     const isYesterday = date.toDateString() === yesterday.toDateString();
 
     if (isToday) {
-      // Return only time (e.g., "02:00 PM")
       return date.toLocaleTimeString([], {
         hour: '2-digit',
         minute: '2-digit',
@@ -2135,182 +1854,68 @@ private async confirmAndDeleteGroup(): Promise<void> {
     } else if (isYesterday) {
       return this.translate.instant('home.time.yesterday');
     } else if (date.getFullYear() === now.getFullYear()) {
-      return date.toLocaleDateString([], {
-        day: 'numeric',
-        month: 'short',
-      });
+      return date.toLocaleDateString([], { day: 'numeric', month: 'short' });
     } else {
       return date.toLocaleDateString();
     }
   }
 
-  private async getPreviewFromMessages(
-    messages: any[]
-  ): Promise<{ previewText: string; timestamp?: string } | null> {
-    if (!messages || messages.length === 0) return null;
+  /**
+   * ✅ Get filtered chats
+   */
+  get filteredChats() {
+    let filtered = this.conversations;
 
-    for (let i = messages.length - 1; i >= 0; i--) {
-      const m = messages[i];
+    if (this.selectedFilter === 'read') {
+      filtered = filtered.filter((chat) => chat.unreadCount === 0);
+    } else if (this.selectedFilter === 'unread') {
+      filtered = filtered.filter((chat) => (chat.unreadCount as number) > 0);
+    } else if (this.selectedFilter === 'groups') {
+      filtered = filtered.filter((chat) => chat.type === 'group');
+    }
 
-      // skip deleted / deleted for everyone
-      if (m.isDeleted || m.deletedForEveryone) continue;
+    if (this.searchText.trim() !== '') {
+      const q = this.searchText.toLowerCase();
+      filtered = filtered.filter((chat) =>
+        (chat.title || '').toLowerCase().includes(q)
+      );
+    }
 
-      // skip if deleted for current user
-      try {
-        if (
-          m.deletedFor &&
-          this.senderUserId &&
-          m.deletedFor[String(this.senderUserId)]
-        ) {
-          continue;
-        }
-      } catch {
-        /* ignore */
-      }
+    return [...filtered].sort((a: any, b: any) => {
+      const aPinned = a.isPinned ? 1 : 0;
+      const bPinned = b.isPinned ? 1 : 0;
 
-      // media preview
-      if (m.attachment?.type && m.attachment.type !== 'text') {
-        let txt = this.translate.instant('home.preview.media.generic');
-        switch ((m.attachment.type || '').toString()) {
-          case 'image':
-            txt = '📷 ' + this.translate.instant('home.preview.media.photo');
-            break;
-          case 'video':
-            txt = '🎥 ' + this.translate.instant('home.preview.media.video');
-            break;
-          case 'audio':
-            txt = '🎵 ' + this.translate.instant('home.preview.media.audio');
-            break;
-          case 'file':
-            txt = '📎 ' + this.translate.instant('home.preview.media.file');
-            break;
-          default:
-            txt = this.translate.instant('home.preview.media.generic');
-        }
-        return { previewText: txt, timestamp: m.timestamp };
-      }
-
-      // text (decrypt → fallback → skip empties)
-      try {
-        const dec = await this.encryptionService.decrypt(m.text || '');
-        if (dec && String(dec).trim() !== '') {
-          return { previewText: dec, timestamp: m.timestamp };
-        } else if (m.text && String(m.text).trim() !== '') {
-          return { previewText: m.text, timestamp: m.timestamp };
+      if (aPinned === bPinned) {
+        if (aPinned === 1) {
+          const pinnedAtA = Number(a.pinnedAt || 0);
+          const pinnedAtB = Number(b.pinnedAt || 0);
+          return pinnedAtB - pinnedAtA;
         } else {
-          continue;
+          const timeA = a.lastMessageAt
+            ? new Date(a.lastMessageAt).getTime()
+            : 0;
+          const timeB = b.lastMessageAt
+            ? new Date(b.lastMessageAt).getTime()
+            : 0;
+          return timeB - timeA;
         }
-      } catch {
-        return {
-          previewText: this.translate.instant('home.preview.encrypted'),
-          timestamp: m.timestamp,
-        };
       }
-    }
 
-    return null;
+      return bPinned - aPinned;
+    });
   }
 
-  // get filteredChats() {
-  //   // console.log("visible.length",this.chatList)
-  //   let filtered = this.conversations;
-  //   // console.log({filtered})
-  //   // console.log("this.selectedFilter", this.selectedFilter);
-
-  //   if (this.selectedFilter === 'read') {
-  //     filtered = filtered.filter((chat) => chat.unreadCount === 0);
-  //   } else if (this.selectedFilter === 'unread') {
-  //     filtered = filtered.filter((chat) => (chat.unreadCount as number) > 0);
-  //   } else if (this.selectedFilter === 'groups') {
-  //     filtered = filtered.filter((chat) => chat.type === 'group');
-  //   }
-
-  //   if (this.searchText.trim() !== '') {
-  //     const q = this.searchText.toLowerCase();
-  //     filtered = filtered.filter(
-  //       (chat) =>
-  //         (chat.title || '').toLowerCase().includes(q)
-  //         // (chat.message || '').toLowerCase().includes(q)
-  //     );
-  //   }
-
-  //   return [...filtered].sort((a: any, b: any) => {
-  //     const ap = a.pinned ? 1 : 0;
-  //     const bp = b.pinned ? 1 : 0;
-  //     if (ap !== bp) return bp - ap;
-
-  //     if (ap === 1 && bp === 1) {
-  //       const pa = Number(a.pinnedAt || 0);
-  //       const pb = Number(b.pinnedAt || 0);
-  //       if (pa !== pb) return pb - pa; // newest pin first
-  //     }
-
-  //     const ta = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-  //     const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-  //     return tb - ta;
-  //   });
-  // }
-
-get filteredChats() {
-  let filtered = this.conversations;
-
-  // Filter by type
-  if (this.selectedFilter === 'read') {
-    filtered = filtered.filter((chat) => chat.unreadCount === 0);
-  } else if (this.selectedFilter === 'unread') {
-    filtered = filtered.filter((chat) => (chat.unreadCount as number) > 0);
-  } else if (this.selectedFilter === 'groups') {
-    filtered = filtered.filter((chat) => chat.type === 'group');
+  get pinnedChatsCount(): number {
+    return this.conversations.filter((c) => c.isPinned).length;
   }
 
-  // Search filter
-  if (this.searchText.trim() !== '') {
-    const q = this.searchText.toLowerCase();
-    filtered = filtered.filter(
-      (chat) => (chat.title || '').toLowerCase().includes(q)
-    );
+  get canPinMore(): boolean {
+    return this.pinnedChatsCount < 3;
   }
 
-  // ✅ Sort: Pinned chats first (by pinnedAt DESC), then unpinned (by lastMessageAt DESC)
-  return [...filtered].sort((a: any, b: any) => {
-    const aPinned = a.isPinned ? 1 : 0;
-    const bPinned = b.isPinned ? 1 : 0;
-
-    // If both are pinned or both are unpinned
-    if (aPinned === bPinned) {
-      if (aPinned === 1) {
-        // Both pinned: Sort by pinnedAt (newest first)
-        const pinnedAtA = Number(a.pinnedAt || 0);
-        const pinnedAtB = Number(b.pinnedAt || 0);
-        return pinnedAtB - pinnedAtA; // ✅ Newest pin first
-      } else {
-        // Both unpinned: Sort by lastMessageAt (newest first)
-        const timeA = a.lastMessageAt 
-          ? new Date(a.lastMessageAt).getTime() 
-          : 0;
-        const timeB = b.lastMessageAt 
-          ? new Date(b.lastMessageAt).getTime() 
-          : 0;
-        return timeB - timeA;
-      }
-    }
-
-    // Pinned chats always come first
-    return bPinned - aPinned;
-  });
-}
-
-get pinnedChatsCount(): number {
-  return this.conversations.filter(c => c.isPinned).length;
-}
-
-get canPinMore(): boolean {
-  return this.pinnedChatsCount < 3;
-}
-
-get remainingPinSlots(): number {
-  return Math.max(0, 3 - this.pinnedChatsCount);
-}
+  get remainingPinSlots(): number {
+    return Math.max(0, 3 - this.pinnedChatsCount);
+  }
 
   get totalUnreadCount(): number {
     return this.conversations.reduce(
@@ -2323,36 +1928,145 @@ get remainingPinSlots(): number {
     this.selectedFilter = filter;
   }
 
-  async openChat(chat: any) {
-    console.log({ chat });
-    await this.firebaseChatService.openChat(chat);
-    try {
-      if (chat.type == 'private') {
-        const parts = chat.roomId.split('_');
-        const receiverId =
-          parts.find((p: string | null) => p !== this.senderUserId) ??
-          parts[parts.length - 1];
-        console.log({ receiverId });
-        this.router.navigate(['/chatting-screen'], {
-          queryParams: { receiverId: receiverId, from: 'home' },
-        });
-      } else if (chat.type == 'community') {
-        const receiverId = chat.roomId;
-        this.router.navigate(['/community-detail'], {
-          queryParams: { receiverId: receiverId, from: 'home' },
-        });
-      } else {
-        const receiverId = chat.roomId;
-        this.router.navigate(['/chatting-screen'], {
-          queryParams: { receiverId: receiverId, from: 'home' },
-        });
+  /**
+   * ✅ Open chat
+   */
+  // async openChat(chat: any) {
+  //   console.log({ chat });
+  //   await this.firebaseChatService.openChat(chat);
+
+  //   try {
+  //     const routes: Record<string, string> = {
+  //       private: '/chatting-screen',
+  //       community: '/community-detail',
+  //       group: '/chatting-screen',
+  //     };
+
+  //     const route = routes[chat.type];
+  //     if (!route) {
+  //       console.error('Unknown chat type:', chat.type);
+  //       return;
+  //     }
+
+  //     let receiverId: string;
+  //     if (chat.type === 'private') {
+  //       const parts = chat.roomId.split('_');
+  //       receiverId =
+  //         parts.find((p: string | null) => p !== this.senderUserId) ??
+  //         parts[parts.length - 1];
+  //     } else {
+  //       receiverId = chat.roomId;
+  //     }
+
+  //     this.router.navigate([route], {
+  //       queryParams: { receiverId: receiverId, from: 'home' },
+  //     });
+  //   } catch (error) {
+  //     console.error('chat not open', error);
+  //   }
+  // }
+
+   prefetchConversation(chat: any) {
+    // Debounce to avoid excessive prefetching
+    if (this.prefetchTimeout) {
+      clearTimeout(this.prefetchTimeout);
+    }
+
+    this.prefetchTimeout = setTimeout(async () => {
+      if (this.prefetchedConversations.has(chat.roomId)) return;
+
+      try {
+        // Prefetch basic data only
+        const prefetchData = {
+          roomId: chat.roomId,
+          type: chat.type,
+          title: chat.title,
+          members: chat.members,
+          cachedAt: Date.now(),
+        };
+
+        this.prefetchedConversations.set(chat.roomId, prefetchData);
+        console.log(`✅ Prefetched conversation: ${chat.roomId}`);
+      } catch (error) {
+        console.warn('Prefetch failed:', error);
       }
-      return;
-    } catch (error) {
-      console.error('chat not open', error);
+    }, 300); // Wait 300ms before prefetching
+  }
+
+  /**
+   * ✅ Clear prefetch timeout when mouse/touch leaves
+   */
+  cancelPrefetch() {
+    if (this.prefetchTimeout) {
+      clearTimeout(this.prefetchTimeout);
+      this.prefetchTimeout = null;
     }
   }
 
+  /**
+   * ✅ Optimized chat opening with instant navigation
+   */
+  async openChat(chat: any) {
+    // 🔥 INSTANT NAVIGATION - Don't wait for data loading
+    this.navigateToChat(chat);
+
+    // 🔥 Background data loading (non-blocking)
+    this.loadChatDataInBackground(chat);
+  }
+
+  /**
+   * 🔥 Instant navigation (no await)
+   */
+  private navigateToChat(chat: any) {
+    const routes: Record<string, string> = {
+      private: '/chatting-screen',
+      community: '/community-detail',
+      group: '/chatting-screen',
+    };
+
+    const route = routes[chat.type];
+    if (!route) {
+      console.error('Unknown chat type:', chat.type);
+      return;
+    }
+
+    let receiverId: string;
+    if (chat.type === 'private') {
+      const parts = chat.roomId.split('_');
+      receiverId =
+        parts.find((p: string) => p !== this.senderUserId) ??
+        parts[parts.length - 1];
+    } else {
+      receiverId = chat.roomId;
+    }
+
+    // Navigate immediately
+    this.router.navigate([route], {
+      queryParams: { receiverId: receiverId, from: 'home' },
+    });
+  }
+
+  /**
+   * 🔥 Load chat data in background (non-blocking)
+   */
+  private async loadChatDataInBackground(chat: any) {
+    try {
+      // Use prefetched data if available
+      const prefetched = this.prefetchedConversations.get(chat.roomId);
+      
+      // Open chat with prefetched or current data
+      await this.firebaseChatService.openChat(
+        prefetched || chat,
+        false
+      );
+    } catch (error) {
+      console.error('Background chat loading error:', error);
+    }
+  }
+
+  /**
+   * ✅ Load user communities for home
+   */
   async loadUserCommunitiesForHome() {
     try {
       const userid = this.senderUserId;
@@ -2362,43 +2076,41 @@ get remainingPinSlots(): number {
         (await this.firebaseChatService.getUserCommunities(userid)) || [];
 
       for (const cid of communityIds) {
-        // avoid duplicates
         const exists = this.chatList.find(
           (c: any) => c.receiver_Id === cid && c.isCommunity
         );
         if (exists) continue;
 
-        // fetch community meta
         const commSnap = await get(
           rtdbRef(getDatabase(), `communities/${cid}`)
         );
         if (!commSnap.exists()) continue;
-        const comm = commSnap.val();
 
-        // fetch groups list under community
+        const comm = commSnap.val();
         const groupIds = await this.firebaseChatService.getGroupsInCommunity(
           cid
         );
 
-        // choose preview group: announcement -> general -> first
         let previewGroupId: string | null = null;
         let previewGroupName = '';
+
         if (groupIds && groupIds.length > 0) {
-          // try announcement
           for (const gid of groupIds) {
             const g = await this.firebaseChatService.getGroupInfo(gid);
             if (!g) continue;
+
             if (g.type === 'announcement') {
               previewGroupId = gid;
               previewGroupName = g.name || 'Announcements';
               break;
             }
           }
-          // fallback to General
+
           if (!previewGroupId) {
             for (const gid of groupIds) {
               const g = await this.firebaseChatService.getGroupInfo(gid);
               if (!g) continue;
+
               if ((g.name || '').toLowerCase() === 'general') {
                 previewGroupId = gid;
                 previewGroupName = g.name || 'General';
@@ -2406,7 +2118,7 @@ get remainingPinSlots(): number {
               }
             }
           }
-          // final fallback use first group id
+
           if (!previewGroupId) {
             previewGroupId = groupIds[0];
             const g = await this.firebaseChatService.getGroupInfo(
@@ -2416,44 +2128,37 @@ get remainingPinSlots(): number {
           }
         }
 
-        // fetch last message for previewGroup (one-time)
         let previewText = '';
         let previewTime = '';
+
         if (previewGroupId) {
           try {
             const chatsSnap = await get(
               rtdbRef(getDatabase(), `chats/${previewGroupId}`)
             );
             const chatsVal = chatsSnap.val();
+
             if (chatsVal) {
               const msgs = Object.entries(chatsVal).map(([k, v]: any) => ({
                 key: k,
                 ...(v as any),
               }));
+
               const last = msgs[msgs.length - 1];
               if (last) {
-                // derive preview text similar to other code
-                if (last.isDeleted) previewText = 'This message was deleted';
-                else if (
+                if (last.isDeleted) {
+                  previewText = 'This message was deleted';
+                } else if (
                   last.attachment?.type &&
                   last.attachment.type !== 'text'
                 ) {
-                  switch (last.attachment.type) {
-                    case 'image':
-                      previewText = '📷 Photo';
-                      break;
-                    case 'video':
-                      previewText = '🎥 Video';
-                      break;
-                    case 'audio':
-                      previewText = '🎵 Audio';
-                      break;
-                    case 'file':
-                      previewText = '📎 Attachment';
-                      break;
-                    default:
-                      previewText = '[Media]';
-                  }
+                  const typeMap: Record<string, string> = {
+                    image: '📷 Photo',
+                    video: '🎥 Video',
+                    audio: '🎵 Audio',
+                    file: '📎 Attachment',
+                  };
+                  previewText = typeMap[last.attachment.type] || '[Media]';
                 } else {
                   try {
                     const dec = await this.encryptionService.decrypt(last.text);
@@ -2462,8 +2167,10 @@ get remainingPinSlots(): number {
                     previewText = '[Encrypted]';
                   }
                 }
-                if (last.timestamp)
+
+                if (last.timestamp) {
                   previewTime = this.formatTimestamp(last.timestamp);
+                }
               }
             }
           } catch (err) {
@@ -2475,7 +2182,6 @@ get remainingPinSlots(): number {
           }
         }
 
-        // create typed community row
         const communityChat: CommunityChat = {
           name: comm.name || 'Community',
           receiver_Id: cid,
@@ -2489,36 +2195,36 @@ get remainingPinSlots(): number {
           dp: comm.icon || 'assets/images/multiple-users-silhouette (1).png',
         };
 
-        // push typed object into list
         this.chatList.push(communityChat as any);
 
-        // subscribe to unread count for previewGroup (if exists)
         if (previewGroupId) {
           const sub = this.firebaseChatService
             .listenToUnreadCount(previewGroupId, userid)
             .subscribe((count: number) => {
-              // find target row and update typed fields
               const target = this.chatList.find(
                 (c: any) => c.receiver_Id === cid && c.isCommunity
               ) as CommunityChat | undefined;
+
               if (target) {
                 target.unreadCount = count;
                 target.unread = count > 0;
               }
             });
+
           this.unreadSubs.push(sub);
-          // keep a reference too if you want to cancel separately later
           this.communityUnreadSubs.set(cid, sub);
         }
       }
 
-      // sort chatList same as other lists (by unread/time etc.)
       this.chatList.sort((a: any, b: any) => b.unreadCount - a.unreadCount);
     } catch (err) {
       console.error('loadUserCommunitiesForHome error', err);
     }
   }
 
+  /**
+   * ✅ Present popover
+   */
   async presentPopover(ev: any) {
     const popover = await this.popoverCtrl.create({
       component: MenuPopoverComponent,
@@ -2529,47 +2235,42 @@ get remainingPinSlots(): number {
 
     const { data } = await popover.onDidDismiss();
     if (data?.action === 'readAll') {
-      //console.log("Mark All Read clicked")
       await this.markAllAsReadOnHome();
     }
   }
 
+  /**
+   * ✅ Mark all as read on home
+   */
   private async markAllAsReadOnHome(): Promise<void> {
     const me = this.senderUserId || this.authService.authData?.userId || '';
     if (!me) return;
 
-    // collect roomIds for every visible chat (ignore communities unless they have previewGroupId)
     const roomIds: string[] = [];
 
     for (const chat of this.chatList || []) {
-      // communities: use stored previewGroupId (see change below in loadUserCommunitiesForHome)
       if (chat.isCommunity) {
         if (chat.previewGroupId) roomIds.push(String(chat.previewGroupId));
         continue;
       }
 
-      // groups: groupId is the roomId
       if (chat.group) {
         roomIds.push(String(chat.receiver_Id));
       } else {
-        // private: build a_roomId
         roomIds.push(this.getRoomId(String(me), String(chat.receiver_Id)));
       }
     }
 
-    // de-duplicate & filter empty
     const uniqueRoomIds = Array.from(new Set(roomIds)).filter((r) => !!r);
 
     if (uniqueRoomIds.length === 0) return;
 
     try {
-      // use your firebase helper (same used elsewhere)
       await this.firebaseChatService.markManyRoomsAsRead(
         uniqueRoomIds,
         String(me)
       );
 
-      // optimistic UI update
       this.chatList.forEach((c) => {
         c.unread = false;
         c.unreadCount = 0;
@@ -2583,67 +2284,15 @@ get remainingPinSlots(): number {
     this.router.navigate(['/contact-screen']);
   }
 
+  // ========================================
+  // 🎯 CAMERA & ATTACHMENTS
+  // ========================================
+
   /**
-   * Open camera and handle image cropping
+   * ✅ Open camera
    */
-  // async openCamera() {
-  //   try {
-  //     // Capture image from camera
-  //     const image = await Camera.getPhoto({
-  //       source: CameraSource.Camera,
-  //       quality: 90,
-  //       resultType: CameraResultType.Uri,
-  //     });
-
-  //     if (!image.webPath) {
-  //       throw new Error('No image path returned');
-  //     }
-
-  //     // Show loading indicator
-  //     const loading = await this.loadingController.create({
-  //       message: 'Processing image...',
-  //       duration: 10000,
-  //     });
-  //     await loading.present();
-
-  //     // Convert image to blob
-  //     const response = await fetch(image.webPath);
-  //     const blob = await response.blob();
-
-  //     // Validate file size
-  //     if (blob.size > this.MAX_FILE_SIZE) {
-  //       await loading.dismiss();
-  //       const toast = await this.toastCtrl.create({
-  //         message: 'Image size should be less than 5MB',
-  //         duration: 3000,
-  //         color: 'danger',
-  //       });
-  //       await toast.present();
-  //       return;
-  //     }
-
-  //     // Convert blob to data URL for cropper
-  //     const imageUrl = await this.blobToDataURL(blob);
-  //     await loading.dismiss();
-
-  //     // Open image cropper modal
-  //     await this.openImageCropperForCamera(imageUrl, blob, image.format || 'jpg');
-
-  //   } catch (error) {
-  //     console.error('Camera error:', error);
-
-  //     const toast = await this.toastCtrl.create({
-  //       message: 'Failed to capture photo. Please try again.',
-  //       duration: 2000,
-  //       color: 'danger',
-  //     });
-  //     await toast.present();
-  //   }
-  // }
-
   async openCamera() {
     try {
-      // Capture photo from camera
       const image = await Camera.getPhoto({
         source: CameraSource.Camera,
         quality: 90,
@@ -2654,19 +2303,14 @@ get remainingPinSlots(): number {
         throw new Error('No image path returned');
       }
 
-      // Fetch the image blob from the webPath
       const response = await fetch(image.webPath);
       const blob = await response.blob();
 
-      // Generate filename with timestamp
       const timestamp = Date.now();
       const fileName = `camera_${timestamp}.${image.format || 'jpg'}`;
       const mimeType = `image/${image.format || 'jpeg'}`;
-
-      // Create preview URL (same as pickAttachment)
       const previewUrl = URL.createObjectURL(blob);
 
-      // Set selectedAttachment exactly like pickAttachment does
       this.selectedAttachment = {
         type: 'image',
         blob: blob,
@@ -2675,24 +2319,19 @@ get remainingPinSlots(): number {
         fileSize: blob.size,
         previewUrl: previewUrl,
       };
-      console.log('this selected attachment', this.selectedAttachment);
 
-      // Show preview modal (same as pickAttachment)
       this.showPreviewModal = true;
     } catch (error) {
       console.error('Camera error:', error);
-
-      const toast = await this.toastCtrl.create({
-        message: 'Failed to capture photo. Please try again.',
-        duration: 2000,
-        color: 'danger',
-      });
-      await toast.present();
+      await this.showToast(
+        'Failed to capture photo. Please try again.',
+        'danger'
+      );
     }
   }
 
   /**
-   * 🖼️ Open cropper modal for image editing
+   * ✅ Open cropper modal
    */
   async openCropperModal(attachment: any) {
     if (!attachment || attachment.type !== 'image') {
@@ -2705,19 +2344,17 @@ get remainingPinSlots(): number {
         component: ImageCropperModalComponent,
         componentProps: {
           imageUrl: attachment.previewUrl,
-          aspectRatio: 0, // Free aspect ratio (set to 1 for square, 16/9 for landscape)
+          aspectRatio: 0,
           cropQuality: 0.9,
         },
         cssClass: 'image-cropper-modal',
-        backdropDismiss: false, // Prevent accidental dismissal
+        backdropDismiss: false,
       });
 
       await modal.present();
-
       const { data } = await modal.onDidDismiss<CropResult>();
 
       if (data && data.success && data.originalBlob) {
-        // ✅ Revoke old preview URL to free memory
         if (attachment.previewUrl) {
           try {
             URL.revokeObjectURL(attachment.previewUrl);
@@ -2726,15 +2363,11 @@ get remainingPinSlots(): number {
           }
         }
 
-        // ✅ Create new preview URL from cropped blob
         const newPreviewUrl = URL.createObjectURL(data.originalBlob);
-
-        // ✅ Generate new filename with timestamp
         const timestamp = Date.now();
         const fileExtension = attachment.fileName.split('.').pop() || 'jpg';
         const newFileName = `cropped_${timestamp}.${fileExtension}`;
 
-        // ✅ Update selectedAttachment with cropped image data
         this.selectedAttachment = {
           ...attachment,
           blob: data.originalBlob,
@@ -2742,61 +2375,32 @@ get remainingPinSlots(): number {
           fileName: newFileName,
           fileSize: data.originalBlob.size,
           mimeType: data.originalBlob.type || attachment.mimeType,
-          caption: '', // Initialize empty caption
+          caption: '',
         };
 
-        console.log('✅ Cropped attachment ready:', this.selectedAttachment);
-
-        // ✅ Store in Firebase service for cross-page access
         this.firebaseChatService.setSelectedAttachment(this.selectedAttachment);
-
-        // ✅ Show preview modal
         this.showPreviewModal = true;
 
-        // ✅ Show success toast
-        const toast = await this.toastCtrl.create({
-          message: 'Image cropped successfully',
-          duration: 1500,
-          color: 'success',
-        });
-        await toast.present();
+        await this.showToast('Image cropped successfully', 'success');
       } else if (data && data.cancelled) {
-        // User cancelled cropping - clean up
-        console.log('🚫 Cropping cancelled by user');
-
         if (attachment.previewUrl) {
           try {
             URL.revokeObjectURL(attachment.previewUrl);
-          } catch (e) {
-            console.warn('Failed to revoke preview URL:', e);
-          }
+          } catch (e) {}
         }
       } else if (data && data.error) {
-        // Show error toast
-        const toast = await this.toastCtrl.create({
-          message: data.error,
-          duration: 2000,
-          color: 'danger',
-        });
-        await toast.present();
+        await this.showToast(data.error, 'danger');
       }
     } catch (error) {
       console.error('❌ Error opening cropper modal:', error);
-
-      const toast = await this.toastCtrl.create({
-        message: 'Failed to open image editor',
-        duration: 2000,
-        color: 'danger',
-      });
-      await toast.present();
+      await this.showToast('Failed to open image editor', 'danger');
     }
   }
 
   /**
-   * ❌ Cancel attachment and close preview modal
+   * ✅ Cancel attachment
    */
   cancelAttachment() {
-    // Revoke object URL to prevent memory leaks
     if (this.selectedAttachment?.previewUrl) {
       try {
         URL.revokeObjectURL(this.selectedAttachment.previewUrl);
@@ -2808,36 +2412,21 @@ get remainingPinSlots(): number {
     this.selectedAttachment = null;
     this.showPreviewModal = false;
     this.messageText = '';
-
-    console.log('🗑️ Attachment cancelled');
   }
 
   /**
-   * 📤 Navigate to contact list with attachment and caption
+   * ✅ Go to contact list
    */
   async goToContactList() {
     if (!this.selectedAttachment) {
-      const toast = await this.toastCtrl.create({
-        message: 'No attachment to send',
-        duration: 2000,
-        color: 'warning',
-      });
-      await toast.present();
+      await this.showToast('No attachment to send', 'warning');
       return;
     }
 
-    console.log('📤 Navigating to contact list with attachment');
-
-    // ✅ Add caption to attachment object
     this.selectedAttachment.caption = this.messageText.trim();
-
-    // ✅ Update in Firebase service
     this.firebaseChatService.setSelectedAttachment(this.selectedAttachment);
-
-    // ✅ Close preview modal
     this.showPreviewModal = false;
 
-    // ✅ Navigate with state
     setTimeout(() => {
       this.router.navigate(['/select-contact-list'], {
         state: {
@@ -2847,14 +2436,10 @@ get remainingPinSlots(): number {
         },
       });
 
-      // ✅ Clear local state after navigation
       this.messageText = '';
     }, 100);
   }
 
-  /**
-   * Convert blob to data URL
-   */
   private blobToDataURL(blob: Blob): Promise<string> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -2864,160 +2449,29 @@ get remainingPinSlots(): number {
     });
   }
 
-  /**
-   * Open image cropper modal for camera images
-   */
-  private async openImageCropperForCamera(
-    imageUrl: string,
-    originalBlob: Blob,
-    format: string
-  ) {
-    const modal = await this.modalController.create({
-      component: ImageCropperModalComponent,
-      componentProps: {
-        imageUrl: imageUrl,
-        cropQuality: 0.9,
-      },
-      cssClass: 'image-cropper-modal',
-      backdropDismiss: false,
-    });
-
-    await modal.present();
-
-    const { data } = await modal.onDidDismiss<CropResult>();
-
-    if (data?.success && data.croppedImage && data.originalBlob) {
-      // Generate filename
-      const timestamp = Date.now();
-      const fileName = `camera_cropped_${timestamp}.${format}`;
-      const mimeType = `image/${format === 'jpg' ? 'jpeg' : format}`;
-
-      const previewUrl = URL.createObjectURL(originalBlob);
-
-      // Set cropped image as selected attachment
-      this.selectedAttachment = {
-        type: 'image',
-        blob: data.originalBlob, // Use cropped blob
-        fileName: fileName,
-        mimeType: mimeType,
-        fileSize: data.originalBlob.size,
-        previewUrl: data.croppedImage, // Use cropped data URL for preview
-      };
-
-      console.log('Cropped attachment:', this.selectedAttachment);
-      this.firebaseChatService.setSelectedAttachment(this.selectedAttachment);
-
-      // Show preview modal
-      this.showPreviewModal = true;
-
-      // Show success toast
-      const toast = await this.toastCtrl.create({
-        message: 'Image cropped successfully!',
-        duration: 2000,
-        color: 'success',
-      });
-      await toast.present();
-    } else if (data?.error) {
-      // Show error toast
-      const toast = await this.toastCtrl.create({
-        message: data.error,
-        duration: 3000,
-        color: 'danger',
-      });
-      await toast.present();
-    }
-    // If cancelled, do nothing
-  }
-
-  /**
-   * Cancel attachment and close preview
-   */
-  // cancelAttachment() {
-  //   if (this.selectedAttachment?.previewUrl) {
-  //     try {
-  //       URL.revokeObjectURL(this.selectedAttachment.previewUrl);
-  //     } catch (e) {
-  //       console.warn('Failed to revoke preview URL:', e);
-  //     }
-  //   }
-
-  //   this.selectedAttachment = null;
-  //   this.showPreviewModal = false;
-  //   this.messageText = '';
-  // }
-
-  // /**
-  //  * Navigate to contact list with attachment
-  //  */
-  // async goToContactList() {
-  //   console.log('Navigating to contact list with attachment');
-
-  //   this.showPreviewModal = false;
-
-  //   setTimeout(() => {
-  //     this.router.navigate(['/select-contact-list'], {
-  //       state: {
-  //         attachmentData: this.selectedAttachment,
-  //         caption: this.messageText.trim(),
-  //         fromCamera: true
-  //       }
-  //     });
-  //   }, 100);
-  // }
-
   async scanBarcode() {
-    // try {
-    //   if (!Capacitor.isNativePlatform()) {
-    //     alert(this.translate.instant('home.scan.onlyDevice'));
-    //     return;
-    //   }
-    //   const permission = await BarcodeScanner.checkPermission({ force: true });
-    //   if (!permission.granted) {
-    //     alert(this.translate.instant('home.scan.permission'));
-    //     return;
-    //   }
-    //   await BarcodeScanner.prepare();
-    //   await BarcodeScanner.hideBackground();
-    //   document.body.classList.add('scanner-active');
-    //   const result = await BarcodeScanner.startScan();
-    //   if (result?.hasContent) {
-    //     this.scannedText = result.content;
-    //   } else {
-    //     alert(this.translate.instant('home.scan.notFound'));
-    //   }
-    // } catch (error) {
-    //   console.error('Barcode Scan Error:', error);
-    //   alert(this.translate.instant('home.scan.error'));
-    // } finally {
-    //   await BarcodeScanner.showBackground();
-    //   await BarcodeScanner.stopScan();
-    //   document.body.classList.remove('scanner-active');
-    // }
+    // Implementation commented out
   }
 
   getRoomId(a: string, b: string): string {
     return a < b ? `${a}_${b}` : `${b}_${a}`;
   }
 
+  // ========================================
+  // 🎯 TYPING LISTENERS
+  // ========================================
+
   /**
-   * ------------- Typing listeners helpers -------------
-   *
-   * startTypingListenerForChat(chat) : starts an onValue listener on typing/{roomId}
-   * stopTypingListenerForChat(chat)  : stops that listener
-   *
-   * The typing node format expected:
-   * typing/{roomId}/{userId} => { typing: true, name: 'Rahul', lastUpdated: <ms> }
+   * ✅ Start typing listener for chat
    */
   private startTypingListenerForChat(chat: any) {
     try {
-      // compute roomId
       const db = getDatabase();
       const roomId = chat.group
         ? chat.receiver_Id
         : this.getRoomId(this.senderUserId || '', chat.receiver_Id);
-      if (!roomId) return;
 
-      if (this.typingUnsubs.has(roomId)) return; // already listening
+      if (!roomId || this.typingUnsubs.has(roomId)) return;
 
       const typingRef = rtdbRef(db, `typing/${roomId}`);
 
@@ -3026,11 +2480,8 @@ get remainingPinSlots(): number {
         const now = Date.now();
 
         if (!chat.group) {
-          // For private: see if the other user has a node set
           const otherUserKey = chat.receiver_Id;
           const entry = val[otherUserKey] || null;
-
-          // If writer writes boolean directly or object
           const isTyping = entry
             ? !!entry.typing
             : Object.keys(val).length === 0
@@ -3040,7 +2491,6 @@ get remainingPinSlots(): number {
           chat.isTyping = !!isTyping;
           chat.typingText = isTyping ? chat.name || 'typing...' : null;
         } else {
-          // Group: count recent typers (exclude current user)
           const entries = Object.keys(val).map((k) => ({
             userId: k,
             typing: val[k]?.typing ?? !!val[k],
@@ -3060,7 +2510,6 @@ get remainingPinSlots(): number {
 
           if (recent.length === 1) {
             const r = recent[0];
-            // name prefer from DB entry, fallback to group members map
             chat.typingText =
               r.name || this.lookupMemberName(chat, r.userId) || null;
           } else {
@@ -3069,19 +2518,22 @@ get remainingPinSlots(): number {
         }
       });
 
-      // store unsubscribe
       this.typingUnsubs.set(roomId, unsub);
     } catch (err) {
       console.warn('startTypingListenerForChat error', err);
     }
   }
 
+  /**
+   * ✅ Stop typing listener for chat
+   */
   private stopTypingListenerForChat(chat: any) {
     try {
       const roomId = chat.group
         ? chat.receiver_Id
         : this.getRoomId(this.senderUserId || '', chat.receiver_Id);
       if (!roomId) return;
+
       const unsub = this.typingUnsubs.get(roomId);
       if (unsub) {
         try {
@@ -3092,7 +2544,9 @@ get remainingPinSlots(): number {
     } catch (err) {}
   }
 
-  // try to lookup member name from loaded group members (if available)
+  /**
+   * ✅ Lookup member name
+   */
   private lookupMemberName(groupChat: any, userId: string): string | null {
     try {
       if (!groupChat || !groupChat.members) return null;
@@ -3101,5 +2555,29 @@ get remainingPinSlots(): number {
     } catch (e) {
       return null;
     }
+  }
+
+  // ========================================
+  // 🎯 HELPER METHODS
+  // ========================================
+
+  /**
+   * ✅ Show toast helper
+   */
+  private async showToast(message: string, color: string = 'primary') {
+    const toast = await this.toastCtrl.create({
+      message,
+      duration: 2000,
+      color,
+    });
+    await toast.present();
+  }
+
+  /**
+   * ✅ Normalize phone number
+   */
+  private normalizePhone(num?: string): string {
+    if (!num) return '';
+    return num.replace(/\D/g, '').slice(-10);
   }
 }
