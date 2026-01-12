@@ -2223,7 +2223,7 @@ export class FirebaseChatService {
         console.log('✅ Loaded from cache:', cached.length);
       } else {
         console.log('📭 No cached conversations found');
-      }
+      } 
 
       // 🔥 STEP 2: Background sync (only if online)
       if (this.networkService.isOnline.value) {
