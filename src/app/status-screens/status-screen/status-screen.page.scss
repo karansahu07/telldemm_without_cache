@@ -160,6 +160,39 @@ ion-content {
   color: var(--ion-color-step-600);
 }
 
+/* 🔥 NEW: Container for channel lists (replaces virtual scroll viewport) */
+.channels-list {
+  width: 100%;
+  /* No fixed height - let it grow naturally within ion-content scroll */
+  
+  /* 🚀 Performance optimizations */
+  will-change: scroll-position;
+  contain: layout style paint;
+  
+  /* 🚀 Reduce repaints */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
+}
+
+/* 🚀 Optimize avatar rendering */
+ion-avatar {
+  --border-radius: 50%;
+  flex-shrink: 0; /* Prevent layout shift */
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: var(--ion-color-step-150); /* Placeholder color while loading */
+    
+    /* 🚀 Force GPU compositing for images */
+    transform: translateZ(0);
+    will-change: opacity;
+  }
+}
+
 /* lists & items */
 ion-list {
   background: var(--ion-card-background);
@@ -174,6 +207,25 @@ ion-item {
   --inner-border-width: 0;
   --border-style: none;
   --border-width: 0;
+  
+  /* 🚀 Performance boost for scrolling */
+  will-change: transform;
+  transform: translate3d(0, 0, 0); /* Force GPU layer */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  
+  /* 🚀 Prevent layout thrashing */
+  contain: layout style;
+}
+
+/* 🚀 Optimize label rendering */
+ion-label {
+  h2, p {
+    /* Prevent text reflow during scroll */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 /* text blocks */
@@ -375,6 +427,3 @@ swiper-container {
   align-items: center;
   background: transparent; // no white flash
 }
-
-
-

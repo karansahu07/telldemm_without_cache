@@ -4,8 +4,8 @@
       <ion-back-button defaultHref="/status-screen"></ion-back-button>
     </ion-buttons>
 
-    <!-- Channels → MegaTells -->
-    <ion-title>MegaTells</ion-title>
+    <!-- Channels → Channels -->
+    <ion-title>Channels</ion-title>
 
     <ion-buttons slot="end">
       <ion-button (click)="openRegionFilter()">
@@ -21,9 +21,9 @@
       <ion-icon name="close-circle" slot="end" (click)="clearRegionFilter()"></ion-icon>
     </ion-chip>
 
-    <!-- Channels → MegaTells -->
+    <!-- Channels → Channels -->
     <span style="margin-left:8px;color:var(--ion-color-medium);font-size:13px;">
-      Showing MegaTells for selected region
+      Showing Channels for selected region
     </span>
   </div>
 </ion-header>
@@ -140,14 +140,14 @@
     <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreCategoryChannels($event)"
       [disabled]="!hasMoreCategoryChannels">
       <ion-infinite-scroll-content loadingSpinner="bubbles"
-        loadingText="Loading more MegaTells..."></ion-infinite-scroll-content>
+        loadingText="Loading more Channels..."></ion-infinite-scroll-content>
     </ion-infinite-scroll>
   </ng-container>
 
   <!-- empty state -->
   <div *ngIf="!isLoading && !categoryFullViewActive && (!pagedGroupedCategories || pagedGroupedCategories.length === 0)"
     class="empty-state">
-    <p>No MegaTells found.</p>
+    <p>No Channels found.</p>
     <ion-button (click)="loadChannels()" fill="outline">Retry</ion-button>
   </div>
 </ion-content>

@@ -1,3 +1,4 @@
+<!-- HEADER -->
 <ion-header [translucent]="true">
   <ion-toolbar class="telldemm">
     <div class="main-header">
@@ -7,7 +8,6 @@
 
       <ion-buttons slot="end" class="header-icons">
         <ion-button (click)="presentPopover($event)">
-          <!-- <img src="assets/images/dots (1).svg" alt="" /> -->
           <i class="fa-solid fa-ellipsis-vertical homemainicons"></i>
         </ion-button>
       </ion-buttons>
@@ -15,104 +15,122 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content>
-  <div>
-    <div class="channels-main">
-      <p class="Status">Channels</p>
+<!-- CONTENT -->
+<ion-content [scrollY]="true">
 
-      <p class="Explore" (click)="goToChannels()">
-        Explore Channels
-        <ion-icon name="chevron-forward-outline" [class.rotate]="isRotated"></ion-icon>
-      </p>
-    </div>
+  <!-- CHANNEL HEADER -->
+  <div class="channels-main">
+    <p class="Status">Channels</p>
 
-    <!-- --- My Channels (from backend) --- -->
-    <!-- <ion-list *ngIf="!isLoadingChannels">
-       -->
-    <ion-list [class.hidden]="isLoadingChannels">
-
-      <ion-list-header>
-        <ion-label>My Channels</ion-label>
-      </ion-list-header>
-
-      <ion-item *ngFor="let ch of myChannels; trackBy: trackByChannelId" (click)="openChat(ch)">
-        <ion-avatar slot="start">
-          <img [src]="ch.channel_dp  || 'assets/images/user.jfif'" />
-        </ion-avatar>
-
-        <ion-label>
-          <p class="chat-message">{{ ch.channel_name }}</p>
-          <p class="followers">{{ (ch.followers_count ?? 0) + ' followers' }}</p>
-        </ion-label>
-
-        <div slot="end" class="chat-meta">
-          <!-- My Channels actions -->
-        </div>
-      </ion-item>
-
-      <ion-item *ngIf="myChannels.length === 0">
-        <ion-label>You are not following any channels yet</ion-label>
-      </ion-item>
-    </ion-list>
-
-    <!-- Loading -->
-    <!-- <ng-container *ngIf="isLoadingChannels">
-      <ion-item>
-        <ion-spinner name="crescent"></ion-spinner>
-        <ion-label>Loading channels...</ion-label>
-      </ion-item>
-    </ng-container> -->
-    <ion-spinner class="loading-overlay" [class.visible]="isLoadingChannels">
-    </ion-spinner>
-    
-
-
-    <!-- --- Public Channels --- -->
-    <div style="margin-top: 12px;">
-      <p class="channels">Discover Channels (Find channels to follow)</p>
-
-      <!-- <ion-list *ngIf="!isLoadingChannels">
-         -->
-      <ion-list [class.hidden]="isLoadingChannels">
-
-        <ion-item *ngFor="let ch of filteredChannels; trackBy: trackByChannelId" (click)="openChat(ch)">
-          <ion-avatar slot="start">
-            <img [src]="ch.channel_dp || 'assets/images/user.jfif'" />
-          </ion-avatar>
-
-          <ion-label>
-            <p class="chat-India">{{ ch.channel_name }}</p>
-            <p class="followers">{{ (ch.followers_count ?? 0) + ' followers' }}</p>
-          </ion-label>
-
-          <div slot="end" class="chat-meta">
-            <ion-button fill="clear" size="small" color="primary" (click)="onFollowClick($event, ch)"
-              [disabled]="loadingChannelId === ch.channel_id">
-
-              <span *ngIf="!isFollowing(ch)">Join Channel</span>
-
-              <span *ngIf="isFollowing(ch)" class="following-text">
-                <ion-icon name="checkmark-done-outline"></ion-icon>
-                Following Channel
-              </span>
-
-            </ion-button>
-          </div>
-        </ion-item>
-
-        <ion-item *ngIf="publicChannels.length === 0">
-          <ion-label>No Channels Found</ion-label>
-        </ion-item>
-      </ion-list>
-    </div>
+    <p class="Explore" (click)="goToChannels()">
+      Explore Channels
+      <ion-icon
+        name="chevron-forward-outline"
+        [class.rotate]="isRotated">
+      </ion-icon>
+    </p>
   </div>
 
-  <!-- Add Channel FAB -->
+  <!-- ========================= -->
+  <!-- MY CHANNELS -->
+  <!-- ========================= -->
+
+  <ion-list-header>
+    <ion-label>My Channels</ion-label>
+  </ion-list-header>
+
+  <!-- 🔥 Fixed: Removed cdk-virtual-scroll-viewport, use regular *ngFor -->
+  <div class="channels-list" *ngIf="myChannels.length > 0 && !isLoadingChannels">
+    <ion-item
+      *ngFor="let ch of myChannels; trackBy: trackByChannelId"
+      (click)="openChat(ch)"
+      button
+      lines="none">
+
+      <ion-avatar slot="start">
+        <img
+          [src]="ch.channel_dp || 'assets/images/user.jfif'"
+          [alt]="ch.channel_name" />
+      </ion-avatar>
+
+      <ion-label>
+        <h2 class="chat-message">{{ ch.channel_name }}</h2>
+        <p class="followers">{{ (ch.followers_count ?? 0) }} followers</p>
+      </ion-label>
+
+    </ion-item>
+  </div>
+
+  <!-- Empty state -->
+  <ion-item *ngIf="myChannels.length === 0 && !isLoadingChannels">
+    <ion-label>You are not following any channels yet</ion-label>
+  </ion-item>
+
+  <!-- ========================= -->
+  <!-- LOADING OVERLAY -->
+  <!-- ========================= -->
+  <ion-spinner
+    class="loading-overlay"
+    [class.visible]="isLoadingChannels">
+  </ion-spinner>
+
+  <!-- ========================= -->
+  <!-- DISCOVER CHANNELS -->
+  <!-- ========================= -->
+
+  <p class="channels">
+    Discover Channels (Find channels to follow)
+  </p>
+
+  <!-- 🔥 Fixed: Removed cdk-virtual-scroll-viewport, use regular *ngFor -->
+  <div class="channels-list" *ngIf="filteredChannels.length > 0 && !isLoadingChannels">
+    <ion-item
+      *ngFor="let ch of filteredChannels; trackBy: trackByChannelId"
+      (click)="openChat(ch)"
+      button
+      lines="none">
+
+      <ion-avatar slot="start">
+        <img
+          [src]="ch.channel_dp || 'assets/images/user.jfif'"
+          [alt]="ch.channel_name" />
+      </ion-avatar>
+
+      <ion-label>
+        <h2 class="chat-India">{{ ch.channel_name }}</h2>
+        <p class="followers">{{ (ch.followers_count ?? 0) }} followers</p>
+      </ion-label>
+
+      <ion-button
+        slot="end"
+        fill="clear"
+        size="small"
+        color="primary"
+        (click)="onFollowClick($event, ch)"
+        [disabled]="loadingChannelId === ch.channel_id">
+        Join
+      </ion-button>
+
+    </ion-item>
+  </div>
+
+  <!-- Empty state -->
+  <ion-item *ngIf="filteredChannels.length === 0 && !isLoadingChannels">
+    <ion-label>No Channels Found</ion-label>
+  </ion-item>
+
+  <!-- ========================= -->
+  <!-- ADD CHANNEL FAB -->
+  <!-- ========================= -->
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
     <ion-fab-button (click)="openAddChannelModal()">
       <ion-icon name="add"></ion-icon>
     </ion-fab-button>
   </ion-fab>
+
 </ion-content>
 
-<app-footer-tabs [totalUnreadUpdates]="totalUnreadUpdates"></app-footer-tabs>
+<!-- FOOTER -->
+<app-footer-tabs
+  [totalUnreadUpdates]="totalUnreadUpdates">
+</app-footer-tabs>

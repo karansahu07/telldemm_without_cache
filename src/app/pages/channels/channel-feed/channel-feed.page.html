@@ -30,7 +30,9 @@
       <ion-button (click)="toggleMute()">
         <ion-icon slot="icon-only" [name]="isMuted ? 'notifications-off-outline' : 'notifications-outline'"></ion-icon>
       </ion-button>
-
+      <ion-button expand="block" color="primary" (click)="dumpDbToConsole()">
+        Dump
+      </ion-button>
       <!-- <ion-button expand="block" color="primary" (click)="dumpDbToConsole()">
         Dump
       </ion-button>
@@ -124,11 +126,11 @@
   </div>
 
   <!-- Update the read-only banner to mention reactions are disabled -->
-<div *ngIf="!canCreatePost || !isOnline" class="read-only-banner">
-  <ion-icon [name]="!isOnline ? 'cloud-offline-outline' : 'eye-outline'"></ion-icon>
-  <span *ngIf="!isOnline">Offline - View only</span>
-  <span *ngIf="canCreatePost && isOnline">View only - You can react to posts</span>
-</div>
+  <div *ngIf="!canCreatePost || !isOnline" class="read-only-banner">
+    <ion-icon [name]="!isOnline ? 'cloud-offline-outline' : 'eye-outline'"></ion-icon>
+    <span *ngIf="!isOnline">Offline - View only</span>
+    <span *ngIf="canCreatePost && isOnline">View only - You can react to posts</span>
+  </div>
 </ion-content>
 
 <!-- INPUT BAR -->

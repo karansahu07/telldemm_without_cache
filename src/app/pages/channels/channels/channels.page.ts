@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { IonicModule, ModalController, ToastController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -6,10 +6,8 @@ import { Router } from '@angular/router';
 import { RegionFilterModalComponent } from '../modals/region-filter-modal/region-filter-modal.component';
 import { AddChannelModalComponent } from '../modals/add-channel-modal/add-channel-modal.component';
 import { ChannelService, Category, Region, Channel } from '../services/channel';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subscription, interval } from 'rxjs';
 import { AuthService } from 'src/app/auth/auth.service';
-// import { ChannelPouchDbService } from 'src/app/services/channel-pouch-db.service';
-import { ChannelFirebaseSyncService } from '../services/firebasesyncchannel';
 import { ChannelPouchDbService } from '../services/pouch-db';
 
 interface GroupedCategory {
@@ -36,7 +34,7 @@ interface UIChannel {
   standalone: true,
   imports: [IonicModule, CommonModule, FormsModule],
 })
-export class ChannelsPage implements OnInit {
+export class ChannelsPage implements OnInit, OnDestroy {
   isLoading = false;
 
   allChannels: UIChannel[] = [];
@@ -76,18 +74,20 @@ export class ChannelsPage implements OnInit {
   selectedCategoryName?: string | null = null;
   selectedRegionName?: string | null = null;
 
+  // Polling subscription
+  private pollSubscription?: Subscription;
+
   constructor(
     private modalCtrl: ModalController,
     private router: Router,
     private channelService: ChannelService,
     private toastCtrl: ToastController,
     private authService: AuthService,
-    private pouchDb: ChannelPouchDbService,
-    private channelFirebase: ChannelFirebaseSyncService
+    private pouchDb: ChannelPouchDbService
   ) { }
 
   /* =========================
-     LIFECYCLE - OFFLINE-FIRST
+     LIFECYCLE - SIMPLIFIED
      ========================= */
 
   async ngOnInit() {
@@ -97,16 +97,51 @@ export class ChannelsPage implements OnInit {
     // 🔹 STEP 2: Load metadata (categories/regions)
     await this.loadMetadata();
 
-    // 🔹 STEP 3: Setup Firebase listeners
-    this.setupFirebaseListeners();
-
-    // 🔹 STEP 4: Load from backend (background sync)
+    // 🔹 STEP 3: Load from backend (background sync)
     await this.loadChannels();
+
+    // 🔹 STEP 4: Start polling for updates
+    this.startPolling();
   }
 
   async ionViewWillEnter() {
     // Reload from cache when returning to page
     await this.loadFromCache();
+    
+    // Restart polling if stopped
+    if (!this.pollSubscription) {
+      this.startPolling();
+    }
+  }
+
+  ionViewWillLeave() {
+    // Stop polling when leaving page
+    this.stopPolling();
+  }
+
+  ngOnDestroy() {
+    this.stopPolling();
+  }
+
+  /* =========================
+     POLLING FOR UPDATES
+     ========================= */
+
+  private startPolling() {
+    // Poll every 30 seconds if online
+    this.pollSubscription = interval(30000).subscribe(() => {
+      if (navigator.onLine) {
+        console.log('🔄 Polling for channel updates...');
+        this.syncFromBackend();
+      }
+    });
+  }
+
+  private stopPolling() {
+    if (this.pollSubscription) {
+      this.pollSubscription.unsubscribe();
+      this.pollSubscription = undefined;
+    }
   }
 
   /* =========================
@@ -174,53 +209,6 @@ export class ChannelsPage implements OnInit {
       console.error('❌ Failed to load from cache:', error);
       this.isLoading = true;
     }
-  }
-
-  /**
-   * 🔥 Setup Firebase listeners for real-time updates
-   */
-  private setupFirebaseListeners() {
-    // Listen to my channels (for followed state)
-    this.channelFirebase.listenMyChannels(this.userId, channels => {
-      console.log('🔥 Firebase update: My Channels (followed state)');
-      this.followedChannelIds = new Set(
-        channels.map(c => `c${c.channel_id}`)
-      );
-      
-      // Update following state in all UI channels
-      this.updateFollowingStateInAllChannels();
-    });
-
-    // Listen to discover channels
-    this.channelFirebase.listenDiscoverChannels(this.userId, channels => {
-      console.log('🔥 Firebase update: Discover Channels');
-      
-      // Convert to UI format
-      const mapped: UIChannel[] = channels.map((c: any) => {
-        const rawFollowers = c.followers_count ?? c.follower_count ?? c.followers ?? 0;
-        const followersNum = Number(rawFollowers) || 0;
-        const channelId = `c${c.channel_id}`;
-
-        return {
-          id: channelId,
-          name: c.channel_name,
-          followers: followersNum,
-          followersFormatted: this.formatFollowers(followersNum),
-          avatar: c.channel_dp || null,
-          verified: !!c.is_verified,
-          following: this.followedChannelIds.has(channelId),
-          _meta: c
-        } as UIChannel;
-      });
-
-      // Only update if we have new data
-      if (mapped.length > 0) {
-        this.allChannels = mapped;
-        this.buildAllGroupedCategories(mapped);
-        this.resetPaging();
-        this.isLoading = false;
-      }
-    });
   }
 
   /**
@@ -309,13 +297,10 @@ export class ChannelsPage implements OnInit {
         return !isOwned && !isFollowed;
       });
 
-      // 🔥 Sync to Firebase (which auto-updates PouchDB)
-      await this.channelFirebase.syncDiscoverChannels(
-        this.userId,
-        filtered
-      );
+      // 💾 Save to PouchDB immediately
+      await this.pouchDb.saveDiscoverChannels(this.userId, filtered);
 
-      // Convert to UI format
+      // Convert to UI format and update display
       const mapped: UIChannel[] = filtered.map((c: any) => {
         const rawFollowers = c.followers_count ?? c.follower_count ?? c.followers ?? 0;
         const followersNum = Number(rawFollowers) || 0;
@@ -341,7 +326,6 @@ export class ChannelsPage implements OnInit {
       console.error('❌ Load channels error:', err);
       
       if (!event) {
-        // Only show toast if not a pull-to-refresh
         await this.presentToast('Could not load channels. Using cached data.');
       }
     } finally {
@@ -351,30 +335,110 @@ export class ChannelsPage implements OnInit {
   }
 
   /**
-   * Load followed channels in background
+   * Background sync without loading indicators
    */
-  private async loadMyFollowedChannels() {
+  private async syncFromBackend() {
     if (!navigator.onLine) {
-      console.log('📴 Offline: Skipping followed channels sync');
+      console.log('📴 Offline: Skipping backend sync');
       return;
     }
 
+    try {
+      // Sync discover channels
+      await this.syncDiscoverChannels();
+      
+      // Sync followed channels
+      await this.syncMyChannels();
+    } catch (err) {
+      console.warn('📴 Background sync failed:', err);
+    }
+  }
+
+  /**
+   * Sync discover channels in background
+   */
+  private async syncDiscoverChannels() {
+    try {
+      const params: any = { page: 1, limit: 50 };
+
+      if (this.selectedCategoryId !== 'all') {
+        const catObj = this.categories.find(c => c.id == this.selectedCategoryId);
+        if (catObj) params.category = catObj.category_name;
+      }
+
+      if (this.selectedRegionId !== 'all') {
+        const regionObj = this.regions.find(r => r.region_id == this.selectedRegionId);
+        if (regionObj) params.region = regionObj.region_name;
+      }
+
+      const res = await firstValueFrom(this.channelService.listChannels(params));
+      const backendChannels = Array.isArray(res.channels) ? res.channels : [];
+
+      const filtered = backendChannels.filter((c: any) => {
+        const channelId = `c${c.channel_id}`;
+        const isOwned = c.created_by === this.userId;
+        const isFollowed = this.followedChannelIds.has(channelId);
+        return !isOwned && !isFollowed;
+      });
+
+      console.log(`✅ Background sync: ${filtered.length} discover channels`);
+
+      // Update PouchDB
+      await this.pouchDb.saveDiscoverChannels(this.userId, filtered);
+
+      // Update UI if data changed
+      const mapped: UIChannel[] = filtered.map((c: any) => {
+        const rawFollowers = c.followers_count ?? c.follower_count ?? c.followers ?? 0;
+        const followersNum = Number(rawFollowers) || 0;
+        const channelId = `c${c.channel_id}`;
+
+        return {
+          id: channelId,
+          name: c.channel_name,
+          followers: followersNum,
+          followersFormatted: this.formatFollowers(followersNum),
+          avatar: c.channel_dp || null,
+          verified: !!c.is_verified,
+          following: this.followedChannelIds.has(channelId),
+          _meta: c
+        };
+      });
+
+      if (mapped.length > 0) {
+        this.allChannels = mapped;
+        this.buildAllGroupedCategories(mapped);
+        this.resetPaging();
+      }
+    } catch (err) {
+      console.warn('📴 Discover channels sync failed:', err);
+    }
+  }
+
+  /**
+   * Sync followed channels in background
+   */
+  private async syncMyChannels() {
     try {
       const res = await firstValueFrom(
         this.channelService.getUserChannels(this.userId, { role: 'all' })
       );
       
       if (res?.status && Array.isArray(res.channels)) {
-        console.log(`✅ Backend sync: ${res.channels.length} followed channels`);
+        console.log(`✅ Background sync: ${res.channels.length} followed channels`);
         
-        // Update Firebase (which updates PouchDB)
-        await this.channelFirebase.syncMyChannels(
-          this.userId,
-          res.channels
+        // Update PouchDB
+        await this.pouchDb.saveMyChannels(this.userId, res.channels);
+        
+        // Update followed IDs
+        this.followedChannelIds = new Set(
+          res.channels.map((c: any) => `c${c.channel_id}`)
         );
+        
+        // Update following state in UI
+        this.updateFollowingStateInAllChannels();
       }
     } catch (err) {
-      console.warn('📴 Could not sync followed channels:', err);
+      console.warn('📴 Followed channels sync failed:', err);
     }
   }
 
@@ -413,20 +477,62 @@ export class ChannelsPage implements OnInit {
       Haptics.impact({ style: ImpactStyle.Light });
     } catch (e) { /* web = no haptics */ }
 
-    // 2️⃣ Update Firebase + PouchDB (with offline queue)
-    if (wasFollowing) {
-      await this.channelFirebase.unfollowChannel(
-        this.userId,
-        channelId
-      );
-    } else {
-      await this.channelFirebase.followChannel(
-        this.userId,
-        channel._meta
-      );
+    // 2️⃣ Update PouchDB immediately
+    try {
+      if (wasFollowing) {
+        // Remove from my channels
+        const myChannels = await this.pouchDb.getMyChannels(this.userId);
+        const updated = myChannels.filter(c => c.channel_id !== channelId);
+        await this.pouchDb.saveMyChannels(this.userId, updated);
+        
+        // Add to discover if not there
+        const discoverChannels = await this.pouchDb.getDiscoverChannels(this.userId);
+        if (!discoverChannels.find(c => c.channel_id === channelId)) {
+          discoverChannels.push(channel._meta);
+          await this.pouchDb.saveDiscoverChannels(this.userId, discoverChannels);
+        }
+      } else {
+        // Add to my channels
+        const myChannels = await this.pouchDb.getMyChannels(this.userId);
+        myChannels.push(channel._meta);
+        await this.pouchDb.saveMyChannels(this.userId, myChannels);
+        
+        // Remove from discover
+        const discoverChannels = await this.pouchDb.getDiscoverChannels(this.userId);
+        const updated = discoverChannels.filter(c => c.channel_id !== channelId);
+        await this.pouchDb.saveDiscoverChannels(this.userId, updated);
+      }
+    } catch (err) {
+      console.error('❌ Failed to update PouchDB:', err);
     }
 
-    // 3️⃣ Backend confirmation
+    // 3️⃣ Queue action if offline
+    if (!navigator.onLine) {
+      await this.pouchDb.enqueueAction({
+        type: wasFollowing ? 'channel_unfollow' : 'channel_follow',
+        channelId: String(channelId),
+        data: { 
+          userId: this.userId, 
+          channel: wasFollowing ? undefined : channel._meta,
+          channelId: wasFollowing ? channelId : undefined
+        },
+        timestamp: Date.now()
+      });
+      
+      this.presentToast(
+        `${!wasFollowing ? 'Following' : 'Unfollowed'} (will sync when online)`,
+        800
+      );
+      
+      if (!wasFollowing) {
+        this.removeChannelFromExploreViews(channel.id);
+      }
+      
+      this.loadingChannelId = null;
+      return;
+    }
+
+    // 4️⃣ Backend confirmation
     try {
       await firstValueFrom(
         this.channelService.setFollow(channelId, !wasFollowing, this.userId)
@@ -446,7 +552,7 @@ export class ChannelsPage implements OnInit {
     } catch (err) {
       console.error('❌ Backend operation failed:', err);
 
-      // 4️⃣ Revert optimistic update
+      // 5️⃣ Revert optimistic update
       channel.following = wasFollowing;
       channel.followers += wasFollowing ? 1 : -1;
       channel.followersFormatted = this.formatFollowers(channel.followers);
@@ -463,17 +569,45 @@ export class ChannelsPage implements OnInit {
         followersFormatted: channel.followersFormatted
       });
 
-      // 5️⃣ Revert Firebase
-      if (wasFollowing) {
-        await this.channelFirebase.followChannel(this.userId, channel._meta);
-      } else {
-        await this.channelFirebase.unfollowChannel(this.userId, channelId);
+      // 6️⃣ Revert PouchDB
+      try {
+        if (wasFollowing) {
+          const myChannels = await this.pouchDb.getMyChannels(this.userId);
+          myChannels.push(channel._meta);
+          await this.pouchDb.saveMyChannels(this.userId, myChannels);
+          
+          const discoverChannels = await this.pouchDb.getDiscoverChannels(this.userId);
+          const updated = discoverChannels.filter(c => c.channel_id !== channelId);
+          await this.pouchDb.saveDiscoverChannels(this.userId, updated);
+        } else {
+          const myChannels = await this.pouchDb.getMyChannels(this.userId);
+          const updated = myChannels.filter(c => c.channel_id !== channelId);
+          await this.pouchDb.saveMyChannels(this.userId, updated);
+          
+          const discoverChannels = await this.pouchDb.getDiscoverChannels(this.userId);
+          if (!discoverChannels.find(c => c.channel_id === channelId)) {
+            discoverChannels.push(channel._meta);
+            await this.pouchDb.saveDiscoverChannels(this.userId, discoverChannels);
+          }
+        }
+      } catch (pouchErr) {
+        console.error('❌ Failed to revert PouchDB:', pouchErr);
       }
 
+      // Queue for retry
+      await this.pouchDb.enqueueAction({
+        type: wasFollowing ? 'channel_unfollow' : 'channel_follow',
+        channelId: String(channelId),
+        data: { 
+          userId: this.userId, 
+          channel: wasFollowing ? undefined : channel._meta,
+          channelId: wasFollowing ? channelId : undefined
+        },
+        timestamp: Date.now()
+      });
+
       this.presentToast(
-        `Failed to ${wasFollowing ? 'unfollow' : 'follow'}. ${
-          navigator.onLine ? 'Try again.' : 'Will retry when online.'
-        }`
+        `Failed to ${wasFollowing ? 'unfollow' : 'follow'}. Will retry.`
       );
     } finally {
       this.loadingChannelId = null;

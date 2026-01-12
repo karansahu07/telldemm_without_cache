@@ -52,7 +52,14 @@ export class ChannelPouchDbService {
      CHANNELS - MY CHANNELS
      ========================= */
 
-  async saveMyChannels(userId: string, channels: Channel[]): Promise<void> {
+
+// Replace BOTH saveMyChannels AND saveDiscoverChannels methods in pouch-db.ts:
+
+async saveMyChannels(userId: string, channels: Channel[]): Promise<void> {
+  let retries = 0;
+  const maxRetries = 3;
+  
+  while (retries < maxRetries) {
     try {
       const docId = `my_channels_${userId}`;
       
@@ -65,6 +72,7 @@ export class ChannelPouchDbService {
           userId,
           timestamp: Date.now()
         });
+        return; // Success!
       } catch (err: any) {
         if (err.status === 404) {
           await this.db.put({
@@ -73,15 +81,25 @@ export class ChannelPouchDbService {
             userId,
             timestamp: Date.now()
           });
-        } else {
-          throw err;
+          return; // Success!
+        } else if (err.status === 409) {
+          // Conflict - retry with exponential backoff
+          retries++;
+          if (retries < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 50 * retries));
+            continue; // Retry the loop
+          }
         }
+        throw err;
       }
     } catch (error) {
-      console.error('❌ Failed to save my channels:', error);
+      if (retries >= maxRetries) {
+        console.error('❌ Failed to save my channels after retries:', error);
+        return;
+      }
     }
   }
-
+}
   async getMyChannels(userId: string): Promise<Channel[]> {
     try {
       const docId = `my_channels_${userId}`;
@@ -100,7 +118,11 @@ export class ChannelPouchDbService {
      CHANNELS - DISCOVER
      ========================= */
 
-  async saveDiscoverChannels(userId: string, channels: Channel[]): Promise<void> {
+async saveDiscoverChannels(userId: string, channels: Channel[]): Promise<void> {
+  let retries = 0;
+  const maxRetries = 3;
+  
+  while (retries < maxRetries) {
     try {
       const docId = `discover_channels_${userId}`;
       
@@ -113,6 +135,7 @@ export class ChannelPouchDbService {
           userId,
           timestamp: Date.now()
         });
+        return; // Success!
       } catch (err: any) {
         if (err.status === 404) {
           await this.db.put({
@@ -121,15 +144,25 @@ export class ChannelPouchDbService {
             userId,
             timestamp: Date.now()
           });
-        } else {
-          throw err;
+          return; // Success!
+        } else if (err.status === 409) {
+          // Conflict - retry with exponential backoff
+          retries++;
+          if (retries < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 50 * retries));
+            continue; // Retry the loop
+          }
         }
+        throw err;
       }
     } catch (error) {
-      console.error('❌ Failed to save discover channels:', error);
+      if (retries >= maxRetries) {
+        console.error('❌ Failed to save discover channels after retries:', error);
+        return;
+      }
     }
   }
-
+}
   async getDiscoverChannels(userId: string): Promise<Channel[]> {
     try {
       const docId = `discover_channels_${userId}`;
@@ -230,36 +263,6 @@ async saveChannel(channel: Channel, immediate: boolean = false): Promise<void> {
      POSTS - CHANNEL POSTS
      ========================= */
 
-  // async savePosts(channelId: string, posts: CachedPost[]): Promise<void> {
-  //   try {
-  //     const docId = `posts_${channelId}`;
-      
-  //     try {
-  //       const existing = await this.db.get(docId);
-  //       await this.db.put({
-  //         _id: docId,
-  //         _rev: existing._rev,
-  //         posts,
-  //         channelId,
-  //         timestamp: Date.now()
-  //       });
-  //     } catch (err: any) {
-  //       if (err.status === 404) {
-  //         await this.db.put({
-  //           _id: docId,
-  //           posts,
-  //           channelId,
-  //           timestamp: Date.now()
-  //         });
-  //       } else {
-  //         throw err;
-  //       }
-  //     }
-  //     console.log(`✅ Saved ${posts.length} posts for channel ${channelId}`);
-  //   } catch (error) {
-  //     console.error('❌ Failed to save posts:', error);
-  //   }
-  // }
 
  private saveTimers: Map<string, any> = new Map(); // Debounce timers
   /* =========================
@@ -405,76 +408,182 @@ async saveChannel(channel: Channel, immediate: boolean = false): Promise<void> {
      UNIFIED WRITE QUEUE
      ========================= */
 
-  async enqueueAction(action: PendingAction): Promise<void> {
-    try {
-      const queueDoc = await this.getOrCreateQueue();
-      queueDoc.actions.push(action);
-      
-      await this.db.put({
-        _id: 'unified_write_queue',
-        _rev: queueDoc._rev,
-        actions: queueDoc.actions
-      });
 
-      console.log('📝 Queued action:', action.type);
-    } catch (error) {
-      console.error('❌ Failed to enqueue action:', error);
-    }
-  }
 
-  async getQueue(): Promise<PendingAction[]> {
-    try {
-      const doc: any = await this.db.get('unified_write_queue');
-      return doc.actions || [];
-    } catch (err: any) {
-      if (err.status === 404) {
-        return [];
+// Add these properties to the ChannelPouchDbService class:
+
+private queueLock: Promise<void> | null = null;
+private pendingQueueOperations: Array<() => Promise<void>> = [];
+private queueProcessing = false;
+  
+async enqueueAction(action: PendingAction): Promise<void> {
+  return this.executeQueueOperation(async () => {
+    let retries = 0;
+    const maxRetries = 5;
+    
+    while (retries < maxRetries) {
+      try {
+        const queueDoc = await this.getOrCreateQueue();
+        queueDoc.actions.push(action);
+        
+        await this.db.put({
+          _id: 'unified_write_queue',
+          _rev: queueDoc._rev,
+          actions: queueDoc.actions
+        });
+
+        console.log('📝 Queued action:', action.type);
+        return;
+      } catch (error: any) {
+        if (error.status === 409) {
+          retries++;
+          if (retries < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 30 * retries));
+            continue;
+          }
+        }
+        throw error;
       }
-      console.error('❌ Failed to get queue:', err);
+    }
+    
+    console.error('❌ Failed to enqueue action after retries');
+  });
+}
+
+async getQueue(): Promise<PendingAction[]> {
+  try {
+    const doc: any = await this.db.get('unified_write_queue');
+    return doc.actions || [];
+  } catch (err: any) {
+    if (err.status === 404) {
       return [];
     }
+    console.error('❌ Failed to get queue:', err);
+    return [];
   }
+}
 
-  async removeFromQueue(actionIndex: number): Promise<void> {
-    try {
-      const doc: any = await this.db.get('unified_write_queue');
-      doc.actions.splice(actionIndex, 1);
-      await this.db.put(doc);
-    } catch (error) {
-      console.error('❌ Failed to remove from queue:', error);
-    }
-  }
-
-  async clearQueue(): Promise<void> {
-    try {
-      const doc: any = await this.db.get('unified_write_queue');
-      await this.db.put({
-        _id: 'unified_write_queue',
-        _rev: doc._rev,
-        actions: []
-      });
-    } catch (err: any) {
-      if (err.status !== 404) {
-        console.error('❌ Failed to clear queue:', err);
+async removeFromQueue(actionIndex: number): Promise<void> {
+  return this.executeQueueOperation(async () => {
+    let retries = 0;
+    const maxRetries = 5;
+    
+    while (retries < maxRetries) {
+      try {
+        const doc: any = await this.db.get('unified_write_queue');
+        doc.actions.splice(actionIndex, 1);
+        await this.db.put(doc);
+        return;
+      } catch (error: any) {
+        if (error.status === 409) {
+          retries++;
+          if (retries < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 30 * retries));
+            continue;
+          }
+        }
+        throw error;
       }
     }
-  }
+    
+    console.error('❌ Failed to remove from queue after retries');
+  });
+}
 
-  private async getOrCreateQueue(): Promise<any> {
-    try {
-      return await this.db.get('unified_write_queue');
-    } catch (err: any) {
-      if (err.status === 404) {
-        const newQueue = {
+async clearQueue(): Promise<void> {
+  return this.executeQueueOperation(async () => {
+    let retries = 0;
+    const maxRetries = 5;
+    
+    while (retries < maxRetries) {
+      try {
+        const doc: any = await this.db.get('unified_write_queue');
+        await this.db.put({
           _id: 'unified_write_queue',
+          _rev: doc._rev,
           actions: []
-        };
-        await this.db.put(newQueue);
-        return { ...newQueue, _rev: undefined };
+        });
+        return;
+      } catch (err: any) {
+        if (err.status === 404) {
+          return; // Already cleared
+        }
+        if (err.status === 409) {
+          retries++;
+          if (retries < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 30 * retries));
+            continue;
+          }
+        }
+        throw err;
       }
-      throw err;
+    }
+    
+    console.error('❌ Failed to clear queue after retries');
+  });
+}
+
+private async getOrCreateQueue(): Promise<any> {
+  try {
+    return await this.db.get('unified_write_queue');
+  } catch (err: any) {
+    if (err.status === 404) {
+      const newQueue = {
+        _id: 'unified_write_queue',
+        actions: []
+      };
+      await this.db.put(newQueue);
+      // Fetch it back to get the _rev
+      return await this.db.get('unified_write_queue');
+    }
+    throw err;
+  }
+}
+
+/**
+ * Execute queue operations serially with a lock
+ * This prevents concurrent modifications to the queue document
+ */
+private async executeQueueOperation<T>(operation: () => Promise<T>): Promise<T> {
+  // Add to pending operations queue
+  return new Promise<T>((resolve, reject) => {
+    this.pendingQueueOperations.push(async () => {
+      try {
+        const result = await operation();
+        resolve(result);
+      } catch (error) {
+        reject(error);
+      }
+    });
+    
+    // Start processing if not already running
+    if (!this.queueProcessing) {
+      this.processQueueOperations();
+    }
+  });
+}
+
+/**
+ * Process pending queue operations one at a time
+ */
+private async processQueueOperations(): Promise<void> {
+  if (this.queueProcessing) return;
+  
+  this.queueProcessing = true;
+  
+  while (this.pendingQueueOperations.length > 0) {
+    const operation = this.pendingQueueOperations.shift();
+    if (operation) {
+      try {
+        await operation();
+      } catch (error) {
+        console.error('❌ Queue operation failed:', error);
+      }
     }
   }
+  
+  this.queueProcessing = false;
+}
 
   /* =========================
      UTILITY & MAINTENANCE
@@ -612,4 +721,21 @@ async saveChannel(channel: Channel, immediate: boolean = false): Promise<void> {
       console.error('❌ Debug dump failed:', error);
     }
   }
+
+//   async removeFromQueueById(docId: string): Promise<void> {
+//   try {
+//     const queueDoc: any = await this.db.get('unified_write_queue');
+//     queueDoc.actions = queueDoc.actions.filter(a => a._id !== docId);
+
+//     await this.db.put({
+//       _id: 'unified_write_queue',
+//       _rev: queueDoc._rev,
+//       actions: queueDoc.actions
+//     });
+
+//   } catch (err) {
+//     console.error('❌ Failed to remove queue action by id:', err);
+//   }
+// }
+
 }
