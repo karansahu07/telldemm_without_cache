@@ -5,6 +5,12 @@
     </ion-title>
 
     <ion-buttons slot="end">
+      <!-- Syncing indicator -->
+      <!-- <ion-chip *ngIf="isSyncing" color="primary" size="small" style="margin-right: 8px;">
+        <ion-icon name="sync-outline"></ion-icon>
+        <ion-label>{{ 'community.syncing' | translate }}</ion-label>
+      </ion-chip> -->
+
       <ion-button
         fill="clear"
         (click)="presentPopover($event)"
@@ -17,6 +23,16 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
+  <!-- Pull to refresh -->
+  <ion-refresher slot="fixed" (ionRefresh)="refreshCommunities($event)">
+    <ion-refresher-content
+      pullingIcon="chevron-down-circle-outline"
+      [pullingText]="'community.pullToRefresh' | translate"
+      refreshingSpinner="circles"
+      [refreshingText]="'community.refreshing' | translate">
+    </ion-refresher-content>
+  </ion-refresher>
+
   <!-- New Community button -->
   <ion-item
     lines="none"
@@ -34,8 +50,8 @@
     </ion-label>
   </ion-item>
 
-  <!-- 🔹 Skeleton while loading -->
-  <ng-container *ngIf="loading; else communitiesContent">
+  <!-- 🔥 Skeleton while loading (first time only) -->
+  <ng-container *ngIf="loading; else contentOrEmpty">
     <ion-list>
       <ng-container *ngFor="let _ of skeletonCommunities">
         <!-- community row skeleton -->
@@ -85,53 +101,95 @@
     </ion-list>
   </ng-container>
 
-  <!-- 🔹 Actual content -->
-  <ng-template #communitiesContent>
-    <ng-container *ngFor="let community of joinedCommunities">
-      <!-- community header row -->
-      <ion-item class="community-item">
-        <ion-avatar slot="start" class="community-avatar">
-          <img [src]="community.icon" />
-        </ion-avatar>
-        <ion-label>
-          <h2 class="community-name">{{ community.name }}</h2>
-        </ion-label>
-      </ion-item>
+  <!-- 🔥 Content or Empty State -->
+  <ng-template #contentOrEmpty>
+    <!-- 🔥 EMPTY STATE: No communities yet -->
+    <ng-container *ngIf="joinedCommunities.length === 0; else communitiesContent">
+      <div class="empty-state">
+        <div class="empty-state-content">
+          <!-- Icon -->
+          <ion-icon name="people-outline" class="empty-icon"></ion-icon>
+          
+          <!-- Title -->
+          <h2 class="empty-title">
+            No Communities Yet
+          </h2>
+          
+          <!-- Description -->
+          <p class="empty-description">
+            Create or join a community to start connecting with others.
+          </p>
+          
+          <!-- Action Button -->
+          <ion-button
+            expand="block"
+            (click)="createCommunityPrompt()"
+            class="empty-action-btn"
+            [disabled]="isOffline"
+          >
+            <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+            Create Community
+          </ion-button>
 
-      <!-- groups list (max 3 – displayGroups) -->
-      <ion-list lines="none" class="group-list">
-        <ion-item
-          *ngFor="let group of community.displayGroups"
-          button
-          class="group-item"
-          (click)="goToGroupChat(group.id)"
-        >
-          <div slot="start" class="group-icon-wrapper">
-            <ion-icon
-              [name]="getGroupIcon(group)"
-              class="group-icon"
-            ></ion-icon>
-          </div>
-          <ion-label>
-            <h3 class="group-name">{{ group.name }}</h3>
-          </ion-label>
-        </ion-item>
-      </ion-list>
-
-      <!-- View all for this community -->
-      <ion-item
-        lines="none"
-        button
-        detail="false"
-        (click)="goToAddGroupCommunity(community)"
-        class="view-all-item"
-        [attr.aria-label]="'community.viewAll' | translate"
-      >
-        <ion-label color="primary" class="view-all-label">
-          {{ 'community.viewAll' | translate }}
-        </ion-label>
-      </ion-item>
+          <!-- Offline message -->
+          <p *ngIf="isOffline" class="offline-message">
+            <ion-icon name="cloud-offline-outline"></ion-icon>
+            {{ 'community.emptyState.offlineMessage' | translate }}
+          </p>
+        </div>
+      </div>
     </ng-container>
+
+    <!-- 🔥 Communities List -->
+    <ng-template #communitiesContent>
+      <ion-list>
+        <ng-container *ngFor="let community of joinedCommunities">
+          <!-- community header row -->
+          <ion-item class="community-item">
+            <ion-avatar slot="start" class="community-avatar">
+              <img [src]="community.icon" [alt]="community.name" />
+            </ion-avatar>
+            <ion-label>
+              <h2 class="community-name">{{ community.name }}</h2>
+            </ion-label>
+          </ion-item>
+
+          <!-- groups list (max 3 – displayGroups) -->
+          <ion-list lines="none" class="group-list">
+            <ion-item
+              *ngFor="let group of community.displayGroups"
+              button
+              class="group-item"
+              (click)="goToGroupChat(group.id)"
+            >
+              <div slot="start" class="group-icon-wrapper">
+                <ion-icon
+                  [name]="getGroupIcon(group)"
+                  class="group-icon"
+                ></ion-icon>
+              </div>
+              <ion-label>
+                <h3 class="group-name">{{ group.name }}</h3>
+              </ion-label>
+            </ion-item>
+          </ion-list>
+
+          <!-- View all for this community -->
+          <ion-item
+            lines="none"
+            button
+            detail="false"
+            (click)="goToAddGroupCommunity(community)"
+            class="view-all-item"
+            [attr.aria-label]="'community.viewAll' | translate"
+          >
+            <ion-label color="primary" class="view-all-label">
+              {{ 'community.viewAll' | translate }}
+            </ion-label>
+          </ion-item>
+        </ng-container>
+      </ion-list>
+    </ng-template>
   </ng-template>
 </ion-content>
 

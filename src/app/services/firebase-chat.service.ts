@@ -988,52 +988,58 @@ export class FirebaseChatService {
   // }
 
   async openChat(chat: any, isNew: boolean = false) {
-    try {
-      console.log('📂 Opening chat:', chat.roomId);
+  try {
+    console.log('📂 Opening chat:', chat.roomId);
 
-      let conv: any = null;
+    let conv: any = null;
 
-      // 🔥 OPTIMIZATION 1: Use in-memory cache first
-      if (!isNew) {
-        conv = this.currentConversations.find((c) => c.roomId === chat.roomId);
+    // ✅ OPTIMIZATION 1: Use in-memory cache first
+    if (!isNew) {
+      conv = this.currentConversations.find((c) => c.roomId === chat.roomId);
 
-        if (conv) {
-          console.log('✅ Using cached conversation');
-          this.currentChat = { ...conv };
+      if (conv) {
+        console.log('✅ Using cached conversation');
+        this.currentChat = { ...conv };
 
-          // Start listeners immediately (non-blocking)
-          this.setupChatListeners(conv);
+        // ✅ Start listeners immediately (non-blocking)
+        this.setupChatListeners(conv);
 
-          // Load messages from cache (fast)
-          await this.loadMessagesFromCache(conv.roomId);
+        // ✅ Load messages from cache (fast)
+        await this.loadMessagesFromCache(conv.roomId);
 
-          // Sync with server in background (non-blocking)
-          this.syncChatInBackground(conv);
-
-          return;
+        // ✅ Sync with server in background (non-blocking)
+        if (this.networkService.isOnline.value) {
+          this.syncChatInBackground(conv).catch(err => 
+            console.warn('Background sync failed:', err)
+          );
         }
+
+        return;
       }
-
-      // 🔥 OPTIMIZATION 2: Build minimal conversation object
-      conv = this.buildMinimalConversation(chat, isNew);
-      this.currentChat = { ...conv };
-
-      // 🔥 OPTIMIZATION 3: Load cached messages immediately
-      await this.loadMessagesFromCache(conv.roomId);
-
-      // 🔥 OPTIMIZATION 4: Setup listeners (parallel)
-      this.setupChatListeners(conv);
-
-      // 🔥 OPTIMIZATION 5: Sync with server in background
-      if (this.networkService.isOnline.value) {
-        this.syncChatInBackground(conv);
-      }
-
-      console.log('✅ Chat opened instantly');
-    } catch (error) {
-      console.error('❌ Error in openChat:', error);
     }
+
+    // ✅ OPTIMIZATION 2: Build minimal conversation object
+    conv = this.buildMinimalConversation(chat, isNew);
+    this.currentChat = { ...conv };
+
+    // ✅ OPTIMIZATION 3: Load cached messages immediately
+    await this.loadMessagesFromCache(conv.roomId);
+
+    // ✅ OPTIMIZATION 4: Setup listeners (parallel)
+    this.setupChatListeners(conv);
+
+    // ✅ OPTIMIZATION 5: Sync with server in background
+    if (this.networkService.isOnline.value) {
+      this.syncChatInBackground(conv).catch(err => 
+        console.warn('Background sync failed:', err)
+      );
+    }
+
+    console.log('✅ Chat opened instantly');
+  } catch (error) {
+    console.error('❌ Error in openChat:', error);
   }
+}
 
   /**
    * 🔥 Build minimal conversation object (no API calls)
@@ -2220,7 +2226,7 @@ export class FirebaseChatService {
 
       if (cached.length > 0) {
         this._conversations$.next(cached);
-        console.log('✅ Loaded from cache:', cached.length);
+        console.log('✅ Loaded from cache:', cached);
       } else {
         console.log('📭 No cached conversations found');
       } 
@@ -3129,213 +3135,280 @@ export class FirebaseChatService {
   // }
 
   async syncConversationWithServer(): Promise<void> {
-    try {
-      if (!this.senderId) {
-        console.warn('syncConversationWithServer: senderId is not set');
-        return;
-      }
+  try {
+    if (!this.senderId) {
+      console.warn('syncConversationWithServer: senderId is not set');
+      return;
+    }
 
-      if (!this.networkService.isOnline.value) {
-        console.log('📴 Skipping sync - offline');
-        return;
-      }
+    if (!this.networkService.isOnline.value) {
+      console.log('📴 Skipping sync - offline');
+      return;
+    }
 
-      if (this._isSyncing$.value) {
-        console.log('⏳ Sync already in progress, skipping...');
-        return;
-      }
+    if (this._isSyncing$.value) {
+      console.log('⏳ Sync already in progress, skipping...');
+      return;
+    }
 
-      this._isSyncing$.next(true);
+    this._isSyncing$.next(true);
 
-      const userChatsPath = `userchats/${this.senderId}`;
-      const userChatsRef = rtdbRef(this.db, userChatsPath);
-      const snapshot: DataSnapshot = await rtdbGet(userChatsRef);
-      const userChats = snapshot.val() || {};
-      const roomIds = Object.keys(userChats);
+    const userChatsPath = `userchats/${this.senderId}`;
+    const userChatsRef = rtdbRef(this.db, userChatsPath);
+    const snapshot: DataSnapshot = await rtdbGet(userChatsRef);
+    const userChats = snapshot.val() || {};
+    const roomIds = Object.keys(userChats);
 
-      const BATCH_SIZE = 10;
-      const conversations: IConversation[] = [];
+    const BATCH_SIZE = 10;
+    const conversations: IConversation[] = [];
 
-      // Process in batches for better performance
-      for (let i = 0; i < roomIds.length; i += BATCH_SIZE) {
-        const batch = roomIds.slice(i, i + BATCH_SIZE);
+    // ✅ Process in batches with progressive UI updates
+    for (let i = 0; i < roomIds.length; i += BATCH_SIZE) {
+      const batch = roomIds.slice(i, i + BATCH_SIZE);
+      const batchStartTime = performance.now();
 
-        const batchResults = await Promise.allSettled(
-          batch.map(async (roomId) => {
-            const meta: IChatMeta = userChats[roomId] || {};
-            try {
-              const type: IConversation['type'] = meta.type;
+      const batchResults = await Promise.allSettled(
+        batch.map(async (roomId) => {
+          const meta: IChatMeta = userChats[roomId] || {};
+          try {
+            const type: IConversation['type'] = meta.type;
 
-              if (type === 'private') {
-                return await this.fetchPrivateConvDetails(roomId, meta);
-              } else if (type === 'group') {
-                const isSystemGroup = await this.isSystemGroupInCommunity(
-                  roomId
-                );
-                if (isSystemGroup) {
-                  console.log(`⏭️ Skipping system group: ${roomId}`);
-                  return null;
-                }
-                return await this.fetchGroupConDetails(roomId, meta);
-              } else if (type === 'community') {
-                return await this.fetchCommunityConvDetails(roomId, meta);
-              } else {
-                return {
-                  roomId,
-                  type: 'private',
-                  title: roomId,
-                  lastMessage: meta?.lastmessage,
-                  lastMessageAt: meta?.lastmessageAt
-                    ? new Date(Number(meta.lastmessageAt))
-                    : undefined,
-                  unreadCount: Number(meta?.unreadCount) || 0,
-                } as IConversation;
-              }
-            } catch (innerErr) {
-              console.error(
-                'Error building conversation for',
-                roomId,
-                innerErr
+            if (type === 'private') {
+              return await this.fetchPrivateConvDetails(roomId, meta);
+            } else if (type === 'group') {
+              const isSystemGroup = await this.isSystemGroupInCommunity(
+                roomId
               );
-              return null;
+              if (isSystemGroup) {
+                console.log(`⏭️ Skipping system group: ${roomId}`);
+                return null;
+              }
+              return await this.fetchGroupConDetails(roomId, meta);
+            } else if (type === 'community') {
+              return await this.fetchCommunityConvDetails(roomId, meta);
+            } else {
+              return {
+                roomId,
+                type: 'private',
+                title: roomId,
+                lastMessage: meta?.lastmessage,
+                lastMessageAt: meta?.lastmessageAt
+                  ? new Date(Number(meta.lastmessageAt))
+                  : undefined,
+                unreadCount: Number(meta?.unreadCount) || 0,
+              } as IConversation;
             }
-          })
-        );
-
-        batchResults.forEach((result) => {
-          if (result.status === 'fulfilled' && result.value) {
-            conversations.push(result.value);
+          } catch (innerErr) {
+            console.error(
+              'Error building conversation for',
+              roomId,
+              innerErr
+            );
+            return null;
           }
-        });
-      }
+        })
+      );
 
-      // 🔥 NEW: Save ALL conversations to PouchDB (immediate save)
-      try {
-        await this.chatPouchDb.saveConversations(
-          this.senderId as string,
-          conversations.map((c) => ({
-            ...c,
-            syncStatus: 'synced',
-            lastSyncedAt: Date.now(),
-          })),
-          true // immediate save
-        );
-        console.log(
-          `✅ Saved ${conversations.length} conversations to PouchDB`
-        );
-      } catch (cacheErr) {
-        console.warn('⚠️ PouchDB save failed:', cacheErr);
-      }
+      // ✅ Add valid results to conversations
+      batchResults.forEach((result) => {
+        if (result.status === 'fulfilled' && result.value) {
+          conversations.push(result.value);
+        }
+      });
 
-      // Update local state
+      // ✅ PROGRESSIVE UPDATE: Emit partial results after each batch
       const existing = this._conversations$.value;
       const newConversations = conversations.filter(
         ({ roomId }) => !existing.some((c) => c.roomId === roomId)
       );
 
-      if (newConversations.length) {
-        await Promise.allSettled(
-          newConversations.map((conv) =>
-            this.sqliteService.createConversation({
-              ...conv,
-              ownerId: this.senderId || '',
-            })
-          )
-        );
+      if (newConversations.length > 0) {
+        // ✅ Update UI with new batch
         this._conversations$.next([...existing, ...newConversations]);
+        console.log(
+          `📊 Batch ${Math.floor(i / BATCH_SIZE) + 1}: Added ${newConversations.length} conversations`
+        );
+
+        // ✅ Save to PouchDB incrementally
+        try {
+          await this.chatPouchDb.saveConversations(
+            this.senderId as string,
+            conversations.map((c) => ({
+              ...c,
+              syncStatus: 'synced',
+              lastSyncedAt: Date.now(),
+            })),
+            false // Don't wait for save
+          );
+        } catch (cacheErr) {
+          console.warn('⚠️ PouchDB batch save failed:', cacheErr);
+        }
       }
 
-      // 🔥 UPDATED: Real-time listener with instant updates
-      const onUserChatsChange = async (snap: DataSnapshot) => {
-        const updatedData: IChatMeta = snap.val() || {};
-        const current = [...this._conversations$.value];
+      const batchTime = performance.now() - batchStartTime;
+      console.log(
+        `⏱️ Batch ${Math.floor(i / BATCH_SIZE) + 1} completed in ${batchTime.toFixed(2)}ms`
+      );
+    }
 
-        for (const [roomId, meta] of Object.entries(updatedData)) {
-          const idx = current.findIndex((c) => c.roomId === roomId);
-          const chatMeta: IChatMeta = { ...meta, roomId };
+    // ✅ Save all conversations to SQLite
+    const existing = this._conversations$.value;
+    if (existing.length > 0) {
+      await Promise.allSettled(
+        existing.map((conv) =>
+          this.sqliteService.createConversation({
+            ...conv,
+            ownerId: this.senderId || '',
+          })
+        )
+      );
+    }
 
+    // ✅ Setup real-time listener for updates
+    this.setupConversationListener();
+
+  } catch (error) {
+    console.error('syncConversationWithServer error:', error);
+
+    // ✅ Restore from PouchDB on error
+    try {
+      const cached = await this.chatPouchDb.getConversations(
+        this.senderId as string
+      );
+      if (cached.length > 0) {
+        this._conversations$.next(cached);
+        console.log('✅ Restored from cache after sync error');
+      }
+    } catch (cacheErr) {
+      console.error('Failed to restore from cache:', cacheErr);
+    }
+  } finally {
+    this._isSyncing$.next(false);
+  }
+}
+
+private setupConversationListener(): void {
+  if (this._userChatsListener) {
+    console.log('Listener already active');
+    return;
+  }
+
+  const userChatsPath = `userchats/${this.senderId}`;
+  const userChatsRef = rtdbRef(this.db, userChatsPath);
+
+  const onUserChatsChange = async (snap: DataSnapshot) => {
+    const updatedData: IChatMeta = snap.val() || {};
+    const current = [...this._conversations$.value];
+    let hasChanges = false;
+
+    for (const [roomId, meta] of Object.entries(updatedData)) {
+      const idx = current.findIndex((c) => c.roomId === roomId);
+      const chatMeta: IChatMeta = { ...meta, roomId };
+
+      try {
+        if (idx > -1) {
+          // ✅ Update existing conversation
+          const decryptedText = await this.encryptionService.decrypt(
+            chatMeta.lastmessage
+          );
+          const conv = current[idx];
+          current[idx] = {
+            ...conv,
+            lastMessage: decryptedText ?? conv.lastMessage,
+            lastMessageType:
+              chatMeta.lastmessageType ?? conv.lastMessageType,
+            lastMessageAt: chatMeta.lastmessageAt
+              ? new Date(Number((meta as any).lastmessageAt))
+              : conv.lastMessageAt,
+            unreadCount: Number(chatMeta.unreadCount || 0),
+            isArchived: chatMeta.isArchived,
+            updatedAt: chatMeta.lastmessageAt
+              ? new Date(Number(chatMeta.lastmessageAt))
+              : conv.updatedAt,
+          };
+          hasChanges = true;
+
+          // ✅ Update PouchDB cache
           try {
-            if (idx > -1) {
-              const decryptedText = await this.encryptionService.decrypt(
-                chatMeta.lastmessage
-              );
-              const conv = current[idx];
-              current[idx] = {
-                ...conv,
-                lastMessage: decryptedText ?? conv.lastMessage,
-                lastMessageType:
-                  chatMeta.lastmessageType ?? conv.lastMessageType,
-                lastMessageAt: chatMeta.lastmessageAt
-                  ? new Date(Number((meta as any).lastmessageAt))
-                  : conv.lastMessageAt,
+            await this.chatPouchDb.updateConversationField(
+              this.senderId as string,
+              roomId,
+              {
+                lastMessage: decryptedText,
+                lastMessageType: chatMeta.lastmessageType,
+                lastMessageAt: new Date(Number(chatMeta.lastmessageAt)),
                 unreadCount: Number(chatMeta.unreadCount || 0),
                 isArchived: chatMeta.isArchived,
-                updatedAt: chatMeta.lastmessageAt
-                  ? new Date(Number(chatMeta.lastmessageAt))
-                  : conv.updatedAt,
-              };
-
-              // 🔥 NEW: Update PouchDB for changed conversation
-              try {
-                await this.chatPouchDb.updateConversationField(
-                  this.senderId as string,
-                  roomId,
-                  {
-                    lastMessage: decryptedText,
-                    lastMessageType: chatMeta.lastmessageType,
-                    lastMessageAt: new Date(Number(chatMeta.lastmessageAt)),
-                    unreadCount: Number(chatMeta.unreadCount || 0),
-                    isArchived: chatMeta.isArchived,
-                    updatedAt: new Date(Number(chatMeta.lastmessageAt)),
-                  }
-                );
-
-                console.log(`✅ PouchDB updated instantly for ${roomId}`);
-              } catch (cacheErr) {
-                console.warn(
-                  `⚠️ PouchDB update failed for ${roomId}:`,
-                  cacheErr
-                );
+                updatedAt: new Date(Number(chatMeta.lastmessageAt)),
               }
-            } else {
-              // Handle new conversation (existing code remains)
-              console.warn('New room detected:', roomId);
-              // ... your existing code for new conversations ...
-            }
-          } catch (e) {
-            console.error('onUserChatsChange inner error for', roomId, e);
+            );
+          } catch (cacheErr) {
+            console.warn(`⚠️ PouchDB update failed for ${roomId}:`, cacheErr);
           }
+        } else {
+          // ✅ Handle new conversation (fetch in background)
+          this.fetchNewConversation(roomId, chatMeta)
+            .then(newConv => {
+              if (newConv) {
+                const updated = [...this._conversations$.value, newConv];
+                this._conversations$.next(updated);
+              }
+            })
+            .catch(err => console.error('Error fetching new conversation:', err));
         }
-
-        // 🔥 INSTANT EMIT: Force new array reference
-        this._conversations$.next([...current]);
-
-        console.log(
-          `✅ Conversations updated INSTANTLY (${current.length} total)`
-        );
-      };
-
-      const unsubscribe = rtdbOnValue(userChatsRef, onUserChatsChange);
-      this._userChatsListener = unsubscribe;
-    } catch (error) {
-      console.error('syncConversationWithServer error:', error);
-
-      // Restore from PouchDB on error
-      try {
-        const cached = await this.chatPouchDb.getConversations(
-          this.senderId as string
-        );
-        if (cached.length > 0) {
-          this._conversations$.next(cached);
-          console.log('✅ Restored from cache after sync error');
-        }
-      } catch (cacheErr) {
-        console.error('Failed to restore from cache:', cacheErr);
+      } catch (e) {
+        console.error('onUserChatsChange inner error for', roomId, e);
       }
-    } finally {
-      this._isSyncing$.next(false);
     }
+
+    // ✅ Emit updates if there were changes
+    if (hasChanges) {
+      this._conversations$.next([...current]);
+      console.log(`✅ Conversations updated (${current.length} total)`);
+    }
+  };
+
+  const unsubscribe = rtdbOnValue(userChatsRef, onUserChatsChange);
+  this._userChatsListener = unsubscribe;
+  
+  console.log('✅ Real-time conversation listener active');
+}
+
+private async fetchNewConversation(
+  roomId: string, 
+  chatMeta: IChatMeta
+): Promise<IConversation | null> {
+  try {
+    const type: IConversation['type'] = chatMeta.type || 'private';
+
+    if (type === 'private') {
+      return await this.fetchPrivateConvDetails(roomId, chatMeta);
+    } else if (type === 'group') {
+      const isSystemGroup = await this.isSystemGroupInCommunity(roomId);
+      if (isSystemGroup) {
+        console.log(`⏭️ Skipping new system group ${roomId}`);
+        return null;
+      }
+      return await this.fetchGroupConDetails(roomId, chatMeta);
+    } else if (type === 'community') {
+      return await this.fetchCommunityConvDetails(roomId, chatMeta);
+    } else {
+      return {
+        roomId,
+        type: 'private',
+        title: roomId,
+        lastMessage: chatMeta.lastmessage,
+        lastMessageAt: chatMeta.lastmessageAt
+          ? new Date(Number(chatMeta.lastmessageAt))
+          : undefined,
+        unreadCount: Number(chatMeta.unreadCount) || 0,
+      } as IConversation;
+    }
+  } catch (error) {
+    console.error('fetchNewConversation error:', error);
+    return null;
   }
+}
 
   private _groupTitleListeners: Map<string, () => void> = new Map();
   private _communityTitleListeners: Map<string, () => void> = new Map();

@@ -23,6 +23,26 @@ export interface PendingChatAction {
   userId: string;
 }
 
+export interface CachedCommunity {
+  id: string;
+  name: string;
+  icon: string;
+  groups: CommunityGroup[];
+  displayGroups: CommunityGroup[];
+  totalGroups: number;
+  hasMore: boolean;
+  syncStatus?: 'synced' | 'pending';
+  lastSyncedAt?: number;
+}
+
+export interface CommunityGroup {
+  id: string;
+  name: string;
+  type: string;
+  createdAt?: number;
+  isSystemGroup?: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -700,6 +720,179 @@ export class ChatPouchDb {
       return [];
     }
   }
+
+  /**
+ * 🔥 Save communities for a user
+ */
+async saveCommunities(userId: string, communities: CachedCommunity[], immediate: boolean = false): Promise<void> {
+  const key = `communities_${userId}`;
+
+  if (this.saveTimers.has(key)) {
+    clearTimeout(this.saveTimers.get(key));
+  }
+
+  const doSave = async () => {
+    try {
+      const docId = `communities_${userId}`;
+      
+      try {
+        const existing = await this.db.get(docId);
+        await this.db.put({
+          _id: docId,
+          _rev: existing._rev,
+          communities,
+          userId,
+          timestamp: Date.now()
+        });
+      } catch (err: any) {
+        if (err.status === 404) {
+          await this.db.put({
+            _id: docId,
+            communities,
+            userId,
+            timestamp: Date.now()
+          });
+        } else {
+          throw err;
+        }
+      }
+      console.log(`✅ Saved ${communities.length} communities for user ${userId}`);
+      this.saveTimers.delete(key);
+    } catch (error) {
+      console.error('❌ Failed to save communities:', error);
+    }
+  };
+
+  if (immediate) {
+    await doSave();
+  } else {
+    const timer = setTimeout(doSave, 500);
+    this.saveTimers.set(key, timer);
+  }
+}
+
+/**
+ * 🔥 Get communities for a user
+ */
+async getCommunities(userId: string): Promise<CachedCommunity[]> {
+  try {
+    const docId = `communities_${userId}`;
+    const doc: any = await this.db.get(docId);
+    return doc.communities || [];
+  } catch (err: any) {
+    if (err.status === 404) {
+      return [];
+    }
+    console.error('❌ Failed to get communities:', err);
+    return [];
+  }
+}
+
+/**
+ * 🔥 Update single community
+ */
+async updateCommunity(userId: string, communityId: string, updates: Partial<CachedCommunity>): Promise<void> {
+  try {
+    const communities = await this.getCommunities(userId);
+    const index = communities.findIndex(c => c.id === communityId);
+    
+    if (index >= 0) {
+      communities[index] = {
+        ...communities[index],
+        ...updates,
+        lastSyncedAt: Date.now(),
+        syncStatus: 'synced'
+      };
+      
+      await this.saveCommunities(userId, communities, true);
+      console.log(`✅ Updated community ${communityId} in PouchDB`);
+    }
+  } catch (error) {
+    console.error('❌ Failed to update community:', error);
+  }
+}
+
+/**
+ * 🔥 Delete community from cache
+ */
+async deleteCommunity(userId: string, communityId: string): Promise<void> {
+  try {
+    const communities = await this.getCommunities(userId);
+    const filtered = communities.filter(c => c.id !== communityId);
+    
+    await this.saveCommunities(userId, filtered, true);
+    console.log(`✅ Deleted community ${communityId} from cache`);
+  } catch (error) {
+    console.error('❌ Failed to delete community:', error);
+  }
+}
+
+/**
+ * 🔥 Save groups for a community
+ */
+async saveCommunityGroups(communityId: string, groups: CommunityGroup[], immediate: boolean = false): Promise<void> {
+  const key = `community_groups_${communityId}`;
+
+  if (this.saveTimers.has(key)) {
+    clearTimeout(this.saveTimers.get(key));
+  }
+
+  const doSave = async () => {
+    try {
+      const docId = `community_groups_${communityId}`;
+      
+      try {
+        const existing = await this.db.get(docId);
+        await this.db.put({
+          _id: docId,
+          _rev: existing._rev,
+          groups,
+          communityId,
+          timestamp: Date.now()
+        });
+      } catch (err: any) {
+        if (err.status === 404) {
+          await this.db.put({
+            _id: docId,
+            groups,
+            communityId,
+            timestamp: Date.now()
+          });
+        } else {
+          throw err;
+        }
+      }
+      console.log(`✅ Saved ${groups.length} groups for community ${communityId}`);
+      this.saveTimers.delete(key);
+    } catch (error) {
+      console.error('❌ Failed to save community groups:', error);
+    }
+  };
+
+  if (immediate) {
+    await doSave();
+  } else {
+    const timer = setTimeout(doSave, 500);
+    this.saveTimers.set(key, timer);
+  }
+}
+
+/**
+ * 🔥 Get groups for a community
+ */
+async getCommunityGroups(communityId: string): Promise<CommunityGroup[]> {
+  try {
+    const docId = `community_groups_${communityId}`;
+    const doc: any = await this.db.get(docId);
+    return doc.groups || [];
+  } catch (err: any) {
+    if (err.status === 404) {
+      return [];
+    }
+    console.error('❌ Failed to get community groups:', err);
+    return [];
+  }
+}
 
   /* =========================
      UTILITY & MAINTENANCE

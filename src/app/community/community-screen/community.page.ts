@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import {
   ActionSheetController,
@@ -14,21 +14,16 @@ import { FirebaseChatService } from '../../services/firebase-chat.service';
 import { AuthService } from '../../auth/auth.service';
 import { Database, get, ref } from 'firebase/database';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-
-interface CommunityGroup {
-  id: string;
-  name: string;
-  type: string;
-  createdAt?: number;
-  isSystemGroup?: boolean;
-}
+import { ChatPouchDb, CachedCommunity, CommunityGroup } from '../../services/chat-pouch-db';
+import { NetworkService } from '../../services/network-connection/network.service';
+import { Subscription } from 'rxjs';
 
 interface Community {
   id: string;
   name: string;
   icon: string;
   groups: CommunityGroup[];
-  displayGroups: CommunityGroup[]; // max 3 for list
+  displayGroups: CommunityGroup[];
   totalGroups: number;
   hasMore: boolean;
 }
@@ -40,15 +35,19 @@ interface Community {
   standalone: true,
   imports: [IonicModule, CommonModule, FooterTabsComponent, TranslateModule],
 })
-export class CommunityPage implements OnInit {
+export class CommunityPage implements OnInit, OnDestroy {
   userId = this.authService.authData?.userId as string;
   joinedCommunities: Community[] = [];
   selectedCommunity: any = null;
   communityGroups: any[] = [];
   loading = false;
+  isSyncing = false;
+  isOffline = false;
 
-  // 🔹 skeleton placeholders (3 fake communities)
   skeletonCommunities = Array(3);
+  
+  private networkSub: Subscription | null = null;
+  private isInitialLoadComplete = false;
 
   constructor(
     private router: Router,
@@ -58,108 +57,375 @@ export class CommunityPage implements OnInit {
     private alertCtrl: AlertController,
     private toastCtrl: ToastController,
     private authService: AuthService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private chatPouchDb: ChatPouchDb,
+    private networkService: NetworkService,
+    private cdr: ChangeDetectorRef
   ) {}
 
-  ngOnInit() {
-    this.loadUserCommunities();
+  async ngOnInit() {
+    this.setupNetworkMonitoring();
   }
 
-  async presentPopover(ev: any) {
-    const popover = await this.popoverCtrl.create({
-      component: MenuPopoverComponent,
-      event: ev,
-      translucent: true,
-    });
-    await popover.present();
+  async ionViewWillEnter() {
+    try {
+
+      if (this.isInitialLoadComplete) {
+        console.log('✅ Communities already loaded, using cached data...');
+        
+        // ✅ Just refresh the view (instant)
+        this.cdr.detectChanges();
+        
+        // ✅ Silently sync in background (no loader, non-blocking)
+        if (this.networkService.isOnline.value && !this.isSyncing) {
+          this.syncInBackgroundSilently();
+        }
+        
+        return;
+      }
+
+      this.loading = true;
+      console.log('🚀 First time loading communities...');
+
+      await this.loadCommunitiesFromCache();
+
+      this.loading = false;
+
+      this.isInitialLoadComplete = true;
+
+      if (this.networkService.isOnline.value) {
+        this.syncInBackground();
+      }
+
+    } catch (error) {
+      console.error('❌ Error in ionViewWillEnter:', error);
+      this.loading = false;
+
+      if (!this.networkService.isOnline.value) {
+        await this.showToast('Using cached data (offline)', 'warning');
+      } else {
+        await this.showToast('Failed to load communities', 'danger');
+      }
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.networkSub) {
+      this.networkSub.unsubscribe();
+      this.networkSub = null;
+    }
+
+    console.log('🔵 Component destroyed but data retained in memory');
+  }
+
+  // ==========================================
+  // 🔥 NETWORK MONITORING
+  // ==========================================
+
+  /**
+   * Setup network status monitoring
+   */
+  private setupNetworkMonitoring(): void {
+    this.networkSub = this.networkService.isOnline$.subscribe(
+      async (isOnline) => {
+        const wasOffline = this.isOffline;
+        this.isOffline = !isOnline;
+
+        console.log(`🌐 Network status: ${isOnline ? 'ONLINE' : 'OFFLINE'}`);
+
+        if (isOnline && wasOffline) {
+          console.log('📡 Back online - syncing communities...');
+          await this.showToast('Back online - syncing...', 'success');
+          this.syncInBackgroundSilently();
+        } else if (!isOnline && !wasOffline) {
+          console.log('📴 Went offline - using cached data');
+          await this.showToast('You are offline', 'warning');
+        }
+      }
+    );
+
+    this.isOffline = !this.networkService.isOnline.value;
+  }
+
+  // ==========================================
+  // 🔥 CACHE LOADING (INSTANT)
+  // ==========================================
+
+  /**
+   * Load communities from PouchDB cache (instant - ~50ms)
+   */
+  private async loadCommunitiesFromCache(): Promise<void> {
+    try {
+      console.log('📦 Loading communities from PouchDB cache...');
+      // const startTime = performance.now();
+      
+      const cachedCommunities = await this.chatPouchDb.getCommunities(this.userId);
+      
+      // const loadTime = performance.now() - startTime;
+      // console.log(`⏱️ Cache load time: ${loadTime.toFixed(2)}ms`);
+
+      if (cachedCommunities.length > 0) {
+        this.joinedCommunities = cachedCommunities;
+        console.log(`✅ Loaded ${cachedCommunities.length} communities from cache`);
+      } else {
+        console.log('📭 No cached communities found');
+        this.joinedCommunities = []; // Empty array for empty state
+      }
+
+      // ✅ Trigger change detection
+      this.cdr.detectChanges();
+      
+    } catch (error) {
+      console.error('❌ Error loading from cache:', error);
+      this.joinedCommunities = [];
+    }
+  }
+
+  // ==========================================
+  // 🔥 BACKGROUND SYNC
+  // ==========================================
+
+  /**
+   * Initial background sync (first load)
+   */
+  private async syncInBackground() {
+    if (this.isSyncing) {
+      console.log('⏳ Sync already in progress');
+      return;
+    }
+    
+    this.isSyncing = true;
+    console.log('🔄 Initial background sync started...');
+
+    try {
+      await this.syncCommunitiesWithServer();
+      console.log('✅ Initial sync completed');
+    } catch (error) {
+      console.warn('⚠️ Background sync failed:', error);
+    } finally {
+      this.isSyncing = false;
+    }
   }
 
   /**
-   * Load communities with group sorting and limiting
+   * Silent background sync (subsequent visits)
    */
-  async loadUserCommunities() {
+  private async syncInBackgroundSilently() {
+    if (this.isSyncing) {
+      console.log('⏳ Sync already in progress');
+      return;
+    }
+
+    this.isSyncing = true;
+    console.log('🔄 Silent background sync started...');
+
     try {
-      this.loading = true;
-      this.joinedCommunities = [];
-
-      const communityIds = await this.firebaseService.getUserCommunities(
-        this.userId
-      );
-
-      for (const cid of communityIds) {
-        try {
-          const commSnap = await get(
-            ref(this.firebaseService['db'] as Database, `communities/${cid}`)
-          );
-
-          if (!commSnap.exists()) continue;
-
-          const commData = commSnap.val();
-          const groupIds = await this.firebaseService.getGroupsInCommunity(cid);
-
-          const allGroups: CommunityGroup[] = [];
-
-          for (const gid of groupIds) {
-            const gData = await this.firebaseService.getGroupInfo(gid);
-            if (gData) {
-              const groupName = gData.title || gData.name || 'Unnamed Group';
-              const isSystemGroup =
-                groupName === 'Announcements' ||
-                groupName === 'General' ||
-                gData.type === 'announcement';
-
-              allGroups.push({
-                id: gid,
-                name: groupName,
-                type: gData.type || 'normal',
-                createdAt: gData.createdAt || 0,
-                isSystemGroup,
-              });
-            }
-          }
-
-          // sort + slice
-          const sortedGroups = this.sortGroups(allGroups);
-          const displayGroups = sortedGroups.slice(0, 3);
-          const hasMore = sortedGroups.length > 3;
-
-          this.joinedCommunities.push({
-            id: cid,
-            name:
-              commData.title ||
-              commData.name ||
-              this.translate.instant('community.unnamedCommunity'),
-            icon: commData.avatar || commData.icon || 'assets/images/user.jfif',
-            groups: sortedGroups,
-            displayGroups,
-            totalGroups: sortedGroups.length,
-            hasMore,
-          });
-        } catch (err) {
-          console.error(`Error loading community ${cid}:`, err);
-        }
-      }
+      await this.syncCommunitiesWithServer();
+      console.log('✅ Silent sync completed');
     } catch (error) {
-      console.error('Error loading communities:', error);
-      const toast = await this.toastCtrl.create({
-        message: this.translate.instant('community.errors.loadFailed'),
-        duration: 2000,
-        color: 'danger',
-      });
-      await toast.present();
+      console.warn('⚠️ Silent sync failed:', error);
     } finally {
-      this.loading = false;
+      this.isSyncing = false;
     }
   }
+
+  // ==========================================
+  // 🔥 SERVER SYNC (OPTIMIZED - PARALLEL)
+  // ==========================================
+
+  /**
+   * Sync communities with Firebase server (OPTIMIZED)
+   */
+  private async syncCommunitiesWithServer(): Promise<void> {
+    try {
+      if (!this.networkService.isOnline.value) {
+        console.log('📴 Skipping sync - offline');
+        return;
+      }
+
+      console.log('🔄 Syncing communities with server...');
+      const startTime = performance.now();
+
+      const communityIds = await this.firebaseService.getUserCommunities(this.userId);
+
+      if (communityIds.length === 0) {
+        console.log('📭 No communities to sync');
+        this.joinedCommunities = [];
+        this.cdr.detectChanges();
+        return;
+      }
+
+      // 🔥 OPTIMIZATION 1: Process ALL communities in PARALLEL
+      const communityPromises = communityIds.map(cid => 
+        this.fetchCommunityWithGroups(cid)
+      );
+
+      const communities = await Promise.allSettled(communityPromises);
+
+      const validCommunities: CachedCommunity[] = communities
+        .filter((result): result is PromiseFulfilledResult<CachedCommunity> => 
+          result.status === 'fulfilled' && result.value !== null
+        )
+        .map(result => result.value);
+
+      // ✅ Save ALL to PouchDB
+      if (validCommunities.length > 0) {
+        await this.chatPouchDb.saveCommunities(this.userId, validCommunities, true);
+        this.joinedCommunities = validCommunities;
+
+        const syncTime = performance.now() - startTime;
+        console.log(`✅ Synced ${validCommunities.length} communities in ${syncTime.toFixed(2)}ms`);
+      } else {
+        this.joinedCommunities = [];
+      }
+
+      // ✅ Trigger change detection
+      this.cdr.detectChanges();
+
+    } catch (error) {
+      console.error('❌ Error syncing communities:', error);
+    }
+  }
+
+  /**
+   * Fetch single community with groups (optimized)
+   */
+  private async fetchCommunityWithGroups(cid: string): Promise<CachedCommunity | null> {
+    try {
+      // Fetch community data
+      const commSnap = await get(
+        ref(this.firebaseService['db'] as Database, `communities/${cid}`)
+      );
+
+      if (!commSnap.exists()) {
+        console.warn(`Community ${cid} not found`);
+        return null;
+      }
+
+      const commData = commSnap.val();
+
+      // 🔥 OPTIMIZATION 2: Load groups in parallel
+      const allGroups = await this.loadGroupsForCommunityParallel(cid);
+
+      // Sort and prepare display
+      const sortedGroups = this.sortGroups(allGroups);
+      const displayGroups = sortedGroups.slice(0, 3);
+      const hasMore = sortedGroups.length > 3;
+
+      const community: CachedCommunity = {
+        id: cid,
+        name: commData.title || commData.name || this.translate.instant('community.unnamedCommunity'),
+        icon: commData.avatar || commData.icon || 'assets/images/user.jfif',
+        groups: sortedGroups,
+        displayGroups,
+        totalGroups: sortedGroups.length,
+        hasMore,
+        syncStatus: 'synced',
+        lastSyncedAt: Date.now(),
+      };
+
+      // 🔥 Save groups to cache in background (non-blocking)
+      this.chatPouchDb.saveCommunityGroups(cid, sortedGroups, false)
+        .catch(err => console.warn('Group cache save failed:', err));
+
+      return community;
+
+    } catch (err) {
+      console.error(`Error loading community ${cid}:`, err);
+      return null;
+    }
+  }
+
+  /**
+   * Load groups for community in PARALLEL (not sequential)
+   */
+  private async loadGroupsForCommunityParallel(communityId: string): Promise<CommunityGroup[]> {
+    try {
+      // ✅ Try cache first
+      const cachedGroups = await this.chatPouchDb.getCommunityGroups(communityId);
+
+      if (cachedGroups.length > 0 && !this.networkService.isOnline.value) {
+        console.log(`✅ Using cached groups for community ${communityId}`);
+        return cachedGroups;
+      }
+
+      // ✅ Fetch from server if online
+      if (this.networkService.isOnline.value) {
+        const groupIds = await this.firebaseService.getGroupsInCommunity(communityId);
+
+        if (groupIds.length === 0) {
+          console.log(`📭 No groups found for community ${communityId}`);
+          return [];
+        }
+
+        // 🔥 CRITICAL OPTIMIZATION: Fetch ALL groups in PARALLEL
+        const groupPromises = groupIds.map(gid => this.fetchGroupInfo(gid));
+        const groupResults = await Promise.allSettled(groupPromises);
+
+        const allGroups: CommunityGroup[] = groupResults
+          .filter((result): result is PromiseFulfilledResult<CommunityGroup> => 
+            result.status === 'fulfilled' && result.value !== null
+          )
+          .map(result => result.value);
+
+        console.log(`✅ Loaded ${allGroups.length} groups for community ${communityId}`);
+        return allGroups;
+      }
+
+      return cachedGroups; // Fallback to cache
+
+    } catch (error) {
+      console.error(`Error loading groups for community ${communityId}:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Fetch single group info
+   */
+  private async fetchGroupInfo(gid: string): Promise<CommunityGroup | null> {
+    try {
+      const gData = await this.firebaseService.getGroupInfo(gid);
+      
+      if (!gData) {
+        console.warn(`Group ${gid} not found`);
+        return null;
+      }
+
+      const groupName = gData.title || gData.name || 'Unnamed Group';
+      const isSystemGroup =
+        groupName === 'Announcements' ||
+        groupName === 'General' ||
+        gData.type === 'announcement';
+
+      return {
+        id: gid,
+        name: groupName,
+        type: gData.type || 'normal',
+        createdAt: gData.createdAt || 0,
+        isSystemGroup,
+      };
+
+    } catch (error) {
+      console.warn(`Failed to fetch group ${gid}:`, error);
+      return null;
+    }
+  }
+
+  // ==========================================
+  // 🔥 UTILITY METHODS
+  // ==========================================
 
   /**
    * Sort groups: Announcement → General → Others (by creation date)
    */
   private sortGroups(groups: CommunityGroup[]): CommunityGroup[] {
     return groups.sort((a, b) => {
+      // System groups first
       if (a.isSystemGroup && !b.isSystemGroup) return -1;
       if (!a.isSystemGroup && b.isSystemGroup) return 1;
 
+      // Within system groups: Announcements first, then General
       if (a.isSystemGroup && b.isSystemGroup) {
         if (a.name === 'Announcements') return -1;
         if (b.name === 'Announcements') return 1;
@@ -167,37 +433,57 @@ export class CommunityPage implements OnInit {
         if (b.name === 'General') return 1;
       }
 
+      // Other groups sorted by creation date
       return (a.createdAt || 0) - (b.createdAt || 0);
     });
   }
 
   /**
-   * Create new community
+   * Get icon based on group type
    */
-  async createCommunityPrompt() {
-    this.router.navigate(['/new-community']);
+  getGroupIcon(group: CommunityGroup): string {
+    if (group.name === 'Announcements' || group.type === 'announcement') {
+      return 'megaphone-outline';
+    }
+    if (group.name === 'General') {
+      return 'people-outline';
+    }
+    return 'chatbox-outline';
   }
 
   /**
-   * Legacy method (if still used anywhere)
+   * Get translated group type
    */
-  async openCommunityGroups(community: any) {
-    this.selectedCommunity = community;
-    this.communityGroups = [];
+  getGroupTypeLabel(group: CommunityGroup): string {
+    const typeKey = group.type || 'normal';
+    return this.translate.instant(`community.groupType.${typeKey}`);
+  }
 
-    const groupIds = await this.firebaseService.getGroupsInCommunity(
-      community.id
-    );
-    for (const gid of groupIds) {
-      const groupData = await this.firebaseService.getGroupInfo(gid);
-      if (groupData) {
-        this.communityGroups.push({
-          id: gid,
-          name: groupData.title || groupData.name,
-          type: groupData.type,
-        });
-      }
+  /**
+   * Helper: Show toast
+   */
+  private async showToast(message: string, color: string = 'primary') {
+    const toast = await this.toastCtrl.create({
+      message,
+      duration: 2000,
+      color,
+    });
+    await toast.present();
+  }
+
+  // ==========================================
+  // 🔥 USER ACTIONS
+  // ==========================================
+
+  /**
+   * Create new community
+   */
+  async createCommunityPrompt() {
+    if (this.isOffline) {
+      await this.showToast('Cannot create community while offline', 'warning');
+      return;
     }
+    this.router.navigate(['/new-community']);
   }
 
   /**
@@ -226,33 +512,88 @@ export class CommunityPage implements OnInit {
   }
 
   /**
-   * Get icon based on group type
-   */
-  getGroupIcon(group: CommunityGroup): string {
-    if (group.name === 'Announcements' || group.type === 'announcement') {
-      return 'megaphone-outline';
-    }
-    if (group.name === 'General') {
-      return 'people-outline';
-    }
-    return 'chatbox-outline';
-  }
-
-  /**
-   * Get translated group type (if needed somewhere else)
-   */
-  getGroupTypeLabel(group: CommunityGroup): string {
-    const typeKey = group.type || 'normal';
-    return this.translate.instant(`community.groupType.${typeKey}`);
-  }
-
-  /**
    * Pull-to-refresh support
    */
   async refreshCommunities(event?: any) {
-    await this.loadUserCommunities();
-    if (event) {
-      event.target.complete();
+    try {
+      if (!this.networkService.isOnline.value) {
+        await this.showToast('Cannot refresh while offline', 'warning');
+        if (event) event.target.complete();
+        return;
+      }
+
+      console.log('🔄 Manual refresh triggered');
+
+      // Force sync from server
+      await this.syncCommunitiesWithServer();
+      await this.showToast('Communities refreshed', 'success');
+
+    } catch (error) {
+      console.error('Refresh error:', error);
+      await this.showToast('Refresh failed', 'danger');
+    } finally {
+      if (event) {
+        event.target.complete();
+      }
+    }
+  }
+
+  /**
+   * Present menu popover
+   */
+  async presentPopover(ev: any) {
+    const popover = await this.popoverCtrl.create({
+      component: MenuPopoverComponent,
+      event: ev,
+      translucent: true,
+    });
+    await popover.present();
+  }
+
+  // ==========================================
+  // 🔥 PUBLIC API (for external reset)
+  // ==========================================
+
+  /**
+   * Reset page state (call ONLY on logout)
+   */
+  public resetPageState() {
+    console.log('🔄 Resetting community page state (logout)');
+    this.isInitialLoadComplete = false;
+    this.joinedCommunities = [];
+    this.loading = false;
+    this.isSyncing = false;
+  }
+
+  // ==========================================
+  // 🔥 LEGACY METHODS (keep for compatibility)
+  // ==========================================
+
+  /**
+   * @deprecated Use ionViewWillEnter instead
+   */
+  async loadUserCommunities() {
+    console.warn('loadUserCommunities is deprecated, data loads automatically');
+  }
+
+  /**
+   * @deprecated Legacy method
+   */
+  async openCommunityGroups(community: any) {
+    console.warn('openCommunityGroups is deprecated');
+    this.selectedCommunity = community;
+    this.communityGroups = [];
+
+    const groupIds = await this.firebaseService.getGroupsInCommunity(community.id);
+    for (const gid of groupIds) {
+      const groupData = await this.firebaseService.getGroupInfo(gid);
+      if (groupData) {
+        this.communityGroups.push({
+          id: gid,
+          name: groupData.title || groupData.name,
+          type: groupData.type,
+        });
+      }
     }
   }
 }

@@ -140,6 +140,7 @@ export class HomeScreenPage implements OnInit, OnDestroy {
   private conversationsSubscription: any = null;
   private prefetchedConversations = new Map<string, any>();
   private prefetchTimeout: any = null;
+  isSyncing: boolean = false;
 
   constructor(
     private router: Router,
@@ -225,127 +226,159 @@ export class HomeScreenPage implements OnInit, OnDestroy {
     }
   }
 
-  async ionViewWillEnter() {
-  try {
-    if (!this.isInitialLoadComplete) {
-      this.isLoading = true;
-    }
-
-    await this.firebaseChatService.closeChat();
-
-    if (!this.isInitialLoadComplete) {
-      console.info('🚀 First time initialization...');
-
-      const isOnline = this.networkService.isOnline.value;
-      console.log(`📡 Network status: ${isOnline ? 'ONLINE' : 'OFFLINE'}`);
-
-      // 🔥 NEW: Load from PouchDB FIRST (instant)
-      await this.loadChatsFromCache();
-
-      // Initialize app (triggers background sync)
-      await this.initializeApp();
-
-      // Subscribe to conversations
-      if (!this.conversationsSubscription) {
-        this.conversationsSubscription =
-          this.firebaseChatService.conversations.subscribe((convs) => {
-            this.archievedCount = convs.filter((c) => c.isArchived).length || 0;
-
-            this.conversations = convs
-              .map((c) => ({
-                ...c,
-                isTyping: false,
-                isSelected: false,
-                lastMessage: c.lastMessage ?? '',
-                isSelfChat: this.isSelfChat(c),
-              }))
-              .filter((c) => !c.isLocked && !c.isArchived);
-
-            this.isChatsLoaded = true;
-            this.cdr.detectChanges();
-            console.log(`📊 Conversations updated: ${this.conversations.length}`);
-          });
+ async ionViewWillEnter() {
+    try {
+      // ✅ Phase 1: Show loading indicator
+      if (!this.isInitialLoadComplete) {
+        this.isLoading = true;
       }
 
-      if (isOnline) {
-        await this.performOnlineChecks();
+      await this.firebaseChatService.closeChat();
+
+      if (!this.isInitialLoadComplete) {
+        console.info('🚀 First time initialization...');
+
+        const isOnline = this.networkService.isOnline.value;
+        console.log(`📡 Network status: ${isOnline ? 'ONLINE' : 'OFFLINE'}`);
+
+        // ✅ Phase 2: Load cache FIRST (instant - 0.5s)
+        await this.loadChatsFromCache();
+        
+        // ✅ Phase 3: Hide loading, show cached data
+        this.isLoading = false;
+        
+        // ✅ Phase 4: Start background sync (non-blocking)
+        if (isOnline) {
+          this.isSyncing = true;
+          this.initializeApp()
+            .catch(err => console.warn('Init error:', err))
+            .finally(() => this.isSyncing = false);
+        } else {
+          // Offline: Just initialize without sync
+          await this.initializeApp();
+        }
+
+        // ✅ Phase 5: Subscribe to conversations
+        if (!this.conversationsSubscription) {
+          this.conversationsSubscription =
+            this.firebaseChatService.conversations.subscribe((convs) => {
+              this.archievedCount = convs.filter((c) => c.isArchived).length || 0;
+
+              this.conversations = convs
+                .map((c) => ({
+                  ...c,
+                  isTyping: false,
+                  isSelected: false,
+                  lastMessage: c.lastMessage ?? '',
+                  isSelfChat: this.isSelfChat(c),
+                }))
+                .filter((c) => !c.isLocked && !c.isArchived);
+
+              this.isChatsLoaded = true;
+              this.cdr.detectChanges();
+              console.log(`📊 Conversations updated: ${this.conversations.length}`);
+            });
+        }
+
+        // ✅ Phase 6: Online-only checks (background)
+        if (isOnline) {
+          this.performOnlineChecks().catch(err => 
+            console.warn('Online checks error:', err)
+          );
+        }
+
+        this.isInitialLoadComplete = true;
+      } else {
+        // ✅ Subsequent visits: instant
+        this.isLoading = false;
       }
 
-      this.isInitialLoadComplete = true;
-    }
+      this.senderUserId = this.authService.authData?.userId || this.senderUserId || '';
+      this.sender_name = this.authService.authData?.name || '';
+      this.clearChatSelection();
+      
+    } catch (err) {
+      console.warn('❌ ionViewWillEnter error:', err);
+      this.isLoading = false;
+      this.isSyncing = false;
 
-    this.isLoading = false;
-    this.senderUserId = this.authService.authData?.userId || this.senderUserId || '';
-    this.sender_name = this.authService.authData?.name || '';
-
-    this.clearChatSelection();
-  } catch (err) {
-    console.warn('❌ ionViewWillEnter error:', err);
-    this.isLoading = false;
-
-    if (!this.networkService.isOnline.value) {
-      await this.showToast('Using cached data (offline)', 'warning');
-    } else {
-      await this.showToast('Failed to load some data', 'danger');
+      if (!this.networkService.isOnline.value) {
+        await this.showToast('Using cached data (offline)', 'warning');
+      } else {
+        await this.showToast('Failed to load some data', 'danger');
+      }
     }
   }
-}
 
   private async loadChatsFromCache(): Promise<void> {
-  try {
-    console.log('📦 Loading chats from PouchDB cache...');
-    
-    const cachedConversations = await this.chatPouchDb.getConversations(
-      this.authService.senderId as string
-    );
+    try {
+      console.log('📦 Loading chats from PouchDB cache...');
+      
+      const startTime = performance.now();
+      
+      const cachedConversations = await this.chatPouchDb.getConversations(
+        this.authService.senderId as string
+      );
 
-    if (cachedConversations.length > 0) {
-      // Update conversations immediately
-      this.conversations = cachedConversations
-        .map((c) => ({
-          ...c,
-          isTyping: false,
-          isSelected: false,
-          lastMessage: c.lastMessage ?? '',
-          isSelfChat: this.isSelfChat(c),
-        }))
-        .filter((c) => !c.isLocked && !c.isArchived);
+      const loadTime = performance.now() - startTime;
+      console.log(`⏱️ Cache load time: ${loadTime.toFixed(2)}ms`);
 
-      this.archievedCount = cachedConversations.filter((c) => c.isArchived).length || 0;
-      this.isChatsLoaded = true;
+      if (cachedConversations.length > 0) {
+        // ✅ Update UI immediately
+        this.conversations = cachedConversations
+          .map((c) => ({
+            ...c,
+            isTyping: false,
+            isSelected: false,
+            lastMessage: c.lastMessage ?? '',
+            isSelfChat: this.isSelfChat(c),
+          }))
+          .filter((c) => !c.isLocked && !c.isArchived);
 
-      console.log(`✅ Loaded ${this.conversations.length} chats from cache`);
-    } else {
-      console.log('📭 No cached chats found');
+        this.archievedCount = cachedConversations.filter((c) => c.isArchived).length || 0;
+        this.isChatsLoaded = true;
+
+        console.log(`✅ Loaded ${this.conversations.length} chats from cache`);
+      } else {
+        console.log('📭 No cached chats found');
+      }
+    } catch (error) {
+      console.error('❌ Error loading from cache:', error);
+      // Don't throw - let the app continue with server sync
     }
-  } catch (error) {
-    console.error('❌ Error loading from cache:', error);
-    // Don't throw - let the app continue with server sync
   }
-}
+
 
   /**
    * 🔥 NEW: Initialize app with network awareness
    */
 private async initializeApp(): Promise<void> {
-  try {
-    const isOnline = this.networkService.isOnline.value;
+    try {
+      const isOnline = this.networkService.isOnline.value;
 
-    if (isOnline) {
-      // Only check notification permission when online
-      await this.checkAndUpdateNotificationPermission();
+      // ✅ Start Firebase init (triggers background sync)
+      const initPromise = this.firebaseChatService.initApp(
+        this.authService.senderId as string
+      );
+
+      if (isOnline) {
+        // ✅ Run notification check in parallel (non-blocking)
+        this.checkAndUpdateNotificationPermission().catch(err => 
+          console.warn('Notification check failed:', err)
+        );
+        
+        // ✅ Wait for Firebase init to complete
+        await initPromise;
+      } else {
+        // ✅ Offline: just init without waiting
+        await initPromise;
+      }
+    } catch (error) {
+      console.error('❌ initializeApp error:', error);
+      // Don't throw - allow app to continue with cached data
+      await this.showToast('Using cached data', 'warning');
     }
-
-    // Initialize Firebase chat service (will sync in background)
-    await this.firebaseChatService.initApp(
-      this.authService.senderId as string
-    );
-  } catch (error) {
-    console.error('❌ initializeApp error:', error);
-    // Don't throw - allow app to continue with cached data
-    await this.showToast('Using cached data', 'warning');
   }
-}
 
   /**
    * 🔥 NEW: Perform online-only checks
@@ -2007,11 +2040,13 @@ private async initializeApp(): Promise<void> {
    * ✅ Optimized chat opening with instant navigation
    */
   async openChat(chat: any) {
-    // 🔥 INSTANT NAVIGATION - Don't wait for data loading
+    // ✅ Step 1: Navigate immediately (0ms delay)
     this.navigateToChat(chat);
-
-    // 🔥 Background data loading (non-blocking)
-    this.loadChatDataInBackground(chat);
+    
+    // ✅ Step 2: Load data in background (fire-and-forget)
+    this.loadChatDataInBackground(chat).catch(err => 
+      console.warn('Background load failed:', err)
+    );
   }
 
   /**
