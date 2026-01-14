@@ -257,8 +257,8 @@ ion-modal .pre-model {
   height: 56px;
   width: 56px;
   border-radius: 50%;
-    background: var(--ion-color-primary);
-    box-shadow: 0 2px 8px rgba(var(--ion-color-primary-rgb), 0.4);
+  background: var(--ion-color-primary);
+  box-shadow: 0 2px 8px rgba(var(--ion-color-primary-rgb), 0.4);
 }
 
 .sendbtn p {
@@ -268,16 +268,15 @@ ion-modal .pre-model {
 /* Send Icon */
 .mediasend {
   font-size: 24px;
-    color: var(--ion-color-primary-contrast);
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center; 
-    cursor: pointer;
-    transition: all 0.2s ease;
+  color: var(--ion-color-primary-contrast);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
-
 
 .mediasend:active {
   transform: scale(0.95);
@@ -290,7 +289,7 @@ ion-modal .pre-model {
 }
 
 .mediasend.sending::after {
-  content: '';
+  content: "";
   position: absolute;
   width: 20px;
   height: 20px;
@@ -443,15 +442,15 @@ span.emoji {
     background: var(--ion-color-dark);
     border-top-color: var(--ion-color-medium-shade);
   }
-  
+
   .reply-preview .reply-message {
     color: var(--ion-color-light);
   }
-  
+
   .replied-message {
     background: rgba(var(--ion-color-primary-rgb), 0.2);
   }
-  
+
   .replied-message .replied-content .replied-text,
   .replied-message .replied-content .replied-attachment {
     color: var(--ion-color-light);
@@ -476,7 +475,7 @@ span.emoji {
     .message-input-container {
       background: color-mix(in srgb, var(--ion-color-primary), black 80%);
     }
-    
+
     .preview-card {
       background: linear-gradient(
         135deg,
@@ -487,37 +486,37 @@ span.emoji {
       box-shadow: 0 8px 32px rgba(var(--ion-color-primary-rgb), 0.4),
         0 2px 8px rgba(0, 0, 0, 0.2);
     }
-    
+
     .preview-text-container {
       background: color-mix(in srgb, var(--ion-color-primary), black 80%);
       border-color: rgba(var(--ion-color-primary-rgb), 0.2);
     }
-    
+
     .preview-text {
       color: var(--ion-color-primary-tint);
     }
-    
+
     .preview-loading .loading-text {
       color: var(--ion-color-primary-tint);
     }
-    
+
     .revert-translation-btn {
       --border-color: color-mix(in srgb, var(--ion-color-primary), black 60%);
       --color: var(--ion-color-primary-tint);
     }
-    
+
     .send-translation-btn {
       --box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.4);
     }
-    
+
     .typing-indicator-content {
       background: color-mix(in srgb, var(--ion-color-primary), black 80%);
     }
-    
+
     .typing-text {
       color: var(--ion-color-primary-tint);
     }
-    
+
     .typing-dots .dot {
       background: color-mix(in srgb, var(--ion-color-primary-tint), black 20%);
     }
@@ -654,8 +653,8 @@ ion-tab-bar,
 
 @media (min-width: 375px) and (max-width: 767px) {
   .mine {
-        padding: 8px 10px;
-        top: 15px;
+    padding: 8px 10px;
+    top: 15px;
   }
   .pre-message {
     font-size: 15px;
@@ -797,7 +796,7 @@ ion-tab-bar,
     justify-content: center;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
-    
+
     &:active {
       transform: scale(0.9);
     }
@@ -891,7 +890,7 @@ ion-tab-bar,
     font-size: 20px;
   }
 
-/* Reply preview */
+  /* Reply preview */
   .reply-preview {
     // background: color-mix(
     //   in srgb,
@@ -903,7 +902,6 @@ ion-tab-bar,
     padding: 8px 12px;
     margin: 0 -12px 8px -12px;
     border-radius: 0 0 16px 16px;
-
 
     .reply-header {
       display: flex;
@@ -945,26 +943,26 @@ ion-tab-bar,
     .footer-row {
       gap: 4px;
     }
-    
+
     .message-input-container {
       padding: 6px 8px;
       border-radius: 16px;
       gap: 4px;
       background: var(--chat-input-bg);
     }
-    
+
     .message-input {
       font-size: 14px;
       max-height: 80px;
       color: var(--chat-input-text);
     }
-    
+
     .action-icon,
     .compressed-menu-icon {
       font-size: 20px;
       min-width: 36px;
     }
-    
+
     .mic-button,
     .send-btn {
       --padding: 8px;
@@ -977,17 +975,17 @@ ion-tab-bar,
       gap: 6px;
       flex-direction: column;
     }
-    
+
     .quick-translate-row {
       flex-direction: column;
       gap: 6px;
     }
-    
+
     .quick-btn {
       width: 100%;
       height: 40px;
     }
-    
+
     .trash-btn {
       width: 40px;
       height: 40px;
@@ -999,16 +997,16 @@ ion-tab-bar,
       border-radius: 16px;
       max-height: 30vh;
     }
-    
+
     .preview-card ion-card-content {
       padding: 12px;
     }
-    
+
     .preview-text {
       font-size: 14px;
       color: var(--ion-color-primary);
     }
-    
+
     .send-translation-btn,
     .revert-translation-btn {
       height: 40px;
@@ -1031,14 +1029,14 @@ ion-tab-bar,
 // Recording button animation
 .mic-button {
   transition: all 0.3s ease;
-  
+
   &.recording {
     animation: pulse-recording 1.5s infinite;
     background: var(--ion-color-danger) !important;
     pointer-events: none; // Prevent clicks while recording
     cursor: not-allowed;
   }
-  
+
   // Prevent rapid clicking
   &:active {
     transform: scale(0.95);
@@ -1046,7 +1044,8 @@ ion-tab-bar,
 }
 
 @keyframes pulse-recording {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     opacity: 1;
   }
@@ -1111,7 +1110,8 @@ ion-tab-bar,
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
@@ -1171,13 +1171,13 @@ ion-tab-bar,
   display: flex;
   align-items: center;
   min-width: 60px;
-  
+
   .timer-text {
     color: white;
     font-size: 18px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
-    font-family: 'Courier New', monospace;
+    font-family: "Courier New", monospace;
     letter-spacing: 1px;
     padding-left: 5px;
   }
@@ -1199,7 +1199,7 @@ ion-tab-bar,
   gap: 3px;
   width: 100%;
   height: 100%;
-  
+
   .waveform-bar {
     flex: 1;
     min-width: 3px;
@@ -1209,53 +1209,133 @@ ion-tab-bar,
     border-radius: 2px;
     transition: height 0.3s ease;
   }
-  
+
   &.recording .waveform-bar {
     background: rgba(255, 255, 255, 0.8);
-    
+
     // Create varied animation delays for each bar to simulate real waveform
-    &:nth-child(1) { animation: waveformPulse1 0.8s ease-in-out infinite; }
-    &:nth-child(2) { animation: waveformPulse2 1.0s ease-in-out infinite; }
-    &:nth-child(3) { animation: waveformPulse3 0.9s ease-in-out infinite; }
-    &:nth-child(4) { animation: waveformPulse4 1.1s ease-in-out infinite; }
-    &:nth-child(5) { animation: waveformPulse1 0.7s ease-in-out infinite; }
-    &:nth-child(6) { animation: waveformPulse2 1.2s ease-in-out infinite; }
-    &:nth-child(7) { animation: waveformPulse3 0.85s ease-in-out infinite; }
-    &:nth-child(8) { animation: waveformPulse4 1.05s ease-in-out infinite; }
-    &:nth-child(9) { animation: waveformPulse1 0.95s ease-in-out infinite; }
-    &:nth-child(10) { animation: waveformPulse2 0.75s ease-in-out infinite; }
-    &:nth-child(11) { animation: waveformPulse3 1.15s ease-in-out infinite; }
-    &:nth-child(12) { animation: waveformPulse4 0.9s ease-in-out infinite; }
-    &:nth-child(13) { animation: waveformPulse1 1.0s ease-in-out infinite; }
-    &:nth-child(14) { animation: waveformPulse2 0.8s ease-in-out infinite; }
-    &:nth-child(15) { animation: waveformPulse3 1.1s ease-in-out infinite; }
-    &:nth-child(16) { animation: waveformPulse4 0.95s ease-in-out infinite; }
-    &:nth-child(17) { animation: waveformPulse1 0.85s ease-in-out infinite; }
-    &:nth-child(18) { animation: waveformPulse2 1.05s ease-in-out infinite; }
-    &:nth-child(19) { animation: waveformPulse3 0.9s ease-in-out infinite; }
-    &:nth-child(20) { animation: waveformPulse4 0.75s ease-in-out infinite; }
-    &:nth-child(21) { animation: waveformPulse1 1.2s ease-in-out infinite; }
-    &:nth-child(22) { animation: waveformPulse2 0.8s ease-in-out infinite; }
-    &:nth-child(23) { animation: waveformPulse3 1.0s ease-in-out infinite; }
-    &:nth-child(24) { animation: waveformPulse4 0.95s ease-in-out infinite; }
-    &:nth-child(25) { animation: waveformPulse1 0.85s ease-in-out infinite; }
-    &:nth-child(26) { animation: waveformPulse2 1.1s ease-in-out infinite; }
-    &:nth-child(27) { animation: waveformPulse3 0.9s ease-in-out infinite; }
-    &:nth-child(28) { animation: waveformPulse4 0.75s ease-in-out infinite; }
-    &:nth-child(29) { animation: waveformPulse1 1.05s ease-in-out infinite; }
-    &:nth-child(30) { animation: waveformPulse2 0.8s ease-in-out infinite; }
-    &:nth-child(31) { animation: waveformPulse3 1.15s ease-in-out infinite; }
-    &:nth-child(32) { animation: waveformPulse4 0.9s ease-in-out infinite; }
-    &:nth-child(33) { animation: waveformPulse1 1.0s ease-in-out infinite; }
-    &:nth-child(34) { animation: waveformPulse2 0.85s ease-in-out infinite; }
-    &:nth-child(35) { animation: waveformPulse3 1.1s ease-in-out infinite; }
-    &:nth-child(36) { animation: waveformPulse4 0.95s ease-in-out infinite; }
-    &:nth-child(37) { animation: waveformPulse1 0.75s ease-in-out infinite; }
-    &:nth-child(38) { animation: waveformPulse2 1.2s ease-in-out infinite; }
-    &:nth-child(39) { animation: waveformPulse3 0.8s ease-in-out infinite; }
-    &:nth-child(40) { animation: waveformPulse4 1.05s ease-in-out infinite; }
+    &:nth-child(1) {
+      animation: waveformPulse1 0.8s ease-in-out infinite;
+    }
+    &:nth-child(2) {
+      animation: waveformPulse2 1s ease-in-out infinite;
+    }
+    &:nth-child(3) {
+      animation: waveformPulse3 0.9s ease-in-out infinite;
+    }
+    &:nth-child(4) {
+      animation: waveformPulse4 1.1s ease-in-out infinite;
+    }
+    &:nth-child(5) {
+      animation: waveformPulse1 0.7s ease-in-out infinite;
+    }
+    &:nth-child(6) {
+      animation: waveformPulse2 1.2s ease-in-out infinite;
+    }
+    &:nth-child(7) {
+      animation: waveformPulse3 0.85s ease-in-out infinite;
+    }
+    &:nth-child(8) {
+      animation: waveformPulse4 1.05s ease-in-out infinite;
+    }
+    &:nth-child(9) {
+      animation: waveformPulse1 0.95s ease-in-out infinite;
+    }
+    &:nth-child(10) {
+      animation: waveformPulse2 0.75s ease-in-out infinite;
+    }
+    &:nth-child(11) {
+      animation: waveformPulse3 1.15s ease-in-out infinite;
+    }
+    &:nth-child(12) {
+      animation: waveformPulse4 0.9s ease-in-out infinite;
+    }
+    &:nth-child(13) {
+      animation: waveformPulse1 1s ease-in-out infinite;
+    }
+    &:nth-child(14) {
+      animation: waveformPulse2 0.8s ease-in-out infinite;
+    }
+    &:nth-child(15) {
+      animation: waveformPulse3 1.1s ease-in-out infinite;
+    }
+    &:nth-child(16) {
+      animation: waveformPulse4 0.95s ease-in-out infinite;
+    }
+    &:nth-child(17) {
+      animation: waveformPulse1 0.85s ease-in-out infinite;
+    }
+    &:nth-child(18) {
+      animation: waveformPulse2 1.05s ease-in-out infinite;
+    }
+    &:nth-child(19) {
+      animation: waveformPulse3 0.9s ease-in-out infinite;
+    }
+    &:nth-child(20) {
+      animation: waveformPulse4 0.75s ease-in-out infinite;
+    }
+    &:nth-child(21) {
+      animation: waveformPulse1 1.2s ease-in-out infinite;
+    }
+    &:nth-child(22) {
+      animation: waveformPulse2 0.8s ease-in-out infinite;
+    }
+    &:nth-child(23) {
+      animation: waveformPulse3 1s ease-in-out infinite;
+    }
+    &:nth-child(24) {
+      animation: waveformPulse4 0.95s ease-in-out infinite;
+    }
+    &:nth-child(25) {
+      animation: waveformPulse1 0.85s ease-in-out infinite;
+    }
+    &:nth-child(26) {
+      animation: waveformPulse2 1.1s ease-in-out infinite;
+    }
+    &:nth-child(27) {
+      animation: waveformPulse3 0.9s ease-in-out infinite;
+    }
+    &:nth-child(28) {
+      animation: waveformPulse4 0.75s ease-in-out infinite;
+    }
+    &:nth-child(29) {
+      animation: waveformPulse1 1.05s ease-in-out infinite;
+    }
+    &:nth-child(30) {
+      animation: waveformPulse2 0.8s ease-in-out infinite;
+    }
+    &:nth-child(31) {
+      animation: waveformPulse3 1.15s ease-in-out infinite;
+    }
+    &:nth-child(32) {
+      animation: waveformPulse4 0.9s ease-in-out infinite;
+    }
+    &:nth-child(33) {
+      animation: waveformPulse1 1s ease-in-out infinite;
+    }
+    &:nth-child(34) {
+      animation: waveformPulse2 0.85s ease-in-out infinite;
+    }
+    &:nth-child(35) {
+      animation: waveformPulse3 1.1s ease-in-out infinite;
+    }
+    &:nth-child(36) {
+      animation: waveformPulse4 0.95s ease-in-out infinite;
+    }
+    &:nth-child(37) {
+      animation: waveformPulse1 0.75s ease-in-out infinite;
+    }
+    &:nth-child(38) {
+      animation: waveformPulse2 1.2s ease-in-out infinite;
+    }
+    &:nth-child(39) {
+      animation: waveformPulse3 0.8s ease-in-out infinite;
+    }
+    &:nth-child(40) {
+      animation: waveformPulse4 1.05s ease-in-out infinite;
+    }
   }
-  
+
   &.paused .waveform-bar {
     background: rgba(255, 255, 255, 0.3);
     animation: none;
@@ -1264,23 +1344,51 @@ ion-tab-bar,
 }
 
 @keyframes waveformPulse1 {
-  0%, 100% { height: 8px; opacity: 0.5; }
-  50% { height: 28px; opacity: 1; }
+  0%,
+  100% {
+    height: 8px;
+    opacity: 0.5;
+  }
+  50% {
+    height: 28px;
+    opacity: 1;
+  }
 }
 
 @keyframes waveformPulse2 {
-  0%, 100% { height: 12px; opacity: 0.6; }
-  50% { height: 35px; opacity: 1; }
+  0%,
+  100% {
+    height: 12px;
+    opacity: 0.6;
+  }
+  50% {
+    height: 35px;
+    opacity: 1;
+  }
 }
 
 @keyframes waveformPulse3 {
-  0%, 100% { height: 10px; opacity: 0.55; }
-  50% { height: 30px; opacity: 1; }
+  0%,
+  100% {
+    height: 10px;
+    opacity: 0.55;
+  }
+  50% {
+    height: 30px;
+    opacity: 1;
+  }
 }
 
 @keyframes waveformPulse4 {
-  0%, 100% { height: 14px; opacity: 0.65; }
-  50% { height: 32px; opacity: 1; }
+  0%,
+  100% {
+    height: 14px;
+    opacity: 0.65;
+  }
+  50% {
+    height: 32px;
+    opacity: 1;
+  }
 }
 
 /* Second Row: Action Buttons (Delete, Mic, Send) */
@@ -1298,7 +1406,7 @@ ion-tab-bar,
   min-width: 50px;
   min-height: 50px;
   color: var(--ion-color-danger);
-  
+
   ion-icon {
     font-size: 28px;
   }
@@ -1313,11 +1421,11 @@ ion-tab-bar,
   --background: rgba(255, 255, 255, 0.15);
   border-radius: 50%;
   transition: all 0.2s ease;
-  
+
   ion-icon {
     font-size: 28px;
   }
-  
+
   &:active {
     transform: scale(0.95);
     --background: rgba(255, 255, 255, 0.25);
@@ -1332,7 +1440,7 @@ ion-tab-bar,
   color: white;
   --background: var(--ion-color-primary);
   border-radius: 50%;
-  
+
   ion-icon {
     font-size: 28px;
   }
@@ -1346,21 +1454,21 @@ ion-tab-bar,
     padding: 16px 20px;
     gap: 20px;
   }
-  
+
   .recording-preview-timer .timer-text {
     font-size: 20px;
     min-width: 70px;
   }
-  
+
   .waveform-container {
     height: 60px;
   }
-  
+
   .waveform .waveform-bar {
     min-width: 4px;
     max-width: 5px;
   }
-  
+
   .preview-listen-btn {
     ion-icon {
       font-size: 32px;
@@ -1373,27 +1481,27 @@ ion-tab-bar,
   .recording-preview-overlay {
     padding: 14px;
   }
-  
+
   .recording-preview-row-1 {
     gap: 14px;
     padding: 13px 15px;
   }
-  
+
   .recording-preview-timer .timer-text {
     font-size: 17px;
     min-width: 60px;
   }
-  
+
   .waveform-container {
     height: 48px;
   }
-  
+
   .waveform .waveform-bar {
     min-width: 3px;
     max-width: 4px;
   }
-  
-  .preview-listen-btn { 
+
+  .preview-listen-btn {
     ion-icon {
       font-size: 28px;
     }
@@ -1405,39 +1513,39 @@ ion-tab-bar,
   .recording-preview-overlay {
     padding: 12px;
   }
-  
+
   .recording-preview-row-1 {
     gap: 10px;
     padding: 10px 12px;
   }
-  
+
   .recording-preview-timer .timer-text {
     font-size: 14px;
     min-width: 45px;
   }
-  
+
   .waveform-container {
     height: 36px;
   }
-  
+
   .waveform .waveform-bar {
     min-width: 2px;
     max-width: 3px;
     gap: 2px;
   }
-  
+
   .preview-listen-btn {
     ion-icon {
       font-size: 24px;
     }
   }
-  
+
   .preview-delete-btn,
   .preview-play-btn,
   .preview-send-btn {
     min-width: 44px;
     min-height: 44px;
-    
+
     ion-icon {
       font-size: 24px;
     }
@@ -1448,7 +1556,7 @@ ion-tab-bar,
   font-size: 24px;
   font-weight: 600;
   color: white;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   letter-spacing: 2px;
 }
 
@@ -1480,7 +1588,7 @@ ion-tab-bar,
   font-weight: 600;
   padding: 12px 24px;
   border-radius: 25px;
-  
+
   ion-icon {
     font-size: 24px;
   }
@@ -1501,12 +1609,12 @@ ion-tab-bar,
   justify-content: center;
   padding: 40px 20px;
   text-align: center;
-  
+
   audio {
     max-width: 300px;
     margin: 20px 0;
   }
-  
+
   p {
     font-size: 14px;
     word-break: break-word;
@@ -1517,30 +1625,30 @@ ion-tab-bar,
   .footer-fixed {
     padding: 8px 16px;
     max-height: 60vh;
-    
+
     .message-input-container {
       padding: 10px 16px;
       border-radius: 24px;
       gap: 12px;
       background: var(--chat-input-bg);
     }
-    
+
     .action-icon,
     .compressed-menu-icon {
       font-size: 26px;
       min-width: 48px;
       color: var(--ion-color-primary);
     }
-    
+
     .translate-buttons-row {
       gap: 16px;
     }
-    
+
     .quick-btn {
       min-width: 120px;
       height: 44px;
     }
-    
+
     .preview-card {
       margin: 12px 16px 0;
       max-height: 50vh;
@@ -1562,18 +1670,18 @@ ion-tab-bar,
     left: 50%;
     transform: translateX(-50%);
     border-radius: 24px 24px 0 0;
-    
+
     .message-input-container {
       padding: 12px 20px;
       border-radius: 28px;
       background: var(--chat-input-bg);
     }
-    
+
     .quick-btn {
       min-width: 140px;
       height: 48px;
     }
-    
+
     .preview-card {
       margin: 12px 0 0;
       border-radius: 24px;
@@ -1592,7 +1700,7 @@ ion-tab-bar,
     max-height: 50vh;
     padding: 4px 8px;
   }
-  
+
   .footer-fixed .preview-card {
     max-height: 28vh;
     margin-bottom: calc(10px + env(safe-area-inset-bottom));
@@ -1672,14 +1780,12 @@ ion-tab-bar,
   font-size: 12px;
   padding: 4px 6px;
   border-radius: 10px;
-  background: rgba(0,0,0,.1);
+  background: rgba(0, 0, 0, 0.1);
 }
 
 .dark .wa-audio-speed {
-  background: rgba(255,255,255,.15);
+  background: rgba(255, 255, 255, 0.15);
 }
-
-
 
 // /* ========================================
 //    FOOTER FIXED CHAT
@@ -1702,15 +1808,24 @@ ion-tab-bar,
 
 /* animation keyframes */
 @keyframes pulse {
-  0% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.65; transform: scale(0.98); }
-  100% { opacity: 1; transform: scale(1); }
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* when the button has .sending class, show loader and animate it */
 ion-button.sending {
   pointer-events: none; /* disable clicks */
-  opacity: 0.95;        /* slightly dim */
+  opacity: 0.95; /* slightly dim */
 }
 
 /* loader layout */
@@ -1730,7 +1845,9 @@ ion-button .tiny-spinner {
 }
 
 /* hide normal content when sending (defensive - Angular *ngIf already hides it but keep for CSS fallback) */
-ion-button.sending .normal { display: none !important; }
+ion-button.sending .normal {
+  display: none !important;
+}
 
 /* ensure loader text matches button look */
 ion-button .loader-text {
@@ -1780,13 +1897,48 @@ ion-button .loader-text {
   border-radius: inherit;
   pointer-events: none;
   z-index: 2;
-  mask-image: 
-    radial-gradient(circle at 25% 30%, transparent 10px, black 12px, black 18px, transparent 20px),
-    radial-gradient(circle at 75% 25%, transparent 8px, black 10px, black 15px, transparent 17px),
-    radial-gradient(circle at 35% 75%, transparent 9px, black 11px, black 17px, transparent 19px),
-    radial-gradient(circle at 70% 70%, transparent 7px, black 9px, black 14px, transparent 16px),
-    radial-gradient(circle at 50% 45%, transparent 11px, black 13px, black 19px, transparent 21px),
-    radial-gradient(circle at 15% 60%, transparent 6px, black 8px, black 13px, transparent 15px);
+  mask-image: radial-gradient(
+      circle at 25% 30%,
+      transparent 10px,
+      black 12px,
+      black 18px,
+      transparent 20px
+    ),
+    radial-gradient(
+      circle at 75% 25%,
+      transparent 8px,
+      black 10px,
+      black 15px,
+      transparent 17px
+    ),
+    radial-gradient(
+      circle at 35% 75%,
+      transparent 9px,
+      black 11px,
+      black 17px,
+      transparent 19px
+    ),
+    radial-gradient(
+      circle at 70% 70%,
+      transparent 7px,
+      black 9px,
+      black 14px,
+      transparent 16px
+    ),
+    radial-gradient(
+      circle at 50% 45%,
+      transparent 11px,
+      black 13px,
+      black 19px,
+      transparent 21px
+    ),
+    radial-gradient(
+      circle at 15% 60%,
+      transparent 6px,
+      black 8px,
+      black 13px,
+      transparent 15px
+    );
   mask-composite: subtract;
   -webkit-mask-composite: xor;
   animation: chunkScatter 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
@@ -1821,8 +1973,11 @@ ion-button .loader-text {
   border-radius: inherit;
   pointer-events: none;
   z-index: 3;
-  background: 
-    radial-gradient(circle at 20% 30%, currentColor 2px, transparent 2.5px),
+  background: radial-gradient(
+      circle at 20% 30%,
+      currentColor 2px,
+      transparent 2.5px
+    ),
     radial-gradient(circle at 80% 25%, currentColor 1.5px, transparent 2px),
     radial-gradient(circle at 35% 75%, currentColor 2px, transparent 2.5px),
     radial-gradient(circle at 70% 70%, currentColor 1px, transparent 1.5px),
@@ -1857,28 +2012,90 @@ ion-button .loader-text {
 
 /* Enhanced sparkle for sent messages */
 .message-bubble.sender-message.fade-out::after {
-  background: 
-    radial-gradient(circle at 25% 25%, rgba(var(--ion-color-primary-rgb), 0.9) 2px, transparent 2.5px),
-    radial-gradient(circle at 75% 35%, rgba(214, 186, 128, 0.8) 1.5px, transparent 2px),
-    radial-gradient(circle at 45% 75%, rgba(var(--ion-color-primary-rgb), 0.9) 2px, transparent 2.5px),
-    radial-gradient(circle at 65% 15%, rgba(201, 163, 86, 0.7) 1px, transparent 1.5px),
-    radial-gradient(circle at 15% 85%, rgba(var(--ion-color-primary-rgb), 0.8) 2px, transparent 2.5px),
-    radial-gradient(circle at 85% 85%, rgba(214, 186, 128, 0.7) 1.5px, transparent 2px),
-    radial-gradient(circle at 55% 45%, rgba(var(--ion-color-primary-rgb), 0.7) 1.5px, transparent 2px),
-    radial-gradient(circle at 35% 55%, rgba(var(--ion-color-primary-rgb), 0.8) 2px, transparent 2.5px);
+  background: radial-gradient(
+      circle at 25% 25%,
+      rgba(var(--ion-color-primary-rgb), 0.9) 2px,
+      transparent 2.5px
+    ),
+    radial-gradient(
+      circle at 75% 35%,
+      rgba(214, 186, 128, 0.8) 1.5px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 45% 75%,
+      rgba(var(--ion-color-primary-rgb), 0.9) 2px,
+      transparent 2.5px
+    ),
+    radial-gradient(
+      circle at 65% 15%,
+      rgba(201, 163, 86, 0.7) 1px,
+      transparent 1.5px
+    ),
+    radial-gradient(
+      circle at 15% 85%,
+      rgba(var(--ion-color-primary-rgb), 0.8) 2px,
+      transparent 2.5px
+    ),
+    radial-gradient(
+      circle at 85% 85%,
+      rgba(214, 186, 128, 0.7) 1.5px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 55% 45%,
+      rgba(var(--ion-color-primary-rgb), 0.7) 1.5px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 35% 55%,
+      rgba(var(--ion-color-primary-rgb), 0.8) 2px,
+      transparent 2.5px
+    );
 }
 
 /* Enhanced sparkle for received messages */
 .message-bubble.receiver-message.fade-out::after {
-  background: 
-    radial-gradient(circle at 25% 25%, rgba(180, 180, 180, 0.8) 2px, transparent 2.5px),
-    radial-gradient(circle at 75% 35%, rgba(200, 200, 200, 0.7) 1.5px, transparent 2px),
-    radial-gradient(circle at 45% 75%, rgba(160, 160, 160, 0.8) 2px, transparent 2.5px),
-    radial-gradient(circle at 65% 15%, rgba(220, 220, 220, 0.6) 1px, transparent 1.5px),
-    radial-gradient(circle at 15% 85%, rgba(180, 180, 180, 0.7) 2px, transparent 2.5px),
-    radial-gradient(circle at 85% 85%, rgba(200, 200, 200, 0.6) 1.5px, transparent 2px),
-    radial-gradient(circle at 55% 45%, rgba(190, 190, 190, 0.7) 1.5px, transparent 2px),
-    radial-gradient(circle at 35% 55%, rgba(170, 170, 170, 0.7) 2px, transparent 2.5px);
+  background: radial-gradient(
+      circle at 25% 25%,
+      rgba(180, 180, 180, 0.8) 2px,
+      transparent 2.5px
+    ),
+    radial-gradient(
+      circle at 75% 35%,
+      rgba(200, 200, 200, 0.7) 1.5px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 45% 75%,
+      rgba(160, 160, 160, 0.8) 2px,
+      transparent 2.5px
+    ),
+    radial-gradient(
+      circle at 65% 15%,
+      rgba(220, 220, 220, 0.6) 1px,
+      transparent 1.5px
+    ),
+    radial-gradient(
+      circle at 15% 85%,
+      rgba(180, 180, 180, 0.7) 2px,
+      transparent 2.5px
+    ),
+    radial-gradient(
+      circle at 85% 85%,
+      rgba(200, 200, 200, 0.6) 1.5px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 55% 45%,
+      rgba(190, 190, 190, 0.7) 1.5px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 35% 55%,
+      rgba(170, 170, 170, 0.7) 2px,
+      transparent 2.5px
+    );
 }
 
 /* Subtle glow effect */
@@ -1895,12 +2112,12 @@ ion-button .loader-text {
   .message-bubble.fade-out {
     animation: simpleFade 0.6s ease-out forwards;
   }
-  
+
   .message-bubble.fade-out::before,
   .message-bubble.fade-out::after {
     display: none;
   }
-  
+
   @keyframes simpleFade {
     to {
       opacity: 0;
@@ -2285,17 +2502,17 @@ ion-toolbar {
   }
 }
 
-.header-avatar-initial{
-      display: flex;
-    justify-content: center;
-    align-items: center;
-    color: white;
-    background-color: #bc8c2c;
-    border-radius: 50%;
-    border-width: 0px;
-    overflow: hidden;
-    object-fit: contain;
-    height: -webkit-fill-available;
+.header-avatar-initial {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  background-color: #bc8c2c;
+  border-radius: 50%;
+  border-width: 0px;
+  overflow: hidden;
+  object-fit: contain;
+  height: -webkit-fill-available;
 }
 
 /* Wrapper */
@@ -2456,9 +2673,15 @@ ion-toolbar {
 }
 
 @keyframes resumePulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 .preview-mic-only {
@@ -2478,11 +2701,19 @@ ion-toolbar {
 }
 
 @keyframes waveformListen {
-  0% { height: 10px; opacity: 0.5; }
-  50% { height: 32px; opacity: 1; }
-  100% { height: 10px; opacity: 0.5; }
+  0% {
+    height: 10px;
+    opacity: 0.5;
+  }
+  50% {
+    height: 32px;
+    opacity: 1;
+  }
+  100% {
+    height: 10px;
+    opacity: 0.5;
+  }
 }
-
 
 /* 🎤 Mic button default */
 .mic-button {
@@ -2499,5 +2730,65 @@ ion-toolbar {
 .mic-button.recording ion-icon {
   font-size: 28px;
 }
+/* ============================================
+   ⭐ PERFECT ALIGNMENT OF REACTION BADGES UNDER AUDIO BUBBLES
+   ============================================ */
 
-  
+/* Reaction badges always start exactly under the bubble */
+.reaction-badges {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  z-index: 5;
+  max-width: 70%;
+}
+
+/* For messages I SENT → align right under audio bubble */
+.reaction-badges.right {
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+/* For messages I RECEIVED → align left under audio bubble */
+.reaction-badges.left {
+  justify-content: flex-start;
+  margin-right: auto;
+}
+
+/* Avoid floating too wide for audio bubble */
+.wa-audio-wrapper + .reaction-badges {
+  max-width: 260px;     /* Matching min-width of audio bubble */
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+/* Nudge right-aligned audio reactions slightly left so they don't touch screen edge */
+.wa-audio-wrapper + .reaction-badges.right {
+  margin-right: 12px;
+}
+
+/* Reaction badge UI (emoji bubble) */
+.reaction-badges .badge {
+  background: white;
+  border-radius: 12px;
+  padding: 2px 6px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* My reaction highlighted */
+.reaction-badges .badge.mine {
+  background: var(--ion-color-primary);
+  color: white;
+}
+
+/* Count indicator */
+.reaction-badges .cnt {
+  font-size: 12px;
+  padding: 0 4px;
+  opacity: 0.8;
+}
