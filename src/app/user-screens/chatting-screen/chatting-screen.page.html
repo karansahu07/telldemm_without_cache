@@ -452,29 +452,28 @@
           (pause)="onMsgAudioPaused(msg)"
           (ended)="resetMsgAudio(msg)"
         ></audio>
+        
+        <div
+  class="reaction-badges audio-reactions"
+  *ngIf="msg.reactions && getReactionsCount(msg) > 0"
+  [class.right]="msg.sender === senderId"
+  [class.left]="msg.sender !== senderId"
+>
+  <ng-container *ngFor="let b of msg.reactions">
+    <div
+      *ngIf="b.emoji"
+      [class.mine]="b.userId === senderId"
+      (click)="onReactionBadgeClick($event, msg, b)"
+    >
+      <span class="audio_emoji">{{ b.emoji }}</span>
+    </div>
+  </ng-container>
 
-      </div>
+  <span class="cnt" *ngIf="getReactionsCount(msg) > 1">
+    {{ getReactionsCount(msg) }}
+  </span>
+</div>
 
-      <!-- 🟡 REACTION BADGES FOR AUDIO (same behavior as other messages) -->
-      <div
-        class="reaction-badges"
-        *ngIf="msg.reactions && msg.reactions.length > 0 && getReactionsCount(msg) > 0"
-        [class.right]="msg.sender === senderId"
-        [class.left]="msg.sender !== senderId"
-      >
-        <ng-container *ngFor="let b of msg.reactions">
-          <div
-            *ngIf="b.emoji"
-            class="badge"
-            [class.mine]="b.userId == senderId"
-            (click)="onReactionBadgeClick($event, msg, b)"
-          >
-            <span class="emoji">{{ b.emoji }}</span>
-          </div>
-        </ng-container>
-        <span class="cnt" *ngIf="getReactionsCount(msg) > 1">
-          {{ getReactionsCount(msg) }}
-        </span>
       </div>
 
     </ng-container>

@@ -412,6 +412,15 @@ span.emoji {
   padding: 5px;
 }
 
+.audio_emoji{
+  position: absolute;
+  top: 8px;
+  background: white;
+  border-radius: 15px;
+  padding: 3px;
+  left: 217px;
+}
+
 @keyframes fadeScale {
   0% {
     transform: scale(0.6);
@@ -433,6 +442,11 @@ span.emoji {
     transform: translateY(0) scale(1);
   }
 }
+
+.audio-reactions{
+  position: absolute;
+}
+
 
 /* ========================================
    DARK MODE
@@ -2628,7 +2642,6 @@ ion-toolbar {
 .wa-time {
   grid-row: 2 / 3;
   grid-column: 2 / 3;
-
   font-size: 11px;
   color: #555;
   text-align: left;
@@ -2637,14 +2650,14 @@ ion-toolbar {
 .wa-audio-meta {
   grid-row: 2 / 3;
   grid-column: 3 / 4;
-
   display: flex;
   align-items: center;
   gap: 4px;
-
   font-size: 10px;
   color: #555;
   justify-self: end;
+  position: relative;
+  right: 29px;
 }
 
 .preview-listen-btn {
