@@ -18,6 +18,7 @@ import { Capacitor, PluginListenerHandle } from '@capacitor/core';
 import { ApiService } from './api/api.service';
 import { FirebaseChatService } from './firebase-chat.service';
 import { NativeSettings, AndroidSettings, IOSSettings } from 'capacitor-native-settings';
+import { Contacts } from '@capacitor-community/contacts';
 
 
 @Injectable({
@@ -147,41 +148,108 @@ export class FcmService {
       });
 
       // 📩 Foreground push - UPDATED with notification tracking
+      // PushNotifications.addListener(
+      //   'pushNotificationReceived',
+      //   async (notification: PushNotificationSchema) => {
+      //     console.log('📩 Foreground push received:', notification);
+          
+      //     // ✅ Extract roomId and store notification ID
+      //     let payload = notification.data?.payload;
+      //     if (payload) {
+      //       try {
+      //         const data = JSON.parse(payload);
+      //         if (data.roomId) {
+      //           // Store this notification ID for later removal
+      //           const notifId = Math.floor(Math.random() * 1000000);
+      //           this.activeNotifications.set(data.roomId, notifId);
+      //           console.log(`📌 Stored notification ID ${notifId} for room ${data.roomId}`);
+                
+      //           // Pass notification ID to local notification
+      //           await this.showLocalNotification(notification, notifId, data.roomId);
+      //           return;
+      //         }
+      //       } catch (e) {
+      //         console.error('Error parsing notification payload:', e);
+      //       }
+      //     }
+          
+      //     // Fallback if no roomId
+      //     await this.showLocalNotification(notification);
+      //   }
+      // );
       PushNotifications.addListener(
         'pushNotificationReceived',
         async (notification: PushNotificationSchema) => {
           console.log('📩 Foreground push received:', notification);
           
-          // ✅ Extract roomId and store notification ID
-          let payload = notification.data?.payload;
-          if (payload) {
-            try {
+          // ✅ Extract sender phone and match with contacts
+          let displayTitle = notification.title || 'New Message';
+          
+          try {
+            let payload = notification.data?.payload;
+            if (payload) {
               const data = JSON.parse(payload);
+              
+              if (data.senderPhone) {
+                // ✅ Match with saved contacts
+                const contactName = await this.getContactNameByPhone(data.senderPhone);
+                
+                if (contactName) {
+                  displayTitle = contactName; // ✅ Use saved contact name
+                  console.log(`📇 Found saved contact: ${contactName} for ${data.senderPhone}`);
+                } else {
+                  displayTitle = data.senderPhone; // ✅ Use phone number if not saved
+                  console.log(`📱 Contact not saved, using phone: ${data.senderPhone}`);
+                }
+              }
+              
+              // Store notification ID
               if (data.roomId) {
-                // Store this notification ID for later removal
                 const notifId = Math.floor(Math.random() * 1000000);
                 this.activeNotifications.set(data.roomId, notifId);
-                console.log(`📌 Stored notification ID ${notifId} for room ${data.roomId}`);
                 
-                // Pass notification ID to local notification
-                await this.showLocalNotification(notification, notifId, data.roomId);
+                // ✅ Pass modified title
+                await this.showLocalNotification(
+                  notification, 
+                  notifId, 
+                  data.roomId,
+                  displayTitle // ✅ Custom title
+                );
                 return;
               }
-            } catch (e) {
-              console.error('Error parsing notification payload:', e);
             }
-          }
-          
-          // Fallback if no roomId
+          } catch (e) {
+            console.error('Error processing notification:', e);
+          }          
           await this.showLocalNotification(notification);
         }
       );
 
       // 👉 CRITICAL: Background notification tapped
-      PushNotifications.addListener(
+      // PushNotifications.addListener(
+      //   'pushNotificationActionPerformed',
+      //   (notification: ActionPerformed) => {
+      //     console.log('👉 Raw notification tap:', notification);
+
+      //     let payload = notification.notification?.data?.payload;
+      //     let data: any = {};
+
+      //     try {
+      //       if (payload) data = JSON.parse(payload);
+      //     } catch (e) {
+      //       console.error('❌ JSON parse error:', e);
+      //     }
+
+      //     console.log('👉 Parsed tap data:', data);
+
+      //     this.handleNotificationTap(data);
+      //   }
+      // );
+
+       PushNotifications.addListener(
         'pushNotificationActionPerformed',
-        (notification: ActionPerformed) => {
-          console.log('👉 Raw notification tap:', notification);
+        async (notification: ActionPerformed) => {
+          console.log('👉 Background notification tap:', notification);
 
           let payload = notification.notification?.data?.payload;
           let data: any = {};
@@ -193,6 +261,16 @@ export class FcmService {
           }
 
           console.log('👉 Parsed tap data:', data);
+
+          // ✅ Match contact and update notification display (for next time)
+          if (data.senderPhone) {
+            const contactName = await this.getContactNameByPhone(data.senderPhone);
+            if (contactName) {
+              console.log(`📇 Contact matched in background: ${contactName}`);
+              // Store for future use if needed
+              data.displayName = contactName;
+            }
+          }
 
           this.handleNotificationTap(data);
         }
@@ -237,6 +315,63 @@ export class FcmService {
     } catch (error) {
       console.error('❌ Error initializing push notifications:', error);
       return false;
+    }
+  }
+
+  private async getContactNameByPhone(phoneNumber: string): Promise<string | null> {
+    try {
+      // Normalize phone number (remove spaces, dashes, etc.)
+      const normalizedPhone = phoneNumber.replace(/[\s\-\(\)]/g, '');
+      
+      // Check permission
+      const permission = await Contacts.checkPermissions();
+      
+      if (permission.contacts !== 'granted') {
+        console.warn('⚠️ Contacts permission not granted');
+        return null;
+      }
+
+      // Get all contacts
+      const result = await Contacts.getContacts({
+        projection: {
+          name: true,
+          phones: true,
+        }
+      });
+
+      if (!result.contacts || result.contacts.length === 0) {
+        return null;
+      }
+
+      // Search for matching contact
+      for (const contact of result.contacts) {
+        if (contact.phones && contact.phones.length > 0) {
+          for (const phone of contact.phones) {
+            // Normalize contact phone
+            const normalizedContactPhone = phone.number?.replace(/[\s\-\(\)]/g, '') || '';
+            
+            // Check if numbers match (last 10 digits for flexibility)
+            const last10Digits = normalizedPhone.slice(-10);
+            const contactLast10 = normalizedContactPhone.slice(-10);
+            
+            if (last10Digits === contactLast10 && contactLast10.length === 10) {
+              const displayName = contact.name?.display || 
+                                 contact.name?.given || 
+                                 contact.name?.family || 
+                                 null;
+              
+              if (displayName) {
+                return displayName;
+              }
+            }
+          }
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.error('❌ Error matching contact:', error);
+      return null;
     }
   }
 
@@ -328,21 +463,82 @@ export class FcmService {
   }
 
   // ✅ UPDATED: Accept notification ID and roomId
-  private async showLocalNotification(
+  // private async showLocalNotification(
+  //   notification: PushNotificationSchema,
+  //   notificationId?: number,
+  //   roomId?: string
+  // ) {
+  //   try {
+  //     const notificationData = notification.data || {};
+  //     const title =
+  //       notificationData.title || notification.title || 'New Message';
+  //     const body =
+  //       notificationData.body || notification.body || 'You have a new message';
+
+  //     const finalNotificationId = notificationId || Math.floor(Math.random() * 1000000);
+
+  //     // ✅ Store notification ID if roomId is available
+  //     if (roomId && !this.activeNotifications.has(roomId)) {
+  //       this.activeNotifications.set(roomId, finalNotificationId);
+  //     }
+
+  //     await LocalNotifications.schedule({
+  //       notifications: [
+  //         {
+  //           id: finalNotificationId,
+  //           title,
+  //           body,
+  //           extra: notificationData,
+  //           smallIcon: 'ic_notification',
+  //           sound: 'default',
+  //           schedule: { at: new Date(Date.now() + 500) },
+  //         },
+  //       ],
+  //     });
+
+  //     const toast = await this.toastController.create({
+  //       message: body,
+  //       duration: 3000,
+  //       position: 'top',
+  //       cssClass: 'custom-toast',
+  //       buttons: [
+  //         {
+  //           text: '',
+  //           handler: () => {
+  //             this.handleNotificationTap(notificationData);
+  //           },
+  //         },
+  //       ],
+  //     });
+
+  //     await toast.present();
+  //   } catch (error) {
+  //     console.error('❌ Error scheduling local notification or toast:', error);
+  //   }
+  // }
+
+   private async showLocalNotification(
     notification: PushNotificationSchema,
     notificationId?: number,
-    roomId?: string
+    roomId?: string,
+    customTitle?: string
   ) {
     try {
       const notificationData = notification.data || {};
-      const title =
-        notificationData.title || notification.title || 'New Message';
-      const body =
-        notificationData.body || notification.body || 'You have a new message';
+      
+      // ✅ Use custom title if provided
+      const title = customTitle || 
+                    notificationData.title || 
+                    notification.title || 
+                    'New Message';
+      
+      const body = notificationData.body || 
+                   notification.body || 
+                   'You have a new message';
 
       const finalNotificationId = notificationId || Math.floor(Math.random() * 1000000);
 
-      // ✅ Store notification ID if roomId is available
+      // Store notification ID
       if (roomId && !this.activeNotifications.has(roomId)) {
         this.activeNotifications.set(roomId, finalNotificationId);
       }
@@ -351,7 +547,7 @@ export class FcmService {
         notifications: [
           {
             id: finalNotificationId,
-            title,
+            title, // ✅ Use matched contact name or phone
             body,
             extra: notificationData,
             smallIcon: 'ic_notification',
@@ -362,7 +558,7 @@ export class FcmService {
       });
 
       const toast = await this.toastController.create({
-        message: body,
+        message: `${title}: ${body}`,
         duration: 3000,
         position: 'top',
         cssClass: 'custom-toast',

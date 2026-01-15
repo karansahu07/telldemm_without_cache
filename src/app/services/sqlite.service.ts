@@ -70,6 +70,7 @@ export interface IMessage {
   roomId: string;
   sender: string;
   sender_name: string;
+  sender_phone : string;
   receiver_id: string;
   type: 'text' | 'image' | 'audio' | 'video' | 'pdf' | 'other';
 

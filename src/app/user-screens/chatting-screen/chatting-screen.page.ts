@@ -76,7 +76,11 @@ import { ImageCropperModalComponent } from 'src/app/components/image-cropper-mod
 import { EmojiPickerModalComponent } from 'src/app/components/emoji-picker-modal/emoji-picker-modal.component';
 import { FcmService } from 'src/app/services/fcm-service';
 import { VoiceRecorder } from 'capacitor-voice-recorder';
-import { AndroidSettings, IOSSettings, NativeSettings } from 'capacitor-native-settings';
+import {
+  AndroidSettings,
+  IOSSettings,
+  NativeSettings,
+} from 'capacitor-native-settings';
 
 interface ICurrentChat {
   roomId: string;
@@ -196,52 +200,52 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   alertController: any;
   recordingPhase: 'recording' | 'paused' | 'listening' = 'recording';
   get micPermissionButtons() {
-  // 🟢 First time → Cancel + Continue
-  if (this.micPermissionStage === 'never-asked') {
-    return [
-      {
-        text: 'Cancel',
-        role: 'cancel',
-        handler: () => {
-          this.showMicPermissionPrompt = false;
-          this.isPermissionPromptOpen = false;
+    // 🟢 First time → Cancel + Continue
+    if (this.micPermissionStage === 'never-asked') {
+      return [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          handler: () => {
+            this.showMicPermissionPrompt = false;
+            this.isPermissionPromptOpen = false;
+          },
         },
-      },
-      {
-        text: 'Continue',
-        handler: () => {
-          this.requestMicPermissionFromPrompt();
+        {
+          text: 'Continue',
+          handler: () => {
+            this.requestMicPermissionFromPrompt();
+          },
         },
-      },
-    ];
+      ];
+    }
+
+    // 🔴 Denied once → Cancel + Settings
+    if (this.micPermissionStage === 'asked-denied') {
+      return [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          handler: () => {
+            this.showMicPermissionPrompt = false;
+            this.isPermissionPromptOpen = false;
+          },
+        },
+        {
+          text: 'Open Settings',
+          handler: () => {
+            this.openAppSettingsForNotifications();
+            this.showMicPermissionPrompt = false;
+            this.isPermissionPromptOpen = false;
+          },
+        },
+      ];
+    }
+
+    return [];
   }
 
-  // 🔴 Denied once → Cancel + Settings
-  if (this.micPermissionStage === 'asked-denied') {
-    return [
-      {
-        text: 'Cancel',
-        role: 'cancel',
-        handler: () => {
-          this.showMicPermissionPrompt = false;
-          this.isPermissionPromptOpen = false;
-        },
-      },
-      {
-        text: 'Open Settings',
-        handler: () => {
-          this.openAppSettingsForNotifications();
-          this.showMicPermissionPrompt = false;
-          this.isPermissionPromptOpen = false;
-        },
-      },
-    ];
-  }
-
-  return [];
-}
-
-    // 🎤 Voice Recording State
+  // 🎤 Voice Recording State
   isRecording = false;
   recordingTime = '00:00';
   previewTotalDuration = '00:00';
@@ -268,10 +272,11 @@ export class ChattingScreenPage implements OnInit, AfterViewInit, OnDestroy {
   private msgSpeeds = [1, 1.5, 2];
   private micPermissionGranted = false;
   showMicPermissionPrompt = false;
-  private micPermissionStage: 'never-asked' | 'asked-denied' | 'granted' = 'never-asked';
+  private micPermissionStage: 'never-asked' | 'asked-denied' | 'granted' =
+    'never-asked';
 
   isStoppingRecording = false;
-private isPermissionPromptOpen = false;  // prevent re-opening alert
+  private isPermissionPromptOpen = false; // prevent re-opening alert
 
   // 🔒 Minimum hold duration (300ms) before recording actually starts
   private micHoldStartTime: number = 0;
@@ -395,6 +400,7 @@ private isPermissionPromptOpen = false;  // prevent re-opening alert
 
   private groupMembershipRef: any = null;
   private groupMembershipUnsubscribe: (() => void) | null = null;
+  isChatMuted: boolean = false;
 
   constructor(
     private chatService: FirebaseChatService,
@@ -471,45 +477,44 @@ private isPermissionPromptOpen = false;  // prevent re-opening alert
     this.stopTypingSignal();
   }
 
-  
   async openAppSettingsForNotifications(): Promise<void> {
-  try {
-    await NativeSettings.open({
-      optionAndroid: AndroidSettings.ApplicationDetails,
-      optionIOS: IOSSettings.AppNotification,
-    });
-  } catch (error) {
-    console.error('❌ Error opening native settings:', error);
+    try {
+      await NativeSettings.open({
+        optionAndroid: AndroidSettings.ApplicationDetails,
+        optionIOS: IOSSettings.AppNotification,
+      });
+    } catch (error) {
+      console.error('❌ Error opening native settings:', error);
+    }
   }
-}
 
-    // real audio 
-    
-async toggleListen() {
-  const audio = this.previewAudio?.nativeElement;
-  if (!audio) return;
-  if (audio.paused) {
-    await audio.play();
-    this.recordingPhase = 'listening';
-    this.isAudioPlaying = true;
-  } else {
-    audio.pause();
-    this.recordingPhase = 'paused';
-    this.isAudioPlaying = false;
-    // On pause, show total duration
-    this.recordingTime = this.previewTotalDuration;
+  // real audio
+
+  async toggleListen() {
+    const audio = this.previewAudio?.nativeElement;
+    if (!audio) return;
+    if (audio.paused) {
+      await audio.play();
+      this.recordingPhase = 'listening';
+      this.isAudioPlaying = true;
+    } else {
+      audio.pause();
+      this.recordingPhase = 'paused';
+      this.isAudioPlaying = false;
+      // On pause, show total duration
+      this.recordingTime = this.previewTotalDuration;
+    }
   }
-}
 
-onPreviewTimeUpdate() {
-  const audio = this.previewAudio?.nativeElement;
-  // 🔒 CRITICAL FIX: Only update timer if preview is showing AND audio is actually playing
-  if (!audio || !this.isAudioPlaying || !this.showRecordingPreview) return;
-  const t = Math.floor(audio.currentTime);
-  const min = Math.floor(t / 60);
-  const sec = t % 60;
-  this.recordingTime = `${this.padNumber(min)}:${this.padNumber(sec)}`;
-}
+  onPreviewTimeUpdate() {
+    const audio = this.previewAudio?.nativeElement;
+    // 🔒 CRITICAL FIX: Only update timer if preview is showing AND audio is actually playing
+    if (!audio || !this.isAudioPlaying || !this.showRecordingPreview) return;
+    const t = Math.floor(audio.currentTime);
+    const min = Math.floor(t / 60);
+    const sec = t % 60;
+    this.recordingTime = `${this.padNumber(min)}:${this.padNumber(sec)}`;
+  }
 
   // Called when preview audio metadata is loaded
   onPreviewLoadedMetadata() {
@@ -525,320 +530,320 @@ onPreviewTimeUpdate() {
     }
   }
 
-onPreviewEnded() {
-  this.recordingPhase = 'paused';
-  this.isAudioPlaying = false;
-  // On end, show total duration
-  this.recordingTime = this.previewTotalDuration;
-  const audio = this.previewAudio?.nativeElement;
-  if (audio) audio.currentTime = 0;
-}
+  onPreviewEnded() {
+    this.recordingPhase = 'paused';
+    this.isAudioPlaying = false;
+    // On end, show total duration
+    this.recordingTime = this.previewTotalDuration;
+    const audio = this.previewAudio?.nativeElement;
+    if (audio) audio.currentTime = 0;
+  }
 
+  toggleMsgAudio(msg: any, audio: HTMLAudioElement) {
+    if (!audio) return;
 
-toggleMsgAudio(msg: any, audio: HTMLAudioElement) {
-  if (!audio) return;
-
-  if (msg._isPlaying) {
-    audio.pause();
-    msg._isPlaying = false;
-    // 👇 pause handler will restore duration
-  } else {
-    // 🔒 CRITICAL FIX: Ensure audio metadata is loaded before playing
-    if (!msg._duration || msg._duration === '00:00') {
-      // Audio metadata not loaded yet, try to load it
-      if (audio.readyState >= 2) {
-        // HAVE_CURRENT_DATA or better - we can access duration
-        this.onMsgAudioLoaded(msg, audio);
-      } else {
-        // Wait for metadata to load
-        const handler = () => {
+    if (msg._isPlaying) {
+      audio.pause();
+      msg._isPlaying = false;
+      // 👇 pause handler will restore duration
+    } else {
+      // 🔒 CRITICAL FIX: Ensure audio metadata is loaded before playing
+      if (!msg._duration || msg._duration === '00:00') {
+        // Audio metadata not loaded yet, try to load it
+        if (audio.readyState >= 2) {
+          // HAVE_CURRENT_DATA or better - we can access duration
           this.onMsgAudioLoaded(msg, audio);
-          audio.removeEventListener('loadedmetadata', handler);
-        };
-        audio.addEventListener('loadedmetadata', handler);
+        } else {
+          // Wait for metadata to load
+          const handler = () => {
+            this.onMsgAudioLoaded(msg, audio);
+            audio.removeEventListener('loadedmetadata', handler);
+          };
+          audio.addEventListener('loadedmetadata', handler);
+        }
       }
+
+      // ▶️ play from current position
+      audio.play();
+      msg._isPlaying = true;
+    }
+  }
+  onMsgAudioPaused(msg: any) {
+    msg._isPlaying = false;
+
+    // ✅ On pause → show TOTAL duration
+    if (msg._duration) {
+      msg._currentTime = msg._duration;
+    }
+  }
+
+  toggleMsgSpeed(msg: any, audio: HTMLAudioElement) {
+    const current = parseFloat(msg._speed || '1');
+    const idx = this.msgSpeeds.indexOf(current);
+    const next = this.msgSpeeds[(idx + 1) % this.msgSpeeds.length];
+
+    audio.playbackRate = next;
+    msg._speed = `${next}x`;
+  }
+
+  onMsgAudioLoaded(msg: any, audio: HTMLAudioElement) {
+    if (!audio) return;
+
+    // 🔒 Handle both cases: loaded via event or called manually
+    if (isNaN(audio.duration)) {
+      // Duration not available yet, try again after a short delay
+      setTimeout(() => {
+        if (!isNaN(audio.duration)) {
+          this.onMsgAudioLoaded(msg, audio);
+        }
+      }, 100);
+      return;
     }
 
-    // ▶️ play from current position
-    audio.play();
-    msg._isPlaying = true;
-  }
-}
-onMsgAudioPaused(msg: any) {
-  msg._isPlaying = false;
+    const total = Math.floor(audio.duration);
+    const minutes = Math.floor(total / 60);
+    const seconds = total % 60;
 
-  // ✅ On pause → show TOTAL duration
-  if (msg._duration) {
+    // ✅ store total duration
+    msg._duration = `${this.padNumber(minutes)}:${this.padNumber(seconds)}`;
+
+    // ✅ show total duration BEFORE play
     msg._currentTime = msg._duration;
-  }
-}
 
-
-toggleMsgSpeed(msg: any, audio: HTMLAudioElement) {
-  const current = parseFloat(msg._speed || '1');
-  const idx = this.msgSpeeds.indexOf(current);
-  const next = this.msgSpeeds[(idx + 1) % this.msgSpeeds.length];
-
-  audio.playbackRate = next;
-  msg._speed = `${next}x`;
-}
-
-onMsgAudioLoaded(msg: any, audio: HTMLAudioElement) {
-  if (!audio) return;
-
-  // 🔒 Handle both cases: loaded via event or called manually
-  if (isNaN(audio.duration)) {
-    // Duration not available yet, try again after a short delay
-    setTimeout(() => {
-      if (!isNaN(audio.duration)) {
-        this.onMsgAudioLoaded(msg, audio);
-      }
-    }, 100);
-    return;
+    // 🔒 CRITICAL FIX: Trigger change detection to update UI
+    this.cdr.detectChanges();
   }
 
-  const total = Math.floor(audio.duration);
-  const minutes = Math.floor(total / 60);
-  const seconds = total % 60;
+  // 🎤 Initialize all audio messages after messages are rendered
+  async ensureAudioMetadataLoaded() {
+    // Delay to allow DOM to render
+    await new Promise((r) => setTimeout(r, 500));
 
-  // ✅ store total duration
-  msg._duration = `${this.padNumber(minutes)}:${this.padNumber(seconds)}`;
+    // Find all audio elements in the DOM
+    const audioElements = Array.from(
+      document.querySelectorAll('audio')
+    ) as HTMLAudioElement[];
 
-  // ✅ show total duration BEFORE play
-  msg._currentTime = msg._duration;
+    for (const audioElement of audioElements) {
+      // 🔒 CRITICAL FIX: Set up loadedmetadata listener for each audio element
+      // This ensures we capture the duration when it's available
+      const handleLoadedMetadata = () => {
+        if (!isNaN(audioElement.duration) && audioElement.duration > 0) {
+          // Get the message from the closest parent
+          const msgWrapper = audioElement.closest('[data-msg-key]');
+          if (msgWrapper) {
+            const msgKey = msgWrapper.getAttribute('data-msg-key');
 
-  // 🔒 CRITICAL FIX: Trigger change detection to update UI
-  this.cdr.detectChanges();
-}
-
-// 🎤 Initialize all audio messages after messages are rendered
-async ensureAudioMetadataLoaded() {
-  // Delay to allow DOM to render
-  await new Promise(r => setTimeout(r, 500));
-
-  // Find all audio elements in the DOM
-  const audioElements = Array.from(document.querySelectorAll('audio')) as HTMLAudioElement[];
-  
-  for (const audioElement of audioElements) {
-    // 🔒 CRITICAL FIX: Set up loadedmetadata listener for each audio element
-    // This ensures we capture the duration when it's available
-    const handleLoadedMetadata = () => {
-      if (!isNaN(audioElement.duration) && audioElement.duration > 0) {
-        // Get the message from the closest parent
-        const msgWrapper = audioElement.closest('[data-msg-key]');
-        if (msgWrapper) {
-          const msgKey = msgWrapper.getAttribute('data-msg-key');
-          
-          // Find the message in grouped messages
-          for (const group of this.groupedMessages) {
-            const msg = group.messages.find(m => (m as any).msgId === msgKey);
-            if (msg && (msg as any).attachment?.type === 'audio') {
-              this.onMsgAudioLoaded(msg as any, audioElement);
-              break;
+            // Find the message in grouped messages
+            for (const group of this.groupedMessages) {
+              const msg = group.messages.find(
+                (m) => (m as any).msgId === msgKey
+              );
+              if (msg && (msg as any).attachment?.type === 'audio') {
+                this.onMsgAudioLoaded(msg as any, audioElement);
+                break;
+              }
             }
           }
         }
-      }
-    };
+      };
 
-    // Check if already loaded
-    if (!isNaN(audioElement.duration) && audioElement.duration > 0) {
-      handleLoadedMetadata();
-    } else {
-      // Wait for loadedmetadata event
-      if (!audioElement.hasAttribute('data-metadata-listener')) {
-        audioElement.addEventListener('loadedmetadata', handleLoadedMetadata, { once: true });
-        audioElement.setAttribute('data-metadata-listener', 'true');
+      // Check if already loaded
+      if (!isNaN(audioElement.duration) && audioElement.duration > 0) {
+        handleLoadedMetadata();
+      } else {
+        // Wait for loadedmetadata event
+        if (!audioElement.hasAttribute('data-metadata-listener')) {
+          audioElement.addEventListener(
+            'loadedmetadata',
+            handleLoadedMetadata,
+            { once: true }
+          );
+          audioElement.setAttribute('data-metadata-listener', 'true');
+        }
       }
     }
   }
-}
 
+  updateMsgAudioTime(msg: any, audio: HTMLAudioElement) {
+    if (!audio || !audio.duration) return;
 
-updateMsgAudioTime(msg: any, audio: HTMLAudioElement) {
-  if (!audio || !audio.duration) return;
+    // ⏱ current time
+    const t = Math.floor(audio.currentTime);
+    const min = Math.floor(t / 60);
+    const sec = t % 60;
 
-  // ⏱ current time
-  const t = Math.floor(audio.currentTime);
-  const min = Math.floor(t / 60);
-  const sec = t % 60;
+    msg._currentTime = `${this.padNumber(min)}:${this.padNumber(sec)}`;
 
-  msg._currentTime = `${this.padNumber(min)}:${this.padNumber(sec)}`;
-
-  // 📊 waveform progress
-  const totalDots = 28;
-  const progress = audio.currentTime / audio.duration;
-  msg._progressDots = Math.floor(progress * totalDots);
-}
-
-
-resetMsgAudio(msg: any) {
-  msg._isPlaying = false;
-
-  // ✅ After finish → back to total duration
-  if (msg._duration) {
-    msg._currentTime = msg._duration;
+    // 📊 waveform progress
+    const totalDots = 28;
+    const progress = audio.currentTime / audio.duration;
+    msg._progressDots = Math.floor(progress * totalDots);
   }
-}
 
-togglePreviewSpeed() {
-  const idx = this.previewSpeeds.indexOf(this.previewPlaybackSpeed);
-  this.previewPlaybackSpeed =
-    this.previewSpeeds[(idx + 1) % this.previewSpeeds.length];
+  resetMsgAudio(msg: any) {
+    msg._isPlaying = false;
 
-  if (this.previewAudioElement) {
-    this.previewAudioElement.playbackRate = this.previewPlaybackSpeed;
+    // ✅ After finish → back to total duration
+    if (msg._duration) {
+      msg._currentTime = msg._duration;
+    }
   }
-}
 
-seekPreviewAudio(event: any) {
-  if (!this.previewAudioElement) return;
-  this.previewAudioElement.currentTime = +event.target.value;
-}
+  togglePreviewSpeed() {
+    const idx = this.previewSpeeds.indexOf(this.previewPlaybackSpeed);
+    this.previewPlaybackSpeed =
+      this.previewSpeeds[(idx + 1) % this.previewSpeeds.length];
 
-seekMsgAudio(event: Event, audio: HTMLAudioElement) {
-  if (!audio) return;
+    if (this.previewAudioElement) {
+      this.previewAudioElement.playbackRate = this.previewPlaybackSpeed;
+    }
+  }
 
-  audio.pause();
-  audio.currentTime = Number(
-    (event.target as HTMLInputElement).value
-  );
-  audio.play();
-} 
+  seekPreviewAudio(event: any) {
+    if (!this.previewAudioElement) return;
+    this.previewAudioElement.currentTime = +event.target.value;
+  }
+
+  seekMsgAudio(event: Event, audio: HTMLAudioElement) {
+    if (!audio) return;
+
+    audio.pause();
+    audio.currentTime = Number((event.target as HTMLInputElement).value);
+    audio.play();
+  }
 
   // ========================================
-  // 🎤 VOICE RECORDING METHODS   
+  // 🎤 VOICE RECORDING METHODS
   // ========================================
 
   onPreviewMicTap() {
-  // 📳 Same subtle vibration as hold mic
-  if (this.platform.is('capacitor')) {
-    navigator.vibrate?.(20);
-  }
-
-  // Resume recording
-  this.resumeRecording();
-}
-
-async startRecording(event?: any) {
-  // 🔒 Record when the user touches down - start hold timer
-  this.micHoldStartTime = Date.now();
-  this.shouldStartRecording = false;
-
-  // Check if already recording
-  if (this.isRecording) return;
-
-  // ------------------------------------------------
-  // 🔐 Permission gate (FINAL)
-  // ------------------------------------------------
-  if (this.micPermissionStage !== 'granted') {
-    if (!this.isPermissionPromptOpen) {
-      this.showMicPermissionPrompt = true;
-      this.isPermissionPromptOpen = true;
-    }
-    return;
-  }
-
-  // ------------------------------------------------
-  // ⏰ Check minimum hold duration
-  // ------------------------------------------------
-  // Wait for minimum hold time before starting actual recording
-  await new Promise(r => setTimeout(r, this.minHoldDuration));
-
-  // If user released before minimum hold, don't start recording
-  if (!this.micHoldStartTime || Date.now() - this.micHoldStartTime < this.minHoldDuration) {
-    return;
-  }
-
-  // User held long enough, proceed with recording
-  this.shouldStartRecording = true;
-
-  // ------------------------------------------------
-  // 🧹 Safety: stop dangling recorder
-  // ------------------------------------------------
-  try {
-    const status = await VoiceRecorder.getCurrentStatus();
-    if (status.status === 'RECORDING') {
-      await VoiceRecorder.stopRecording();
-      await new Promise(r => setTimeout(r, 300));
-    }
-  } catch {}
-
-  // ------------------------------------------------
-  // 📍 Capture touch
-  // ------------------------------------------------
-  if (event?.touches?.[0]) {
-    this.recordingStartY = event.touches[0].clientY;
-    this.recordingStartX = event.touches[0].clientX;
-  } else if (event?.clientX || event?.clientY) {
-    this.recordingStartY = event.clientY;
-    this.recordingStartX = event.clientX;
-  }
-
-  this.hasSwipedUp = false;
-  this.hasSwipedLeft = false;
-
-  // ------------------------------------------------
-  // 🎙️ UI before recording
-  // ------------------------------------------------
-  this.isRecording = true;
-  if (this.platform.is('capacitor')) {
-  navigator.vibrate?.(20);
-}
-  // If starting fresh (not resuming), reset segments
-  if (!this.isRecordingPaused) {
-    this.audioSegments = [];
-    this.recordingSeconds = 0;
-    this.recordingTime = '00:00';
-    // 🧹 CRITICAL FIX: Clear all preview state when starting new recording
-    this.showRecordingPreview = false;
-    this.isAudioPlaying = false;
-    this.recordingPhase = 'recording';
-    this.selectedAttachment = null;
-    this.previewAudioElement = null;
-    // Clean up old preview URLs
-    if (this.selectedAttachment?.previewUrl) {
-      URL.revokeObjectURL(this.selectedAttachment.previewUrl);
-    }
-  }
-  this.startRecordingTimer();
-
-  // ------------------------------------------------
-  // 🎤 START RECORDING
-  // ------------------------------------------------
-  await VoiceRecorder.startRecording();
-}
-
-
-
-async checkMicPermission(): Promise<boolean> {
-  const status = await VoiceRecorder.hasAudioRecordingPermission();
-  return status.value === true;
-}
-
-
-async requestMicPermissionFromPrompt() {
-  try {
-    // User explicitly wants to continue
-    await VoiceRecorder.requestAudioRecordingPermission();
-
-    const granted = await this.checkMicPermission();
-
-    if (granted) {
-      this.micPermissionStage = 'granted';
-    } else {
-      // User denied in system dialog
-      this.micPermissionStage = 'asked-denied';
+    // 📳 Same subtle vibration as hold mic
+    if (this.platform.is('capacitor')) {
+      navigator.vibrate?.(20);
     }
 
-    this.showMicPermissionPrompt = false;
-    this.isPermissionPromptOpen = false;
-
-  } catch (e) {
-    console.error('Mic permission request failed', e);
+    // Resume recording
+    this.resumeRecording();
   }
-}
 
+  async startRecording(event?: any) {
+    // 🔒 Record when the user touches down - start hold timer
+    this.micHoldStartTime = Date.now();
+    this.shouldStartRecording = false;
+
+    // Check if already recording
+    if (this.isRecording) return;
+
+    // ------------------------------------------------
+    // 🔐 Permission gate (FINAL)
+    // ------------------------------------------------
+    if (this.micPermissionStage !== 'granted') {
+      if (!this.isPermissionPromptOpen) {
+        this.showMicPermissionPrompt = true;
+        this.isPermissionPromptOpen = true;
+      }
+      return;
+    }
+
+    // ------------------------------------------------
+    // ⏰ Check minimum hold duration
+    // ------------------------------------------------
+    // Wait for minimum hold time before starting actual recording
+    await new Promise((r) => setTimeout(r, this.minHoldDuration));
+
+    // If user released before minimum hold, don't start recording
+    if (
+      !this.micHoldStartTime ||
+      Date.now() - this.micHoldStartTime < this.minHoldDuration
+    ) {
+      return;
+    }
+
+    // User held long enough, proceed with recording
+    this.shouldStartRecording = true;
+
+    // ------------------------------------------------
+    // 🧹 Safety: stop dangling recorder
+    // ------------------------------------------------
+    try {
+      const status = await VoiceRecorder.getCurrentStatus();
+      if (status.status === 'RECORDING') {
+        await VoiceRecorder.stopRecording();
+        await new Promise((r) => setTimeout(r, 300));
+      }
+    } catch {}
+
+    // ------------------------------------------------
+    // 📍 Capture touch
+    // ------------------------------------------------
+    if (event?.touches?.[0]) {
+      this.recordingStartY = event.touches[0].clientY;
+      this.recordingStartX = event.touches[0].clientX;
+    } else if (event?.clientX || event?.clientY) {
+      this.recordingStartY = event.clientY;
+      this.recordingStartX = event.clientX;
+    }
+
+    this.hasSwipedUp = false;
+    this.hasSwipedLeft = false;
+
+    // ------------------------------------------------
+    // 🎙️ UI before recording
+    // ------------------------------------------------
+    this.isRecording = true;
+    if (this.platform.is('capacitor')) {
+      navigator.vibrate?.(20);
+    }
+    // If starting fresh (not resuming), reset segments
+    if (!this.isRecordingPaused) {
+      this.audioSegments = [];
+      this.recordingSeconds = 0;
+      this.recordingTime = '00:00';
+      // 🧹 CRITICAL FIX: Clear all preview state when starting new recording
+      this.showRecordingPreview = false;
+      this.isAudioPlaying = false;
+      this.recordingPhase = 'recording';
+      this.selectedAttachment = null;
+      this.previewAudioElement = null;
+      // Clean up old preview URLs
+      if (this.selectedAttachment?.previewUrl) {
+        URL.revokeObjectURL(this.selectedAttachment.previewUrl);
+      }
+    }
+    this.startRecordingTimer();
+
+    // ------------------------------------------------
+    // 🎤 START RECORDING
+    // ------------------------------------------------
+    await VoiceRecorder.startRecording();
+  }
+
+  async checkMicPermission(): Promise<boolean> {
+    const status = await VoiceRecorder.hasAudioRecordingPermission();
+    return status.value === true;
+  }
+
+  async requestMicPermissionFromPrompt() {
+    try {
+      // User explicitly wants to continue
+      await VoiceRecorder.requestAudioRecordingPermission();
+
+      const granted = await this.checkMicPermission();
+
+      if (granted) {
+        this.micPermissionStage = 'granted';
+      } else {
+        // User denied in system dialog
+        this.micPermissionStage = 'asked-denied';
+      }
+
+      this.showMicPermissionPrompt = false;
+      this.isPermissionPromptOpen = false;
+    } catch (e) {
+      console.error('Mic permission request failed', e);
+    }
+  }
 
   onRecordingTouchMove(event: TouchEvent) {
     if (!this.isRecording) return;
@@ -881,93 +886,91 @@ async requestMicPermissionFromPrompt() {
     }
   }
 
-async stopRecording() {
-  // 🔒 Clear hold timer when user releases
-  this.micHoldStartTime = 0;
+  async stopRecording() {
+    // 🔒 Clear hold timer when user releases
+    this.micHoldStartTime = 0;
 
-  // 🔒 Prevent double execution (touchend + mouseup)
-  if (this.isStoppingRecording) {
-    console.log('stopRecording already in progress, ignoring duplicate call');
-    return;
-  }
-
-  // 🔒 If user didn't hold long enough, cancel instead of stopping
-  if (!this.shouldStartRecording) {
-    console.log('Recording not started (insufficient hold time)');
-    return;
-  }
-
-  if (!this.isRecording && !this.showRecordingPreview) {
-    console.log('Not recording, ignoring stop call');
-    return;
-  }
-
-  // 👆 If user swiped up → keep recording, just show preview
-  if (this.hasSwipedUp || this.showRecordingPreview) {
-    this.showRecordingPreview = true;
-    return;
-  }
-
-  this.isStoppingRecording = true;
-
-  try {
-    console.log('Stopping recording...');
-
-    // Stop UI timer first
-    this.isRecording = false;
-    this.stopRecordingTimer();
-
-    const result = await VoiceRecorder.stopRecording();
-    console.log('Recording stopped, processing result...');
-
-    if (!result?.value?.recordDataBase64) {
-      throw new Error('No audio data returned');
+    // 🔒 Prevent double execution (touchend + mouseup)
+    if (this.isStoppingRecording) {
+      console.log('stopRecording already in progress, ignoring duplicate call');
+      return;
     }
 
-    // Convert base64 to Blob
-    const blob = this.base64ToBlob(
-      result.value.recordDataBase64,
-      'audio/aac'
-    );
-    // Append segment
-    this.audioSegments.push(blob);
-    // Generate metadata for preview
-    const timestamp = Date.now();
-    const fileName = `voice_${timestamp}.aac`;
-    const previewUrl = URL.createObjectURL(this.combinedAudioBlob!);
-    this.selectedAttachment = {
-      type: 'audio',
-      blob: this.combinedAudioBlob!,
-      fileName,
-      mimeType: 'audio/aac',
-      fileSize: this.combinedAudioBlob!.size,
-      previewUrl,
-    };
-if (!this.hasSwipedUp) {
-  await this.sendRecordingFromPreview();
-  return;
-}
-    this.hasSwipedUp = false;
-    console.log('✅ Recording ready in inline preview (multi-segment)');
+    // 🔒 If user didn't hold long enough, cancel instead of stopping
+    if (!this.shouldStartRecording) {
+      console.log('Recording not started (insufficient hold time)');
+      return;
+    }
 
-  } catch (error) {
-    console.error('Error stopping recording:', error);
+    if (!this.isRecording && !this.showRecordingPreview) {
+      console.log('Not recording, ignoring stop call');
+      return;
+    }
 
-    this.isRecording = false;
-    this.showRecordingPreview = false;
-    this.stopRecordingTimer();
+    // 👆 If user swiped up → keep recording, just show preview
+    if (this.hasSwipedUp || this.showRecordingPreview) {
+      this.showRecordingPreview = true;
+      return;
+    }
 
-    const toast = await this.toastCtrl.create({
-      message: 'Failed to save recording. Please try again.',
-      duration: 2000,
-      color: 'danger',
-    });
-    await toast.present();
-  } finally {
-    this.isStoppingRecording = false;
+    this.isStoppingRecording = true;
+
+    try {
+      console.log('Stopping recording...');
+
+      // Stop UI timer first
+      this.isRecording = false;
+      this.stopRecordingTimer();
+
+      const result = await VoiceRecorder.stopRecording();
+      console.log('Recording stopped, processing result...');
+
+      if (!result?.value?.recordDataBase64) {
+        throw new Error('No audio data returned');
+      }
+
+      // Convert base64 to Blob
+      const blob = this.base64ToBlob(
+        result.value.recordDataBase64,
+        'audio/aac'
+      );
+      // Append segment
+      this.audioSegments.push(blob);
+      // Generate metadata for preview
+      const timestamp = Date.now();
+      const fileName = `voice_${timestamp}.aac`;
+      const previewUrl = URL.createObjectURL(this.combinedAudioBlob!);
+      this.selectedAttachment = {
+        type: 'audio',
+        blob: this.combinedAudioBlob!,
+        fileName,
+        mimeType: 'audio/aac',
+        fileSize: this.combinedAudioBlob!.size,
+        previewUrl,
+      };
+      if (!this.hasSwipedUp) {
+        await this.sendRecordingFromPreview();
+        return;
+      }
+      this.hasSwipedUp = false;
+      console.log('✅ Recording ready in inline preview (multi-segment)');
+    } catch (error) {
+      console.error('Error stopping recording:', error);
+
+      this.isRecording = false;
+      this.showRecordingPreview = false;
+      this.stopRecordingTimer();
+
+      const toast = await this.toastCtrl.create({
+        message: 'Failed to save recording. Please try again.',
+        duration: 2000,
+        color: 'danger',
+      });
+      await toast.present();
+    } finally {
+      this.isStoppingRecording = false;
+    }
   }
-}
-
 
   async stopRecordingAndGetFullAudio() {
     if (!this.isRecording) {
@@ -1011,33 +1014,30 @@ if (!this.hasSwipedUp) {
     await VoiceRecorder.startRecording();
   }
 
-async pauseRecording() {
-  if (!this.isRecording) return;
-  this.isRecordingPaused = true;
-  this.stopRecordingTimer();
-  // Stop recorder and store audio so far
-  const result = await VoiceRecorder.stopRecording();
-  if (!result?.value?.recordDataBase64) return;
-  const blob = this.base64ToBlob(
-    result.value.recordDataBase64,
-    'audio/aac'
-  );
-  // Append segment
-  this.audioSegments.push(blob);
-  // Update preview to use combined audio
-  const previewUrl = URL.createObjectURL(this.combinedAudioBlob!);
-  this.selectedAttachment = {
-    type: 'audio',
-    blob: this.combinedAudioBlob!,
-    fileName: `voice_${Date.now()}.aac`,
-    mimeType: 'audio/aac',
-    fileSize: this.combinedAudioBlob!.size,
-    previewUrl,
-  };
-  this.isRecording = false;
-  this.recordingPhase = 'paused';
-  this.showRecordingPreview = true;
-}
+  async pauseRecording() {
+    if (!this.isRecording) return;
+    this.isRecordingPaused = true;
+    this.stopRecordingTimer();
+    // Stop recorder and store audio so far
+    const result = await VoiceRecorder.stopRecording();
+    if (!result?.value?.recordDataBase64) return;
+    const blob = this.base64ToBlob(result.value.recordDataBase64, 'audio/aac');
+    // Append segment
+    this.audioSegments.push(blob);
+    // Update preview to use combined audio
+    const previewUrl = URL.createObjectURL(this.combinedAudioBlob!);
+    this.selectedAttachment = {
+      type: 'audio',
+      blob: this.combinedAudioBlob!,
+      fileName: `voice_${Date.now()}.aac`,
+      mimeType: 'audio/aac',
+      fileSize: this.combinedAudioBlob!.size,
+      previewUrl,
+    };
+    this.isRecording = false;
+    this.recordingPhase = 'paused';
+    this.showRecordingPreview = true;
+  }
 
   async toggleAudioPlayback() {
     // If still recording, don't allow playback control
@@ -1048,14 +1048,20 @@ async pauseRecording() {
     if (this.selectedAttachment && this.selectedAttachment.type === 'audio') {
       // If previewAudioElement not set, set it up
       setTimeout(() => {
-        const audioEl = document.querySelector('.preview-audio-element') as HTMLAudioElement;
+        const audioEl = document.querySelector(
+          '.preview-audio-element'
+        ) as HTMLAudioElement;
         if (audioEl) {
           this.previewAudioElement = audioEl;
           if (!audioEl.hasAttribute('data-listeners-added')) {
-            audioEl.addEventListener('loadedmetadata', () => this.onAudioLoaded());
+            audioEl.addEventListener('loadedmetadata', () =>
+              this.onAudioLoaded()
+            );
             audioEl.addEventListener('play', () => this.onAudioPlay());
             audioEl.addEventListener('pause', () => this.onAudioPause());
-            audioEl.addEventListener('timeupdate', () => this.onAudioTimeUpdate());
+            audioEl.addEventListener('timeupdate', () =>
+              this.onAudioTimeUpdate()
+            );
             audioEl.addEventListener('ended', () => this.onAudioEnded());
             audioEl.setAttribute('data-listeners-added', 'true');
           }
@@ -1094,7 +1100,9 @@ async pauseRecording() {
       const currentTime = Math.floor(this.previewAudioElement.currentTime);
       const minutes = Math.floor(currentTime / 60);
       const seconds = currentTime % 60;
-      this.recordingTime = `${this.padNumber(minutes)}:${this.padNumber(seconds)}`;
+      this.recordingTime = `${this.padNumber(minutes)}:${this.padNumber(
+        seconds
+      )}`;
     }
   }
 
@@ -1107,7 +1115,9 @@ async pauseRecording() {
   onAudioLoaded() {
     // Audio metadata loaded - initialize playback state
     if (this.previewAudioElement) {
-      const audioEl = document.querySelector('.preview-audio-element') as HTMLAudioElement;
+      const audioEl = document.querySelector(
+        '.preview-audio-element'
+      ) as HTMLAudioElement;
       if (audioEl && !this.previewAudioElement) {
         this.previewAudioElement = audioEl;
       }
@@ -1120,11 +1130,18 @@ async pauseRecording() {
   onAudioTimeUpdate() {
     // Update timer based on audio playback position when in preview mode AND not recording
     // If recording, timer is already updating via startRecordingTimer()
-    if (this.previewAudioElement && this.showRecordingPreview && !this.isRecording && this.isAudioPlaying) {
+    if (
+      this.previewAudioElement &&
+      this.showRecordingPreview &&
+      !this.isRecording &&
+      this.isAudioPlaying
+    ) {
       const currentTime = Math.floor(this.previewAudioElement.currentTime);
       const minutes = Math.floor(currentTime / 60);
       const seconds = currentTime % 60;
-      this.recordingTime = `${this.padNumber(minutes)}:${this.padNumber(seconds)}`;
+      this.recordingTime = `${this.padNumber(minutes)}:${this.padNumber(
+        seconds
+      )}`;
     }
   }
 
@@ -1175,44 +1192,46 @@ async pauseRecording() {
     this.previewTotalDuration = '00:00';
   }
 
-async sendRecordingFromPreview() {
-  // ⛔ If recording still active → stop FIRST
-  if (this.isRecording) {
-    const result = await VoiceRecorder.stopRecording();
-    if (result?.value?.recordDataBase64) {
-      const blob = this.base64ToBlob(result.value.recordDataBase64, 'audio/aac');
-      this.audioSegments.push(blob);
+  async sendRecordingFromPreview() {
+    // ⛔ If recording still active → stop FIRST
+    if (this.isRecording) {
+      const result = await VoiceRecorder.stopRecording();
+      if (result?.value?.recordDataBase64) {
+        const blob = this.base64ToBlob(
+          result.value.recordDataBase64,
+          'audio/aac'
+        );
+        this.audioSegments.push(blob);
+      }
+      this.isRecording = false;
+      this.stopRecordingTimer();
     }
-    this.isRecording = false;
-    this.stopRecordingTimer();
+    // ✅ STOP playback before sending
+    const audio = this.previewAudio?.nativeElement;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+    // Use combined audio for sending
+    if (this.combinedAudioBlob) {
+      this.selectedAttachment = {
+        type: 'audio',
+        blob: this.combinedAudioBlob,
+        fileName: `voice_${Date.now()}.aac`,
+        mimeType: 'audio/aac',
+        fileSize: this.combinedAudioBlob.size,
+        previewUrl: URL.createObjectURL(this.combinedAudioBlob),
+      };
+    }
+    await this.sendMessage();
+    // 🧹 cleanup
+    this.audioSegments = [];
+    this.showRecordingPreview = false;
+    this.isAudioPlaying = false;
+    this.recordingPhase = 'paused';
+    this.recordingTime = '00:00';
+    this.selectedAttachment = null;
   }
-  // ✅ STOP playback before sending
-  const audio = this.previewAudio?.nativeElement;
-  if (audio) {
-    audio.pause();
-    audio.currentTime = 0;
-  }
-  // Use combined audio for sending
-  if (this.combinedAudioBlob) {
-    this.selectedAttachment = {
-      type: 'audio',
-      blob: this.combinedAudioBlob,
-      fileName: `voice_${Date.now()}.aac`,
-      mimeType: 'audio/aac',
-      fileSize: this.combinedAudioBlob.size,
-      previewUrl: URL.createObjectURL(this.combinedAudioBlob),
-    };
-  }
-  await this.sendMessage();
-  // 🧹 cleanup
-  this.audioSegments = [];
-  this.showRecordingPreview = false;
-  this.isAudioPlaying = false;
-  this.recordingPhase = 'paused';
-  this.recordingTime = '00:00';
-  this.selectedAttachment = null;
-}
-
 
   async cancelRecording() {
     // 🔒 Clear hold timer
@@ -1259,7 +1278,9 @@ async sendRecordingFromPreview() {
       this.recordingSeconds++;
       const minutes = Math.floor(this.recordingSeconds / 60);
       const seconds = this.recordingSeconds % 60;
-      this.recordingTime = `${this.padNumber(minutes)}:${this.padNumber(seconds)}`;
+      this.recordingTime = `${this.padNumber(minutes)}:${this.padNumber(
+        seconds
+      )}`;
     }, 1000);
   }
 
@@ -1284,7 +1305,7 @@ async sendRecordingFromPreview() {
     return new Blob([byteArray], { type: mimeType });
   }
 
- /////////////////////
+  /////////////////////
 
   private async sendTypingSignal() {
     try {
@@ -1332,6 +1353,7 @@ async sendRecordingFromPreview() {
     // Load initial messages
     // await this.chatService.loadMessages(20, true);
     // this.chatService.syncMessagesWithServer();
+    
     this.route.queryParamMap.subscribe((params) => {
       const from = params.get('from');
 
@@ -1406,6 +1428,7 @@ async sendRecordingFromPreview() {
     console.log({ currentChat });
     this.chatType = currentChat?.type || '';
 
+    await this.checkChatMuteStatus();
     if (this.chatType === 'private') {
       const parts: string[] = currentChat?.roomId?.split('_') || [];
       this.receiverId =
@@ -1438,7 +1461,7 @@ async sendRecordingFromPreview() {
       console.log('✅ Notifications cleared for room:', this.roomId);
     }
 
-        // 🎤 CRITICAL FIX: Load audio metadata for all audio messages when entering view
+    // 🎤 CRITICAL FIX: Load audio metadata for all audio messages when entering view
     this.ensureAudioMetadataLoaded();
 
     // ✅ Scroll to bottom after first load
@@ -1907,6 +1930,7 @@ async sendRecordingFromPreview() {
       translucent: true,
       componentProps: {
         chatType: this.chatType,
+        isMuted: this.isChatMuted, // ✅ Pass current mute status
       },
     });
 
@@ -1945,6 +1969,16 @@ async sendRecordingFromPreview() {
       await this.handleClearChat();
       return;
     }
+
+    if (option === 'Mute Notifications') {
+    await this.muteCurrentChat();
+    return;
+  }
+
+  if (option === 'Unmute Notifications') {
+    await this.unmuteCurrentChat();
+    return;
+  }
 
     const groupId = this.receiverId;
     const userId = await this.secureStorage.getItem('userId');
@@ -2122,6 +2156,139 @@ async sendRecordingFromPreview() {
         color: 'danger',
       });
       await toast.present();
+    }
+  }
+
+  async checkChatMuteStatus() {
+    console.log("1111111111111",this.roomId, this.senderId)
+    try {
+      if (!this.roomId || !this.senderId) {
+        this.isChatMuted = false;
+        return;
+      }
+
+      this.isChatMuted = await this.chatService.isChatMuted(
+        this.roomId,
+        this.senderId
+      );
+
+      console.log(
+        `🔕 Chat mute status: ${this.isChatMuted ? 'Muted' : 'Unmuted'}`
+      );
+    } catch (error) {
+      console.error('❌ Error checking chat mute status:', error);
+      this.isChatMuted = false;
+    }
+  }
+
+  /**
+   * Mute the current chat with confirmation alert
+   */
+  async muteCurrentChat() {
+    try {
+      if (!this.roomId || !this.senderId) {
+        this.showToast('Unable to mute chat', 'warning');
+        return;
+      }
+
+      // ✅ Show confirmation alert
+      const alert = await this.alertCtrl.create({
+        header: 'Mute Notifications',
+        message: 'You will no longer receive notifications for this chat.',
+        buttons: [
+          {
+            text: 'Cancel',
+            role: 'cancel',
+          },
+          {
+            text: 'Mute',
+            handler: async () => {
+              try {
+                // ✅ Call Firebase service to mute
+                await this.chatService.muteChat(this.roomId, this.senderId);
+
+                // ✅ Update local state
+                this.isChatMuted = true;
+
+                // ✅ Show success toast
+                this.showToast('Chat muted', 'success');
+
+                // ✅ Force UI update
+                this.cdr.detectChanges();
+              } catch (error) {
+                console.error('❌ Error muting chat:', error);
+                this.showToast('Failed to mute chat', 'error');
+              }
+            },
+          },
+        ],
+      });
+
+      await alert.present();
+    } catch (error) {
+      console.error('❌ Error showing mute confirmation:', error);
+      this.showToast('Failed to show confirmation', 'error');
+    }
+  }
+
+  /**
+   * Unmute the current chat with confirmation alert
+   */
+  async unmuteCurrentChat() {
+    try {
+      if (!this.roomId || !this.senderId) {
+        this.showToast('Unable to unmute chat', 'warning');
+        return;
+      }
+
+      // ✅ Show confirmation alert
+      const alert = await this.alertCtrl.create({
+        header: 'Unmute Notifications',
+        message: 'You will start receiving notifications for this chat again.',
+        buttons: [
+          {
+            text: 'Cancel',
+            role: 'cancel',
+          },
+          {
+            text: 'Unmute',
+            handler: async () => {
+              try {
+                // ✅ Call Firebase service to unmute
+                await this.chatService.unmuteChat(this.roomId, this.senderId);
+
+                // ✅ Update local state
+                this.isChatMuted = false;
+
+                // ✅ Show success toast
+                this.showToast('Chat unmuted', 'success');
+
+                // ✅ Force UI update
+                this.cdr.detectChanges();
+              } catch (error) {
+                console.error('❌ Error unmuting chat:', error);
+                this.showToast('Failed to unmute chat', 'error');
+              }
+            },
+          },
+        ],
+      });
+
+      await alert.present();
+    } catch (error) {
+      console.error('❌ Error showing unmute confirmation:', error);
+      this.showToast('Failed to show confirmation', 'error');
+    }
+  }
+
+  /**
+   * Toggle mute status for current chat
+   */
+  async toggleChatMute() {
+    if (this.isChatMuted) {
+      await this.unmuteCurrentChat();
+    } else {
+      await this.muteCurrentChat();
     }
   }
 
@@ -3309,7 +3476,7 @@ async sendRecordingFromPreview() {
       this.scrollToBottomInstant();
       this.isInitialLoad = false;
     }, 300);
-        // 🎤 CRITICAL FIX: Load audio metadata for all audio messages
+    // 🎤 CRITICAL FIX: Load audio metadata for all audio messages
     this.ensureAudioMetadataLoaded();
   }
 
@@ -3887,6 +4054,7 @@ async sendRecordingFromPreview() {
       const localMessage: Partial<IMessage & { attachment?: IAttachment }> = {
         sender: this.senderId,
         sender_name: this.sender_name,
+        sender_phone: this.sender_phone,
         receiver_id: this.receiverId,
         text: plainText || '',
         timestamp,

@@ -11,6 +11,7 @@ import { IonicModule, PopoverController } from '@ionic/angular';
 })
 export class ChatOptionsPopoverComponent {
   @Input() chatType: string = 'private';
+  @Input() isMuted: boolean = false; // ✅ NEW: Track mute status
 
   constructor(private popoverCtrl: PopoverController) {}
 
@@ -18,32 +19,24 @@ export class ChatOptionsPopoverComponent {
     this.popoverCtrl.dismiss({ selected: option });
   }
 
-  // get menuOptions() {
-  //   if (this.chatType === 'group') {
-  //     return ['Group Info','Group Media','Search','Add Members', 'Exit Group', 'clear chat'];
-  //   } else {
-  //     return ['View Contact', 'Search', 'Mute Notifications wip', 'clear chat'];
-  //   }
-  // }
   get menuOptions() {
-  if (this.chatType === 'group') {
-    return [
-      'Group Info',
-      'Group Media',
-      'Search',
-      'Add Members',
-      'Exit Group',
-      'Clear Chat'
-    ];
-  } else {
-    return [
-      'View Contact',
-      'Search',
-      'Mute Notifications wip',
-      'Clear Chat'
-    ];
+    if (this.chatType === 'group') {
+      return [
+        'Group Info',
+        'Group Media',
+        'Search',
+        'Add Members',
+        'Exit Group',
+        this.isMuted ? 'Unmute Notifications' : 'Mute Notifications',
+        'Clear Chat'
+      ];
+    } else {
+      return [
+        'View Contact',
+        'Search',
+        this.isMuted ? 'Unmute Notifications' : 'Mute Notifications',
+        'Clear Chat'
+      ];
+    }
   }
-}
-
-
 }

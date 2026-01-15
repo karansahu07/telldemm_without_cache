@@ -9783,6 +9783,152 @@ private async fetchNewConversation(
     }
   }
 
+  //mute notifications chatwise
+  
+  /**
+ * Mute a specific chat for the current user
+ * @param roomId - The chat room ID to mute
+ * @param userId - The current user ID
+ * @returns Promise<void>
+ */
+async muteChat(roomId: string, userId: string): Promise<void> {
+  try {
+    if (!roomId || !userId) {
+      throw new Error('roomId and userId are required');
+    }
+
+    const db = getDatabase();
+    const mutedChatsRef = ref(db, `users/${userId}/mutedChats`);
+
+    // Get current muted chats
+    const snapshot = await get(mutedChatsRef);
+    const mutedChats: string[] = snapshot.exists() ? snapshot.val() : [];
+
+    // Check if chat is already muted
+    if (mutedChats.includes(roomId)) {
+      console.log(`⚠️ Chat ${roomId} is already muted for user ${userId}`);
+      return;
+    }
+
+    // Add room to muted chats
+    mutedChats.push(roomId);
+
+    // Update Firebase
+    await set(mutedChatsRef, mutedChats);
+
+    console.log(`✅ Chat ${roomId} muted for user ${userId}`);
+  } catch (error) {
+    console.error('❌ Error muting chat:', error);
+    throw error;
+  }
+}
+
+/**
+ * Unmute a specific chat for the current user
+ * @param roomId - The chat room ID to unmute
+ * @param userId - The current user ID
+ * @returns Promise<void>
+ */
+async unmuteChat(roomId: string, userId: string): Promise<void> {
+  try {
+    if (!roomId || !userId) {
+      throw new Error('roomId and userId are required');
+    }
+
+    const db = getDatabase();
+    const mutedChatsRef = ref(db, `users/${userId}/mutedChats`);
+
+    // Get current muted chats
+    const snapshot = await get(mutedChatsRef);
+    
+    if (!snapshot.exists()) {
+      console.log(`⚠️ No muted chats found for user ${userId}`);
+      return;
+    }
+
+    const mutedChats: string[] = snapshot.val();
+
+    // Check if chat is actually muted
+    if (!mutedChats.includes(roomId)) {
+      console.log(`⚠️ Chat ${roomId} is not muted for user ${userId}`);
+      return;
+    }
+
+    // Remove room from muted chats
+    const updatedChats = mutedChats.filter(id => id !== roomId);
+
+    // Update Firebase (use set with empty array if no chats left)
+    if (updatedChats.length > 0) {
+      await set(mutedChatsRef, updatedChats);
+    } else {
+      // Remove the node entirely if no muted chats remain
+      await remove(mutedChatsRef);
+    }
+
+    console.log(`✅ Chat ${roomId} unmuted for user ${userId}`);
+  } catch (error) {
+    console.error('❌ Error unmuting chat:', error);
+    throw error;
+  }
+}
+
+/**
+ * Check if a specific chat is muted for the current user
+ * @param roomId - The chat room ID to check
+ * @param userId - The current user ID
+ * @returns Promise<boolean> - True if chat is muted, false otherwise
+ */
+async isChatMuted(roomId: string, userId: string): Promise<boolean> {
+  try {
+    if (!roomId || !userId) {
+      return false;
+    }
+
+    const db = getDatabase();
+    const mutedChatsRef = ref(db, `users/${userId}/mutedChats`);
+
+    const snapshot = await get(mutedChatsRef);
+    
+    if (!snapshot.exists()) {
+      return false;
+    }
+
+    const mutedChats: string[] = snapshot.val();
+    return mutedChats.includes(roomId);
+  } catch (error) {
+    console.error('❌ Error checking if chat is muted:', error);
+    return false;
+  }
+}
+
+/**
+ * Get all muted chats for the current user
+ * @param userId - The current user ID
+ * @returns Promise<string[]> - Array of muted room IDs
+ */
+async getMutedChats(userId: string): Promise<string[]> {
+  try {
+    if (!userId) {
+      return [];
+    }
+
+    const db = getDatabase();
+    const mutedChatsRef = ref(db, `users/${userId}/mutedChats`);
+
+    const snapshot = await get(mutedChatsRef);
+    
+    if (!snapshot.exists()) {
+      return [];
+    }
+
+    return snapshot.val() || [];
+  } catch (error) {
+    console.error('❌ Error getting muted chats:', error);
+    return [];
+  }
+}
+
+
   // =====================
   // ====== STATE ========
   // Forward message storage and selected message info used by UI
