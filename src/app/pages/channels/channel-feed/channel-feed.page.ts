@@ -1,8 +1,8 @@
 // src/app/pages/channels/channel-feed/channel-feed.page.ts
+import { IonicModule, ModalController, ActionSheetController, ToastController } from '@ionic/angular';
 import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { IonicModule, ModalController, ActionSheetController } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { ChannelService, Channel } from '../services/channel';
@@ -13,8 +13,9 @@ import { AuthService } from 'src/app/auth/auth.service';
 import { ChannelPouchDbService } from '../services/pouch-db';
 import { FileStorageService } from '../services/file-storage';
 // import { PostPouchDbService } from '../services/post-pouch-db.service';
-import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Filesystem, Directory } from '@capacitor/filesystem';
+import { FilePicker } from '@capawesome/capacitor-file-picker';
+import { ImageCropperModalComponent } from 'src/app/components/image-cropper-modal/image-cropper-modal.component';
 
 interface ReactionMap {
   [emoji: string]: number;
@@ -49,8 +50,6 @@ export class ChannelFeedPage implements OnInit, OnDestroy {
   channel: Channel | null = null;
   posts: Post[] = [];
   newMessage: string = '';
-  selectedImage: string | null = null;
-  selectedFile: File | undefined = undefined;
   uploadProgress: number = 0;
   isUploading: boolean = false;
   isMuted: boolean = false;
@@ -70,6 +69,21 @@ export class ChannelFeedPage implements OnInit, OnDestroy {
   // Multi-select
   selectionMode: boolean = false;
   selectedPosts: Set<string> = new Set();
+  
+  // pickAttachment
+  selectedAttachment: {
+  type: 'image' | 'video' | 'file';
+  blob: Blob;
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+  previewUrl: string;
+} | null = null;
+
+// Preview modal (same as Chat)
+showPreviewModal = false;
+messageText = ''; // caption
+
 
   // Long press detection
   private longPressTimer: any;
@@ -85,20 +99,21 @@ export class ChannelFeedPage implements OnInit, OnDestroy {
   currentUserId!: any;
   canCreatePost: boolean = false;
 
-  constructor(
-    private route: ActivatedRoute,
-    private postService: PostService,
-    private channelService: ChannelService,
-    private cdr: ChangeDetectorRef,
-    private router: Router,
-    private modalController: ModalController,
-    private actionSheetController: ActionSheetController,
-    private authService: AuthService,
-    private postPouchDb: ChannelPouchDbService,
-    private fileStorage: FileStorageService  // ✅ Add this
-  ) {
-    this.currentUserId = this.authService.authData?.userId || 0;
-  }
+constructor(
+  private route: ActivatedRoute,
+  private postService: PostService,
+  private channelService: ChannelService,
+  private cdr: ChangeDetectorRef,
+  private router: Router,
+  private modalController: ModalController, // ✅ use THIS everywhere
+  private toastController: ToastController, // ✅ add this
+  private actionSheetController: ActionSheetController,
+  private authService: AuthService,
+  private postPouchDb: ChannelPouchDbService,
+  private fileStorage: FileStorageService
+) {
+  this.currentUserId = this.authService.authData?.userId || 0;
+}
 
   /* =========================
      LIFECYCLE - OFFLINE-FIRST
@@ -431,23 +446,33 @@ export class ChannelFeedPage implements OnInit, OnDestroy {
 
   async sendPost() {
     if (!this.channelId) return;
-    if (!this.newMessage && !this.selectedFile) return;
+    if (!this.newMessage && !this.selectedAttachment) return;
 
     this.isUploading = true;
     this.uploadProgress = 0;
 
     try {
+      let fileToSend: File | undefined;
+
+if (this.selectedAttachment) {
+  fileToSend = new File(
+    [this.selectedAttachment.blob],
+    this.selectedAttachment.fileName,
+    { type: this.selectedAttachment.mimeType }
+  );
+}
       // PostService handles IndexedDB storage automatically
-      await this.postService.createPost(
-        this.channelId,
-        this.newMessage,
-        this.selectedFile,
-        this.currentUserId,
-        (progress: number) => {
-          this.uploadProgress = progress;
-          this.cdr.detectChanges();
-        }
-      );
+    await this.postService.createPost(
+  this.channelId,
+  this.newMessage,
+  fileToSend, // 👈 unified
+  this.currentUserId,
+  (progress: number) => {
+    this.uploadProgress = progress;
+    this.cdr.detectChanges();
+  }
+);
+
 
       console.log('✅ Post sent successfully');
 
@@ -458,13 +483,12 @@ export class ChannelFeedPage implements OnInit, OnDestroy {
         console.log('📴 Post will be sent when back online');
       }
     } finally {
-      this.isUploading = false;
-      this.uploadProgress = 0;
-      this.newMessage = '';
-      this.selectedImage = null;
-      this.selectedFile = undefined;
-      this.cdr.detectChanges();
-    }
+  this.isUploading = false;
+  this.uploadProgress = 0;
+  this.newMessage = '';
+  this.clearAttachment();
+  this.cdr.detectChanges();
+}
   }
 
 
@@ -831,89 +855,134 @@ export class ChannelFeedPage implements OnInit, OnDestroy {
     this.showReactionPopup = false;
   }
 
-  // Replace your selectMedia() method with this:
-  async selectMedia() {
-    try {
-      // Request permissions first
-      const permissions = await Camera.requestPermissions();
+async selectMedia() {
+  try {
+    const result = await FilePicker.pickFiles({
+      readData: true,
+    });
 
-      if (permissions.photos === 'granted' || permissions.camera === 'granted') {
-        // Show action sheet to choose camera or gallery
-        const actionSheet = await this.actionSheetController.create({
-          header: 'Select Image',
-          buttons: [
-            {
-              text: 'Take Photo',
-              icon: 'camera-outline',
-              handler: () => {
-                this.captureImage(CameraSource.Camera);
-              }
-            },
-            {
-              text: 'Choose from Gallery',
-              icon: 'images-outline',
-              handler: () => {
-                this.captureImage(CameraSource.Photos);
-              }
-            },
-            {
-              text: 'Cancel',
-              icon: 'close',
-              role: 'cancel'
-            }
-          ]
-        });
+    if (!result?.files?.length) return;
 
-        await actionSheet.present();
-      } else {
-        console.error('Camera permissions not granted');
-        // Show alert to user
+    const file = result.files[0];
+    const mimeType = file.mimeType || '';
+    
+    const type = mimeType.startsWith('image')
+      ? 'image'
+      : mimeType.startsWith('video')
+      ? 'video'
+      : 'file';
+
+    let blob = file.blob as Blob;
+
+    if (!blob && file.data) {
+      const byteCharacters = atob(file.data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
       }
-    } catch (error) {
-      console.error('Error selecting media:', error);
+      blob = new Blob([new Uint8Array(byteNumbers)], { type: mimeType });
     }
+
+    const previewUrl = URL.createObjectURL(blob);
+    this.blobURLs.add(previewUrl); // 👈 reuse your cleanup system
+
+this.selectedAttachment = {
+  type,
+  blob,
+  fileName: `${Date.now()}_${file.name}`,
+  mimeType,
+  fileSize: blob.size,
+  previewUrl
+};
+
+// ✅ OPEN PREVIEW MODAL (same UX as Chat)
+this.messageText = '';
+this.showPreviewModal = true;   // ✅ open fullscreen preview
+this.cdr.detectChanges();
+
+  } catch (err) {
+    console.error('Attachment pick failed', err);
+  }
+}
+
+cancelPreview() {
+  this.showPreviewModal = false;
+  this.clearAttachment();
+}
+
+async sendFromPreview() {
+  this.newMessage = this.messageText;
+  this.showPreviewModal = false;
+  await this.sendPost(); // reuse existing upload logic
+}
+
+async openCropperModal() {
+  if (!this.selectedAttachment || this.selectedAttachment.type !== 'image') {
+    return;
   }
 
-  async captureImage(source: CameraSource) {
-    try {
-      const image = await Camera.getPhoto({
-        quality: 90,
-        allowEditing: false,
-        resultType: CameraResultType.Uri, // Use Uri for native
-        source: source
+  try {
+    // ✅ Convert blob → base64
+    const base64Image = await this.blobToBase64(this.selectedAttachment.blob);
+
+    const modal = await this.modalController.create({
+      component: ImageCropperModalComponent,
+      componentProps: {
+        imageUrl: base64Image,   // ✅ BASE64
+        aspectRatio: 0,
+        cropQuality: 0.9,
+      },
+      cssClass: 'image-cropper-modal',
+    });
+
+    await modal.present();
+    const { data } = await modal.onDidDismiss();
+
+    if (data?.success && data.originalBlob) {
+      URL.revokeObjectURL(this.selectedAttachment.previewUrl);
+
+      const newPreviewUrl = URL.createObjectURL(data.originalBlob);
+
+      this.selectedAttachment = {
+        ...this.selectedAttachment,
+        blob: data.originalBlob,
+        previewUrl: newPreviewUrl,
+        fileName: `cropped_${Date.now()}.jpg`,
+        fileSize: data.originalBlob.size,
+        mimeType: data.originalBlob.type,
+      };
+
+      const toast = await this.toastController.create({
+        message: 'Image cropped successfully',
+        duration: 1500,
+        color: 'success',
       });
-
-      if (image.webPath) {
-        // Convert to Blob for native platforms
-        const response = await fetch(image.webPath);
-        const blob = await response.blob();
-
-        // Create File object
-        const fileName = `image_${Date.now()}.${image.format || 'jpg'}`;
-        this.selectedFile = new File([blob], fileName, {
-          type: `image/${image.format || 'jpeg'}`
-        });
-
-        // Set preview
-        this.selectedImage = image.webPath;
-        this.cdr.detectChanges();
-
-        console.log('✅ Image selected:', fileName);
-      }
-    } catch (error) {
-      console.error('Error capturing image:', error);
+      await toast.present();
     }
+  } catch (err) {
+    console.error('Cropper error:', err);
+  }
+}
+
+
+  private blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+clearAttachment() {
+  if (this.selectedAttachment?.previewUrl) {
+    URL.revokeObjectURL(this.selectedAttachment.previewUrl);
+    this.blobURLs.delete(this.selectedAttachment.previewUrl);
   }
 
-  clearMedia() {
-    this.selectedImage = null;
-    this.selectedFile = undefined;
-    this.newMessage = '';
-  }
-
-  isImage(file: File): boolean {
-    return file && file.type.startsWith('image/');
-  }
+  this.selectedAttachment = null;
+  this.cdr.detectChanges();
+}
 
   /* =========================
      FORWARD & OTHER ACTIONS

@@ -34,7 +34,7 @@
   </ion-refresher>
 
   <!-- category quick filter -->
-  <div class="category-bar" *ngIf="categories?.length">
+  <div class="category-bar" *ngIf="categories.length">
     <ion-segment [(ngModel)]="selectedCategoryId" (ionChange)="onCategorySelected($event)" value="all" scrollable>
       <ion-segment-button value="all"><ion-label>All</ion-label></ion-segment-button>
       <ion-segment-button *ngFor="let cat of categories" [value]="cat.id">

@@ -12,8 +12,10 @@
     <ion-title>
       <div class="header-content">
         <ion-avatar class="header-avatar" (click)="onHeaderClick()">
-          <img *ngIf="channel?.channel_dp" [src]="channel!.channel_dp" alt="Channel Avatar" />
-          <div *ngIf="!channel?.channel_dp" class="avatar-placeholder">{{ (channel?.channel_name || 'C')[0] }}</div>
+          <img *ngIf="channel?.channel_dp" [src]="channel!.channel_dp" />
+          <div *ngIf="!channel?.channel_dp" class="avatar-placeholder">
+            {{ (channel?.channel_name || 'C')[0] }}
+          </div>
         </ion-avatar>
 
         <div class="header-info">
@@ -21,23 +23,25 @@
             {{ channel?.channel_name || 'Loading...' }}
             <span *ngIf="channel?.is_verified" class="verified-badge">✓</span>
           </div>
-          <div class="channel-followers">{{ channel?.follower_count || 0 }} followers</div>
+          <div class="channel-followers">
+            {{ channel?.follower_count || 0 }} followers
+          </div>
         </div>
       </div>
     </ion-title>
 
     <ion-buttons slot="end">
       <ion-button (click)="toggleMute()">
-        <ion-icon slot="icon-only" [name]="isMuted ? 'notifications-off-outline' : 'notifications-outline'"></ion-icon>
+        <ion-icon
+          slot="icon-only"
+          [name]="isMuted ? 'notifications-off-outline' : 'notifications-outline'">
+        </ion-icon>
       </ion-button>
+
       <ion-button expand="block" color="primary" (click)="dumpDbToConsole()">
         Dump
       </ion-button>
-      <!-- <ion-button expand="block" color="primary" (click)="dumpDbToConsole()">
-        Dump
-      </ion-button>
 
-<ion-button (click)="debugCacheStatus()">Debug Cache</ion-button> -->
       <ion-button>
         <ion-icon slot="icon-only" name="ellipsis-vertical"></ion-icon>
       </ion-button>
@@ -45,34 +49,50 @@
   </ion-toolbar>
 </ion-header>
 
+<!-- ================= CONTENT ================= -->
 <ion-content class="channel-content">
   <div class="posts-container">
 
     <!-- BACKDROP -->
     <div *ngIf="showReactionPopup" class="reaction-backdrop" (click)="closePopup()"></div>
 
-    <!-- CUSTOM REACTION POPUP -->
-    <div *ngIf="showReactionPopup" class="reaction-popup" [style.top.px]="popupY" [style.left.px]="popupX">
+    <!-- REACTION POPUP -->
+    <div
+      *ngIf="showReactionPopup"
+      class="reaction-popup"
+      [style.top.px]="popupY"
+      [style.left.px]="popupX">
       <span (click)="react(activePost, '👍')">👍</span>
       <span (click)="react(activePost, '❤️')">❤️</span>
       <span (click)="react(activePost, '😂')">😂</span>
       <span (click)="react(activePost, '🙏')">🙏</span>
       <span class="add-reaction">
-        <ion-icon name="add-circle-outline" (click)="openReactionPicker(activePost)"></ion-icon>
+        <ion-icon
+          name="add-circle-outline"
+          (click)="openReactionPicker(activePost)">
+        </ion-icon>
       </span>
     </div>
 
     <!-- POSTS -->
-    <!-- <div *ngFor="let p of posts" class="post-bubble" [class.sent]="p.isSent" [class.received]="!p.isSent" -->
-    <div *ngFor="let p of posts" class="post-bubble" [class.sent]="p.created_by === currentUserId"
-      [class.received]="p.created_by !== currentUserId" (touchstart)="onTouchStart($event, p)"
-      (touchmove)="onTouchMove($event)" (touchend)="onTouchEnd(p)">
+    <div
+      *ngFor="let p of posts"
+      class="post-bubble"
+      [class.sent]="p.created_by === currentUserId"
+      [class.received]="p.created_by !== currentUserId"
+      (touchstart)="onTouchStart($event, p)"
+      (touchmove)="onTouchMove($event)"
+      (touchend)="onTouchEnd(p)">
 
-      <!-- Multi-select checkbox -->
+      <!-- MULTI SELECT -->
       <div *ngIf="selectionMode" class="checkbox-container">
-        <ion-checkbox [checked]="selectedPosts.has(p.id)" (ionChange)="toggleSelect(p)"></ion-checkbox>
+        <ion-checkbox
+          [checked]="selectedPosts.has(p.id)"
+          (ionChange)="toggleSelect(p)">
+        </ion-checkbox>
       </div>
 
+      <!-- AUTHOR -->
       <div *ngIf="p.created_by !== currentUserId" class="author-info">
         <ion-avatar class="author-avatar">
           <div class="avatar-placeholder">
@@ -84,6 +104,7 @@
         </div>
       </div>
 
+      <!-- MESSAGE -->
       <div class="message-wrapper">
         <img *ngIf="p.image" [src]="p.image" class="post-image" />
 
@@ -94,19 +115,19 @@
             <span class="timestamp">
               {{ p.timestamp | date:'shortTime' }}
             </span>
-            <!-- <span *ngIf="p.isSent" class="read-status">✓✓</span> -->
             <span *ngIf="p.created_by === currentUserId" class="read-status">✓✓</span>
           </div>
         </div>
       </div>
 
-      <!-- REACTIONS BAR WITH FORWARD (ALWAYS VISIBLE) -->
-      <!-- REACTIONS BAR WITH FORWARD (SHOW OFFLINE STATE) -->
+      <!-- REACTIONS -->
       <div class="reactions-bar">
-        <!-- Show reactions if any exist -->
         <div class="reactions-wrapper">
-          <div class="reactions-list" *ngIf="getAggregatedReactions(p) | keyvalue as reactions">
-            <div class="reaction-item" *ngFor="let r of reactions"
+          <div class="reactions-list"
+               *ngIf="getAggregatedReactions(p) | keyvalue as reactions">
+            <div
+              class="reaction-item"
+              *ngFor="let r of reactions"
               (click)="isOnline ? showReactionActionSheet(p, r.key) : showOfflineToast('Reactions unavailable offline')"
               [class.disabled]="!isOnline">
               <span class="emoji">{{ r.key }}</span>
@@ -115,58 +136,134 @@
           </div>
         </div>
 
-        <!-- Forward button (ALWAYS VISIBLE) -->
-        <ion-button fill="clear" class="forward-btn" size="small" (click)="forwardPost(p)">
+        <ion-button
+          fill="clear"
+          class="forward-btn"
+          size="small"
+          (click)="forwardPost(p)">
           <ion-icon slot="icon-only" name="arrow-redo-outline"></ion-icon>
         </ion-button>
       </div>
 
     </div>
-
   </div>
 
-  <!-- Update the read-only banner to mention reactions are disabled -->
+  <!-- READ ONLY -->
   <div *ngIf="!canCreatePost || !isOnline" class="read-only-banner">
     <ion-icon [name]="!isOnline ? 'cloud-offline-outline' : 'eye-outline'"></ion-icon>
     <span *ngIf="!isOnline">Offline - View only</span>
-    <span *ngIf="canCreatePost && isOnline">View only - You can react to posts</span>
+    <span *ngIf="canCreatePost && isOnline">View only - You can react</span>
   </div>
 </ion-content>
 
-<!-- INPUT BAR -->
+<!-- ================= PREVIEW MODAL (SAME AS CHAT) ================= -->
+<ion-modal
+  [isOpen]="showPreviewModal"
+  (didDismiss)="cancelPreview()">
+
+  <ng-template>
+    <ion-header [translucent]="true" class="model-header">
+      <ion-toolbar class="model-toll">
+
+        <!-- ❌ CLOSE -->
+        <ion-buttons slot="start">
+          <ion-icon
+            name="close"
+            style="font-size: 26px"
+            (click)="cancelPreview()">
+          </ion-icon>
+        </ion-buttons>
+
+        <!-- ✂️ CROP (IMAGE ONLY) -->
+        <ion-buttons slot="end">
+          <img
+            *ngIf="selectedAttachment?.type === 'image'"
+            src="assets/images/crop-simple-solid-full.svg"
+            style="width: 22px; height: 22px"
+            (click)="openCropperModal()" />
+        </ion-buttons>
+
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content>
+      <div class="pre-model">
+
+        <div class="mine2">
+          <!-- IMAGE -->
+          <img
+            *ngIf="selectedAttachment?.type === 'image'"
+            [src]="selectedAttachment?.previewUrl"
+            class="preview-image" />
+
+          <!-- VIDEO -->
+          <video
+            *ngIf="selectedAttachment?.type === 'video'"
+            [src]="selectedAttachment?.previewUrl"
+            controls
+            class="preview-video">
+          </video>
+
+          <!-- FILE -->
+          <div *ngIf="selectedAttachment?.type === 'file'" class="preview-file">
+            <ion-icon name="document-attach-outline"></ion-icon>
+            <p>{{ selectedAttachment?.fileName }}</p>
+          </div>
+        </div>
+
+        <!-- CAPTION + SEND -->
+        <div class="mine ion-padding">
+          <ion-textarea
+            [(ngModel)]="messageText"
+            placeholder="Type your message here..."
+            class="pre-message">
+          </ion-textarea>
+
+          <div class="sendbtn">
+            <ion-icon
+              name="send-outline"
+              class="mediasend"
+              (click)="sendFromPreview()">
+            </ion-icon>
+          </div>
+        </div>
+
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+
+<!-- ================= FOOTER ================= -->
 <ion-footer class="chat-footer" *ngIf="canCreatePost">
   <div class="input-row">
+
     <ion-button fill="clear" class="attach-btn" (click)="selectMedia()">
       <ion-icon name="attach-outline"></ion-icon>
     </ion-button>
 
-    <!-- Combined Preview + Input -->
-    <div *ngIf="selectedFile" class="combined-preview">
-      <div class="media-container">
-        <img *ngIf="isImage(selectedFile)" [src]="selectedImage" class="preview-image" alt="Media Preview" />
-        <video *ngIf="!isImage(selectedFile)" [src]="selectedImage" class="preview-video" controls></video>
-        <ion-button fill="clear" size="small" (click)="clearMedia()" class="remove-preview">
-          <ion-icon name="close-outline" slot="icon-only"></ion-icon>
-        </ion-button>
-      </div>
 
-      <div class="caption-input-wrapper">
-        <ion-input class="caption-input" [(ngModel)]="newMessage" placeholder="Add a caption..."
-          [disabled]="isUploading"></ion-input>
-      </div>
-    </div>
+    <!-- NORMAL INPUT -->
+    <ion-input
+      *ngIf="!selectedAttachment"
+      class="chat-input"
+      [(ngModel)]="newMessage"
+      placeholder="Type a message">
+    </ion-input>
 
-    <!-- Fallback: Plain Input -->
-    <ion-input *ngIf="!selectedFile" class="chat-input" [(ngModel)]="newMessage"
-      placeholder="Type a message"></ion-input>
-
-    <ion-button fill="clear" class="send-btn" (click)="sendPost()"
-      [disabled]="isUploading || (!newMessage && !selectedFile)">
+    <ion-button
+      fill="clear"
+      class="send-btn"
+      (click)="sendPost()"
+      [disabled]="isUploading || (!newMessage && !selectedAttachment)">
       <ion-icon name="send"></ion-icon>
     </ion-button>
   </div>
 
-  <!-- Upload Progress Bar -->
-  <ion-progress-bar *ngIf="isUploading" [value]="uploadProgress / 100" color="primary"
-    class="upload-progress"></ion-progress-bar>
+  <ion-progress-bar
+    *ngIf="isUploading"
+    [value]="uploadProgress / 100"
+    color="primary"
+    class="upload-progress">
+  </ion-progress-bar>
 </ion-footer>
