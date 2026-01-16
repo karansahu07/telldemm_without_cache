@@ -1,7 +1,14 @@
 <ion-header class="red-header">
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/chatting-screen"></ion-back-button>
+      <!-- <ion-back-button defaultHref="/chatting-screen"></ion-back-button> -->
+       <ion-icon
+          name="arrow-back-outline"
+          class="back-icon"
+          (click)="onBack()"
+          style="font-size: 24px; cursor: pointer"
+        >
+        </ion-icon>
     </ion-buttons>
     <ion-title>Message info</ion-title>
   </ion-toolbar>

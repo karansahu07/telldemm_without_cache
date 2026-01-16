@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, NgZone } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { IonicModule, ToastController } from '@ionic/angular';
+import { IonicModule, NavController, ToastController } from '@ionic/angular';
 import { FirebaseChatService } from 'src/app/services/firebase-chat.service';
 import { AuthService } from 'src/app/auth/auth.service';
 import { ApiService } from 'src/app/services/api/api.service';
@@ -35,7 +35,8 @@ export class MessageInfoPage implements OnInit {
     private toastCtrl: ToastController,
     private authService: AuthService,
     private apiService: ApiService,
-    private zone: NgZone
+    private zone: NgZone,
+    private navCtrl: NavController,
   ) {}
 
   async ngOnInit() {
@@ -43,7 +44,8 @@ export class MessageInfoPage implements OnInit {
     this.currentUserId = this.authService.authData?.userId || '';
     
     // 1) Try service stored message
-    const svcMsg = this.chatService.getSelectedMessageInfo(true);  
+    const svcMsg = this.chatService.getSelectedMessageInfo(true);
+    console.log({svcMsg})
     if (svcMsg) {
       this.message = svcMsg;
       await this.checkIfGroupChat();
@@ -335,5 +337,9 @@ private async getPhoneFromGroupMembers(
     if (hours === 0) hours = 12;
     const mins = minutes < 10 ? '0' + minutes : minutes;
     return `${hours}:${mins} ${ampm}`;
+  }
+
+  onBack(){
+    this.navCtrl.back();
   }
 }

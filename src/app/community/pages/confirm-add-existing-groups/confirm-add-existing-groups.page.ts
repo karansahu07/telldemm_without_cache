@@ -109,14 +109,15 @@ export class ConfirmAddExistingGroupsPage implements OnInit {
         await toast.present();
 
         // Navigate back to community detail
-        this.navCtrl.navigateBack('/community-detail', {
-          queryParams: {
-            receiverId: this.communityId,
-          },
-          state: {
-            communityId: this.communityId,
-          },
-        });
+        // this.navCtrl.navigateBack('/community-detail', {
+        //   queryParams: {
+        //     receiverId: this.communityId,
+        //   },
+        //   state: {
+        //     communityId: this.communityId,
+        //   },
+        // });
+        this.navCtrl.navigateBack('/home-screen');
       } else {
         throw new Error(result.message || 'Failed to add groups');
       }
